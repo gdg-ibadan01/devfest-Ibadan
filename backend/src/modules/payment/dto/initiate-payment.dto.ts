@@ -8,14 +8,14 @@ import {
 import { ApiProperty } from '@nestjs/swagger';
 
 export class InitiatePaymentDto {
-  // @ApiProperty({
-  //   description:
-  //     'Unique identifier of the event for which the payment is being made',
-  //   example: 'evt_1234567890abcdef',
-  // })
-  // @IsString()
-  // @IsNotEmpty()
-  // eventId: string;
+  @ApiProperty({
+    description:
+      'Unique identifier of the event for which the payment is being made',
+    example: 'evt_1234567890abcdef',
+  })
+  @IsString()
+  @IsNotEmpty()
+  eventId: string;
 
   @ApiProperty({
     description: 'Unique identifier of the attendee making the payment',
@@ -25,13 +25,13 @@ export class InitiatePaymentDto {
   @IsNotEmpty()
   attendeeId: string;
 
-  // @ApiProperty({
-  //   description: 'Unique identifier of the registration linked to this payment',
-  //   example: 'reg_1234567890abcdef',
-  // })
-  // @IsString()
-  // @IsNotEmpty()
-  // registrationId: string;
+  @ApiProperty({
+    description: 'Unique identifier of the registration linked to this payment',
+    example: 'reg_1234567890abcdef',
+  })
+  @IsString()
+  @IsNotEmpty()
+  registrationId: string;
 
   @ApiProperty({
     description: 'Email address of the attendee making the payment',

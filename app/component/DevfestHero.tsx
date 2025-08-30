@@ -61,10 +61,7 @@ const DevfestHero = () => {
             </p>
             <div>
               <p className="text-center font-bold">
-                November 28th, 2025 at 8:00AM
-              </p>
-              <p className="text-center font-bold">
-                November 29th, 2025 at 8:00AM
+                Date: November 28th & 29th 2025 at 8:00AM
               </p>
             </div>
             <div className="flex flex-col md:flex-row gap-3 md:gap-5 text-sm'">

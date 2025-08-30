@@ -43,10 +43,7 @@ const Inclusivity = () => {
               <Calendar />
               <div className="text-center md:text-left">
                 <p className="font-bold text-xl w-[320px]">
-                  November 28th, 2024
-                </p>
-                <p className="font-bold text-xl w-[320px]">
-                  and November 29th, 2025
+                  November 28th, 29th and
                 </p>
                 <p className="font-bold text-xl w-[320px]">
                   join us by 8:00 AM prompt

@@ -27,18 +27,18 @@ export class TicketsController {
     return this.ticketsService.findAll(query);
   }
 
-  // @Get('stats')
-  // @ApiBearerAuth()
-  // @UseGuards(JwtAuthGuard, RolesGuard)
-  // @Roles(Role.ADMIN, Role.SUPER_ADMIN)
-  // @ApiOperation({ summary: 'Get ticket statistics' })
-  // @ApiResponse({
-  //   status: 200,
-  //   description: 'Statistics retrieved successfully',
-  // })
-  // async getStats(@Query('eventId') eventId?: string) {
-  //   return this.ticketsService.getTicketStats(eventId);
-  // }
+  @Get('stats')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @ApiOperation({ summary: 'Get ticket statistics' })
+  @ApiResponse({
+    status: 200,
+    description: 'Statistics retrieved successfully',
+  })
+  async getStats(@Query('eventId') eventId?: string) {
+    return this.ticketsService.getTicketStats(eventId);
+  }
 
   @Get('verify/:ticketNumber')
   @ApiOperation({ summary: 'Verify ticket' })
@@ -67,18 +67,17 @@ export class TicketsController {
     return this.ticketsService.cancelTicket(ticketNumber);
   }
 
-  // @Get('event/:eventId')
-  // @ApiBearerAuth()
-  // @UseGuards(JwtAuthGuard, RolesGuard)
-  // @Roles(Role.ADMIN, Role.SUPER_ADMIN)
-  // @ApiOperation({ summary: 'Get tickets for event' })
-  // @ApiResponse({
-  //   status: 200,
-  //   description: 'Event tickets retrieved successfully',
-  // })
-  // async getEventTickets(@Param('eventId') eventId: string) {
-  //   return this.ticketsService.getEventTickets(eventId);
-  // }
+  @Get('event/:eventId')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @ApiOperation({ summary: 'Get tickets for event' })
+  @ApiResponse({
+    status: 200,
+    description: 'Event tickets retrieved successfully',
+  })
+  async getEventTickets(@Param('eventId') eventId: string) {
+    return this.ticketsService.getEventTickets(eventId);
+  }
 
   @Get(':id')
   @ApiBearerAuth()

@@ -171,12 +171,13 @@ const AttendeesList = () => {
           const status = row.original.status;
           return (
             <span
-              className={`px-2 py-1 rounded font-medium ${status === 'Successful'
-                ? 'text-[#34A853]'
-                : status === 'Pending'
-                  ? 'text-[#FFD427]'
-                  : 'text-[#EA4335]'
-                }`}
+              className={`px-2 py-1 rounded font-medium ${
+                status === 'Successful'
+                  ? 'text-[#34A853]'
+                  : status === 'Pending'
+                    ? 'text-[#FFD427]'
+                    : 'text-[#EA4335]'
+              }`}
             >
               {status}
             </span>
@@ -246,7 +247,7 @@ const AttendeesList = () => {
           Previous
         </button>
         <span>
-          <span className='hidden md:inline-block'>Page</span>    {' '}
+          <span className="hidden md:inline-block">Page</span>{' '}
           <strong>
             {table.getState().pagination.pageIndex + 1} of{' '}
             {table.getPageCount()}

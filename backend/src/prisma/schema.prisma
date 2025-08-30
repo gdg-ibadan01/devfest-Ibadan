@@ -13,20 +13,20 @@ enum Role {
   ATTENDEE
 }
 
-// enum EventStatus {
-//   DRAFT
-//   PUBLISHED
-//   ONGOING
-//   COMPLETED
-//   CANCELLED
-// }
+enum EventStatus {
+  DRAFT
+  PUBLISHED
+  ONGOING
+  COMPLETED
+  CANCELLED
+}
 
-// enum RegistrationStatus {
-//   PENDING
-//   CONFIRMED
-//   CANCELLED
-//   WAITLIST
-// }
+enum RegistrationStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  WAITLIST
+}
 
 enum TicketStatus {
   ACTIVE
@@ -56,7 +56,7 @@ model Admin {
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
-  // createdEvents  Event[]
+  createdEvents  Event[]
 
   @@map("admins")
 }
@@ -72,72 +72,71 @@ model Attendee {
   isActive      Boolean        @default(true)
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
-  // registrations Registration[]
+  registrations Registration[]
   payments      Payment[]
-  tickets       Ticket[]
 
   @@map("attendees")
 }
 
-// model Event {
-//   id                String         @id @default(cuid())
-//   title             String
-//   description       String
-//   slug              String         @unique
-//   venue             String
-//   address           String
-//   startDate         DateTime
-//   endDate           DateTime
-//   registrationStart DateTime
-//   registrationEnd   DateTime
-//   maxAttendees      Int
-//   currentAttendees  Int            @default(0)
-//   isPaid            Boolean        @default(false)
-//   price             Decimal?       @db.Decimal(10, 2)
-//   status            EventStatus    @default(DRAFT)
-//   bannerImage       String?
-//   tags              String[]
-//   requirements      String[]
-//   agenda            Json?
-//   createdById       String
-//   createdAt         DateTime       @default(now())
-//   updatedAt         DateTime       @updatedAt
-//   createdBy         Admin          @relation(fields: [createdById], references: [id])
-//   registrations     Registration[]
-//   tickets           Ticket[]
-//   payments          Payment[]
+model Event {
+  id                String         @id @default(cuid())
+  title             String
+  description       String
+  slug              String         @unique
+  venue             String
+  address           String
+  startDate         DateTime
+  endDate           DateTime
+  registrationStart DateTime
+  registrationEnd   DateTime
+  maxAttendees      Int
+  currentAttendees  Int            @default(0)
+  isPaid            Boolean        @default(false)
+  price             Decimal?       @db.Decimal(10, 2)
+  status            EventStatus    @default(DRAFT)
+  bannerImage       String?
+  tags              String[]
+  requirements      String[]
+  agenda            Json?
+  createdById       String
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  createdBy         Admin          @relation(fields: [createdById], references: [id])
+  registrations     Registration[]
+  tickets           Ticket[]
+  payments          Payment[]
 
-//   @@map("events")
-// }
+  @@map("events")
+}
 
-// model Registration {
-//   id                  String             @id @default(cuid())
-//   eventId             String
-//   attendeeId          String
-//   registrationDate    DateTime           @default(now())
-//   status              RegistrationStatus @default(PENDING)
-//   isCheckedIn         Boolean            @default(false)
-//   checkInTime         DateTime?
-//   specialRequests     String?
-//   ticketType          String?
-//   dietaryRestrictions String?
-//   createdAt           DateTime           @default(now())
-//   updatedAt           DateTime           @updatedAt
+model Registration {
+  id                  String             @id @default(cuid())
+  eventId             String
+  attendeeId          String
+  registrationDate    DateTime           @default(now())
+  status              RegistrationStatus @default(PENDING)
+  isCheckedIn         Boolean            @default(false)
+  checkInTime         DateTime?
+  specialRequests     String?
+  ticketType          String?
+  dietaryRestrictions String?
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
 
-//   event    Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
-//   attendee Attendee @relation(fields: [attendeeId], references: [id])
-//   ticket   Ticket?
-//   payment  Payment?
+  event    Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  attendee Attendee @relation(fields: [attendeeId], references: [id])
+  ticket   Ticket?
+  payment  Payment?
 
-//   @@unique([eventId, attendeeId])
-//   @@map("registrations")
-// }
+  @@unique([eventId, attendeeId])
+  @@map("registrations")
+}
 
 model Ticket {
   id             String       @id @default(cuid())
   ticketNumber   String       @unique
-  // eventId        String
-  // registrationId String       @unique
+  eventId        String
+  registrationId String       @unique
   qrCode         String       @unique
   status         TicketStatus @default(ACTIVE)
   issuedAt       DateTime     @default(now())
@@ -147,27 +146,20 @@ model Ticket {
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
 
-  // New relations
-  attendeeId     String
-  paymentId      String
-
-  attendee       Attendee     @relation(fields: [attendeeId], references: [id])
-  payment        Payment      @relation(fields: [paymentId], references: [id])
-
-  // event        Event        @relation(fields: [eventId], references: [id])
-  // registration Registration @relation(fields: [registrationId], references: [id])
+  event        Event        @relation(fields: [eventId], references: [id])
+  registration Registration @relation(fields: [registrationId], references: [id])
 
   @@map("tickets")
 }
 
 model Payment {
   id                String        @id @default(cuid())
-  // eventId           String
+  eventId           String
   attendeeId        String
-  // registrationId    String        @unique
+  registrationId    String        @unique
   amount            Decimal       @db.Decimal(10, 2)
   currency          String        @default("NGN")
-  paystackReference String?        @unique
+  paystackReference String        @unique
   paymentReference  String        @unique
   status            PaymentStatus @default(PENDING)
   paymentMethod     String?
@@ -178,10 +170,9 @@ model Payment {
   updatedAt         DateTime      @updatedAt
 
   // Relations
-  // event        Event        @relation(fields: [eventId], references: [id])
+  event        Event        @relation(fields: [eventId], references: [id])
   attendee     Attendee     @relation(fields: [attendeeId], references: [id])
-  tickets      Ticket[]   
-  // registration Registration @relation(fields: [registrationId], references: [id])
+  registration Registration @relation(fields: [registrationId], references: [id])
 
   @@map("payments")
 }

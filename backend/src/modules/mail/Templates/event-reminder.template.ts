@@ -21,27 +21,29 @@ export function eventReminderTemplate(
         <table width="600" border="0" cellspacing="0" cellpadding="0" bgcolor="#ffffff" 
                style="border-radius: 8px; overflow: hidden; box-shadow: 0 0 10px rgba(0,0,0,0.05);">
           
-          <!-- Header with Logo (Left aligned) -->
+          <!-- Header with DevFest Colors -->
           <tr>
-            <td style="padding: 20px; text-align: left;">
-              <img src="${logoUrl}" alt="Event Logo" style="max-height: 50px; display: block;" />
+            <td style="padding: 20px; text-align: center; 
+              background: linear-gradient(90deg, #4285F4, #DB4437, #F4B400, #0F9D58);">
+              <img src="${logoUrl}" alt="Event Logo" style="max-height: 60px; display: block; margin: 0 auto 10px auto;" />
+              <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: normal;">🚀 Event Reminder</h1>
             </td>
           </tr>
 
           <!-- Body -->
           <tr>
-            <td style="padding: 30px; color: #333333; font-size: 16px; line-height: 1.6; text-align: center;">
-              <h2 style="margin-top: 0; color: #007BFF;">DevFest Ibadan 2025 Kicks Off Tomorrow!</h2>
+            <td style="padding: 30px; color: #333333; font-size: 16px; line-height: 1.5; text-align: center;">
+              <h2 style="margin-top: 0; color: #4285F4;">DevFest Ibadan 2025 Kicks Off Tomorrow!</h2>
               <p>Hi <strong>${fullName}</strong>,</p>
-              <p>We're thrilled to have you joining us! Here's a quick reminder of your event details:</p>
-              <p style="font-size: 16px; line-height: 1.8;">
+              <p>We're thrilled to have you joining us! Here's a quick reminder:</p>
+              <p>
                 📅 <strong>Date:</strong> ${eventDate}<br/>
                 📍 <strong>Venue:</strong> ${locationAddress}<br/>
                 🕘 <strong>Time:</strong> ${startTime}
               </p>
               <p>✨ Be ready to learn, connect, and have fun with fellow developers!</p>
               <p>Need help? Reach out at 
-                <a href="mailto:${supportEmail}" style="color: #007BFF; text-decoration: none;">
+                <a href="mailto:${supportEmail}" style="color: #DB4437; text-decoration: none;">
                   ${supportEmail}
                 </a>
               </p>
@@ -52,7 +54,7 @@ export function eventReminderTemplate(
           <!-- Footer -->
           <tr>
             <td bgcolor="#f1f3f4" style="padding: 20px; text-align: center; font-size: 12px; color: #888888;">
-              &copy; ${new Date().getFullYear()} DevFest Ibadan. All rights reserved.
+              &copy; ${new Date().getFullYear()} GDG Ibadan. All rights reserved.
             </td>
           </tr>
         </table>

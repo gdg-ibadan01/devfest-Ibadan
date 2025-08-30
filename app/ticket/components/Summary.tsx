@@ -1,3 +1,4 @@
+import { useAttendeeRegistration } from '@/hooks/useAttendeeRegistration';
 import { formatAmount } from '@/utils/formatAmount';
 import { ArrowLeft, ArrowUpRight } from 'lucide-react';
 import React from 'react';
@@ -8,19 +9,28 @@ interface SummaryProps {
   formData: {
     fullName: string;
     phoneNumber: string;
-    jobTitle?: string;
+    jobTitle: string;
     email: string;
+    company?: string
   };
 }
 
 const Summary: React.FC<SummaryProps> = ({ setView, formData }) => {
+  const { registerAttendeeWithPayment, isLoading } = useAttendeeRegistration();
+  const amount = 4000 + 150;
+  const handlePayNow = async () => {
+    try {
+      await registerAttendeeWithPayment({ ...formData, company: 'Paystack' }, amount);
 
-  const handlePayNow = () => {
-    console.log('data', formData);
-  }
+    } catch (error) {
+      console.error('Registration failed:', error);
+    }
+  };
+
   return (
     <div className="bg-white px-4 md:px-28 py-48 rounded-2xl flex flex-col gap-10 border md:border-none">
       <button
+        type='button'
         className="w-fit flex flex-col md:flex-row justify-center items-start mdl:items-center gap-3 text-gray-600"
         onClick={() => setView('checkout')}
       >
@@ -34,7 +44,7 @@ const Summary: React.FC<SummaryProps> = ({ setView, formData }) => {
               Ticket Price
             </span>
             <span className="text-gray-500 font-bold">
-              {formatAmount(4000)}
+              {formatAmount(amount)}
             </span>
           </p>
           <p className="flex justify-between items-center gap-5 md:gap-0">
@@ -49,20 +59,30 @@ const Summary: React.FC<SummaryProps> = ({ setView, formData }) => {
             <span className="text-gray-400 font-thin text-sm md:text-base">
               VAT
             </span>
-            <span className="text-gray-500 font-bold">{formatAmount(270)}</span>
+            <span className="text-gray-500 font-bold">{formatAmount(150)}</span>
           </p>
         </div>
         <p className="flex justify-between items-center bg-pastel-blue rounded-md p-5 ">
           <span className="text-[#2D879D] font-thin">Total Amount</span>
           <span className="text-[#0B5A6E] font-bold text-xl">
-            {formatAmount(4000 + 270)}
+            {formatAmount(amount)}
           </span>
         </p>
         <button
+          type='button'
+          disabled={isLoading}
           className="bg-[#1E1E1E] py-4 text-white hover:bg-core-blue rounded-[100px] flex gap-2 justify-center transition-colors duration-500"
           onClick={handlePayNow}
         >
-          Pay Now <ArrowUpRight />
+          {isLoading ? (
+            <div className="flex items-center">
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+              Processing...
+            </div>
+          ) : (
+            <>   Pay Now <ArrowUpRight /></>
+          )}
+
         </button>
       </div>
     </div>

@@ -7,7 +7,7 @@ import { PrismaService } from '../database/prisma.service';
 import { TicketQueryDto } from './dto/ticket-query.dto';
 import { ITicket, ITicketVerification } from './interfaces/ticket.interface';
 import { TicketStatus } from '@prisma/client';
-// import { RegistrationStatus } from '@prisma/client';
+import { RegistrationStatus } from '@prisma/client';
 
 @Injectable()
 export class TicketsService {
@@ -19,9 +19,9 @@ export class TicketsService {
 
     const where: any = {};
 
-    // if (eventId) {
-    //   where.eventId = eventId;
-    // }
+    if (eventId) {
+      where.eventId = eventId;
+    }
 
     if (status) {
       where.status = status;
@@ -30,16 +30,16 @@ export class TicketsService {
     if (search) {
       where.OR = [
         { ticketNumber: { contains: search, mode: 'insensitive' } },
-        // {
-        //   registration: {
-        //     attendee: {
-        //       OR: [
-        //         { fullName: { contains: search, mode: 'insensitive' } },
-        //         { email: { contains: search, mode: 'insensitive' } },
-        //       ],
-        //     },
-        //   },
-        // },
+        {
+          registration: {
+            attendee: {
+              OR: [
+                { fullName: { contains: search, mode: 'insensitive' } },
+                { email: { contains: search, mode: 'insensitive' } },
+              ],
+            },
+          },
+        },
       ];
     }
 
@@ -50,26 +50,26 @@ export class TicketsService {
         take: limit,
         orderBy: { createdAt: 'desc' },
         include: {
-          // event: {
-          //   select: {
-          //     id: true,
-          //     title: true,
-          //     startDate: true,
-          //     endDate: true,
-          //     venue: true,
-          //   },
-          // },
-          // registration: {
-          // include: {
-          attendee: {
+          event: {
             select: {
               id: true,
-              fullName: true,
-              email: true,
-              // },
+              title: true,
+              startDate: true,
+              endDate: true,
+              venue: true,
             },
           },
-          // },
+          registration: {
+            include: {
+              attendee: {
+                select: {
+                  id: true,
+                  fullName: true,
+                  email: true,
+                },
+              },
+            },
+          },
         },
       }),
       this.prisma.ticket.count({ where }),
@@ -90,13 +90,13 @@ export class TicketsService {
     const ticketRecord = await this.prisma.ticket.findUnique({
       where: { id },
       include: {
-        // event: true,
-        // registration: {
-        // include: {
-        attendee: true,
-        payment: true,
-        // },
-        // },
+        event: true,
+        registration: {
+          include: {
+            attendee: true,
+            payment: true,
+          },
+        },
       },
     });
 
@@ -107,15 +107,15 @@ export class TicketsService {
     const ticket: ITicket = {
       id: ticketRecord.id,
       ticketNumber: ticketRecord.ticketNumber,
-      // eventId: ticketRecord.eventId,
-      // registrationId: ticketRecord.registrationId,
-      // registration: ticketRecord.registration
-      // ? {
-      //     // status: ticketRecord.registration.status,
-      //     // isCheckedIn: ticketRecord.registration.isCheckedIn,
-      //     // checkInTime: ticketRecord.registration.checkInTime ?? undefined,
-      //   }
-      // : undefined,
+      eventId: ticketRecord.eventId,
+      registrationId: ticketRecord.registrationId,
+      registration: ticketRecord.registration
+        ? {
+            status: ticketRecord.registration.status,
+            isCheckedIn: ticketRecord.registration.isCheckedIn,
+            checkInTime: ticketRecord.registration.checkInTime ?? undefined,
+          }
+        : undefined,
       qrCode: ticketRecord.qrCode,
       status: ticketRecord.status,
       issuedAt: ticketRecord.issuedAt,
@@ -127,20 +127,19 @@ export class TicketsService {
 
     return ticket;
   }
-  // }
 
   async findByTicketNumber(ticketNumber: string): Promise<ITicket> {
     const ticket = await this.prisma.ticket.findUnique({
       where: { ticketNumber },
-      // include: {
-      // event: true,
-      // registration: {
       include: {
-        attendee: true,
-        payment: true,
+        event: true,
+        registration: {
+          include: {
+            attendee: true,
+            payment: true,
+          },
+        },
       },
-      // },
-      // },
     });
 
     if (!ticket) {
@@ -154,7 +153,7 @@ export class TicketsService {
     try {
       const ticket = await this.prisma.ticket.findUnique({
         where: { ticketNumber },
-        // include: { registration: true },
+        include: { registration: true },
       });
 
       if (!ticket) {
@@ -193,16 +192,16 @@ export class TicketsService {
       }
 
       // Ensure registration exists and is confirmed
-      // if (
-      // !ticket.registration ||
-      //   ticket.registration.status !== RegistrationStatus.CONFIRMED
-      // ) {
-      //   return {
-      //     isValid: false,
-      //     ticket,
-      //     message: 'Registration is not confirmed',
-      //   };
-      // }
+      if (
+        !ticket.registration ||
+        ticket.registration.status !== RegistrationStatus.CONFIRMED
+      ) {
+        return {
+          isValid: false,
+          ticket,
+          message: 'Registration is not confirmed',
+        };
+      }
 
       return {
         isValid: true,
@@ -226,35 +225,35 @@ export class TicketsService {
 
     const ticket = verification.ticket;
 
-    // if (!ticket.registration) {
-    //   throw new BadRequestException('No registration found for this ticket');
-    // }
+    if (!ticket.registration) {
+      throw new BadRequestException('No registration found for this ticket');
+    }
 
-    // if (ticket.registration.isCheckedIn) {
-    //   throw new BadRequestException('Attendee is already checked in');
-    // }
+    if (ticket.registration.isCheckedIn) {
+      throw new BadRequestException('Attendee is already checked in');
+    }
 
-    // await this.prisma.registration.update({
-    //   where: { id: ticket.registrationId },
-    //   data: {
-    //     isCheckedIn: true,
-    //     checkInTime: new Date(),
-    //   },
-    // });
+    await this.prisma.registration.update({
+      where: { id: ticket.registrationId },
+      data: {
+        isCheckedIn: true,
+        checkInTime: new Date(),
+      },
+    });
 
     const updatedTicket = await this.prisma.ticket.update({
       where: { id: ticket.id },
       data: {
         status: TicketStatus.USED,
       },
-      // include: {
-      // event: true,
-      // registration: {
       include: {
-        attendee: true,
+        event: true,
+        registration: {
+          include: {
+            attendee: true,
+          },
+        },
       },
-      // },
-      // },
     });
 
     return updatedTicket;
@@ -276,87 +275,87 @@ export class TicketsService {
       data: {
         status: TicketStatus.CANCELLED,
       },
-      // include: {
-      // event: true,
-      // registration: {
       include: {
-        attendee: true,
+        event: true,
+        registration: {
+          include: {
+            attendee: true,
+          },
+        },
       },
-      // },
-      // },
     });
 
-    // await this.prisma.registration.update({
-    //   where: { id: ticket.registrationId },
-    //   data: {
-    //     status: RegistrationStatus.CANCELLED,
-    //   },
-    // });
+    await this.prisma.registration.update({
+      where: { id: ticket.registrationId },
+      data: {
+        status: RegistrationStatus.CANCELLED,
+      },
+    });
 
-    // await this.prisma.event.update({
-    //   where: { id: ticket.eventId },
-    //   data: {
-    //     currentAttendees: {
-    //       decrement: 1,
-    //     },
-    //   },
-    // });
+    await this.prisma.event.update({
+      where: { id: ticket.eventId },
+      data: {
+        currentAttendees: {
+          decrement: 1,
+        },
+      },
+    });
 
     return updatedTicket;
   }
 
-  // async getEventTickets(eventId: string) {
-  //   return await this.prisma.ticket.findMany({
-  //     where: { eventId },
-  //     include: {
-  //       registration: {
-  //         include: {
-  //           attendee: {
-  //             select: {
-  //               id: true,
-  //               fullName: true,
-  //               email: true,
-  //               phoneNumber: true,
-  //             },
-  //           },
-  //         },
-  //       },
-  //     },
-  //     orderBy: { createdAt: 'desc' },
-  //   });
-  // }
+  async getEventTickets(eventId: string) {
+    return await this.prisma.ticket.findMany({
+      where: { eventId },
+      include: {
+        registration: {
+          include: {
+            attendee: {
+              select: {
+                id: true,
+                fullName: true,
+                email: true,
+                phoneNumber: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
 
-  // async getTicketStats(eventId?: string) {
-  //   const where = eventId ? { eventId } : {};
+  async getTicketStats(eventId?: string) {
+    const where = eventId ? { eventId } : {};
 
-  //   const [total, active, used, cancelled, expired] = await Promise.all([
-  //     this.prisma.ticket.count({ where }),
-  //     this.prisma.ticket.count({
-  //       where: { ...where, status: TicketStatus.ACTIVE },
-  //     }),
-  //     this.prisma.ticket.count({
-  //       where: { ...where, status: TicketStatus.USED },
-  //     }),
-  //     this.prisma.ticket.count({
-  //       where: { ...where, status: TicketStatus.CANCELLED },
-  //     }),
-  //     this.prisma.ticket.count({
-  //       where: { ...where, status: TicketStatus.EXPIRED },
-  //     }),
-  //   ]);
+    const [total, active, used, cancelled, expired] = await Promise.all([
+      this.prisma.ticket.count({ where }),
+      this.prisma.ticket.count({
+        where: { ...where, status: TicketStatus.ACTIVE },
+      }),
+      this.prisma.ticket.count({
+        where: { ...where, status: TicketStatus.USED },
+      }),
+      this.prisma.ticket.count({
+        where: { ...where, status: TicketStatus.CANCELLED },
+      }),
+      this.prisma.ticket.count({
+        where: { ...where, status: TicketStatus.EXPIRED },
+      }),
+    ]);
 
-  //   return {
-  //     total,
-  //     active,
-  //     used,
-  //     cancelled,
-  //     expired,
-  //     checkedIn: await this.prisma.registration.count({
-  //       where: {
-  //         ...(eventId && { eventId }),
-  //         isCheckedIn: true,
-  //       },
-  //     }),
-  //   };
-  // }
+    return {
+      total,
+      active,
+      used,
+      cancelled,
+      expired,
+      checkedIn: await this.prisma.registration.count({
+        where: {
+          ...(eventId && { eventId }),
+          isCheckedIn: true,
+        },
+      }),
+    };
+  }
 }

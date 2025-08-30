@@ -6,7 +6,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import useMediaQueryWatcher from '../_module/config/hooks/useMediaQueryWatcher';
 
 export default function Ticket() {
-  const isTablet = useMediaQueryWatcher('(min-width: 1024px)')
+  const isTablet = useMediaQueryWatcher('(min-width: 1024px)');
   const [view, setView] = useState('checkout');
   const [formData, setFormData] = useState({
     fullName: '',

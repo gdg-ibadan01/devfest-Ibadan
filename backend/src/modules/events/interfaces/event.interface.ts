@@ -1,4 +1,4 @@
-// import { EventStatus } from '@prisma/client';
+import { EventStatus } from '@prisma/client';
 
 export interface IEvent {
   id: string;
@@ -15,7 +15,7 @@ export interface IEvent {
   currentAttendees: number;
   isPaid: boolean;
   price?: number | null;
-  // status: EventStatus;
+  status: EventStatus;
   bannerImage?: string | null;
   tags: string[];
   requirements: string[];

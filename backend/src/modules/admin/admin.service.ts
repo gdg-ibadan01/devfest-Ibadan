@@ -4,7 +4,6 @@ import {
   UnauthorizedException,
   NotFoundException,
   ForbiddenException,
-  BadRequestException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -16,6 +15,7 @@ import { LoginAdminDto } from './dto/login-admin.dto';
 import { InviteAdminDto } from './dto/invite-admin.dto';
 import { AdminQueryDto } from './dto/admin-query.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
 import {
   IAdmin,
   ILoginResponse,
@@ -23,29 +23,19 @@ import {
   IAdminResponse,
   IDashboardStats,
 } from './interfaces/admin.interface';
-// import { EventStatus } from '@prisma/client';
+import { EventStatus } from '@prisma/client';
 import { Role } from '@prisma/client';
 import { PaymentStatus } from '@prisma/client';
 import { MailService } from '../mail/mail.service';
-import axios from 'axios';
-import { v4 as uuidv4 } from 'uuid';
-import { CreateAttendeeDto } from './dto/create-attendee.dto';
 
 @Injectable()
 export class AdminService {
-  private readonly paystackBaseUrl: string;
-  private readonly paystackSecretKey: string;
   constructor(
     private readonly configService: ConfigService,
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
     private mailService: MailService,
-  ) {
-    this.paystackBaseUrl =
-      this.configService.get<string>('paystack.baseUrl') ?? '';
-    this.paystackSecretKey =
-      this.configService.get<string>('paystack.secretKey') ?? '';
-  }
+  ) {}
 
   async signup(signupDto: CreateAdminDto): Promise<ILoginResponse> {
     const { fullName, email, password } = signupDto;
@@ -125,7 +115,7 @@ export class AdminService {
   async inviteAdmin(
     inviteDto: InviteAdminDto,
     invitedBy: string,
-  ): Promise<{ message: string }> {
+  ): Promise<{ message: string; tempPassword: string }> {
     const { fullName, email, role } = inviteDto;
     if (!invitedBy) {
       throw new UnauthorizedException('Missing inviter id from auth context');
@@ -172,7 +162,7 @@ export class AdminService {
       tempPassword,
     );
 
-    return { message: 'Admin invited successfully' };
+    return { message: 'Admin invited successfully', tempPassword };
   }
 
   async refreshToken(
@@ -237,94 +227,17 @@ export class AdminService {
     return { message: 'Password changed successfully' };
   }
 
-  async create(createAttendeeDto: CreateAttendeeDto): Promise<any> {
-    const { email, fullName, amount, phoneNumber, company, jobTitle } =
-      createAttendeeDto;
+  //   async getProfile(adminId: string): Promise<IAdminResponse> {
+  //     const admin = await this.prisma.admin.findUnique({
+  //       where: { id: adminId },
+  //     });
 
-    // 1. Check if attendee already exists
-    const existingAttendee = await this.prisma.attendee.findUnique({
-      where: { email },
-    });
+  //     if (!admin) {
+  //       throw new NotFoundException('Admin not found');
+  //     }
 
-    if (existingAttendee) {
-      throw new ConflictException('Attendee with this email already exists');
-    }
-
-    // 2. Create attendee
-    const attendee = await this.prisma.attendee.create({
-      data: {
-        email,
-        fullName,
-        phoneNumber,
-        company,
-        jobTitle,
-      },
-    });
-
-    // 3. Initialize payment
-    const paymentReference = `gdg_${Date.now()}_${uuidv4().slice(0, 8)}`;
-    const amountInKobo = Math.round(amount * 100);
-
-    const callbackUrl = `${this.configService.get('APP_URL')}${this.configService.get(
-      'PAYSTACK_CALLBACK_URL',
-    )}?paymentReference=${paymentReference}&name=${encodeURIComponent(
-      attendee.fullName,
-    )}&email=${encodeURIComponent(attendee.email)}`;
-
-    const paystackResponse = await axios.post(
-      `${this.paystackBaseUrl}/transaction/initialize`,
-      {
-        email,
-        amount: amountInKobo,
-        reference: paymentReference,
-        metadata: {
-          attendeeId: attendee.id,
-          attendeeName: attendee.fullName,
-        },
-        callback_url: callbackUrl,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${this.paystackSecretKey}`,
-          'Content-Type': 'application/json',
-        },
-      },
-    );
-
-    if (!paystackResponse.data.status) {
-      throw new BadRequestException('Failed to initialize payment');
-    }
-
-    // 4. Save payment record
-    const payment = await this.prisma.payment.create({
-      data: {
-        attendeeId: attendee.id,
-        amount,
-        paystackReference: paystackResponse.data.data.reference,
-        paymentReference,
-        status: PaymentStatus.PENDING,
-        metadata: { access_code: paystackResponse.data.data.access_code },
-      },
-    });
-
-    // 5. Send payment link email
-    const paymentUrl = paystackResponse.data.data.authorization_url;
-
-    console.log('Sending payment link email to:', attendee.email, paymentUrl);
-    await this.mailService.sendPaymentLinkEmail(
-      attendee.email,
-      attendee.fullName,
-      paymentUrl,
-      amount,
-    );
-
-    // 6. Return attendee + payment info + link
-    return {
-      attendee,
-      payment,
-      paymentUrl,
-    };
-  }
+  //     return this.excludePassword(admin);
+  //   }
 
   async deactivateAdmin(
     adminId: string,
@@ -407,13 +320,13 @@ export class AdminService {
         skip,
         take: limit,
         orderBy: { createdAt: 'desc' },
-        // include: {
-        //   _count: {
-        //     select: {
-        //       createdEvents: true,
-        //     },
-        //   },
-        // },
+        include: {
+          _count: {
+            select: {
+              createdEvents: true,
+            },
+          },
+        },
       }),
       this.prisma.admin.count({ where }),
     ]);
@@ -432,25 +345,25 @@ export class AdminService {
   async findOne(id: string): Promise<IAdminResponse> {
     const admin = await this.prisma.admin.findUnique({
       where: { id },
-      // include: {
-      // createdEvents: {
-      //   select: {
-      //     id: true,
-      //     title: true,
-      //     startDate: true,
-      //     status: true,
-      //     currentAttendees: true,
-      //     maxAttendees: true,
-      //   },
-      //   orderBy: { createdAt: 'desc' },
-      //   take: 10,
-      // },
-      // _count: {
-      //   select: {
-      //     createdEvents: true,
-      //   },
-      // },
-      // },
+      include: {
+        createdEvents: {
+          select: {
+            id: true,
+            title: true,
+            startDate: true,
+            status: true,
+            currentAttendees: true,
+            maxAttendees: true,
+          },
+          orderBy: { createdAt: 'desc' },
+          take: 10,
+        },
+        _count: {
+          select: {
+            createdEvents: true,
+          },
+        },
+      },
     });
 
     if (!admin) {
@@ -479,156 +392,156 @@ export class AdminService {
     await this.prisma.admin.delete({ where: { id } });
   }
 
-  // async getDashboardStats(): Promise<IDashboardStats> {
-  //   const [
-  //     totalEvents,
-  //     totalAttendees,
-  //     totalRegistrations,
-  //     totalRevenue,
-  //     upcomingEvents,
-  //     ongoingEvents,
-  //     completedEvents,
-  //     recentRegistrations,
-  //   ] = await Promise.all([
-  //     this.prisma.event.count(),
-  //     this.prisma.attendee.count(),
-  //     this.prisma.registration.count(),
-  //     this.prisma.payment.aggregate({
-  //       where: { status: PaymentStatus.SUCCESS },
-  //       _sum: { amount: true },
-  //     }),
-  //     this.prisma.event.count({
-  //       where: {
-  //         status: EventStatus.PUBLISHED,
-  //         startDate: { gt: new Date() },
-  //       },
-  //     }),
-  //     this.prisma.event.count({
-  //       where: { status: EventStatus.ONGOING },
-  //     }),
-  //     this.prisma.event.count({
-  //       where: { status: EventStatus.COMPLETED },
-  //     }),
-  //     this.prisma.registration.findMany({
-  //       take: 10,
-  //       orderBy: { createdAt: 'desc' },
-  //       include: {
-  //         event: {
-  //           select: { title: true },
-  //         },
-  //         attendee: {
-  //           select: { fullName: true, email: true },
-  //         },
-  //       },
-  //     }),
-  //   ]);
+  async getDashboardStats(): Promise<IDashboardStats> {
+    const [
+      totalEvents,
+      totalAttendees,
+      totalRegistrations,
+      totalRevenue,
+      upcomingEvents,
+      ongoingEvents,
+      completedEvents,
+      recentRegistrations,
+    ] = await Promise.all([
+      this.prisma.event.count(),
+      this.prisma.attendee.count(),
+      this.prisma.registration.count(),
+      this.prisma.payment.aggregate({
+        where: { status: PaymentStatus.SUCCESS },
+        _sum: { amount: true },
+      }),
+      this.prisma.event.count({
+        where: {
+          status: EventStatus.PUBLISHED,
+          startDate: { gt: new Date() },
+        },
+      }),
+      this.prisma.event.count({
+        where: { status: EventStatus.ONGOING },
+      }),
+      this.prisma.event.count({
+        where: { status: EventStatus.COMPLETED },
+      }),
+      this.prisma.registration.findMany({
+        take: 10,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          event: {
+            select: { title: true },
+          },
+          attendee: {
+            select: { fullName: true, email: true },
+          },
+        },
+      }),
+    ]);
 
-  // Get event stats
-  //   const eventStats = await this.prisma.event.findMany({
-  //     select: {
-  //       id: true,
-  //       title: true,
-  //       startDate: true,
-  //       currentAttendees: true,
-  //       maxAttendees: true,
-  //       status: true,
-  //       _count: {
-  //         select: {
-  //           registrations: true,
-  //           payments: true,
-  //         },
-  //       },
-  //     },
-  //     orderBy: { startDate: 'desc' },
-  //     take: 5,
-  //   });
+    // Get event stats
+    const eventStats = await this.prisma.event.findMany({
+      select: {
+        id: true,
+        title: true,
+        startDate: true,
+        currentAttendees: true,
+        maxAttendees: true,
+        status: true,
+        _count: {
+          select: {
+            registrations: true,
+            payments: true,
+          },
+        },
+      },
+      orderBy: { startDate: 'desc' },
+      take: 5,
+    });
 
-  //   return {
-  //     totalEvents,
-  //     totalAttendees,
-  //     totalRegistrations,
-  //     totalRevenue: Number(totalRevenue._sum.amount) || 0,
-  //     upcomingEvents,
-  //     ongoingEvents,
-  //     completedEvents,
-  //     recentRegistrations,
-  //     eventStats,
-  //   };
-  // }
+    return {
+      totalEvents,
+      totalAttendees,
+      totalRegistrations,
+      totalRevenue: Number(totalRevenue._sum.amount) || 0,
+      upcomingEvents,
+      ongoingEvents,
+      completedEvents,
+      recentRegistrations,
+      eventStats,
+    };
+  }
 
-  // async getEventAnalytics(eventId: string) {
-  //   const event = await this.prisma.event.findUnique({
-  //     where: { id: eventId },
-  //     include: {
-  //       registrations: {
-  //         include: {
-  //           attendee: true,
-  //           payment: true,
-  //           ticket: true,
-  //         },
-  //       },
-  //       _count: {
-  //         select: {
-  //           registrations: true,
-  //           payments: true,
-  //           tickets: true,
-  //         },
-  //       },
-  //     },
-  //   });
+  async getEventAnalytics(eventId: string) {
+    const event = await this.prisma.event.findUnique({
+      where: { id: eventId },
+      include: {
+        registrations: {
+          include: {
+            attendee: true,
+            payment: true,
+            ticket: true,
+          },
+        },
+        _count: {
+          select: {
+            registrations: true,
+            payments: true,
+            tickets: true,
+          },
+        },
+      },
+    });
 
-  //   if (!event) {
-  //     throw new NotFoundException('Event not found');
-  //   }
-  //   const analytics = {
-  //     event: {
-  //       id: event.id,
-  //       title: event.title,
-  //       startDate: event.startDate,
-  //       endDate: event.endDate,
-  //       maxAttendees: event.maxAttendees,
-  //       currentAttendees: event.currentAttendees,
-  //       status: event.status,
-  //     },
-  //     registrations: {
-  //       total: event._count.registrations,
-  //       confirmed: event.registrations.filter((r) => r.status === 'CONFIRMED')
-  //         .length,
-  //       pending: event.registrations.filter((r) => r.status === 'PENDING')
-  //         .length,
-  //       cancelled: event.registrations.filter((r) => r.status === 'CANCELLED')
-  //         .length,
-  //       checkedIn: event.registrations.filter((r) => r.isCheckedIn).length,
-  //     },
-  //     payments: {
-  //       total: event._count.payments,
-  //       successful: event.registrations.filter(
-  //         (r) => r.payment?.status === 'SUCCESS',
-  //       ).length,
-  //       pending: event.registrations.filter(
-  //         (r) => r.payment?.status === 'PENDING',
-  //       ).length,
-  //       failed: event.registrations.filter(
-  //         (r) => r.payment?.status === 'FAILED',
-  //       ).length,
-  //     },
-  //     revenue: event.registrations
-  //       .filter((r) => r.payment?.status === 'SUCCESS')
-  //       .reduce((sum, r) => sum + (Number(r.payment?.amount) || 0), 0),
-  //     attendeeBreakdown: {
-  //       byCompany: this.groupBy(
-  //         event.registrations.map((r) => r.attendee),
-  //         'company',
-  //       ),
-  //       byJobTitle: this.groupBy(
-  //         event.registrations.map((r) => r.attendee),
-  //         'jobTitle',
-  //       ),
-  //     },
-  //   };
+    if (!event) {
+      throw new NotFoundException('Event not found');
+    }
+    const analytics = {
+      event: {
+        id: event.id,
+        title: event.title,
+        startDate: event.startDate,
+        endDate: event.endDate,
+        maxAttendees: event.maxAttendees,
+        currentAttendees: event.currentAttendees,
+        status: event.status,
+      },
+      registrations: {
+        total: event._count.registrations,
+        confirmed: event.registrations.filter((r) => r.status === 'CONFIRMED')
+          .length,
+        pending: event.registrations.filter((r) => r.status === 'PENDING')
+          .length,
+        cancelled: event.registrations.filter((r) => r.status === 'CANCELLED')
+          .length,
+        checkedIn: event.registrations.filter((r) => r.isCheckedIn).length,
+      },
+      payments: {
+        total: event._count.payments,
+        successful: event.registrations.filter(
+          (r) => r.payment?.status === 'SUCCESS',
+        ).length,
+        pending: event.registrations.filter(
+          (r) => r.payment?.status === 'PENDING',
+        ).length,
+        failed: event.registrations.filter(
+          (r) => r.payment?.status === 'FAILED',
+        ).length,
+      },
+      revenue: event.registrations
+        .filter((r) => r.payment?.status === 'SUCCESS')
+        .reduce((sum, r) => sum + (Number(r.payment?.amount) || 0), 0),
+      attendeeBreakdown: {
+        byCompany: this.groupBy(
+          event.registrations.map((r) => r.attendee),
+          'company',
+        ),
+        byJobTitle: this.groupBy(
+          event.registrations.map((r) => r.attendee),
+          'jobTitle',
+        ),
+      },
+    };
 
-  //   return analytics;
-  // }
+    return analytics;
+  }
 
   private groupBy(array: any[], key: string) {
     return array.reduce((groups, item) => {

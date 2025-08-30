@@ -40,23 +40,23 @@ export class AttendeeController {
     return this.attendeeService.findByEmail(email);
   }
 
-  // @Post(':id/register')
-  // @ApiOperation({ summary: 'Register attendee for event' })
-  // @ApiResponse({ status: 201, description: 'Registration successful' })
-  // async registerForEvent(
-  //   @Param('id') attendeeId: string,
-  //   @Body() registerEventDto: RegisterEventDto,
-  // ) {
-  //   return this.attendeeService.registerForEvent(attendeeId, registerEventDto);
-  // }
+  @Post(':id/register')
+  @ApiOperation({ summary: 'Register attendee for event' })
+  @ApiResponse({ status: 201, description: 'Registration successful' })
+  async registerForEvent(
+    @Param('id') attendeeId: string,
+    @Body() registerEventDto: RegisterEventDto,
+  ) {
+    return this.attendeeService.registerForEvent(attendeeId, registerEventDto);
+  }
 
-  // @Get(':id/registrations')
-  // @ApiOperation({ summary: 'Get attendee registrations' })
-  // @ApiResponse({
-  //   status: 200,
-  //   description: 'Registrations retrieved successfully',
-  // })
-  // async getRegistrations(@Param('id') attendeeId: string) {
-  //   return this.attendeeService.getRegistrations(attendeeId);
-  // }
+  @Get(':id/registrations')
+  @ApiOperation({ summary: 'Get attendee registrations' })
+  @ApiResponse({
+    status: 200,
+    description: 'Registrations retrieved successfully',
+  })
+  async getRegistrations(@Param('id') attendeeId: string) {
+    return this.attendeeService.getRegistrations(attendeeId);
+  }
 }

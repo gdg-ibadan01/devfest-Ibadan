@@ -78,7 +78,6 @@ const CheckOut: React.FC<CheckOutProps> = ({
             className="border border-gray-200 px-4 py-2 rounded-md outline-none text-gray-400 text-sm md:text-base"
           />
         </div>
-
       </div>
       <div className="flex flex-col md:flex-row justify-center gap-3">
         <div className="w-full md:w-1/2 flex flex-col gap-1">
@@ -91,7 +90,7 @@ const CheckOut: React.FC<CheckOutProps> = ({
           <input
             type="text"
             id="phoneNumber"
-            placeholder="Enter Phone Number"
+            placeholder="e.g +23359605494"
             required
             value={formData.phoneNumber}
             onChange={(e) =>
@@ -101,7 +100,10 @@ const CheckOut: React.FC<CheckOutProps> = ({
           />
         </div>
         <div className="w-full md:w-1/2 flex flex-col gap-1">
-          <label htmlFor="jobTitle" className="text-gray-600 text-sm md:text-base">
+          <label
+            htmlFor="jobTitle"
+            className="text-gray-600 text-sm md:text-base"
+          >
             Job Title
           </label>
           <input

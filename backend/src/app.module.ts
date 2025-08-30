@@ -19,22 +19,13 @@ import appConfig from './config/app.config';
 import jwtConfig from './config/jwt.config';
 import gmailConfig from './config/mail.config';
 import paystackConfig from './config/paystack.config';
-import cloudinaryConfig from './config/cloudinary.config';
 import { TicketsModule } from './modules/ticket/ticket.module';
-import { UploadModule } from './modules/upload/upload.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [
-        databaseConfig,
-        appConfig,
-        jwtConfig,
-        gmailConfig,
-        cloudinaryConfig,
-        paystackConfig,
-      ],
+      load: [databaseConfig, appConfig, jwtConfig, gmailConfig, paystackConfig],
     }),
     // Logging
     WinstonModule.forRootAsync(winstonConfig),
@@ -45,7 +36,6 @@ import { UploadModule } from './modules/upload/upload.module';
     AdminModule,
     PaymentsModule,
     TicketsModule,
-    UploadModule,
   ],
   controllers: [AppController],
   providers: [
