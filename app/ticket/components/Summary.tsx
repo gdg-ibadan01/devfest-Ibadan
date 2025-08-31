@@ -11,17 +11,19 @@ interface SummaryProps {
     phoneNumber: string;
     jobTitle: string;
     email: string;
-    company?: string
+    company?: string;
   };
 }
 
 const Summary: React.FC<SummaryProps> = ({ setView, formData }) => {
   const { registerAttendeeWithPayment, isLoading } = useAttendeeRegistration();
-  const amount = 4000 + 150;
+  const amount = 4000 + 100;
   const handlePayNow = async () => {
     try {
-      await registerAttendeeWithPayment({ ...formData, company: 'Paystack' }, amount);
-
+      await registerAttendeeWithPayment(
+        formData,
+        amount
+      );
     } catch (error) {
       console.error('Registration failed:', error);
     }
@@ -30,7 +32,7 @@ const Summary: React.FC<SummaryProps> = ({ setView, formData }) => {
   return (
     <div className="bg-white px-4 md:px-28 py-48 rounded-2xl flex flex-col gap-10 border md:border-none">
       <button
-        type='button'
+        type="button"
         className="w-fit flex flex-col md:flex-row justify-center items-start mdl:items-center gap-3 text-gray-600"
         onClick={() => setView('checkout')}
       >
@@ -59,7 +61,7 @@ const Summary: React.FC<SummaryProps> = ({ setView, formData }) => {
             <span className="text-gray-400 font-thin text-sm md:text-base">
               VAT
             </span>
-            <span className="text-gray-500 font-bold">{formatAmount(150)}</span>
+            <span className="text-gray-500 font-bold">{formatAmount(100)}</span>
           </p>
         </div>
         <p className="flex justify-between items-center bg-pastel-blue rounded-md p-5 ">
@@ -69,7 +71,7 @@ const Summary: React.FC<SummaryProps> = ({ setView, formData }) => {
           </span>
         </p>
         <button
-          type='button'
+          type="button"
           disabled={isLoading}
           className="bg-[#1E1E1E] py-4 text-white hover:bg-core-blue rounded-[100px] flex gap-2 justify-center transition-colors duration-500"
           onClick={handlePayNow}
@@ -80,9 +82,11 @@ const Summary: React.FC<SummaryProps> = ({ setView, formData }) => {
               Processing...
             </div>
           ) : (
-            <>   Pay Now <ArrowUpRight /></>
+            <>
+              {' '}
+              Pay Now <ArrowUpRight />
+            </>
           )}
-
         </button>
       </div>
     </div>

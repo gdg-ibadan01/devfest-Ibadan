@@ -6,38 +6,60 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowLeft, Download } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import generatePDF, { Resolution, Margin, Options } from 'react-to-pdf';
+import { PageLoader } from '@/app/layouts';
 
 interface TicketData {
   paymentReference: string;
   name: string;
   email: string;
-  eventDate: string;
-  amount: number;
 }
 
 const TicketComponent = () => {
   const searchParams = useSearchParams();
-  const paymentRef = searchParams.get('paymentReference');
-  const fullName = searchParams.get('fullName');
-  const email = searchParams.get('email');
-  const amount = searchParams.get('amount');
   const router = useRouter();
   const isTablet = useMediaQueryWatcher('(min-width: 1024px)');
   const [isDownloading, setIsDownloading] = useState(false);
-  const getTargetElement = () => document.getElementById('ticket-content') as HTMLElement;
+  const [isValidating, setIsValidating] = useState(true);
 
-  // Default ticket data
+  // Extract query parameters
+  const paymentRef = searchParams.get('paymentReference');
+  const fullName = searchParams.get('name');
+  const email = searchParams.get('email');
+
+  // Required parameters validation
+  useEffect(() => {
+    const validateParams = () => {
+      // Check if all required parameters are present and not empty
+      const requiredParams = [paymentRef, fullName, email];
+      const hasAllParams = requiredParams.every(
+        (param) => param && param.trim() !== ''
+      );
+
+      if (!hasAllParams) {
+        // Redirect to home page if any required parameter is missing
+        router.push('/');
+        return;
+      }
+      setIsValidating(false);
+    };
+
+    validateParams();
+  }, [paymentRef, fullName, email, router]);
+
+  const getTargetElement = () =>
+    document.getElementById('ticket-content') as HTMLElement;
+
+  // Ticket data (now guaranteed to have valid values)
   const ticketData: TicketData = {
-    paymentReference: paymentRef || 'DevIb2025',
-    name: fullName || 'John Doe',
-    email: email || 'attendee@devfest.com',
-    eventDate: new Date('2025-11-29').toDateString(),
-    amount: amount ? parseInt(amount) : 4000,
+    paymentReference: paymentRef!,
+    name: fullName!,
+    email: email!,
   };
-  const ticketName = `DevFest_Ibadan_2025_Ticket_${ticketData.paymentReference}.pdf`
+
+  const ticketName = `DevFest_Ibadan_2025_Ticket_${ticketData.paymentReference}.pdf`;
 
   const options: Options = {
     filename: ticketName,
@@ -50,34 +72,42 @@ const TicketComponent = () => {
     },
     canvas: {
       mimeType: 'image/png',
-      qualityRatio: 1
+      qualityRatio: 1,
     },
     overrides: {
       pdf: {
-        compress: true
+        compress: true,
       },
       canvas: {
-        useCORS: true
-      }
+        useCORS: true,
+      },
     },
   };
+
   const handleDownloadTicket = async () => {
     setIsDownloading(true);
     toast.loading('Generating your ticket PDF...', { id: 'pdf-download' });
     try {
-      await generatePDF(getTargetElement, options)
+      await generatePDF(getTargetElement, options);
       toast.success('Ticket downloaded successfully!', { id: 'pdf-download' });
     } catch (error) {
       console.error('PDF generation failed:', error);
-      toast.error('Failed to download ticket. Please try again.', { id: 'pdf-download' });
+      toast.error('Failed to download ticket. Please try again.', {
+        id: 'pdf-download',
+      });
     } finally {
       setIsDownloading(false);
     }
   };
 
+  // Show loading or nothing while validating (component will redirect if invalid)
+  if (isValidating) {
+    return <PageLoader />;
+  }
+
   return (
     <div
-      className="pb-6 pt-96 w-full flex items-center justify-center px-5 bg-gradient-to-b from-gray-900 to-gray-800"
+      className="pb-6 pt-120 w-full flex items-center justify-center px-5 bg-gradient-to-b from-gray-900 to-gray-800"
       style={{
         backgroundImage: isTablet
           ? "url('/ticket_bg.png')"
@@ -101,15 +131,18 @@ const TicketComponent = () => {
             </h1>
           </div>
           <button
-            className=" w-fit flex items-center gap-3 text-gray-600 mb-5"
+            className="w-fit flex items-center gap-3 text-gray-600 mb-5"
             onClick={() => router.push('/')}
           >
             <ArrowLeft />
-            <p className=" text-xs md:text-2xl hidden md:inline-block">
+            <p className="text-xs md:text-2xl hidden md:inline-block">
               Back Home
             </p>
           </button>
-          <div id="ticket-content" className="bg-core-blue p-4 md:p-28 flex flex-col gap-7">
+          <div
+            id="ticket-content"
+            className="bg-core-blue p-4 md:p-28 flex flex-col gap-7"
+          >
             <p className="font-bold text-xl md:text-2xl text-white">Ticket</p>
             <div
               style={{
@@ -131,51 +164,59 @@ const TicketComponent = () => {
             </div>
 
             <div className="w-full bg-white px-3 py-5 rounded-md">
-
               <div className="mb-6">
                 <div className="flex justify-between gap-4 mb-4">
                   <div>
-                    <p className="text-gray-400 text-xs md:text-base">Attendee Name</p>
-                    <p className="font-bold text-gray-500 md:text-xl">{ticketData.name}</p>
+                    <p className="text-gray-400 text-xs md:text-base">
+                      Attendee Name
+                    </p>
+                    <p className="font-bold text-gray-500 md:text-xl">
+                      {ticketData.name}
+                    </p>
                   </div>
                   <div>
                     <p className="text-gray-400 text-xs md:text-base">Email</p>
-                    <p className="font-bold text-gray-500 md:text-base break-all">{ticketData.email}</p>
+                    <p className="font-bold text-gray-500 md:text-base break-all">
+                      {ticketData.email}
+                    </p>
                   </div>
                 </div>
               </div>
-              <div className="flex justify-between border-b pb-4 mb-4">
+              <div className="flex justify-between  pb-4">
                 <div className="w-3/5 flex flex-col md:flex-row justify-between gap-y-4">
-                  <div className="w-fit">
-                    <p className="text-gray-400 text-xs md:text-base">
-                      Ticket ID
-                    </p>
-                    <p className="font-bold text-gray-500 md:text-xl">{ticketData.paymentReference}</p>
-                  </div>
                   <div className="w-fit">
                     <p className="text-gray-400 text-xs md:text-base">
                       Event Day
                     </p>
                     <p className="font-bold text-gray-500 md:text-xl">
-                      {ticketData.eventDate}
+                      {new Date('2025-11-29').toDateString()}
                     </p>
                   </div>
                 </div>
                 <div className="w-fit text-right">
                   <p className="text-gray-400 text-xs md:text-base">Amount</p>
                   <p className="font-bold text-gray-500 md:text-xl">
-                    {formatAmount(ticketData.amount)}
+                    {formatAmount(4000)}
                   </p>
                 </div>
               </div>
+              <div className="w-full border-b pb-4 mb-4">
+                <p className="text-gray-400 text-xs md:text-base">
+                  Payment Reference
+                </p>
+                <p className="font-bold text-gray-500 md:text-xl">
+                  {ticketData.paymentReference}
+                </p>
+              </div>
+
               <div className="text-center">
                 <p className="text-gray-500 text-xs md:text-sm">
-                  Present this ticket  at the venue entrance
+                  Present this ticket at the venue entrance
                 </p>
               </div>
             </div>
 
-            <hr className="border-t-1 border-dashed " />
+            <hr className="border-t-1 border-dashed" />
             <Image
               src={'/barcode.svg'}
               alt="barcode"
@@ -185,7 +226,7 @@ const TicketComponent = () => {
             />
           </div>
           <button
-            type='button'
+            type="button"
             onClick={handleDownloadTicket}
             disabled={isDownloading}
             className="w-full bg-[#1E1E1E] py-4 text-white hover:bg-core-blue rounded-[100px] flex gap-2 justify-center transition-colors duration-500 mt-7 disabled:opacity-50 disabled:cursor-not-allowed"

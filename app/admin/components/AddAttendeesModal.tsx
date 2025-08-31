@@ -3,10 +3,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ArrowLeft } from 'lucide-react';
-import React, { useState } from 'react';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import React, { SetStateAction, useState } from 'react';
 import BankIcon from '@/app/_module/components/icons/BankIcon';
 import SuccessModalIcon from '@/app/_module/components/icons/SuccessModalIcon';
+import { formatAmount } from '@/utils/formatAmount';
+import { useCreateAttendeeByAdmin } from '@/hooks/useAdminAuth';
 
 interface Step {
   step: 'inputDetails' | 'sendPaymentLink' | 'showSuccessMessage';
@@ -20,7 +21,8 @@ interface Step {
 interface AttendeeData {
   fullName: string;
   email: string;
-  selectedPackage: 'friday' | 'saturday' | 'both';
+  phoneNumber: string;
+  jobTitle: string;
 }
 
 interface AddAttendeesModalProps {
@@ -50,7 +52,7 @@ const SuccessModal: React.FC<
       </p>
 
       <Button
-        className="w-full bg-[#1E1E1E] text-white text-white py-[30px] rounded-[100px]"
+        className="w-full bg-[#1E1E1E] text-white py-[30px] rounded-[100px]"
         onClick={() => setStep('inputDetails')}
       >
         Go to Dashboard
@@ -60,29 +62,22 @@ const SuccessModal: React.FC<
 };
 
 const SendPaymentLink: React.FC<
-  Step & { attendeeData: AttendeeData; setStep: any }
-> = ({ step, setStep, attendeeData }) => {
+  Step & {
+    attendeeData: AttendeeData;
+    setStep: React.Dispatch<
+      React.SetStateAction<
+        'inputDetails' | 'sendPaymentLink' | 'showSuccessMessage'
+      >
+    >;
+    paymentUrl: string;
+  }
+> = ({ setStep, attendeeData, paymentUrl }) => {
   const [copied, setCopied] = useState(false);
 
-  const paymentLink = 'https://pay.rywo.co/evt-12345';
-
   const handleCopy = () => {
-    navigator.clipboard.writeText(paymentLink);
+    navigator.clipboard.writeText(paymentUrl ?? '');
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
-  };
-
-  const getAmount = () => {
-    switch (attendeeData.selectedPackage) {
-      case 'friday':
-        return '₦4,000';
-      case 'saturday':
-        return '₦4,000';
-      case 'both':
-        return '₦8,000';
-      default:
-        return '₦5,000';
-    }
   };
 
   return (
@@ -111,7 +106,7 @@ const SendPaymentLink: React.FC<
 
         <div className="w-full bg-[#F7F7F7] rounded-[32px] pl-5 mb-4 flex items-center justify-between">
           <span className="text-sm py-3 font-mono text-gray-700">
-            {paymentLink}
+            {paymentUrl ?? ''}
           </span>
           <Button
             variant="ghost"
@@ -133,7 +128,9 @@ const SendPaymentLink: React.FC<
 
         <div className="flex justify-between items-center py-3 px-4 border border-[#DEDEDE] rounded-sm">
           <span className="text-gray-600 font-medium">Amount</span>
-          <span className="font-semibold text-gray-900">{getAmount()}</span>
+          <span className="font-semibold text-gray-900">
+            {formatAmount(4000)}
+          </span>
         </div>
 
         <div className="flex justify-between items-center py-3 px-4 border border-[#DEDEDE] rounded-sm">
@@ -155,8 +152,17 @@ const SendPaymentLink: React.FC<
 };
 
 const AddAttendeeDetails: React.FC<
-  Step & { attendeeData: AttendeeData; setAttendeeData: any; setStep: any }
-> = ({ step, setStep, attendeeData, setAttendeeData }) => {
+  Step & {
+    attendeeData: AttendeeData;
+    setAttendeeData: React.Dispatch<React.SetStateAction<AttendeeData>>;
+    setStep: React.Dispatch<
+      React.SetStateAction<
+        'inputDetails' | 'sendPaymentLink' | 'showSuccessMessage'
+      >
+    >;
+    setPaymentUrl: (url: string) => void;
+  }
+> = ({ setStep, attendeeData, setAttendeeData }) => {
   const handleInputChange = (field: keyof AttendeeData, value: string) => {
     setAttendeeData((prev: AttendeeData) => ({
       ...prev,
@@ -164,35 +170,15 @@ const AddAttendeeDetails: React.FC<
     }));
   };
 
-  const handlePackageSelect = (packageType: 'friday' | 'saturday' | 'both') => {
-    setAttendeeData((prev: AttendeeData) => ({
-      ...prev,
-      selectedPackage: packageType,
-    }));
+  const createAttendeeByAdminMutation = useCreateAttendeeByAdmin();
+
+  const handleAddAttendee = () => {
+    createAttendeeByAdminMutation.mutateAsync(attendeeData, {
+      onSuccess: () => {
+        setStep('sendPaymentLink');
+      },
+    });
   };
-
-  const isFormValid =
-    attendeeData.fullName.trim() !== '' &&
-    attendeeData.email.trim() !== '' &&
-    attendeeData.email.includes('@');
-
-  const plans = [
-    {
-      label: 'Friday',
-      description: 'Workshop',
-      price: 4000,
-    },
-    {
-      label: 'Saturday',
-      description: 'Main event & Workshop',
-      price: 8000,
-    },
-    {
-      label: 'Both',
-      description: 'Main event & Workshop',
-      price: 12000,
-    },
-  ];
 
   return (
     <div className="p-6">
@@ -204,101 +190,99 @@ const AddAttendeeDetails: React.FC<
           Add an Attendee
         </h2>
       </div>
-
-      <div className="grid grid-cols-2 gap-4 mb-[32px]">
-        <div>
-          <Label
-            htmlFor="fullName"
-            className="text-[#4D4D4D] text-[16px] font-medium mb-1 block"
-          >
-            Full Name
-          </Label>
-          <Input
-            id="fullName"
-            placeholder="Enter Full Name"
-            value={attendeeData.fullName}
-            onChange={(e) => handleInputChange('fullName', e.target.value)}
-            className="w-full border border-[#E6E6E6] rounded-[8px] h-[50px] outline-none focus:outline-none focus:ring-0"
-          />
-        </div>
-
-        <div>
-          <Label
-            htmlFor="email"
-            className="text-[#4D4D4D] text-[16px] font-medium mb-1 block"
-          >
-            Email Address
-          </Label>
-          <Input
-            id="email"
-            type="email"
-            placeholder="Enter email address"
-            value={attendeeData.email}
-            onChange={(e) => handleInputChange('email', e.target.value)}
-            className="w-full border border-[#E6E6E6] rounded-[8px] h-[50px] outline-none focus:outline-none focus:ring-none"
-          />
-        </div>
-      </div>
-
-      <div className="mb-[32px]">
-        <Label className="text-[#878787] font-medium mb-[24px] block">
-          Kindly Select your Ticket Package
-        </Label>
-
-        <RadioGroup
-          defaultValue="friday"
-          className="flex flex-col space-y-[10px]"
-        >
-          {plans.map((plan) => (
-            <Label
-              key={plan.label}
-              htmlFor={`plan-${plan.label.toLowerCase()}`}
-              className={`border rounded-lg p-4 cursor-pointer transition-colors ${
-                attendeeData.selectedPackage === plan.label.toLowerCase()
-                  ? 'bg-[#C3ECF6] border-[#9AE0F1]'
-                  : 'border-[#DEDEDE]'
-              }`}
-              onClick={() =>
-                handlePackageSelect(
-                  plan.label.toLowerCase() as 'friday' | 'saturday' | 'both'
-                )
-              }
-            >
-              <div className="flex items-center gap-4">
-                <RadioGroupItem
-                  value={plan.label.toLowerCase()}
-                  id={`plan-${plan.label.toLowerCase()}`}
-                  className={`${attendeeData.selectedPackage === plan.label.toLowerCase() ? 'text-[#4285F4] bg-[#C3ECF6] border border-[#4285F4]' : 'text-[#6B6B6B] bg-white border border-[#6b6b6b]'}`}
-                />
-                <div className="flex flex-col gap-[9px]">
-                  <div
-                    className={`font-medium text-[17px] ${attendeeData.selectedPackage === plan.label.toLowerCase() ? 'text-[#5787D6]' : 'text-[#636363]'} `}
-                  >
-                    {plan.label}{' '}
-                    <span
-                      className={`font-light text-[12px] ${attendeeData.selectedPackage === plan.label.toLowerCase() ? 'text-[#5787D6]' : 'text-[#636363]'}`}
-                    >
-                      ({plan.description})
-                    </span>
-                  </div>
-                  <div
-                    className={`text-[20px] font-semibold ${attendeeData.selectedPackage === plan.label.toLowerCase() ? 'text-[#4285F4]' : 'text-[#6B6B6B]'}`}
-                  >
-                    ₦{plan.price}
-                  </div>
-                </div>
-              </div>
-            </Label>
-          ))}
-        </RadioGroup>
-      </div>
-
-      <Button
-        className="w-full bg-[#1E1E1E] text-white text-white py-[30px] rounded-[100px]"
-        onClick={() => setStep('sendPaymentLink')}
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleAddAttendee();
+        }}
       >
-        Check out
-      </Button>
+        <div className="grid grid-cols-2 gap-4 mb-[32px]">
+          <div>
+            <Label
+              htmlFor="fullName"
+              className="text-[#4D4D4D] text-[16px] font-medium mb-1 block"
+            >
+              Full Name
+            </Label>
+            <Input
+              id="fullName"
+              required
+              placeholder="Enter Full Name"
+              value={attendeeData.fullName}
+              onChange={(e) => handleInputChange('fullName', e.target.value)}
+              className="w-full border border-[#E6E6E6] rounded-[8px] h-[50px] outline-none focus:outline-none focus:ring-0"
+            />
+          </div>
+
+          <div>
+            <Label
+              htmlFor="email"
+              className="text-[#4D4D4D] text-[16px] font-medium mb-1 block"
+            >
+              Email Address
+            </Label>
+            <Input
+              id="email"
+              type="email"
+              required
+              placeholder="Enter email address"
+              value={attendeeData.email}
+              onChange={(e) => handleInputChange('email', e.target.value)}
+              className="w-full border border-[#E6E6E6] rounded-[8px] h-[50px] outline-none focus:outline-none focus:ring-none"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4 mb-[32px]">
+          <div>
+            <Label
+              htmlFor="phoneNumber"
+              className="text-[#4D4D4D] text-[16px] font-medium mb-1 block"
+            >
+              Full Name
+            </Label>
+            <Input
+              id="phoneNumber"
+              required
+              placeholder="e.g +234580458034"
+              value={attendeeData.phoneNumber}
+              onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
+              className="w-full border border-[#E6E6E6] rounded-[8px] h-[50px] outline-none focus:outline-none focus:ring-0"
+            />
+          </div>
+
+          <div>
+            <Label
+              htmlFor="email"
+              className="text-[#4D4D4D] text-[16px] font-medium mb-1 block"
+            >
+              Job Title/Occupation
+            </Label>
+            <Input
+              id="jobTitle"
+              type="text"
+              placeholder="Enter your job title"
+              value={attendeeData.jobTitle}
+              onChange={(e) => handleInputChange('jobTitle', e.target.value)}
+              className="w-full border border-[#E6E6E6] rounded-[8px] h-[50px] outline-none focus:outline-none focus:ring-none"
+            />
+          </div>
+        </div>
+
+        <Button
+          type="submit"
+          className="w-full bg-[#1E1E1E] text-white py-[30px] rounded-[100px]"
+        >
+          {createAttendeeByAdminMutation.isPending ? (
+            <div className="flex items-center">
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+              Creating...
+            </div>
+          ) : (
+            'Create Attendee'
+          )}
+        </Button>
+      </form>
     </div>
   );
 };
@@ -313,8 +297,10 @@ const AddAttendeesModal: React.FC<AddAttendeesModalProps> = ({
   const [attendeeData, setAttendeeData] = useState<AttendeeData>({
     fullName: '',
     email: '',
-    selectedPackage: 'friday',
+    phoneNumber: '',
+    jobTitle: '',
   });
+  const [paymentUrl, setPaymentUrl] = useState<string>('');
 
   const handleOpenChange = (newOpen: boolean) => {
     if (!newOpen) {
@@ -322,7 +308,8 @@ const AddAttendeesModal: React.FC<AddAttendeesModalProps> = ({
       setAttendeeData({
         fullName: '',
         email: '',
-        selectedPackage: 'friday',
+        phoneNumber: '',
+        jobTitle: '',
       });
     }
     onOpenChange(newOpen);
@@ -337,6 +324,7 @@ const AddAttendeesModal: React.FC<AddAttendeesModalProps> = ({
             setStep={setStep}
             attendeeData={attendeeData}
             setAttendeeData={setAttendeeData}
+            setPaymentUrl={setPaymentUrl}
           />
         )}
         {step === 'sendPaymentLink' && (
@@ -344,6 +332,7 @@ const AddAttendeesModal: React.FC<AddAttendeesModalProps> = ({
             step={step}
             setStep={setStep}
             attendeeData={attendeeData}
+            paymentUrl={paymentUrl}
           />
         )}
         {step === 'showSuccessMessage' && (
