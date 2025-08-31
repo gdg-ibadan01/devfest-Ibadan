@@ -1,11 +1,18 @@
 'use client';
 
 import useMediaQueryWatcher from '@/app/_module/config/hooks/useMediaQueryWatcher';
+import { useAdminAuth } from '@/hooks/useAdminAuth';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ArrowUpRight } from 'lucide-react';
+import { ArrowUpRight, Loader2 } from 'lucide-react';
+import { useState } from 'react';
 
 export const AdminLogin = () => {
   const isTablet = useMediaQueryWatcher('(min-width: 1024px)');
+  const { login } = useAdminAuth();
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+  });
 
   return (
     <div
@@ -31,7 +38,13 @@ export const AdminLogin = () => {
             Admin Login
           </h1>
 
-          <form className="bg-white px-4 md:px-28 py-28 rounded-2xl flex flex-col gap-5 border md:border-none">
+          <form
+            className="bg-white px-4 md:px-28 py-28 rounded-2xl flex flex-col gap-5 border md:border-none"
+            onSubmit={(e) => {
+              e.preventDefault();
+              login.mutate(formData);
+            }}
+          >
             <div className="w-full  flex flex-col gap-1">
               <label
                 htmlFor="email"
@@ -40,18 +53,20 @@ export const AdminLogin = () => {
                 Email Address
               </label>
               <input
-                type="text"
+                type="email"
                 id="email"
                 placeholder="Enter your email address"
                 required
-                value=""
-                onChange={() => {}}
-                className="w-full border border-gray-200 px-4 py-2 rounded-md outline-none text-gray-400 text-sm md:text-base"
+                value={formData.email}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, email: e.target.value }))
+                }
+                className="w-full border border-gray-200 px-4 py-2 rounded-md outline-none text-gray-600 text-sm md:text-base"
               />
             </div>
             <div className="w-full flex flex-col gap-1">
               <label
-                htmlFor="fullName"
+                htmlFor="password"
                 className="text-gray-600 text-sm md:text-base"
               >
                 Password
@@ -61,13 +76,27 @@ export const AdminLogin = () => {
                 id="password"
                 placeholder="Enter your password"
                 required
-                value=""
-                onChange={() => {}}
-                className="border border-gray-200 px-4 py-2 rounded-md outline-none text-gray-400 text-sm md:text-base"
+                value={formData.password}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, password: e.target.value }))
+                }
+                className="border border-gray-200 px-4 py-2 rounded-md outline-none text-gray-600 text-sm md:text-base"
               />
             </div>
-            <button className="bg-[#1E1E1E] py-3 md:py-4 text-white hover:bg-core-blue rounded-[100px] flex gap-2 justify-center transition-colors duration-500 mt-6">
-              Login <ArrowUpRight />
+            <button
+              type="submit"
+              disabled={login.isPending}
+              className="bg-[#1E1E1E] py-3 md:py-4 text-white hover:bg-core-blue rounded-[100px] flex gap-2 justify-center transition-colors duration-500 mt-6 disabled:opacity-50"
+            >
+              {login.isPending ? (
+                <>
+                  <Loader2 className="animate-spin" /> Processing...
+                </>
+              ) : (
+                <>
+                  Login <ArrowUpRight />
+                </>
+              )}
             </button>
           </form>
         </motion.div>

@@ -2,15 +2,23 @@ import {
   adminLoginData,
   AdminLoginResponse,
   ApiError,
+  ApiResponse,
   CreateAttendeeRequest,
   CreateAttendeeResponse,
+  GetPaymentsParams,
+  GetPaymentsResponse,
   InitiatePaymentRequest,
   InitiatePaymentResponse,
 } from '@/types/services';
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
+import axios, {
+  AxiosInstance,
+  AxiosRequestConfig,
+  AxiosResponse,
+  AxiosHeaders,
+} from 'axios';
 
 // Admin endpoints that require authentication
-const ADMIN_ENDPOINTS = ['/admin'];
+const ADMIN_ENDPOINTS = ['admin', 'payments', 'checkin'];
 
 // Check if endpoint requires authentication
 const requiresAuth = (url: string): boolean => {
@@ -37,7 +45,7 @@ class ApiClient {
     // Request interceptor
     this.client.interceptors.request.use(
       (config) => {
-        // Only add auth token for admin endpoints
+        // Check if URL contains 'admin' or 'payments'
         if (config.url && requiresAuth(config.url)) {
           const token =
             typeof window !== 'undefined'
@@ -45,6 +53,9 @@ class ApiClient {
               : null;
 
           if (token) {
+            if (!config.headers) {
+              config.headers = new AxiosHeaders();
+            }
             config.headers.Authorization = `Bearer ${token}`;
           }
         }
@@ -193,13 +204,47 @@ class ApiClient {
     return response.data;
   }
 
+  async getAllPayments(
+    params: GetPaymentsParams = {}
+  ): Promise<GetPaymentsResponse> {
+    const { page = 1, limit = 10 } = params;
+    const queryParams = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+    });
+
+    const response = await this.get<GetPaymentsResponse>(
+      `payments?${queryParams.toString()}`
+    );
+    return response.data;
+  }
+
+  async checkInAttendee(
+    ticketNumber: string
+  ): Promise<ApiResponse<{ message: string }>> {
+    const response = await this.post<null, ApiResponse<{ message: string }>>(
+      `tickets/checkin/${ticketNumber}`
+    );
+    return response.data;
+  }
+
+  async createAttendeeByAdmin(
+    data: CreateAttendeeRequest
+  ): Promise<CreateAttendeeResponse> {
+    const response = await this.post<
+      CreateAttendeeRequest,
+      CreateAttendeeResponse
+    >('admin/attendee/create', data);
+    return response.data;
+  }
+
   // Auth methods
   async login(credentials: {
     email: string;
     password: string;
   }): Promise<AdminLoginResponse> {
     const response = await this.post<adminLoginData, AdminLoginResponse>(
-      'admin/auth/login',
+      'admin/login',
       credentials
     );
 

@@ -72,3 +72,104 @@ export interface AdminData {
 }
 
 export type AdminLoginResponse = ApiResponse<AdminData>;
+
+export interface Payment {
+  id: string;
+  attendeeId: string;
+  amount: string;
+  currency: string;
+  paystackReference: string;
+  paymentReference: string;
+  status: 'SUCCESS' | 'FAILED' | 'PENDING';
+  paymentMethod:
+    | 'card'
+    | 'bank_transfer'
+    | 'ussd'
+    | 'qr'
+    | 'mobile_money'
+    | 'other';
+  paidAt: string | null;
+  failureReason: string | null;
+  metadata: {
+    access_code: string;
+    webhookData: {
+      id: number;
+      log: any | null;
+      fees: number;
+      plan: Record<string, unknown>;
+      split: Record<string, unknown>;
+      amount: number;
+      domain: string;
+      paidAt: string;
+      source: {
+        type: string;
+        source: string;
+        identifier: string | null;
+        entry_point: string;
+      };
+      status: string;
+      channel: string;
+      message: string | null;
+      paid_at: string;
+      currency: string;
+      customer: {
+        id: number;
+        email: string;
+        phone: string | null;
+        metadata: any | null;
+        last_name: string | null;
+        first_name: string | null;
+        risk_action: string;
+        customer_code: string;
+        international_format_phone: string | null;
+      };
+      metadata: {
+        referrer: string;
+        paymentId: string;
+        attendeeId: string;
+        attendeeName: string;
+      };
+      order_id: string | null;
+      reference: string;
+      created_at: string;
+      fees_split: any | null;
+      ip_address: string;
+      subaccount: Record<string, unknown>;
+      authorization: {
+        bin: string;
+        bank: string;
+        brand: string;
+        last4: string;
+        channel: string;
+        exp_year: string;
+        reusable: boolean;
+        card_type: string;
+        exp_month: string;
+        signature: string;
+        account_name: string | null;
+        country_code: string;
+        receiver_bank: string | null;
+        authorization_code: string;
+        receiver_bank_account_number: string | null;
+      };
+      fees_breakdown: any | null;
+      gateway_response: string;
+      requested_amount: number;
+      pos_transaction_data: any | null;
+    };
+  };
+  createdAt: string;
+  updatedAt: string;
+  attendee: {
+    id: string;
+    fullName: string;
+    email: string;
+  };
+}
+
+export type GetPaymentsResponse = ApiResponse<Payment[]>;
+
+export interface GetPaymentsParams {
+  page?: number;
+  limit?: number;
+}

@@ -13,16 +13,16 @@ import { ErrorBoundary } from '@/providers/error-boundary';
 
 // Loading component for Suspense fallback
 export const PageLoader = () => (
-  <div className="min-h-screen flex items-center justify-center bg-gray-50">
-    <div className="flex items-center space-x-2">
-      <div className="w-4 h-4 bg-blue-600 rounded-full animate-pulse"></div>
+  <div className="fixed inset-0 flex items-center justify-center bg-white/80 backdrop-blur-sm z-50">
+    <div className="flex items-center space-x-3">
+      <div className="w-5 h-5 bg-core-blue rounded-full animate-bounce"></div>
       <div
-        className="w-4 h-4 bg-blue-600 rounded-full animate-pulse"
-        style={{ animationDelay: '0.1s' }}
+        className="w-5 h-5 bg-core-blue rounded-full animate-bounce"
+        style={{ animationDelay: '0.2s' }}
       ></div>
       <div
-        className="w-4 h-4 bg-blue-600 rounded-full animate-pulse"
-        style={{ animationDelay: '0.2s' }}
+        className="w-5 h-5 bg-core-blue rounded-full animate-bounce"
+        style={{ animationDelay: '0.4s' }}
       ></div>
     </div>
   </div>
@@ -45,11 +45,7 @@ const AdminLayout = ({
               <Suspense fallback={<PageLoader />}>
                 <AdminHeader />
                 {children}
-                <Toaster
-                  richColors
-                  position={'top-right'}
-                  duration={5000}
-                />
+                <Toaster richColors position={'top-right'} duration={5000} />
               </Suspense>
             </ErrorBoundary>
           </ReactQueryProvider>
@@ -84,11 +80,7 @@ const HomeLayout = ({
                 {!hideUI && <DFIHeader />}
                 {children}
                 {!hideUI && !shouldHideFooter && <DFIFooter />}
-                <Toaster
-                  richColors
-                  position={'top-right'}
-                  duration={5000}
-                />
+                <Toaster richColors position={'top-right'} duration={5000} />
               </Suspense>
             </ErrorBoundary>
           </ReactQueryProvider>

@@ -120,7 +120,10 @@ const CheckOut: React.FC<CheckOutProps> = ({
         </div>
       </div>
 
-      <button className="bg-[#1E1E1E] py-3 md:py-4 text-white hover:bg-core-blue rounded-[100px] flex gap-2 justify-center transition-colors duration-500 mt-6">
+      <button
+        type="submit"
+        className="bg-[#1E1E1E] py-3 md:py-4 text-white hover:bg-core-blue rounded-[100px] flex gap-2 justify-center transition-colors duration-500 mt-6"
+      >
         Get Ticket <ArrowUpRight />
       </button>
     </form>
