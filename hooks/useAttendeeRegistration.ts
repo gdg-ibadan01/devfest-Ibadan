@@ -14,7 +14,7 @@ import {
 } from '@/types/services';
 
 // Hook options types
-interface MutationConfig<TData, TError, TVariables>
+export interface MutationConfig<TData, TError, TVariables>
   extends Omit<UseMutationOptions<TData, TError, TVariables>, 'mutationFn'> {
   showSuccessToast?: boolean;
   showErrorToast?: boolean;

@@ -32,6 +32,7 @@
     "framer-motion": "^11.11.9",
     "gsap": "^3.12.5",
     "helmet": "^8.1.0",
+    "jspdf-autotable": "^5.0.2",
     "lenis": "^1.1.14",
     "lucide-react": "^0.427.0",
     "moment": "^2.30.1",
@@ -48,7 +49,8 @@
     "tailwind-merge": "^2.5.2",
     "tailwindcss-animate": "^1.0.7",
     "uuid": "^11.1.0",
-    "winston": "^3.17.0"
+    "winston": "^3.17.0",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.4.0",

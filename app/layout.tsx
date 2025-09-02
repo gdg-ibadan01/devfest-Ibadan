@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import RootLayout from './layouts';
+import { Toaster } from 'sonner';
 
 export const metadata: Metadata = {
   title: 'Devfest Ibadan 2025',
@@ -12,5 +13,10 @@ export default function AppLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return <RootLayout>{children}</RootLayout>;
+  return (
+    <RootLayout>
+      <Toaster position="top-right" expand={true} richColors />
+      {children}
+    </RootLayout>
+  );
 }

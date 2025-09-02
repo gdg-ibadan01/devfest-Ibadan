@@ -62,9 +62,9 @@ const DFIFooter = (): ReactNode => {
             </div>
             <div className={styles.middle}>
               <p className={styles.location}>
-                Devfest is taking place on November 28th and 29th, 2025, 8AM Prompt
-                at Jogor Center, No. 1 Harvester Drive, Liberty Road, New GRA,
-                Ibadan
+                Devfest is taking place on November 28th and 29th, 2025, 8AM
+                Prompt at Jogor Center, No. 1 Harvester Drive, Liberty Road, New
+                GRA, Ibadan
               </p>
               <div className={styles.menuWrapper}>
                 <ul className={styles.menu}>

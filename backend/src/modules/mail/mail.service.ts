@@ -24,8 +24,11 @@ export class MailService {
   }
 
   async sendTicketConfirmationEmail(
-    fullName: string,
     email: string,
+    fullName: string,
+    // eventTitle: string,
+    // eventDate: string,
+    // venue: string,
     ticketType: string,
     transactionId: string,
   ) {
@@ -39,10 +42,11 @@ export class MailService {
 
     const html = ticketConfirmationTemplate(
       fullName,
-
+      // eventDate,
+      // venue,
       ticketType,
       transactionId,
-      supportEmail,
+      email,
       logoUrl,
     );
 
