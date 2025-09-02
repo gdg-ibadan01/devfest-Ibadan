@@ -2,9 +2,7 @@ import { PaymentStatus } from '@prisma/client';
 
 export interface IPayment {
   id: string;
-  eventId: string;
   attendeeId: string;
-  registrationId: string;
   amount: number;
   currency: string;
   paystackReference: string;
@@ -16,6 +14,11 @@ export interface IPayment {
   metadata?: any;
   createdAt: Date;
   updatedAt: Date;
+  attendee: {
+    id: string;
+    email: string;
+    fullName: string;
+  };
 }
 
 export interface IPaystackResponse {

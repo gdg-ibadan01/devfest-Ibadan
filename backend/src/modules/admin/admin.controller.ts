@@ -10,6 +10,8 @@ import {
   UnauthorizedException,
   Query,
   Delete,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { Request } from 'express';
 import {
@@ -28,6 +30,9 @@ import { InviteAdminDto } from './dto/invite-admin.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { UpdateAdminStatusDto } from './dto/update-status.dto';
+import { AttendeeService } from '../attendee/attendee.service';
+import { CreateAttendeeDto } from './dto/create-attendee.dto';
+import { IAttendee, ICreateResponse } from './interfaces/attendee.interface';
 import { RolesGuard } from './guards/roles.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import {
@@ -63,6 +68,28 @@ export class AdminController {
     return this.adminService.login(loginDto);
   }
 
+  @Post('attendee/create')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.SUPER_ADMIN)
+  @ApiOperation({ summary: 'Add a new attendee (Super-admin only)' })
+  @ApiResponse({
+    status: 201,
+    description: 'Attendee successfully created',
+    type: CreateAttendeeDto,
+  })
+  @ApiResponse({
+    status: 409,
+    description: 'Attendee with this email already exists',
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async createAttendee(
+    @Body() createAttendeeDto: CreateAttendeeDto,
+  ): Promise<ICreateResponse> {
+    return this.adminService.create(createAttendeeDto);
+  }
+
   @Post('invite')
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -76,7 +103,7 @@ export class AdminController {
   async inviteAdmin(
     @Body() inviteDto: InviteAdminDto,
     @Req() req: Request,
-  ): Promise<{ message: string; tempPassword: string }> {
+  ): Promise<{ message: string }> {
     const inviterId = req.user?.id ?? req.user?.sub;
     return this.adminService.inviteAdmin(inviteDto, inviterId);
   }
@@ -102,33 +129,33 @@ export class AdminController {
     return this.adminService.findAll(query);
   }
 
-  @Get('dashboard/stats')
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
-  @ApiOperation({ summary: 'Get dashboard statistics' })
-  @ApiResponse({
-    status: 200,
-    description: 'Dashboard stats retrieved successfully',
-  })
-  @ApiResponse({ status: 401, description: 'Unauthorized.' })
-  async getDashboardStats(): Promise<IDashboardStats> {
-    return this.adminService.getDashboardStats();
-  }
+  // @Get('dashboard/stats')
+  // @ApiBearerAuth()
+  // @UseGuards(JwtAuthGuard, RolesGuard)
+  // @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  // @ApiOperation({ summary: 'Get dashboard statistics' })
+  // @ApiResponse({
+  //   status: 200,
+  //   description: 'Dashboard stats retrieved successfully',
+  // })
+  // @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  // async getDashboardStats(): Promise<IDashboardStats> {
+  //   return this.adminService.getDashboardStats();
+  // }
 
-  @Get('events/analytics/:eventId')
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
-  @ApiOperation({ summary: 'Get event analytics' })
-  @ApiResponse({
-    status: 200,
-    description: 'Event analytics retrieved successfully',
-  })
-  @ApiResponse({ status: 401, description: 'Unauthorized.' })
-  async getEventAnalytics(@Param('eventId') eventId: string) {
-    return this.adminService.getEventAnalytics(eventId);
-  }
+  // @Get('events/analytics/:eventId')
+  // @ApiBearerAuth()
+  // @UseGuards(JwtAuthGuard, RolesGuard)
+  // @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  // @ApiOperation({ summary: 'Get event analytics' })
+  // @ApiResponse({
+  //   status: 200,
+  //   description: 'Event analytics retrieved successfully',
+  // })
+  // @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  // async getEventAnalytics(@Param('eventId') eventId: string) {
+  //   return this.adminService.getEventAnalytics(eventId);
+  // }
 
   @Get('profile')
   @ApiBearerAuth()

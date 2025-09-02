@@ -7,10 +7,14 @@ import { AdminService } from './admin.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { DatabaseModule } from '../database/prisma.module';
 import { MailModule } from '../mail/mail.module';
+import { AttendeeModule } from '../attendee/attendee.module';
+import { PaymentsModule } from '../payment/payment.module';
 
 @Module({
   imports: [
+    AttendeeModule,
     ConfigModule,
+    PaymentsModule,
     DatabaseModule,
     MailModule,
     PassportModule,

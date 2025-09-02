@@ -1,17 +1,23 @@
-export function paymentSuccessTemplate(
+export function paymentLinkTemplate(
   fullName: string,
-  amount: string,
-  successUrl: string,
+  paymentUrl: string,
   supportEmail: string,
   logoUrl: string,
+  amount: number,
 ): string {
+  // Force Cloudinary to resize for email-friendly rendering
+  const optimizedLogoUrl = logoUrl.replace(
+    '/upload/',
+    '/upload/w_200,h_80,c_fit/',
+  );
+
   return `
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Payment Successful</title>
+  <title>Complete Your Payment</title>
 </head>
 <body style="margin:0; padding:0; font-family: Arial, sans-serif; background-color: #f5f7fa;">
   <table width="100%" border="0" cellspacing="0" cellpadding="0" bgcolor="#f5f7fa">
@@ -23,7 +29,8 @@ export function paymentSuccessTemplate(
           <!-- Header with Logo -->
           <tr>
             <td style="padding: 20px; text-align: left;">
-              <img src="${logoUrl}" alt="DevFest Logo" style="max-width: 150px; display: block;" />
+              <img src="${optimizedLogoUrl}" alt="DevFest Logo"
+                style="max-width: 150px; display: block;" />
             </td>
           </tr>
 
@@ -31,10 +38,10 @@ export function paymentSuccessTemplate(
           <tr>
             <td style="padding: 30px; color: #333333; font-size: 16px; line-height: 1.6;">
               <p>Hi <strong>${fullName}</strong>,</p>
-              <p>Thank you! Your payment of <strong>₦${amount}</strong> for <strong>DevFest Ibadan 2025</strong> was successful.</p>
-              <p>You can access your ticket and event details here:</p>
+              <p>We’re excited to have you at <strong>DevFest Ibadan 2025</strong> 🎉.</p>
+              <p>Your registration has been received. To complete your booking, please make a payment of <strong>₦${amount}</strong> using the link below:</p>
               <p style="margin-top: 20px; text-align: center;">
-                <a href="${successUrl}" 
+                <a href="${paymentUrl}" 
                   style="background: #28a745;
                          color: #ffffff; 
                          text-decoration: none; 
@@ -42,10 +49,10 @@ export function paymentSuccessTemplate(
                          border-radius: 4px; 
                          display: inline-block; 
                          font-weight: bold;">
-                  View Ticket
+                  Complete Payment
                 </a>
               </p>
-              <p>If you have questions, reach out to us at 
+              <p>If you have any questions or need assistance, feel free to reach out to us at 
                 <a href="mailto:${supportEmail}" style="color: #007BFF; text-decoration: none;">
                   ${supportEmail}
                 </a>.

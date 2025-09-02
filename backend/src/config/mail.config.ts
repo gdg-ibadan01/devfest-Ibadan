@@ -1,6 +1,6 @@
 import { registerAs } from '@nestjs/config';
 
-export default registerAs('gmail', () => ({
+export default registerAs('cpanel', () => ({
   host: process.env.EMAIL_HOST,
   port: parseInt(process.env.EMAIL_PORT ?? '', 10) || 587,
   user: process.env.EMAIL_USER,

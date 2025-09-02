@@ -1,23 +1,24 @@
 import { Injectable } from '@nestjs/common';
 import * as nodemailer from 'nodemailer';
 import { ConfigService } from '@nestjs/config';
-import { adminInviteTemplate } from './Templates/admin-invite.template';
-import { eventReminderTemplate } from './Templates/event-reminder.template';
-import { paymentFailedTemplate } from './Templates/payment-failure.templare';
-import { ticketConfirmationTemplate } from './Templates/ticket-confirmation.template';
+import { adminInviteTemplate } from './templates/admin-invite.template';
+import { eventReminderTemplate } from './templates/event-reminder.template';
+import { paymentFailedTemplate } from './templates/payment-failure.templare';
+import { ticketConfirmationTemplate } from './templates/ticket-confirmation.template';
+import { paymentSuccessTemplate } from './templates/payment-success.template';
+import { paymentLinkTemplate } from './templates/payment-link.template';
 
 @Injectable()
 export class MailService {
   private transporter: nodemailer.Transporter;
   constructor(private readonly configService: ConfigService) {
     this.transporter = nodemailer.createTransport({
-      service: 'gmail',
-      host: this.configService.get<string>('gmail.host'),
-      port: this.configService.get<number>('gmail.port'),
-      secure: false,
+      host: this.configService.get<string>('cpanel.host'),
+      port: this.configService.get<number>('cpanel.port'),
+      secure: this.configService.get<number>('cpanel.port') === 465,
       auth: {
-        user: this.configService.get<string>('gmail.user'),
-        pass: this.configService.get<string>('gmail.password'),
+        user: this.configService.get<string>('cpanel.user'),
+        pass: this.configService.get<string>('cpanel.password'),
       },
     });
   }
@@ -25,9 +26,9 @@ export class MailService {
   async sendTicketConfirmationEmail(
     email: string,
     fullName: string,
-    eventTitle: string,
-    eventDate: string,
-    venue: string,
+    // eventTitle: string,
+    // eventDate: string,
+    // venue: string,
     ticketType: string,
     transactionId: string,
   ) {
@@ -36,29 +37,60 @@ export class MailService {
       'https://example.com/default-logo.png';
 
     const supportEmail =
-      this.configService.get<string>('gmail.user') ?? 'noreply@example.com';
+      this.configService.get<string>('cpanel.from.email') ??
+      'noreply@gdgibadan.com';
 
     const html = ticketConfirmationTemplate(
       fullName,
-      eventDate,
-      venue,
+      // eventDate,
+      // venue,
       ticketType,
       transactionId,
-      email,
+      supportEmail,
       logoUrl,
     );
 
     return this.transporter.sendMail({
       from: `"GDG Event Manager" <${supportEmail}>`,
       to: email,
-      subject: `Ticket Confirmed - DevFest Ibadan 2025 ${eventTitle}`,
+      subject: 'Ticket Confirmed - DevFest Ibadan 2025',
+      html,
+    });
+  }
+
+  async sendPaymentSuccessEmail(
+    email: string,
+    fullName: string,
+    amount: string,
+    ticketUrl: string,
+  ) {
+    const logoUrl =
+      this.configService.get<string>('app.logoUrl') ??
+      'https://example.com/default-logo.png';
+
+    const supportEmail =
+      this.configService.get<string>('cpanel.from.email') ??
+      'noreply@gdgibadan.com';
+
+    const html = paymentSuccessTemplate(
+      fullName,
+      amount,
+      ticketUrl,
+      supportEmail,
+      logoUrl,
+    );
+
+    return this.transporter.sendMail({
+      from: `"GDG Event Manager" <${supportEmail}>`,
+      to: email,
+      subject: 'Payment Successful - DevFest Ibadan 2025',
       html,
     });
   }
 
   async sendPaymentFailedEmail(
     email: string,
-    firstName: string,
+    fullName: string,
     retryLink: string,
   ) {
     const logoUrl =
@@ -66,10 +98,11 @@ export class MailService {
       'https://example.com/default-logo.png';
 
     const supportEmail =
-      this.configService.get<string>('gmail.user') ?? 'noreply@example.com';
+      this.configService.get<string>('cpanel.from.email') ??
+      'noreply@gdgibadan.com';
 
     const html = paymentFailedTemplate(
-      firstName,
+      fullName,
       retryLink,
       supportEmail,
       logoUrl,
@@ -95,7 +128,8 @@ export class MailService {
       'https://example.com/default-logo.png';
 
     const supportEmail =
-      this.configService.get<string>('gmail.user') ?? 'noreply@example.com';
+      this.configService.get<string>('cpanel.from.email') ??
+      'noreply@gdgibadan.com';
 
     await this.transporter.sendMail({
       from: `"GDG Event Manager" <${supportEmail}>`,
@@ -118,10 +152,38 @@ export class MailService {
       'https://example.com/default-logo.png';
 
     await this.transporter.sendMail({
-      from: `"GDG Event Manager" <${this.configService.get<string>('gmail.user')}>`,
+      from: `"GDG Event Manager" <${this.configService.get<string>('cpanel.from.email')}>`,
       to: email,
       subject: 'You are invited as an Admin',
       html: adminInviteTemplate(fullName, tempPassword, logoUrl),
+    });
+  }
+
+  async sendPaymentLinkEmail(
+    email: string,
+    fullName: string,
+    paymentUrl: string,
+    amount: number,
+  ) {
+    const logoUrl =
+      this.configService.get<string>('app.logoUrl') ??
+      'https://example.com/default-logo.png';
+
+    const supportEmail =
+      this.configService.get<string>('cpanel.from.email') ??
+      'noreply@gdgibadan.com';
+
+    await this.transporter.sendMail({
+      from: `"GDG Event Manager" <${supportEmail}>`,
+      to: email,
+      subject: 'Complete Your Payment - DevFest Ibadan 2025',
+      html: paymentLinkTemplate(
+        fullName,
+        paymentUrl,
+        supportEmail,
+        logoUrl,
+        amount,
+      ),
     });
   }
 }
