@@ -25,6 +25,7 @@
     "@radix-ui/react-slot": "^1.2.3",
     "@studio-freight/lenis": "^1.0.42",
     "@studio-freight/react-lenis": "^0.0.47",
+    "@tanstack/react-table": "^8.21.3",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.2",
     "class-variance-authority": "^0.7.0",
