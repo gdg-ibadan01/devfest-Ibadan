@@ -1,9 +1,8 @@
-import venue from '@/public/venue1.jpeg';
-import venuee from '@/public/venue2.jpeg';
+import venue from '@/public/jogor-1.jpg';
+import venuee from '@/public/jogor-2.jpg';
 import { ArrowUpRight } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import IconsArt_S from './IconsArt_S';
 import { Button } from '../_module/components/ui/button';
 import IconsArt from './IconsArt';
 
@@ -25,7 +24,8 @@ const Venue = () => {
                   </div>
                   <div className="flip-card-back">
                     <p className="text-xl text-left leading-7 tracking-wider">
-                      Aweni Arena events center - Oke Ado, Ibadan.
+                      Jogor Center, No. 1 Harvester Drive, Liberty Road, New
+                      GRA, Ibadan
                     </p>
                   </div>
                 </div>
@@ -34,10 +34,7 @@ const Venue = () => {
             <div className="w-full md:w-2/3 flex flex-col gap-10">
               <div className="flex flex-row items-center justify-between">
                 <h1 className="font-bold text-2xl md:text-5xl">The venue</h1>
-                <Link
-                  href="https://gdg.community.dev/events/details/google-gdg-ibadan-presents-devfest-ibadan-2024/"
-                  target="_blank"
-                >
+                <Link href="/ticket">
                   <Button className="text-sm md:text-xl rounded-[100px] bg-black text-white hover:bg-core-blue px-20 md:px-52 py-4 md:py-10 hidden md:flex items-center">
                     Get Ticket
                     <ArrowUpRight />

@@ -130,7 +130,11 @@ export class PaymentsService {
     if (!payment) throw new NotFoundException('Payment record not found');
 
     if (payment.status === PaymentStatus.SUCCESS) {
-      return { ...payment, amount: Number(payment.amount) } as IPayment;
+      return {
+        ...payment,
+        amount: Number(payment.amount),
+        attendee: payment.attendee,
+      } as IPayment;
     }
 
     const updatedPayment = await this.prisma.payment.update({
@@ -221,16 +225,16 @@ export class PaymentsService {
       const ticket = await this.generateTicket(payment.attendeeId, payment.id);
 
       await this.mailService.sendTicketConfirmationEmail(
-        payment.attendee.email,
         payment.attendee.fullName,
+        payment.attendee.email,
         ticket.ticketType,
         payment.paystackReference ?? '',
       );
     } else {
       // Payment failed email
       await this.mailService.sendPaymentFailedEmail(
-        payment.attendee.email,
         payment.attendee.fullName,
+        payment.attendee.email,
         `${this.configService.get('app.url')}/retry-payment/${reference}`,
       );
     }
@@ -245,6 +249,7 @@ export class PaymentsService {
         orderBy: { createdAt: 'desc' },
         include: {
           attendee: { select: { id: true, fullName: true, email: true } },
+          tickets: { select: { ticketNumber: true } },
         },
       }),
       this.prisma.payment.count(),
@@ -259,17 +264,25 @@ export class PaymentsService {
   async findOne(id: string): Promise<IPayment> {
     const payment = await this.prisma.payment.findUnique({
       where: { id },
+      include: {
+        tickets: { select: { ticketNumber: true } },
+        attendee: { select: { id: true, fullName: true, email: true } },
+      },
     });
 
     if (!payment) throw new NotFoundException('Payment not found');
 
-    return { ...payment, amount: Number(payment.amount) } as IPayment;
+    return {
+      ...payment,
+      amount: Number(payment.amount),
+      attendee: payment.attendee,
+    } as IPayment;
   }
 
   private async generateTicket(attendeeId: string, paymentId: string) {
     const ticketNumber = `GDG${Date.now()}${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
     const qrCode = `${this.configService.get('app.url')}/tickets/verify/${ticketNumber}`;
-    const ticketType = 'General'; // Default ticket type, since no registration/event
+    const ticketType = 'General';
 
     const ticket = await this.prisma.ticket.create({
       data: {
@@ -277,7 +290,7 @@ export class PaymentsService {
         qrCode,
         ticketType,
         status: TicketStatus.ACTIVE,
-        validFrom: new Date(), // Can adjust if you have an event date
+        validFrom: new Date(),
         validUntil: new Date(
           new Date().setFullYear(new Date().getFullYear() + 1),
         ),

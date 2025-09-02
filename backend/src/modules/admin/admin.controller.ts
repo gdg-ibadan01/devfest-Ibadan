@@ -31,8 +31,8 @@ import { ChangePasswordDto } from './dto/change-password.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { UpdateAdminStatusDto } from './dto/update-status.dto';
 import { AttendeeService } from '../attendee/attendee.service';
-import { CreateAttendeeDto } from '../attendee/dto/create-attendee.dto';
-import { ICreateAttendee } from '../attendee/interfaces/attendee.interface';
+import { CreateAttendeeDto } from './dto/create-attendee.dto';
+import { IAttendee, ICreateResponse } from './interfaces/attendee.interface';
 import { RolesGuard } from './guards/roles.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import {
@@ -44,10 +44,7 @@ import {
 @ApiTags('Admin')
 @Controller('admin')
 export class AdminController {
-  constructor(
-    private readonly adminService: AdminService,
-    private readonly attendeeService: AttendeeService,
-  ) {}
+  constructor(private readonly adminService: AdminService) {}
 
   @Post('signup')
   @ApiOperation({ summary: 'Register a super admin account' })
@@ -89,8 +86,8 @@ export class AdminController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async createAttendee(
     @Body() createAttendeeDto: CreateAttendeeDto,
-  ): Promise<ICreateAttendee> {
-    return this.attendeeService.create(createAttendeeDto);
+  ): Promise<ICreateResponse> {
+    return this.adminService.create(createAttendeeDto);
   }
 
   @Post('invite')

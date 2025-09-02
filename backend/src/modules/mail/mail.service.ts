@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import * as nodemailer from 'nodemailer';
 import { ConfigService } from '@nestjs/config';
-import { adminInviteTemplate } from './Templates/admin-invite.template';
-import { eventReminderTemplate } from './Templates/event-reminder.template';
-import { paymentFailedTemplate } from './Templates/payment-failure.templare';
-import { ticketConfirmationTemplate } from './Templates/ticket-confirmation.template';
-import { paymentSuccessTemplate } from './Templates/payment-success.template';
-import { paymentLinkTemplate } from './Templates/payment-link.template';
+import { adminInviteTemplate } from './templates/admin-invite.template';
+import { eventReminderTemplate } from './templates/event-reminder.template';
+import { paymentFailedTemplate } from './templates/payment-failure.templare';
+import { ticketConfirmationTemplate } from './templates/ticket-confirmation.template';
+import { paymentSuccessTemplate } from './templates/payment-success.template';
+import { paymentLinkTemplate } from './templates/payment-link.template';
 
 @Injectable()
 export class MailService {
@@ -24,11 +24,8 @@ export class MailService {
   }
 
   async sendTicketConfirmationEmail(
-    email: string,
     fullName: string,
-    // eventTitle: string,
-    // eventDate: string,
-    // venue: string,
+    email: string,
     ticketType: string,
     transactionId: string,
   ) {
@@ -42,11 +39,10 @@ export class MailService {
 
     const html = ticketConfirmationTemplate(
       fullName,
-      // eventDate,
-      // venue,
+
       ticketType,
       transactionId,
-      email,
+      supportEmail,
       logoUrl,
     );
 

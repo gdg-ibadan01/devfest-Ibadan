@@ -30,22 +30,19 @@ import { MailService } from '../mail/mail.service';
 import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
 import { CreateAttendeeDto } from './dto/create-attendee.dto';
+import { IAttendee, ICreateResponse } from './interfaces/attendee.interface';
+import { PaymentsService } from '../payment/payment.service';
+import { IPaystackResponse } from '../payment/interfaces/payment.interface';
 
 @Injectable()
 export class AdminService {
-  private readonly paystackBaseUrl: string;
-  private readonly paystackSecretKey: string;
   constructor(
     private readonly configService: ConfigService,
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
     private mailService: MailService,
-  ) {
-    this.paystackBaseUrl =
-      this.configService.get<string>('paystack.baseUrl') ?? '';
-    this.paystackSecretKey =
-      this.configService.get<string>('paystack.secretKey') ?? '';
-  }
+    private readonly paymentsService: PaymentsService,
+  ) {}
 
   async signup(signupDto: CreateAdminDto): Promise<ILoginResponse> {
     const { fullName, email, password } = signupDto;
@@ -237,80 +234,32 @@ export class AdminService {
     return { message: 'Password changed successfully' };
   }
 
-  async create(createAttendeeDto: CreateAttendeeDto): Promise<any> {
+  async create(createAttendeeDto: CreateAttendeeDto): Promise<ICreateResponse> {
     const { email, fullName, amount, phoneNumber, company, jobTitle } =
       createAttendeeDto;
 
-    // 1. Check if attendee already exists
+    // Check if attendee already exists
     const existingAttendee = await this.prisma.attendee.findUnique({
       where: { email },
     });
-
     if (existingAttendee) {
       throw new ConflictException('Attendee with this email already exists');
     }
 
-    // 2. Create attendee
+    // Create attendee
     const attendee = await this.prisma.attendee.create({
-      data: {
-        email,
-        fullName,
-        phoneNumber,
-        company,
-        jobTitle,
-      },
+      data: { email, fullName, phoneNumber, company, jobTitle },
     });
 
-    // 3. Initialize payment
-    const paymentReference = `gdg_${Date.now()}_${uuidv4().slice(0, 8)}`;
-    const amountInKobo = Math.round(amount * 100);
-
-    const callbackUrl = `${this.configService.get('app.frontendUrl')}${this.configService.get(
-      'paystack.callbackUrl',
-    )}?paymentReference=${paymentReference}&name=${encodeURIComponent(
-      attendee.fullName,
-    )}&email=${encodeURIComponent(attendee.email)}`;
-
-    const paystackResponse = await axios.post(
-      `${this.paystackBaseUrl}/transaction/initialize`,
-      {
-        email,
-        amount: amountInKobo,
-        reference: paymentReference,
-        metadata: {
-          attendeeId: attendee.id,
-          attendeeName: attendee.fullName,
-        },
-        callback_url: callbackUrl,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${this.paystackSecretKey}`,
-          'Content-Type': 'application/json',
-        },
-      },
-    );
-
-    if (!paystackResponse.data.status) {
-      throw new BadRequestException('Failed to initialize payment');
-    }
-
-    // 4. Save payment record
-    const payment = await this.prisma.payment.create({
-      data: {
-        attendeeId: attendee.id,
-        amount,
-        paystackReference: paystackResponse.data.data.reference,
-        paymentReference,
-        status: PaymentStatus.PENDING,
-        metadata: { access_code: paystackResponse.data.data.access_code },
-      },
+    // Initialize payment
+    const paystackResponse = await this.paymentsService.initiatePayment({
+      attendeeId: attendee.id,
+      email,
+      amount,
     });
 
-    // 5. Send payment link email
-    const paymentUrl = paystackResponse.data.data.authorization_url;
-
-    console.log('Sending payment link email to:', attendee.email, paymentUrl);
+    // Send payment link email
+    const paymentUrl = paystackResponse.data.authorization_url;
     await this.mailService.sendPaymentLinkEmail(
       attendee.email,
       attendee.fullName,
@@ -318,10 +267,18 @@ export class AdminService {
       amount,
     );
 
-    // 6. Return attendee + payment info + link
+    // Shape attendee response
+    const attendeeResponse: IAttendee = {
+      ...attendee,
+      phoneNumber: attendee.phoneNumber ?? undefined,
+      company: attendee.company ?? undefined,
+      jobTitle: attendee.jobTitle ?? undefined,
+      amount,
+    };
+
     return {
-      attendee,
-      payment,
+      attendee: attendeeResponse,
+      payment: paystackResponse,
       paymentUrl,
     };
   }

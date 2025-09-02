@@ -4,6 +4,10 @@ export function paymentFailedTemplate(
   supportEmail: string,
   logoUrl: string,
 ): string {
+  const optimizedLogoUrl = logoUrl.includes('cloudinary')
+    ? logoUrl.replace('/upload/', '/upload/w_200,h_80,c_fit/')
+    : logoUrl;
+
   return `
 <!DOCTYPE html>
 <html lang="en">
@@ -22,8 +26,8 @@ export function paymentFailedTemplate(
           <!-- Header with Logo (Left aligned) -->
           <tr>
             <td style="padding: 20px; text-align: left;">
-              <img src="${logoUrl}" alt="DevFest Logo"
-                style="max-width: 150px; display: block;" />
+              <img src="${optimizedLogoUrl}" alt="DevFest Logo"
+                style="max-width: 150px; height: auto; display: block;" />
             </td>
           </tr>
 

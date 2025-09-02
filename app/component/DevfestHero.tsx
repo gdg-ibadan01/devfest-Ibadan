@@ -48,29 +48,25 @@ const DevfestHero = () => {
       <main ref={sectionRef} className="pt-[150px] bg-pastel-yellow ">
         <div className="w-full md:max-w-[1500px] mx-auto relative z-10">
           <header className="container headers flex gap-4 md:gap-7 flex-col items-center justify-between">
-            {/* <h1 className="font-bold text-4xl md:text-8xl">
-              {wrapLetters("Devfest Ibadan '24")}
-            </h1> */}
             <h1 className="font-bold text-[2rem] leading-[2.5rem] md:text-8xl">
-              Devfest Ibadan &apos;24
+              Devfest Ibadan &apos;25
             </h1>
-            {/* <p className="text-[#4D4D4D] text-lg md:text-2xl text-center md:w-[1000px]">
-              {wrapLetters(
-                'Whatsup Ibadan!!!. Be a part of the largest tech event in Ibadan where tech enthusiasts come together to explore cutting-edge technology and shape the future'
-              )}
-            </p> */}
             <p className="text-[#4D4D4D] text-lg md:text-2xl text-center md:w-[1000px]">
-              Whatsup Ibadan!!!. Be a part of the largest GDG event in Ibadan
-              where tech enthusiasts come together to explore cutting-edge
-              technology and shape the future
+              IB City whatsup!!! The largest tech event gathering in Ibadan and
+              Oyo State! DevFest Ibadan is back, bigger and better, bringing
+              together tech enthusiasts, developers, and industry leaders from
+              across the region. Prepare for a day of insightful talks, hands-on
+              workshops, networking opportunities, and a chance to explore the
+              latest trends in technology.
             </p>
-            <p className="text-center font-bold">
-              November 23rd 2024 at 8:00AM
-            </p>
+            <div>
+              <p className="text-center font-bold">
+                Date: November 28th & 29th 2025 at 8:00AM
+              </p>
+            </div>
             <div className="flex flex-col md:flex-row gap-3 md:gap-5 text-sm'">
               <Link
-                href="https://gdg.community.dev/events/details/google-gdg-ibadan-presents-devfest-ibadan-2024/"
-                target="_blank"
+                href="/ticket"
                 className="bg-black py-4 px-52 text-white hover:bg-core-blue hover:text-white rounded-[100px] flex"
               >
                 Get Ticket <ArrowUpRight />

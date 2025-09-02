@@ -2,14 +2,8 @@
 
 import { ArrowUpRight } from 'lucide-react';
 import Link from 'next/link';
-import Image from 'next/image';
-import SpeakerOne from '@/public/SpeakerOne.jpeg';
-import SpeakerTwo from '@/public/SpeakerTwo.jpeg';
-import SpeakerThree from '@/public/SpeakerThree.jpeg';
 import { Button } from '../_module/components/ui/button';
 import { SpeakersList } from '../_module/data/speakers-list';
-import { Fragment } from 'react';
-import SpeakerCard from '../_module/components/cards/SpeakerCard';
 import IconsArt from './IconsArt';
 
 const OurSpeakers = () => {
@@ -28,34 +22,25 @@ const OurSpeakers = () => {
                   View All <ArrowUpRight />
                 </Button>
               </Link>
-
-              {/* <Link
-                href="https://sessionize.com/devfest-ibadan-2024"
-                target="_blank"
-              >
-                <Button className="bg-white text-black hover:border-core-blue hover:bg-core-blue  text-sm md:text-xl px-20 md:px-52 py-4 md:py-10 border-[1px] border-black rounded-[100px]">
-                  Apply to Speak
-                </Button>
-              </Link> */}
             </div>
-            <section className="grid grid-cols-1 md:grid-cols-4 gap-24">
+            {/* <section className="grid grid-cols-1 md:grid-cols-4 gap-24">
               {Speakers.map((data, idx) => (
                 <Fragment key={idx}>
                   <SpeakerCard {...data} />
                 </Fragment>
               ))}
-            </section>
+            </section> */}
+            <h1 className="text-5xl font-bold text-center">
+              Speakers Coming Soon
+            </h1>
 
-            {/* <section className="flex gap-5 flex-col items-center py-24">
-              <h1 className="text-5xl font-bold text-center">
-                Speakers Coming Soon
-              </h1>
+            <section className="flex gap-5 flex-col items-center py-24">
               <p className="text-xl font-extralight text-[#4D4D4D] md:w-[820px] text-center">
                 Our speaker lineup is almost here! Prepare to be inspired by
                 industry leaders, tech innovators, and creative thinkers who
                 will transform your DevFest experience.
               </p>
-            </section> */}
+            </section>
           </div>
         </div>
         <IconsArt className="flex flex-col -mt-64 md:-mt-[150px]" />

@@ -5,6 +5,12 @@ export function paymentLinkTemplate(
   logoUrl: string,
   amount: number,
 ): string {
+  // Force Cloudinary to resize for email-friendly rendering
+  const optimizedLogoUrl = logoUrl.replace(
+    '/upload/',
+    '/upload/w_200,h_80,c_fit/',
+  );
+
   return `
 <!DOCTYPE html>
 <html lang="en">
@@ -23,7 +29,7 @@ export function paymentLinkTemplate(
           <!-- Header with Logo -->
           <tr>
             <td style="padding: 20px; text-align: left;">
-              <img src="${logoUrl}" alt="DevFest Logo"
+              <img src="${optimizedLogoUrl}" alt="DevFest Logo"
                 style="max-width: 150px; display: block;" />
             </td>
           </tr>
