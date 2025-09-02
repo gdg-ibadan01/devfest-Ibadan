@@ -46,7 +46,7 @@ export class MailService {
       // venue,
       ticketType,
       transactionId,
-      email,
+      supportEmail,
       logoUrl,
     );
 

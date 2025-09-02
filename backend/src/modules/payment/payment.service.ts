@@ -225,16 +225,16 @@ export class PaymentsService {
       const ticket = await this.generateTicket(payment.attendeeId, payment.id);
 
       await this.mailService.sendTicketConfirmationEmail(
-        payment.attendee.fullName,
         payment.attendee.email,
+        payment.attendee.fullName,
         ticket.ticketType,
         payment.paystackReference ?? '',
       );
     } else {
       // Payment failed email
       await this.mailService.sendPaymentFailedEmail(
-        payment.attendee.fullName,
         payment.attendee.email,
+        payment.attendee.fullName,
         `${this.configService.get('app.url')}/retry-payment/${reference}`,
       );
     }
