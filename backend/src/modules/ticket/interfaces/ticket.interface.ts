@@ -5,6 +5,7 @@ export interface ITicket {
   ticketNumber: string;
   // eventId: string;
   // registrationId: string;
+  isCheckedIn: boolean;
   qrCode: string;
   status: TicketStatus;
   issuedAt: Date;

@@ -2,6 +2,8 @@ export function ticketConfirmationTemplate(
   fullName: string,
   ticketType: string,
   transactionId: string,
+  ticketId: string,
+  isCheckedIn: boolean,
   supportEmail: string,
   logoUrl: string,
 ): string {
@@ -11,7 +13,7 @@ export function ticketConfirmationTemplate(
   );
 
   return `
-<!DOCTYPE html>z
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -55,8 +57,10 @@ export function ticketConfirmationTemplate(
               <p><strong>💡 Bonus for you:</strong> As a ticket holder, you’re also welcome to attend our free hands-on workshops on <strong>Friday, November 28th</strong> covering Design, Mobile Development, Frontend & Backend, AI/ML, Cloud, Cybersecurity, Technical Writing, and Product Management.</p>
 
               <p style="line-height: 1.8;">
+              <strong>Ticket ID:</strong> ${ticketId}<br/>
                 <strong>Ticket Type:</strong> ${ticketType}<br/>
-                <strong>Reference:</strong> ${transactionId}
+                <strong>Reference:</strong> ${transactionId}<br/>
+                <strong>Checked In Status:</strong> ${isCheckedIn ? 'Yes' : 'No'}
               </p>
 
               <p><strong>✅ Next steps:</strong></p>
@@ -70,7 +74,7 @@ export function ticketConfirmationTemplate(
                 <li>Save the dates — November 28th & 29th, 2025.</li>
               </ul>
 
-              <p>We can’t wait to welcome you to DevFest Ibadan 2025 — come ready to learn, connect, and be inspired 🎉.</p>
+              <p>We can’t wait to welcome you to DevFest Ibadan 2025 — come ready to learn, connect, and be inspired 🎉.</p>  
 
               <p>Need help? Contact us at 
                 <a href="mailto:${supportEmail}" style="color:#007BFF; text-decoration:none;">

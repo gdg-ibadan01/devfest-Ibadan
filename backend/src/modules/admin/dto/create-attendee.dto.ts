@@ -11,7 +11,7 @@ import {
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsValidPhoneNumber } from '../../../common/validators/phone.validator';
 
-export class CreateAttendeeDto {
+export class AdminCreateAttendeeDto {
   @ApiProperty({
     description: 'Attendee email address',
     example: 'john.doe@example.com',

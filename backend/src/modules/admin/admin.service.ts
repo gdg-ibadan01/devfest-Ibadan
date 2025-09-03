@@ -29,7 +29,7 @@ import { PaymentStatus } from '@prisma/client';
 import { MailService } from '../mail/mail.service';
 import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
-import { CreateAttendeeDto } from './dto/create-attendee.dto';
+import { AdminCreateAttendeeDto } from './dto/create-attendee.dto';
 import { IAttendee, ICreateResponse } from './interfaces/attendee.interface';
 import { PaymentsService } from '../payment/payment.service';
 import { IPaystackResponse } from '../payment/interfaces/payment.interface';
@@ -234,9 +234,11 @@ export class AdminService {
     return { message: 'Password changed successfully' };
   }
 
-  async create(createAttendeeDto: CreateAttendeeDto): Promise<ICreateResponse> {
+  async create(
+    adminCreateAttendeeDto: AdminCreateAttendeeDto,
+  ): Promise<ICreateResponse> {
     const { email, fullName, amount, phoneNumber, company, jobTitle } =
-      createAttendeeDto;
+      adminCreateAttendeeDto;
 
     // Check if attendee already exists
     const existingAttendee = await this.prisma.attendee.findUnique({

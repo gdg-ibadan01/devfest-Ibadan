@@ -31,7 +31,7 @@ import { ChangePasswordDto } from './dto/change-password.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { UpdateAdminStatusDto } from './dto/update-status.dto';
 import { AttendeeService } from '../attendee/attendee.service';
-import { CreateAttendeeDto } from './dto/create-attendee.dto';
+import { AdminCreateAttendeeDto } from './dto/create-attendee.dto';
 import { IAttendee, ICreateResponse } from './interfaces/attendee.interface';
 import { RolesGuard } from './guards/roles.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
@@ -77,7 +77,7 @@ export class AdminController {
   @ApiResponse({
     status: 201,
     description: 'Attendee successfully created',
-    type: CreateAttendeeDto,
+    type: AdminCreateAttendeeDto,
   })
   @ApiResponse({
     status: 409,
@@ -85,9 +85,9 @@ export class AdminController {
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async createAttendee(
-    @Body() createAttendeeDto: CreateAttendeeDto,
+    @Body() adminCreateAttendeeDto: AdminCreateAttendeeDto,
   ): Promise<ICreateResponse> {
-    return this.adminService.create(createAttendeeDto);
+    return this.adminService.create(adminCreateAttendeeDto);
   }
 
   @Post('invite')

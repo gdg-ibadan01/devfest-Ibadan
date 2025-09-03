@@ -73,10 +73,12 @@ async function bootstrap() {
 
   // Load environment variables
   const port = configService.get<number>('PORT') || 3000;
+  const appUrl =
+    configService.get<string>('APP_URL') || `http://localhost:${port}`;
 
   await app.listen(port);
-  logger.log(`🚀 Application is running on: http://localhost:${port}`);
-  logger.log(`Swagger documentation: http://localhost:${port}/api/docs`);
+  logger.log(`🚀 Application is running on:${appUrl}`);
+  logger.log(`Swagger documentation: ${appUrl}/api/docs`);
   logger.log(`🔧 Environment: ${configService.get('NODE_ENV', 'development')}`);
 }
 bootstrap();

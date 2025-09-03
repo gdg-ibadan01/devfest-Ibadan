@@ -57,9 +57,7 @@ export class PaymentsService {
       },
     });
 
-    const callbackUrl = `${this.configService.get('app.frontendUrl')}${this.configService.get(
-      'paystack.callbackUrl',
-    )}?paymentReference=${payment.paymentReference}&name=${encodeURIComponent(
+    const callbackUrl = `${this.configService.get('app.frontendUrl')}?paymentReference=${payment.paymentReference}&name=${encodeURIComponent(
       attendee.fullName,
     )}&email=${encodeURIComponent(attendee.email)}`;
 
@@ -229,6 +227,8 @@ export class PaymentsService {
         payment.attendee.fullName,
         ticket.ticketType,
         payment.paystackReference ?? '',
+        ticket.id,
+        ticket.isCheckedIn,
       );
     } else {
       // Payment failed email
