@@ -1,35 +1,43 @@
 import { Payment } from '@/types/services';
 
-export const exportToCSV = (data: Payment[], filename = 'payments.csv') => {
+interface ExportDataProps {
+  data: Payment[];
+  filename?: string;
+}
+
+export const exportToCSV = ({
+  data,
+  filename = 'payments.csv',
+}: ExportDataProps) => {
   const headers = [
     'Payment ID',
+    'Ticket ID',
     'Attendee Name',
     'Email',
     'Amount',
-    'Currency',
     'Status',
-    'Payment Method',
     'Payment Reference',
+    'Payment Method',
     'Paid At',
-    'Created At',
+    'Checked-in',
   ];
 
   const csvContent = [
     headers.join(','),
-    ...data.map((payment) =>
-      [
+    ...data.map((payment) => {
+      return [
         payment.id,
+        payment.tickets?.[0]?.ticketNumber || 'N/A',
         `"${payment.attendee.fullName}"`,
         payment.attendee.email,
         payment.amount,
-        payment.currency,
         payment.status,
-        payment.paymentMethod,
         payment.paymentReference,
+        payment.paymentMethod,
         payment.paidAt || 'N/A',
-        new Date(payment.createdAt).toLocaleString(),
-      ].join(',')
-    ),
+        payment.isCheckedIn ? 'Yes' : 'No',
+      ].join(',');
+    }),
   ].join('\n');
 
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -46,29 +54,28 @@ export const exportToCSV = (data: Payment[], filename = 'payments.csv') => {
   }
 };
 
-export const exportToExcel = async (
-  data: Payment[],
-  filename = 'payments.xlsx'
-) => {
+export const exportToExcel = async ({
+  data,
+  filename = 'payments.xlsx',
+}: ExportDataProps) => {
   // This requires the 'xlsx' library: npm install xlsx
   const XLSX = await import('xlsx');
 
   const worksheet = XLSX.utils.json_to_sheet(
-    data.map((payment) => ({
-      'Payment ID': payment.id,
-      'Attendee Name': payment.attendee.fullName,
-      Email: payment.attendee.email,
-      Amount: payment.amount,
-      Currency: payment.currency,
-      Status: payment.status,
-      'Payment Method': payment.paymentMethod,
-      'Payment Reference': payment.paymentReference,
-      'Paystack Reference': payment.paystackReference,
-      'Paid At': payment.paidAt || 'N/A',
-      'Failure Reason': payment.failureReason || 'N/A',
-      'Created At': new Date(payment.createdAt).toLocaleString(),
-      'Updated At': new Date(payment.updatedAt).toLocaleString(),
-    }))
+    data.map((payment) => {
+      return {
+        'Payment ID': payment.id,
+        'Ticket ID': payment.tickets?.[0]?.ticketNumber || 'N/A',
+        'Attendee Name': payment.attendee.fullName,
+        Email: payment.attendee.email,
+        Amount: payment.amount,
+        Status: payment.status,
+        'Payment Reference': payment.paymentReference,
+        'Payment Method': payment.paymentMethod,
+        'Paid At': payment.paidAt || 'N/A',
+        'Checked-in': payment.isCheckedIn ? 'Yes' : 'No',
+      };
+    })
   );
 
   const workbook = XLSX.utils.book_new();

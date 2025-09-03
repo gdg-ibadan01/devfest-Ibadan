@@ -23,6 +23,7 @@ const TicketComponent = () => {
   const isTablet = useMediaQueryWatcher('(min-width: 1024px)');
   const [isDownloading, setIsDownloading] = useState(false);
   const [isValidating, setIsValidating] = useState(true);
+  const ticketPrice = process.env.NEXT_PUBLIC_TICKET_PRICE ? +process.env.NEXT_PUBLIC_TICKET_PRICE : 0;
 
   // Extract query parameters
   const paymentRef = searchParams.get('paymentReference');
@@ -196,7 +197,7 @@ const TicketComponent = () => {
                 <div className="w-fit text-right">
                   <p className="text-gray-400 text-xs md:text-base">Amount</p>
                   <p className="font-bold text-gray-500 md:text-xl">
-                    {formatAmount(4000)}
+                    {formatAmount(ticketPrice)}
                   </p>
                 </div>
               </div>

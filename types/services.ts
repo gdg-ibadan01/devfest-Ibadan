@@ -20,6 +20,7 @@ export interface CreateAttendeeRequest {
   phoneNumber: string;
   jobTitle: string;
   company?: string;
+  amount?: number;
 }
 
 export interface AttendeeData {
@@ -33,9 +34,24 @@ export interface AttendeeData {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+  amount?: number;
+}
+
+export interface AdminAttendeeData extends AttendeeData {
+  payment: {
+    status: boolean;
+    message: string;
+    data: {
+      authorization_url: string;
+      access_code: string;
+      reference: string;
+    };
+  };
+  paymentUrl: string;
 }
 
 export type CreateAttendeeResponse = ApiResponse<AttendeeData>;
+export type AdminCreateAttendeeResponse = ApiResponse<AdminAttendeeData>;
 
 // Payment types
 export interface InitiatePaymentRequest {
@@ -165,7 +181,13 @@ export interface Payment {
     fullName: string;
     email: string;
   };
+  tickets: Tickets[];
 }
+
+type Tickets = {
+  ticketNumber: string;
+  isCheckedIn: boolean;
+};
 
 export type GetPaymentsResponse = ApiResponse<Payment[]>;
 

@@ -2,7 +2,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Check } from 'lucide-react';
 import React, { SetStateAction, useState } from 'react';
 import BankIcon from '@/app/_module/components/icons/BankIcon';
 import SuccessModalIcon from '@/app/_module/components/icons/SuccessModalIcon';
@@ -31,7 +31,13 @@ interface AddAttendeesModalProps {
 }
 
 const SuccessModal: React.FC<
-  Step & { attendeeData: AttendeeData; setStep: any }
+  Step & {
+    attendeeData: AttendeeData; setStep: React.Dispatch<
+      React.SetStateAction<
+        'inputDetails' | 'sendPaymentLink' | 'showSuccessMessage'
+      >
+    >
+  }
 > = ({ step, setStep, attendeeData }) => {
   return (
     <div className="flex flex-col items-center justify-center py-14 px-6 text-center">
@@ -73,6 +79,7 @@ const SendPaymentLink: React.FC<
   }
 > = ({ setStep, attendeeData, paymentUrl }) => {
   const [copied, setCopied] = useState(false);
+  const ticketPrice = process.env.NEXT_PUBLIC_TICKET_PRICE ? +process.env.NEXT_PUBLIC_TICKET_PRICE : 0;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(paymentUrl ?? '');
@@ -113,7 +120,7 @@ const SendPaymentLink: React.FC<
             onClick={handleCopy}
             className="bg-[#4D4D4D] rounded-[32px] text-white font-bold text-[16px] h-full"
           >
-            Copy
+            {copied ? <Check className="w-4 h-4" /> : "Copy"}
           </Button>
         </div>
       </div>
@@ -129,7 +136,7 @@ const SendPaymentLink: React.FC<
         <div className="flex justify-between items-center py-3 px-4 border border-[#DEDEDE] rounded-sm">
           <span className="text-gray-600 font-medium">Amount</span>
           <span className="font-semibold text-gray-900">
-            {formatAmount(4000)}
+            {formatAmount(ticketPrice + 100)}
           </span>
         </div>
 
@@ -145,7 +152,7 @@ const SendPaymentLink: React.FC<
         className="w-full bg-[#1E1E1E] text-white py-[30px] rounded-[100px]"
         onClick={() => setStep('showSuccessMessage')}
       >
-        Send payment link
+        Notify Attendee
       </Button>
     </div>
   );
@@ -162,19 +169,22 @@ const AddAttendeeDetails: React.FC<
     >;
     setPaymentUrl: (url: string) => void;
   }
-> = ({ setStep, attendeeData, setAttendeeData }) => {
+> = ({ setStep, attendeeData, setAttendeeData, setPaymentUrl }) => {
   const handleInputChange = (field: keyof AttendeeData, value: string) => {
     setAttendeeData((prev: AttendeeData) => ({
       ...prev,
       [field]: value,
     }));
   };
+  const ticketPrice = process.env.NEXT_PUBLIC_TICKET_PRICE ? +process.env.NEXT_PUBLIC_TICKET_PRICE : 0;
+
 
   const createAttendeeByAdminMutation = useCreateAttendeeByAdmin();
 
   const handleAddAttendee = () => {
-    createAttendeeByAdminMutation.mutateAsync(attendeeData, {
-      onSuccess: () => {
+    createAttendeeByAdminMutation.mutateAsync({ ...attendeeData, amount: ticketPrice }, {
+      onSuccess: (res) => {
+        setPaymentUrl(res.data?.paymentUrl ?? '')
         setStep('sendPaymentLink');
       },
     });
