@@ -40,7 +40,7 @@ export class CreateAdminDto {
 
   @ApiProperty({
     description: 'Role of the admin',
-    example: Role.ADMIN,
+    example: Role.SUPER_ADMIN,
     enum: Role,
   })
   @IsOptional()

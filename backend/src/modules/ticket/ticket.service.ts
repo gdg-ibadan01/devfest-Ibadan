@@ -116,6 +116,7 @@ export class TicketsService {
       //     // checkInTime: ticketRecord.registration.checkInTime ?? undefined,
       //   }
       // : undefined,
+      isCheckedIn: ticketRecord.isCheckedIn,
       qrCode: ticketRecord.qrCode,
       status: ticketRecord.status,
       issuedAt: ticketRecord.issuedAt,
@@ -226,6 +227,10 @@ export class TicketsService {
 
     const ticket = verification.ticket;
 
+    if (ticket.isCheckedIn) {
+      throw new BadRequestException('Attendee is already checked in');
+    }
+
     // if (!ticket.registration) {
     //   throw new BadRequestException('No registration found for this ticket');
     // }
@@ -246,6 +251,7 @@ export class TicketsService {
       where: { id: ticket.id },
       data: {
         status: TicketStatus.USED,
+        isCheckedIn: true,
       },
       // include: {
       // event: true,
