@@ -35,7 +35,7 @@ export const exportToCSV = ({
         payment.paymentReference,
         payment.paymentMethod,
         payment.paidAt || 'N/A',
-        payment.isCheckedIn ? 'Yes' : 'No',
+        payment.tickets?.[0].isCheckedIn ? 'Yes' : 'No',
       ].join(',');
     }),
   ].join('\n');
@@ -73,7 +73,7 @@ export const exportToExcel = async ({
         'Payment Reference': payment.paymentReference,
         'Payment Method': payment.paymentMethod,
         'Paid At': payment.paidAt || 'N/A',
-        'Checked-in': payment.isCheckedIn ? 'Yes' : 'No',
+        'Checked-in': payment.tickets?.[0]?.isCheckedIn ? 'Yes' : 'No',
       };
     })
   );
