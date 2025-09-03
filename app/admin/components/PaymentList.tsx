@@ -75,7 +75,7 @@ const PaymentsList: React.FC<PaymentsListProps> = ({
       cell: (info) => (
         <div className="font-medium text-sm">
           {info.row.original.currency}{' '}
-          {parseFloat(info.getValue()).toLocaleString()}
+          {parseFloat(info.getValue())?.toLocaleString()}
         </div>
       ),
     }),
@@ -107,7 +107,7 @@ const PaymentsList: React.FC<PaymentsListProps> = ({
       header: 'Payment Method',
       cell: (info) => (
         <div className="capitalize  text-sm">
-          {info.getValue().replace('_', ' ')}
+          {info.getValue()?.replace('_', ' ')}
         </div>
       ),
     }),
