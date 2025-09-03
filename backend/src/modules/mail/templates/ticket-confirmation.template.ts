@@ -2,7 +2,7 @@ export function ticketConfirmationTemplate(
   fullName: string,
   ticketType: string,
   transactionId: string,
-  ticketId: string,
+  ticketNumber: string,
   isCheckedIn: boolean,
   supportEmail: string,
   logoUrl: string,
@@ -57,7 +57,7 @@ export function ticketConfirmationTemplate(
               <p><strong>💡 Bonus for you:</strong> As a ticket holder, you’re also welcome to attend our free hands-on workshops on <strong>Friday, November 28th</strong> covering Design, Mobile Development, Frontend & Backend, AI/ML, Cloud, Cybersecurity, Technical Writing, and Product Management.</p>
 
               <p style="line-height: 1.8;">
-              <strong>Ticket ID:</strong> ${ticketId}<br/>
+              <strong>Ticket ID:</strong> ${ticketNumber}<br/>
                 <strong>Ticket Type:</strong> ${ticketType}<br/>
                 <strong>Reference:</strong> ${transactionId}<br/>
                 <strong>Checked In Status:</strong> ${isCheckedIn ? 'Yes' : 'No'}
