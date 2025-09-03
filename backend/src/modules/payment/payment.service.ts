@@ -227,7 +227,7 @@ export class PaymentsService {
         payment.attendee.fullName,
         ticket.ticketType,
         payment.paystackReference ?? '',
-        ticket.id,
+        ticket.ticketNumber,
         ticket.isCheckedIn,
       );
     } else {
@@ -249,7 +249,7 @@ export class PaymentsService {
         orderBy: { createdAt: 'desc' },
         include: {
           attendee: { select: { id: true, fullName: true, email: true } },
-          tickets: { select: { ticketNumber: true } },
+          tickets: { select: { ticketNumber: true, isCheckedIn: true } },
         },
       }),
       this.prisma.payment.count(),
@@ -265,7 +265,7 @@ export class PaymentsService {
     const payment = await this.prisma.payment.findUnique({
       where: { id },
       include: {
-        tickets: { select: { ticketNumber: true } },
+        tickets: { select: { ticketNumber: true, isCheckedIn: true } },
         attendee: { select: { id: true, fullName: true, email: true } },
       },
     });

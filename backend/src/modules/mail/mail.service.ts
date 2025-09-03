@@ -31,7 +31,7 @@ export class MailService {
     // venue: string,
     ticketType: string,
     transactionId: string,
-    ticketId: string,
+    ticketNumber: string,
     isCheckedIn: boolean,
   ) {
     const logoUrl =
@@ -48,7 +48,7 @@ export class MailService {
       // venue,
       ticketType,
       transactionId,
-      ticketId,
+      ticketNumber,
       isCheckedIn,
       supportEmail,
       logoUrl,
