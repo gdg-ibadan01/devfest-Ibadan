@@ -36,31 +36,32 @@ const PaymentsList: React.FC<PaymentsListProps> = ({
   pageSize,
   paginationInfo,
   onPageChange,
-  onPageSizeChange,
+  onPageSizeChange
 }) => {
   const [sorting, setSorting] = useState<SortingState>([]);
-  const [checkedInAttendees, setCheckedInAttendees] = useState<Set<string>>(
-    new Set()
-  );
-  const checkInMutation = useCheckInAttendee({
-    onSuccess: (_, paymentReference) => {
-      // Add to checked-in set when mutation succeeds
-      setCheckedInAttendees((prev) => new Set([...prev, paymentReference]));
-    },
-  });
+
+  const checkInMutation = useCheckInAttendee();
 
   // Use server-side pagination - display current page data as-is (already filtered client-side)
   const displayData = payments;
 
-  const handleCheckIn = async (paymentReference: string) => {
+  const handleCheckIn = async (ticketNumber: string) => {
     try {
-      await checkInMutation.mutateAsync(paymentReference);
+      await checkInMutation.mutateAsync(ticketNumber);
     } catch (error) {
       console.error('Check-in failed:', error);
     }
   };
 
   const columns = [
+    columnHelper.accessor('id', {
+      header: 'ID',
+      cell: (info) => <div className=" text-sm">{info.getValue()}</div>,
+    }),
+    columnHelper.accessor('tickets.ticketNumber', {
+      header: 'Ticket ID',
+      cell: (info) => <div className=" text-sm">{info.row.original.tickets?.[0]?.ticketNumber}</div>,
+    }),
     columnHelper.accessor('attendee.fullName', {
       header: 'Name',
       cell: (info) => <div className=" text-sm">{info.getValue()}</div>,
@@ -125,9 +126,7 @@ const PaymentsList: React.FC<PaymentsListProps> = ({
       id: 'checkedIn',
       header: 'Checked-In',
       cell: (info) => {
-        const isCheckedIn = checkedInAttendees.has(
-          info.row.original.paymentReference
-        );
+        const isCheckedIn = info.row.original.tickets?.[0]?.isCheckedIn;
         return (
           <span
             className={`font-medium ${isCheckedIn ? 'text-green-600' : 'text-gray-500'}`}
@@ -141,12 +140,11 @@ const PaymentsList: React.FC<PaymentsListProps> = ({
       id: 'actions',
       header: 'Action',
       cell: (info) => {
-        const isCheckedIn = checkedInAttendees.has(
-          info.row.original.paymentReference
-        );
+        const isCheckedIn = info.row.original.tickets?.[0]?.isCheckedIn;
+        const ticketNumber = info.row.original.tickets?.[0]?.ticketNumber;
         const isProcessing =
           checkInMutation.isPending &&
-          checkInMutation.variables === info.row.original.paymentReference;
+          checkInMutation.variables === ticketNumber;
         const canCheckIn =
           info.row.original.status === 'SUCCESS' && !isCheckedIn;
 
@@ -158,10 +156,10 @@ const PaymentsList: React.FC<PaymentsListProps> = ({
               onChange={() =>
                 !isCheckedIn &&
                 canCheckIn &&
-                handleCheckIn(info.row.original.paymentReference)
+                handleCheckIn(info.row.original.tickets?.[0]?.ticketNumber)
               }
               disabled={!canCheckIn || isProcessing}
-              className="rounded border-gray-300 disabled:cursor-not-allowed cursor-pointer w-4 h-4 text-core-blue focus:ring-core-blue"
+              className="rounded border-gray-300 disabled:bg-core-green disabled:cursor-not-allowed cursor-pointer w-5 h-5 text-core-blue focus:ring-core-blue"
               title={
                 isCheckedIn
                   ? 'Already checked in'

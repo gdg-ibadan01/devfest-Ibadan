@@ -1,4 +1,5 @@
 import {
+  AdminCreateAttendeeResponse,
   adminLoginData,
   AdminLoginResponse,
   ApiError,
@@ -230,10 +231,10 @@ class ApiClient {
 
   async createAttendeeByAdmin(
     data: CreateAttendeeRequest
-  ): Promise<CreateAttendeeResponse> {
+  ): Promise<AdminCreateAttendeeResponse> {
     const response = await this.post<
       CreateAttendeeRequest,
-      CreateAttendeeResponse
+      AdminCreateAttendeeResponse
     >('admin/attendee/create', data);
     return response.data;
   }
