@@ -125,7 +125,7 @@ export function useAttendeeRegistration() {
 
       // Then initiate payment
       const paymentResponse = await initiatePayment.mutateAsync({
-        attendeeId: attendeeResponse.data.id,
+        attendeeId: attendeeResponse.data.attendee?.id,
         email: attendeeData.email,
         amount: paymentAmount,
       });

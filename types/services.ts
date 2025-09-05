@@ -24,17 +24,19 @@ export interface CreateAttendeeRequest {
 }
 
 export interface AttendeeData {
-  id: string;
-  email: string;
-  fullName: string;
-  phoneNumber: string;
-  company: string;
-  jobTitle: string;
-  role: 'ATTENDEE';
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-  amount?: number;
+  attendee: {
+    id: string;
+    email: string;
+    fullName: string;
+    phoneNumber: string;
+    company: string;
+    jobTitle: string;
+    role: 'ATTENDEE';
+    isActive: boolean;
+    createdAt: string;
+    updatedAt: string;
+    amount?: number;
+  };
 }
 
 export interface AdminAttendeeData extends AttendeeData {
