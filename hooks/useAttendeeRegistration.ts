@@ -117,7 +117,10 @@ export function useAttendeeRegistration() {
   ) => {
     try {
       // First create the attendee
-      const attendeeResponse = await createAttendee.mutateAsync(attendeeData);
+      const attendeeResponse = await createAttendee.mutateAsync({
+        ...attendeeData,
+        amount: paymentAmount,
+      });
       toast.success('Attendee profile created successfully!');
 
       // Then initiate payment
