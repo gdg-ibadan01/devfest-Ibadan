@@ -45,7 +45,7 @@ const AdminLayout = ({
               <Suspense fallback={<PageLoader />}>
                 <AdminHeader />
                 {children}
-                <Toaster richColors position={'top-right'} duration={5000} />
+                <Toaster richColors position={'top-right'} duration={6000} />
               </Suspense>
             </ErrorBoundary>
           </ReactQueryProvider>
@@ -80,7 +80,7 @@ const HomeLayout = ({
                 {!hideUI && <DFIHeader />}
                 {children}
                 {!hideUI && !shouldHideFooter && <DFIFooter />}
-                <Toaster richColors position={'top-right'} duration={5000} />
+                <Toaster richColors position={'top-right'} duration={6000} />
               </Suspense>
             </ErrorBoundary>
           </ReactQueryProvider>
