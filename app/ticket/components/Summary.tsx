@@ -17,7 +17,8 @@ interface SummaryProps {
 
 const Summary: React.FC<SummaryProps> = ({ setView, formData }) => {
   const { registerAttendeeWithPayment, isLoading } = useAttendeeRegistration();
-  const amount = 4000 + 100;
+  const ticketPrice = process.env.NEXT_PUBLIC_TICKET_PRICE ? +process.env.NEXT_PUBLIC_TICKET_PRICE : 0;
+  const amount = ticketPrice + 100;
   const handlePayNow = async () => {
     try {
       await registerAttendeeWithPayment(

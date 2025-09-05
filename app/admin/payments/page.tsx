@@ -22,7 +22,6 @@ const PaymentsPage = () => {
   const [currentPage, setCurrentPage] = React.useState(1);
   const [pageSize, setPageSize] = React.useState(10);
   const [open, setOpen] = React.useState<boolean>(false);
-
   const statuses = ['All', 'SUCCESS', 'PENDING', 'FAILED'];
   const exports = ['CSV', 'Excel'];
 
@@ -43,6 +42,8 @@ const PaymentsPage = () => {
     error,
     refetch,
   } = useGetAllPayments(queryParams);
+
+  // No need to initialize checkedInAttendees anymore as we're using server state
 
   // Client-side filtering and searching on the current page data
   const filteredPayments = useMemo(() => {
@@ -91,9 +92,18 @@ const PaymentsPage = () => {
 
     try {
       if (format === 'CSV') {
-        exportToCSV(filteredPayments, `${filename}.csv`);
+        exportToCSV(
+          {
+            data: filteredPayments,
+            filename: `${filename}.csv`,
+          }
+        );
       } else {
-        await exportToExcel(filteredPayments, `${filename}.xlsx`);
+        await exportToExcel(
+          {
+            data: filteredPayments,
+            filename: `${filename}.xlsx`,
+          });
       }
     } catch (error) {
       console.error('Export failed:', error);
@@ -112,7 +122,7 @@ const PaymentsPage = () => {
               Error loading payments
             </div>
             <p className="text-red mb-6 text-center max-w-md">
-              {error ? error?.message : 'Something went wrong'}
+              {error ? String(error.message) : 'Something went wrong'}
             </p>
             <button
               onClick={() => refetch()}

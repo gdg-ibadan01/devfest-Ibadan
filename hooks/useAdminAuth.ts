@@ -9,6 +9,7 @@ import {
 import { apiClient } from '@/services';
 import { useRouter } from 'next/navigation';
 import {
+  AdminCreateAttendeeResponse,
   AdminLoginResponse,
   ApiError,
   CreateAttendeeRequest,
@@ -92,17 +93,17 @@ export const useCheckInAttendee = (options?: {
   } = options || {};
 
   return useMutation({
-    mutationFn: (ticketNumber: string) =>
-      apiClient.checkInAttendee(ticketNumber),
+    mutationFn: async (ticketNumber: string) => {
+      const response = await apiClient.checkInAttendee(ticketNumber);
+      await queryClient.invalidateQueries({ queryKey: ['payments'] });
+      return response;
+    },
     onSuccess: (data, variables, context) => {
       if (showSuccessToast) {
         const message =
           successMessage || data.message || 'Attendee checked in successfully!';
         toast.success(message);
       }
-
-      // Invalidate and refetch payments to update the UI
-      queryClient.invalidateQueries({ queryKey: ['payments'] });
 
       // Call custom onSuccess if provided
       onSuccess?.(data, variables, context);
@@ -124,15 +125,19 @@ export const useCheckInAttendee = (options?: {
 
 export function useCreateAttendeeByAdmin(
   options?: MutationConfig<
-    CreateAttendeeResponse,
+    AdminCreateAttendeeResponse,
     ApiError,
     CreateAttendeeRequest
   >
-): UseMutationResult<CreateAttendeeResponse, ApiError, CreateAttendeeRequest> {
+): UseMutationResult<
+  AdminCreateAttendeeResponse,
+  ApiError,
+  CreateAttendeeRequest
+> {
   const {
     showSuccessToast = true,
     showErrorToast = true,
-    successMessage = 'Attendee created successfully!',
+    successMessage = 'Attendee has been successfully checked-in!',
     errorMessage,
     ...mutationOptions
   } = options || {};
