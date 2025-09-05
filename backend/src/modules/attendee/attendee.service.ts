@@ -5,26 +5,79 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
 import { CreateAttendeeDto } from './dto/create-attendee.dto';
-import { RegisterEventDto } from './dto/register-event.dto';
 import { IAttendee, ICreateAttendee } from './interfaces/attendee.interface';
-
+import { MailService } from '../mail/mail.service';
+import { PaymentStatus } from '@prisma/client';
+import { PaymentsService } from '../payment/payment.service';
 @Injectable()
 export class AttendeeService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private mailService: MailService,
+    private readonly paymentsService: PaymentsService,
+  ) {}
 
   async create(createAttendeeDto: CreateAttendeeDto): Promise<ICreateAttendee> {
+    const { email, fullName, amount } = createAttendeeDto;
+
+    if (!amount) {
+      throw new ConflictException('Payment amount is required');
+    }
+
     // Check if attendee already exists
     const existingAttendee = await this.prisma.attendee.findUnique({
-      where: { email: createAttendeeDto.email },
+      where: { email },
+      include: { payments: { orderBy: { createdAt: 'desc' } } },
     });
 
     if (existingAttendee) {
-      throw new ConflictException('Attendee with this email already exists');
+      const latestPayment = existingAttendee.payments[0];
+
+      if (!latestPayment) {
+        // Attendee exists but no payment yet → create payment
+        const paystackResponse = await this.paymentsService.initiatePayment({
+          attendeeId: existingAttendee.id,
+          email,
+          amount,
+        });
+
+        const paymentUrl = paystackResponse.data.authorization_url;
+
+        await this.mailService.sendPaymentLinkEmail(
+          existingAttendee.email,
+          existingAttendee.fullName,
+          paymentUrl,
+          amount,
+        );
+
+        return {
+          attendee: existingAttendee,
+          payment: paystackResponse,
+          paymentUrl,
+        };
+      }
+
+      if (latestPayment.status === PaymentStatus.SUCCESS) {
+        throw new ConflictException(
+          'You already have a confirmed ticket with this email',
+        );
+      }
     }
 
-    return await this.prisma.attendee.create({
-      data: createAttendeeDto,
+    // Create a new attendee
+    const attendee = await this.prisma.attendee.create({
+      data: {
+        email,
+        fullName,
+        phoneNumber: createAttendeeDto.phoneNumber,
+        company: createAttendeeDto.company,
+        jobTitle: createAttendeeDto.jobTitle,
+      },
     });
+
+    return {
+      attendee,
+    };
   }
 
   async findAll(page: number = 1, limit: number = 10) {
