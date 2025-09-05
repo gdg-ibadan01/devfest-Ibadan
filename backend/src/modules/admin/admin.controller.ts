@@ -30,16 +30,11 @@ import { InviteAdminDto } from './dto/invite-admin.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { UpdateAdminStatusDto } from './dto/update-status.dto';
-import { AttendeeService } from '../attendee/attendee.service';
 import { AdminCreateAttendeeDto } from './dto/create-attendee.dto';
-import { IAttendee, ICreateResponse } from './interfaces/attendee.interface';
+import { ICreateResponse } from './interfaces/attendee.interface';
 import { RolesGuard } from './guards/roles.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
-import {
-  ILoginResponse,
-  IAdminResponse,
-  IDashboardStats,
-} from './interfaces/admin.interface';
+import { ILoginResponse, IAdminResponse } from './interfaces/admin.interface';
 
 @ApiTags('Admin')
 @Controller('admin')
