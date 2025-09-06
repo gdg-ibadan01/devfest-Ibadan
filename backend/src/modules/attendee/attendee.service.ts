@@ -51,6 +51,8 @@ export class AttendeeService {
         );
 
         return {
+          message:
+            'Payment URL has been sent to your email, kindly proceed to complete your registration.',
           attendee: existingAttendee,
           payment: paystackResponse,
           paymentUrl,
