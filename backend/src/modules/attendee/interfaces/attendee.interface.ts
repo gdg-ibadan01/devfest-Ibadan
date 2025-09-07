@@ -19,4 +19,5 @@ export interface ICreateAttendee {
   attendee: IAttendee;
   payment?: IPaystackResponse;
   paymentUrl?: string;
+  message?: string;
 }
