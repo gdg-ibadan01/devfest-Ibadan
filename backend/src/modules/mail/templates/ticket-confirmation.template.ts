@@ -54,7 +54,9 @@ export function ticketConfirmationTemplate(
                 <li>✨ A chance to connect with the ecosystem driving impact locally and internationally</li>
               </ul>
 
-              <p><strong>💡 Bonus for you:</strong> As a ticket holder, you’re also welcome to attend our free hands-on workshops on <strong>Friday, November 28th</strong> covering Design, Mobile Development, Frontend & Backend, AI/ML, Cloud, Cybersecurity, Technical Writing, and Product Management.</p>
+              <p><strong>💡 Bonus for you:</strong> As a ticket holder, you’re also welcome to attend our free hands-on workshops Pre-DevFest series on <strong>Friday, November 28th</strong> covering Product, Web, Mobile, Cloud, Cybersecurity tracks.</p>
+             <p><strong>Venue:</strong> Jogor Centre, Felicia Hall, Liberty Road, Ibadan 200273, Nigeria.</p>
+
 
               <p style="line-height: 1.8;">
               <strong>Ticket ID:</strong> ${ticketNumber}<br/>
