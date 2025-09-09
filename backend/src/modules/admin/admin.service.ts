@@ -158,7 +158,7 @@ export class AdminService {
         email,
         password: hashedPassword,
         role,
-        isActive: false,
+        isActive: true,
         invitedById: inviter.id,
       },
     });
