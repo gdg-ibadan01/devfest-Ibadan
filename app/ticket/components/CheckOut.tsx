@@ -31,7 +31,8 @@ const CheckOut: React.FC<CheckOutProps> = ({
       className="bg-white px-4 md:px-28 py-28 rounded-2xl flex flex-col gap-5 border md:border-none"
       onSubmit={(e) => {
         e.preventDefault();
-        setView('summary');
+        return
+        // setView('summary');
       }}
     >
       <button
@@ -122,6 +123,7 @@ const CheckOut: React.FC<CheckOutProps> = ({
 
       <button
         type="submit"
+        disabled
         className="bg-[#1E1E1E] py-3 md:py-4 text-white hover:bg-core-blue rounded-[100px] flex gap-2 justify-center transition-colors duration-500 mt-6"
       >
         Get Ticket <ArrowUpRight />
