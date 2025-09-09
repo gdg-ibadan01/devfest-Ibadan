@@ -31,7 +31,7 @@ const ComingSoon: React.FC<ComingSoonProps> = ({ page, subtitle }) => {
               </p>
 
               <Link
-                href="https://gdg.community.dev/events/details/google-gdg-ibadan-presents-devfest-ibadan-2024/"
+                href="https://devfestibadan.com"
                 target="_blank"
               >
                 <Button className="text-sm md:text-xl rounded-[100px] bg-black text-white hover:bg-core-blue px-20 md:px-52 py-4 md:py-10 hidden md:flex items-center">
