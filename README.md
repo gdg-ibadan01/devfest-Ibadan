@@ -1,22 +1,24 @@
-# DevFest Ibadan 2024 🎉
+# DevFest Ibadan 🎉
 
-The official website for DevFest Ibadan 2024 - the largest GDG (Google Developer Groups) event in Ibadan! Join us on **November 23rd, 2024 at 8:00 AM** at Aweni Arena Events Center, Oke Ado, Ibadan for a day filled with inspiration, innovation, and connection.
+The official website for DevFest Ibadan - the largest GDG (Google Developer Groups) event in Ibadan! Join us on **November 28th and 29th, 2025 at 8:00 AM** at Jogor Center, No. 1 Harvester Drive, Liberty Road, New GRA, Ibadan for a day filled with inspiration, innovation, and connection.
 
-## 🌟 About DevFest Ibadan 2024
+## 🌟 About DevFest Ibadan
 
-DevFest Ibadan 2024 is where tech enthusiasts come together to explore cutting-edge technology and shape the future. No matter where you are on your tech journey, this event is designed for you. Experience a day packed with insightful talks, hands-on workshops, and networking opportunities with industry leaders, tech innovators, and creative thinkers.
+DevFest Ibadan is where over 1,000 Software Engineers, Designers, Tech Professionals and enthusiasts come together to explore cutting-edge technology and shape the future. No matter where you are on your tech journey, this event is designed for you. Experience a day packed with insightful talks, hands-on workshops, and networking opportunities with industry leaders, tech innovators, and creative thinkers.
 
 **Event Details:**
-- 📅 **Date:** November 23rd, 2024
+
+- 📅 **Date:** November 28th and 29th, 2025
 - 🕰️ **Time:** 8:00 AM prompt
-- 📍 **Venue:** Aweni Arena Events Center - Oke Ado, Ibadan
-- 🎟️ **Registration:** [Get Your Ticket](https://gdg.community.dev/events/details/google-gdg-ibadan-presents-devfest-ibadan-2024/)
+- 📍 **Venue:** Jogor Center, No. 1 Harvester Drive, Liberty Road, New GRA, Ibadann
+- 🎟️ **Registration:** [Get Your Ticket](https://devfestibadan.com/ticket)
 
 ## ✨ Current Features
 
 This website includes the following sections and features:
 
 ### 🏠 **Homepage Sections**
+
 - **Hero Section** - Event introduction and call-to-action
 - **Inclusivity Section** - Event details and date information with calendar integration
 - **Recap Section** - Highlights from previous events
@@ -26,13 +28,28 @@ This website includes the following sections and features:
 - **Sponsors Display** - Event sponsors and partners
 - **Merchandise Store** - Official DevFest merchandise with Selar integration
 
+### 📄 **Ticketing System**
+
+- **Ticket form** (`/ticket`) - Where attendees get to fill the registration form
+- **Ticket checkout** (`/ticket`) - Where attendees can purchase tickets
+- **Payment success** (`/payment/success`) - Confirmation page after successful payment
+
+### 📄 **Ticketing Admin System**
+
+- **Admin login** (`/admin`) - Where admin get to login
+- **All Payments** (`/admin/payments`) - Where admin gets to see all the payments and can check-in attendees who have paid for the ticket
+- **Add attendee** (`/admin/payments`) - Admin can add attendees to the event and a payment url will be sent to the attendee's email to purchase ticket
+- **All Payments** (`/admin/payments`) - Admin can export data in CVS and Excel format
+
 ### 📄 **Additional Pages**
+
 - **Speakers Page** (`/speakers`) - Detailed speaker profiles and bios
 - **Schedule/Agenda Page** (`/schedule`) - Event timeline and session details
 - **Sponsors Page** (`/sponsors`) - Complete sponsor information
 - **Team/Organizers Page** (`/team`, `/organizers`) - Meet the organizing team
 
 ### 🎨 **UI/UX Features**
+
 - **Responsive Design** - Optimized for desktop and mobile devices
 - **Smooth Scrolling** - Enhanced user experience with Lenis smooth scrolling
 - **Animations** - Interactive animations using Framer Motion and GSAP
@@ -40,6 +57,7 @@ This website includes the following sections and features:
 - **Accessibility** - Accordion components and proper semantic HTML
 
 ### 🛠️ **Technical Features**
+
 - **TypeScript** - Full type safety and better development experience
 - **Modern Styling** - Tailwind CSS with custom color palette matching Google brand
 - **Code Quality** - ESLint, Prettier, and Husky for consistent code formatting
@@ -49,7 +67,7 @@ This website includes the following sections and features:
 ## 📁 Project Structure
 
 ```
-devfest-Ibadan-2024/
+devfest-Ibadan/
 ├── app/                          # Next.js App Router directory
 │   ├── _module/                  # Internal modules and utilities
 │   │   ├── components/           # Shared components
@@ -63,6 +81,20 @@ devfest-Ibadan-2024/
 │   │   ├── data/                # Static data and content
 │   │   ├── lib/                 # Utility functions and libraries
 │   │   └── shared/              # Shared resources
+│   ├── ticket/                 # Ticket registration and payment
+│   │   ├── components/         # Ticket-specific components
+│   │   ├── success/            # Payment success page
+│   │   └── page.tsx            # Main ticket page
+│   ├── admin/                  # Admin dashboard
+│   │   ├── components/         # Admin interface components
+│   │   ├── payments/           # Payment management
+│   │   ├── attendees/          # Attendee management
+│   │   └── page.tsx            # Admin dashboard page
+│   ├── payment/                 # Payment processing
+│   │   ├── components/         # Payment-specific components
+│   │   ├── success/            # Success page components
+│   │   ├── failed/             # Failed payment components
+│   │   └── page.tsx            # Main payment page
 │   ├── component/               # Page-specific components
 │   │   ├── CountDown.tsx        # Event countdown timer
 │   │   ├── DevfestHero.tsx      # Hero section component
@@ -111,23 +143,27 @@ This project uses **Yarn** as the package manager. You can identify this by the 
 ### Prerequisites
 
 Make sure you have the following installed on your machine:
+
 - **Node.js** (version 18 or higher)
 - **Yarn** package manager
 
 ### Installation
 
 1. **Clone the repository:**
+
    ```bash
-   git clone https://github.com/gdg-ibadan01/devfest-Ibadan-2024.git
-   cd devfest-Ibadan-2024
+   git clone https://github.com/gdg-ibadan01/devfest-Ibadan.git
+   cd devfest-Ibadan
    ```
 
 2. **Install dependencies:**
+
    ```bash
    yarn install
    ```
 
 3. **Run the development server:**
+
    ```bash
    yarn dev
    ```
@@ -147,22 +183,26 @@ Make sure you have the following installed on your machine:
 ## 🛠️ Tech Stack
 
 ### **Frontend Framework**
+
 - **Next.js 14** - React framework with App Router
 - **React 18** - UI library
 - **TypeScript** - Type-safe JavaScript
 
 ### **Styling & UI**
+
 - **Tailwind CSS** - Utility-first CSS framework
 - **Radix UI** - Accessible component primitives
 - **Lucide React** - Icon library
 - **Custom Google Brand Colors** - Core blue, red, green, yellow with pastel variants
 
 ### **Animations & Interactions**
+
 - **Framer Motion** - Animation library
 - **GSAP** - Professional animation library
 - **Lenis** - Smooth scrolling library
 
 ### **Development Tools**
+
 - **ESLint** - Code linting
 - **Prettier** - Code formatting
 - **Husky** - Git hooks
@@ -170,6 +210,7 @@ Make sure you have the following installed on your machine:
 - **Lint-staged** - Run linters on staged files
 
 ### **External Integrations**
+
 - **Selar** - Merchandise store integration
 - **GDG Community** - Event registration platform
 - **Sessionize** - Speaker management (configured in Next.js)
@@ -179,18 +220,21 @@ Make sure you have the following installed on your machine:
 The project uses a comprehensive design system based on Google's brand colors:
 
 ### **Core Colors**
+
 - **Blue:** `#4285f4` (core-blue)
-- **Red:** `#ea4335` (core-red)  
+- **Red:** `#ea4335` (core-red)
 - **Green:** `#34a853` (core-green)
 - **Yellow:** `#f9ab00` (core-yellow)
 
 ### **Pastel Variants**
+
 - **Pastel Blue:** `#c3ecf6`
 - **Pastel Green:** `#ccf6c5`
 - **Pastel Yellow:** `#ffe7a5`
 - **Pastel Red:** `#f8d8d8`
 
 ### **Typography**
+
 - **Primary Font:** Google Sans (custom font files included)
 - **Headings:** FK Grotesk Neue Trial (various weights)
 - **Display:** Caleit Bold
@@ -200,6 +244,7 @@ The project uses a comprehensive design system based on Google's brand colors:
 We welcome contributions from the community! Please read our [Contributing Guidelines](./docs/contributing.md) for details on our code of conduct and the process for submitting pull requests.
 
 ### **Development Workflow**
+
 1. Fork the repository
 2. Create a feature branch from `main`
 3. Make your changes
@@ -213,13 +258,13 @@ This project is licensed under the MIT License. See the [Contributing Guidelines
 
 ## 🌐 Links
 
-- **🎟️ Event Registration:** [GDG Community Platform](https://gdg.community.dev/events/details/google-gdg-ibadan-presents-devfest-ibadan-2024/)
+- **🎟️ Event Registration:** [GDG Community Platform](https://devfestibadan.com/ticket)
 - **🛍️ Official Merchandise:** [Selar Store](https://selar.co/m/gdg-ibadan1)
 - **📧 Contact:** Reach out to the GDG Ibadan team for any inquiries
 
 ## 📱 Social Media
 
-Stay connected and get the latest updates about DevFest Ibadan 2024 through our social media channels and the GDG Ibadan community.
+Stay connected and get the latest updates about DevFest Ibadan through our social media channels and the GDG Ibadan community.
 
 ---
 
