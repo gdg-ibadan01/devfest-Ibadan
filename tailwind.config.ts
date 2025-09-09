@@ -18,6 +18,9 @@ const config = {
       },
     },
     extend: {
+      fontFamily: {
+        sans: ['"Product Sans"', 'sans-serif'],
+      },
       backgroundImage: {
         eclipse: "url('/eclipse.svg')",
       },

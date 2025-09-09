@@ -3,6 +3,8 @@ export const menuItems = [
   { label: 'Speakers', slur: 'speakers' },
   { label: 'Organizers', slur: 'organizers' },
   { label: 'Merch', slur: 'https://selar.co/m/gdg-ibadan1' },
+  // { label: 'Team', slur: 'team' },
+  { label: 'Ticket', slur: 'ticket' },
 ];
 
 export const footerItems = {
@@ -11,6 +13,7 @@ export const footerItems = {
     { label: 'Organizers', slur: 'organizers' },
     { label: 'Speakers', slur: 'speakers' },
     { label: 'Merch', slur: 'https://selar.co/m/gdg-ibadan1' },
+    { label: 'Ticket', slur: 'ticket' },
   ],
   frameTwo: [
     {

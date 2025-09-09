@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 
 const CountDown = () => {
   // Define the target date (December 2nd, 2023)
-  const targetDate = new Date('2025-11-29T00:08:00Z').getTime();
+  const targetDate = new Date('2025-11-28T08:00:00Z').getTime();
 
   // Initialize state variables for the countdown values
   const [days, setDays] = useState<number>(0);

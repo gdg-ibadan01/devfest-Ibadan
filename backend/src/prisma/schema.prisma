@@ -1,0 +1,188 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  SUPER_ADMIN
+  ATTENDEE
+}
+
+// enum EventStatus {
+//   DRAFT
+//   PUBLISHED
+//   ONGOING
+//   COMPLETED
+//   CANCELLED
+// }
+
+// enum RegistrationStatus {
+//   PENDING
+//   CONFIRMED
+//   CANCELLED
+//   WAITLIST
+// }
+
+enum TicketStatus {
+  ACTIVE
+  USED
+  CANCELLED
+  EXPIRED
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  SUCCESS
+  FAILED
+  REFUNDED
+}
+
+model Admin {
+  id             String    @id @default(cuid())
+  fullName       String
+  email          String    @unique
+  password       String
+  role           Role      @default(ADMIN)
+  isActive       Boolean   @default(true)
+  invitedById    String?   
+  inviter        Admin?    @relation("AdminInvitations", fields: [invitedById], references: [id])
+  invitedAdmins  Admin[]   @relation("AdminInvitations")
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  // createdEvents  Event[]
+
+  @@map("admins")
+}
+
+model Attendee {
+  id            String         @id @default(cuid())
+  email         String         @unique
+  fullName      String
+  phoneNumber   String?
+  company       String?
+  jobTitle      String?
+  role          Role           @default(ATTENDEE)
+  isActive      Boolean        @default(true)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  // registrations Registration[]
+  payments      Payment[]
+  tickets       Ticket[]
+
+  @@map("attendees")
+}
+
+// model Event {
+//   id                String         @id @default(cuid())
+//   title             String
+//   description       String
+//   slug              String         @unique
+//   venue             String
+//   address           String
+//   startDate         DateTime
+//   endDate           DateTime
+//   registrationStart DateTime
+//   registrationEnd   DateTime
+//   maxAttendees      Int
+//   currentAttendees  Int            @default(0)
+//   isPaid            Boolean        @default(false)
+//   price             Decimal?       @db.Decimal(10, 2)
+//   status            EventStatus    @default(DRAFT)
+//   bannerImage       String?
+//   tags              String[]
+//   requirements      String[]
+//   agenda            Json?
+//   createdById       String
+//   createdAt         DateTime       @default(now())
+//   updatedAt         DateTime       @updatedAt
+//   createdBy         Admin          @relation(fields: [createdById], references: [id])
+//   registrations     Registration[]
+//   tickets           Ticket[]
+//   payments          Payment[]
+
+//   @@map("events")
+// }
+
+// model Registration {
+//   id                  String             @id @default(cuid())
+//   eventId             String
+//   attendeeId          String
+//   registrationDate    DateTime           @default(now())
+//   status              RegistrationStatus @default(PENDING)
+//   isCheckedIn         Boolean            @default(false)
+//   checkInTime         DateTime?
+//   specialRequests     String?
+//   ticketType          String?
+//   dietaryRestrictions String?
+//   createdAt           DateTime           @default(now())
+//   updatedAt           DateTime           @updatedAt
+
+//   event    Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+//   attendee Attendee @relation(fields: [attendeeId], references: [id])
+//   ticket   Ticket?
+//   payment  Payment?
+
+//   @@unique([eventId, attendeeId])
+//   @@map("registrations")
+// }
+
+model Ticket {
+  id             String       @id @default(cuid())
+  ticketNumber   String       @unique
+  // eventId        String
+  // registrationId String       @unique
+  qrCode         String       @unique
+  status         TicketStatus @default(ACTIVE)
+  issuedAt       DateTime     @default(now())
+  validFrom      DateTime
+  validUntil     DateTime
+  ticketType     String
+  isCheckedIn    Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  // New relations
+  attendeeId     String
+  paymentId      String
+
+  attendee       Attendee     @relation(fields: [attendeeId], references: [id])
+  payment        Payment      @relation(fields: [paymentId], references: [id])
+
+  // event        Event        @relation(fields: [eventId], references: [id])
+  // registration Registration @relation(fields: [registrationId], references: [id])
+
+  @@map("tickets")
+}
+
+model Payment {
+  id                String        @id @default(cuid())
+  // eventId           String
+  attendeeId        String
+  // registrationId    String        @unique
+  amount            Decimal       @db.Decimal(10, 2)
+  currency          String        @default("NGN")
+  paystackReference String?        @unique
+  paymentReference  String        @unique
+  status            PaymentStatus @default(PENDING)
+  paymentMethod     String?
+  paidAt            DateTime?
+  failureReason     String?
+  metadata          Json?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  // Relations
+  // event        Event        @relation(fields: [eventId], references: [id])
+  attendee     Attendee     @relation(fields: [attendeeId], references: [id])
+  tickets      Ticket[]   
+  // registration Registration @relation(fields: [registrationId], references: [id])
+
+  @@map("payments")
+}

@@ -1,6 +1,11 @@
-export const Calendar = () => {
+type CalendarProps = {
+  className?: string;
+};
+
+export const Calendar = ({ className }: CalendarProps) => {
   return (
     <svg
+      className={className}
       width="98"
       height="98"
       viewBox="0 0 98 98"

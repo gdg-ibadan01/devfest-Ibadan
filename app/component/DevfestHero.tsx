@@ -59,13 +59,14 @@ const DevfestHero = () => {
               workshops, networking opportunities, and a chance to explore the
               latest trends in technology.
             </p>
-            <p className="text-center font-bold">
-              Date: November 28th & 29th 2025 at 8:00AM
-            </p>
+            <div>
+              <p className="text-center font-bold">
+                Date: November 28th & 29th 2025 at 8:00AM
+              </p>
+            </div>
             <div className="flex flex-col md:flex-row gap-3 md:gap-5 text-sm'">
               <Link
-                href="https://gdg.community.dev/events/details/google-gdg-ibadan-presents-devfest-ibadan-2024/"
-                target="_blank"
+                href="/ticket"
                 className="bg-black py-4 px-52 text-white hover:bg-core-blue hover:text-white rounded-[100px] flex"
               >
                 Get Ticket <ArrowUpRight />

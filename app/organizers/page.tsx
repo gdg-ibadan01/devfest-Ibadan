@@ -11,7 +11,7 @@ export default function Organizers() {
               </h1>
               <p className="text-[#4D4D4D] w-[311px] leading-[22px] md:leading-[38px] text-[14px] md:text-2xl text-center md:w-[1000px]">
                 Behind every great event is a dedicated team of passionate
-                individuals, and DevFest 2024 is no exception. Meet the
+                individuals, and DevFest 2025 is no exception. Meet the
                 organizers who are working tirelessly to bring this incredible
                 event to life. Get to know the people who share your passion for
                 technology and innovation and learn about their commitment to
