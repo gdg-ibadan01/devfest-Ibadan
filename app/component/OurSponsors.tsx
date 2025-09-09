@@ -88,48 +88,8 @@ const OurSponsors = () => {
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-24 overflow-hidden">
               <SponsorImage
-                imageSrc={turing}
-                alt="Turing"
-                divClassName="bg-white p-5 md:p-10 border-[1px] border-[#f0f0f0] rounded-2xl h-[100px] md:h-[200px]"
-              />
-              <SponsorImage
-                imageSrc={altschool}
-                alt="AltSchool"
-                divClassName="bg-white p-5 md:p-10 border-[1px] border-[#f0f0f0] rounded-2xl h-[100px] md:h-[200px]"
-              />
-              <SponsorImage
-                imageSrc={cardify}
-                alt="Cardify"
-                divClassName="bg-white p-5 md:p-10 border-[1px] border-[#f0f0f0] rounded-2xl h-[100px] md:h-[200px]"
-              />
-              <SponsorImage
                 imageSrc={ton}
                 alt="Ton Society"
-                divClassName="bg-white p-5 md:p-10 border-[1px] border-[#f0f0f0] rounded-2xl h-[100px] md:h-[200px]"
-              />
-              <SponsorImage
-                imageSrc={digitalocean}
-                alt="DigitalOcean"
-                divClassName="bg-white p-5 md:p-10 border-[1px] border-[#f0f0f0] rounded-2xl h-[100px] md:h-[200px]"
-              />
-              <SponsorImage
-                imageSrc={youverify}
-                alt="YouVerify"
-                divClassName="bg-white p-5 md:p-10 border-[1px] border-[#f0f0f0] rounded-2xl h-[100px] md:h-[200px]"
-              />
-              <SponsorImage
-                imageSrc={heyfood}
-                alt="Heyfood"
-                divClassName="bg-white p-5 md:p-10 border-[1px] border-[#f0f0f0] rounded-2xl h-[100px] md:h-[200px]"
-              />
-              <SponsorImage
-                imageSrc={ship}
-                alt="Ship"
-                divClassName="bg-white p-5 md:p-10 border-[1px] border-[#f0f0f0] rounded-2xl h-[100px] md:h-[200px]"
-              />
-              <SponsorImage
-                imageSrc={halal}
-                alt="Halal"
                 divClassName="bg-white p-5 md:p-10 border-[1px] border-[#f0f0f0] rounded-2xl h-[100px] md:h-[200px]"
               />
               <SponsorImage
