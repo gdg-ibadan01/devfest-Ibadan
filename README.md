@@ -152,8 +152,8 @@ Make sure you have the following installed on your machine:
 1. **Clone the repository:**
 
    ```bash
-   git clone https://github.com/gdg-ibadan01/devfest-Ibadan-2024.git
-   cd devfest-Ibadan-2024
+   git clone https://github.com/gdg-ibadan01/devfest-Ibadan.git
+   cd devfest-Ibadan
    ```
 
 2. **Install dependencies:**
@@ -258,13 +258,13 @@ This project is licensed under the MIT License. See the [Contributing Guidelines
 
 ## 🌐 Links
 
-- **🎟️ Event Registration:** [GDG Community Platform](https://gdg.community.dev/events/details/google-gdg-ibadan-presents-devfest-ibadan-2024/)
+- **🎟️ Event Registration:** [GDG Community Platform](https://devfestibadan.com/ticket)
 - **🛍️ Official Merchandise:** [Selar Store](https://selar.co/m/gdg-ibadan1)
 - **📧 Contact:** Reach out to the GDG Ibadan team for any inquiries
 
 ## 📱 Social Media
 
-Stay connected and get the latest updates about DevFest Ibadan 2024 through our social media channels and the GDG Ibadan community.
+Stay connected and get the latest updates about DevFest Ibadan through our social media channels and the GDG Ibadan community.
 
 ---
 
