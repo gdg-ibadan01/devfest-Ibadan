@@ -34,7 +34,7 @@ const Venue = () => {
             <div className="w-full md:w-2/3 flex flex-col gap-10">
               <div className="flex flex-row items-center justify-between">
                 <h1 className="font-bold text-2xl md:text-5xl">The venue</h1>
-                <Link href="/ticket">
+                <Link href="https://gdg.community.dev/e/mrbzpf/">
                   <Button className="text-sm md:text-xl rounded-[100px] bg-black text-white hover:bg-core-blue px-20 md:px-52 py-4 md:py-10 hidden md:flex items-center">
                     Get Ticket
                     <ArrowUpRight />
