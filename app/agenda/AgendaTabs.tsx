@@ -17,7 +17,7 @@ export default function AgendaTabs({ activeDay, setActiveDay }: Props) {
             : 'bg-[#FFFFFF] text-[#B7B7B7] border border-[#D7D7D7]'
         }`}
       >
-        Friday, 28th Dec 2024
+        Friday, 28th Nov 2025
       </button>
       <button
         onClick={() => setActiveDay('day2')}
@@ -27,7 +27,7 @@ export default function AgendaTabs({ activeDay, setActiveDay }: Props) {
             : 'bg-[#FFFFFF] text-[#B7B7B7] border border-[#D7D7D7]'
         }`}
       >
-        Saturday, 29th Dec 2024
+        Saturday, 29th Nov 2025
       </button>
     </div>
   );
