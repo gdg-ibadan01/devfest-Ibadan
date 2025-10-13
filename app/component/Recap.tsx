@@ -1,7 +1,5 @@
 'use client';
-import { ArrowUpRight } from 'lucide-react';
 import Image from 'next/image';
-import Link from 'next/link';
 import { recapImages } from '../_module/data/recap-images';
 import IconsArt from './IconsArt';
 
@@ -13,20 +11,8 @@ const Recap = () => {
           <div className="container">
             <div className="flex flex-row justify-between items-center mb-5 gap-3">
               <h1 className="font-bold text-2xl md:text-3xl">
-                Recap of DevFest Ibadan &apos;23
+                Recap of past events
               </h1>
-              {/* <Link
-                href=""
-                className="hidden md:block py-7 px-52 border-[1px] border-black hover:border-core-blue bg-white  text-black hover:text-white hover:bg-core-blue rounded-[100px]"
-              >
-                Devfest &apos;23 website
-              </Link>
-              <Link
-                href="#"
-                className="block md:hidden p-5 md:px-52 border-[1px] border-black bg-black text-white hover:bg-core-blue hover:text-white rounded-full"
-              >
-                <ArrowUpRight />
-              </Link> */}
             </div>
 
             <div className="scroll-container overflow-hidden relative">

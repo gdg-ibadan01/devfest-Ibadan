@@ -30,6 +30,7 @@ const MenuLink: FC<MenuLinkProps> = ({ slur, label }) => {
         'schedule',
         'sponsors',
         'team',
+        'ticket',
       ].indexOf(slur) > -1 ? (
         <Link
           href={`/${slur}`}
