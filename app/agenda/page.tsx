@@ -17,7 +17,7 @@ export default function Agenda() {
           <section className={Styles.dateContainer}>
             <Calendar className="md:w-[98px] md:h-[98px] w-[53px] h-[53px]" />
             <p className={Styles.date}>
-              December 3rd & 4th, 2025, from 9:00 AM to 5:00 PM
+              November 28th & 29th, 2025, from 9:00 AM to 5:00 PM
             </p>
           </section>
           <p className={Styles.headerText}>
