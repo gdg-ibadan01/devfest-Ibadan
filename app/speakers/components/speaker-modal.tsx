@@ -42,7 +42,7 @@ const SpeakerModal: React.FC<SpeakerModalProps> = ({
                 alt={`${speakerData.name}-${speakerData.title}`}
                 width={500}
                 height={400}
-                // style={{ height: '400px' }}
+              // style={{ height: '400px' }}
               />
               {/* <Link
                 href={speakerData.mediaLink || '#'}
