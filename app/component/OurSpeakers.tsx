@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { Button } from '../_module/components/ui/button';
 import { SpeakersList } from '../_module/data/speakers-list';
 import IconsArt from './IconsArt';
+import { Fragment } from 'react';
+import SpeakerCard from '../_module/components/cards/SpeakerCard';
 
 const OurSpeakers = () => {
   const Speakers = SpeakersList.slice(0, 4);
@@ -23,16 +25,14 @@ const OurSpeakers = () => {
                 </Button>
               </Link>
             </div>
-            {/* <section className="grid grid-cols-1 md:grid-cols-4 gap-24">
+            <section className="grid grid-cols-1 md:grid-cols-4 gap-24">
               {Speakers.map((data, idx) => (
                 <Fragment key={idx}>
                   <SpeakerCard {...data} />
                 </Fragment>
               ))}
-            </section> */}
-            <h1 className="text-5xl font-bold text-center">
-              Speakers Coming Soon
-            </h1>
+            </section>
+
 
             <section className="flex gap-5 flex-col items-center py-24">
               <p className="text-xl font-extralight text-[#4D4D4D] md:w-[820px] text-center">
