@@ -1,125 +1,203 @@
 export type AgendaItem = {
   time: string;
-  activity: string;
+  felicia?: string;
+  banquet?: string;
+  functions?: string;
   duration: string;
   highlight?: boolean;
 };
 
-export const agendaData: { day1: AgendaItem[]; day2: AgendaItem[] } = {
-  day1: [
-    {
-      time: '9:00 am - 9:30 am',
-      activity: 'Arrival of Guests',
-      duration: '30 mins',
-    },
-    {
-      time: '9:30 am - 10:00 am',
-      activity: 'Opening Ceremony',
-      duration: '30 mins',
-    },
-    {
-      time: '10:00 am - 10:30 am',
-      activity: 'Keynote Session',
-      duration: '30 mins',
-    },
-    {
-      time: '10:30 am - 11:00 am',
-      activity: 'Speaker Session 1',
-      duration: '30 mins',
-    },
-    {
-      time: '11:00 am - 11:30 am',
-      activity: 'Speaker Session 2',
-      duration: '30 mins',
-    },
-    {
-      time: '12:00 pm - 01:00 pm',
-      activity: 'Break/Networking',
-      duration: '30 mins',
-      highlight: true,
-    },
-    {
-      time: '1:00 pm - 1:30 pm',
-      activity: 'Workshop Session 1',
-      duration: '30 mins',
-    },
-    {
-      time: '1:30 pm - 2:00 pm',
-      activity: 'Workshop Session 2',
-      duration: '30 mins',
-    },
-    {
-      time: '2:00 pm - 2:30 pm',
-      activity: 'Panel Session',
-      duration: '30 mins',
-    },
-    {
-      time: '2:30 pm - 3:00 pm',
-      activity: 'Product Demos',
-      duration: '30 mins',
-    },
-    {
-      time: '3:00 pm - 3:30 pm',
-      activity: 'Hackathon Pitching',
-      duration: '30 mins',
-    },
-    {
-      time: '4:00 pm - 5:00 pm',
-      activity: 'Closing Remarks',
-      duration: '1 hr',
-    },
-  ],
-  day2: [
-    {
-      time: '9:00 am - 9:30 am',
-      activity: 'Arrival of Guests',
-      duration: '30 mins',
-    },
-    {
-      time: '9:30 am - 10:00 am',
-      activity: 'Workshop Session 3',
-      duration: '30 mins',
-    },
-    {
-      time: '10:00 am - 10:30 am',
-      activity: 'Workshop Session 4',
-      duration: '30 mins',
-    },
-    {
-      time: '10:30 am - 11:00 am',
-      activity: 'Speaker Session 3',
-      duration: '30 mins',
-    },
-    {
-      time: '11:00 am - 11:30 am',
-      activity: 'Speaker Session 4',
-      duration: '30 mins',
-    },
-    {
-      time: '12:00 pm - 01:00 pm',
-      activity: 'Break/Networking',
-      duration: '30 mins',
-      highlight: true,
-    },
-    {
-      time: '1:00 pm - 2:00 pm',
-      activity: 'Hackathon Presentations',
-      duration: '1 hr',
-    },
-    {
-      time: '2:00 pm - 3:00 pm',
-      activity: 'Panel Session 2',
-      duration: '1 hr',
-    },
-    {
-      time: '3:00 pm - 4:00 pm',
-      activity: 'Awards & Recognition',
-      duration: '1 hr',
-    },
-    {
-      time: '4:00 pm - 5:00 pm',
-      activity: 'Closing & Networking',
-      duration: '1 hr',
-    },
-  ],
-};
+export const agendaData: AgendaItem[] = [
+  {
+    time: '8:30 am - 9:00 am',
+    felicia: 'Registrations and arrival',
+    banquet: '',
+    functions: '',
+    duration: '30 mins',
+    highlight: true,
+  },
+  {
+    time: '9:00 am - 9:15 am',
+    felicia: 'Introduction/Opening Speech',
+    banquet: '',
+    functions: '',
+    duration: '15 mins',
+    highlight: true,
+  },
+  {
+    time: '9:15 am - 9:40 am',
+    felicia: 'Keynote Speech 1\nSodiq Akinjobi',
+    banquet: '',
+    functions: '',
+    duration: '25 mins',
+    highlight: true,
+  },
+  {
+    time: '9:40 am - 9:50 am',
+    felicia: 'Games',
+    banquet: '',
+    functions: '',
+    duration: '10 mins',
+    highlight: true,
+  },
+  {
+    time: '9:55 am - 10:20 am',
+    felicia: 'Keynote Speech 2',
+    banquet: '',
+    functions: '',
+    duration: '25 mins',
+    highlight: true,
+  },
+  {
+    time: '10:20 am - 10:30 am',
+    felicia: 'Transfer Between Halls',
+    banquet: '',
+    functions: '',
+    duration: '10 mins',
+    highlight: true,
+  },
+  {
+    time: '10:35 am - 11:00 am',
+    felicia: 'Speaker Session 1\nTriumph Ogeh',
+    banquet: 'Speaker Session 2\nDara Obademi',
+    functions: 'Speaker Session 3\nTaiwo Famakinde',
+    duration: '25 mins',
+  },
+  {
+    time: '11:05 am - 11:30 am',
+    felicia: 'Speaker Session 4\nUchenna Nnamadim',
+    banquet: 'Speaker Session 5\nEmmanuel Omidiora',
+    functions: 'Speaker Session 6\nMagaret Ekerendu',
+    duration: '25 mins',
+  },
+  {
+    time: '11:35 am - 12:00 pm',
+    felicia: 'Speaker Session 7\nJoshua Olajide',
+    banquet: 'Speaker Session 8\nIfeoluwa Obayemi',
+    functions: 'Speaker Session 9\nAyantunji Timilchin',
+    duration: '25 mins',
+  },
+  {
+    time: '12:00 pm - 12:10 pm',
+    felicia: 'Games and Giveaway',
+    banquet: '',
+    functions: '',
+    duration: '10 mins',
+    highlight: true,
+  },
+  {
+    time: '12:10 pm - 12:20 pm',
+    felicia: 'Sponsor Slot - NotZero Hub',
+    banquet: '',
+    functions: '',
+    duration: '10 mins',
+    highlight: true,
+  },
+  {
+    time: '12:25 pm - 12:50 pm',
+    felicia: 'Speaker Session 10\nDamilola Alimi',
+    banquet: 'Speaker Session 11\nDominic Orim',
+    functions: 'Speaker Session 12\nChukwuemeka Chukwurah',
+    duration: '25 mins',
+  },
+  {
+    time: '12:55 pm - 01:20 pm',
+    felicia: 'Speaker Session 13\nAtuoha Anthony',
+    banquet: 'Workshop 1\nMileke Kolawole',
+    functions: 'Workshop 2\nGideon Ogunkola',
+    duration: '25 mins',
+  },
+  {
+    time: '01:25 pm - 01:50 pm',
+    felicia: 'Speaker Session 14\nAdefunke Bolatito',
+    banquet: '',
+    functions: '',
+    duration: '25 mins',
+    highlight: true,
+  },
+  {
+    time: '01:50 pm - 02:00 pm',
+    felicia: 'Games and Giveaway',
+    banquet: '',
+    functions: '',
+    duration: '10 mins',
+    highlight: true,
+  },
+  {
+    time: '02:00 pm - 02:05 pm',
+    felicia: 'Sponsor Slot - AgentPesa',
+    banquet: '',
+    functions: '',
+    duration: '5 mins',
+    highlight: true,
+  },
+  {
+    time: '02:10 pm - 02:20 pm',
+    felicia: 'Lightening Talk 1\nSamuel Femi',
+    banquet: 'Lightening Talk 2\nMary Ojo',
+    functions: 'Lightening Talk 3\nFehintoluwa Dahunsi',
+    duration: '10 mins',
+  },
+  {
+    time: '02:25 pm - 02:35 pm',
+    felicia: 'Lightening Talk 4\nAbdul-Malik Adebayo',
+    banquet: 'Lightening Talk 5\nTunmise Akinade',
+    functions: 'Lightening Talk 6\nOrire Agbaje',
+    duration: '10 mins',
+  },
+  {
+    time: '02:35 pm - 02:45 pm',
+    felicia: 'Lightening Talk 7\nFolaranmi Jesutofunmi',
+    banquet: 'Lightening Talk 8\nAyomide Akindeyin',
+    functions: 'Lightening Talk 9\nBlessing Akanle',
+    duration: '10 mins',
+  },
+  {
+    time: '02:45 pm – 3:15 pm',
+    felicia: 'Networking, Visit to the Booths, Pictures, and Item 7',
+    banquet: '',
+    functions: '',
+    duration: '30 mins',
+    highlight: true,
+  },
+  {
+    time: '03:20 pm - 03:30 pm',
+    felicia: 'Games and Giveaway',
+    banquet: '',
+    functions: '',
+    duration: '10 mins',
+    highlight: true,
+  },
+  {
+    time: '03:35 pm – 04:20 pm',
+    felicia: 'Panel Session - Titilope Laniran (Moderator)\nSodiq Ogunyeiwa',
+    banquet: '',
+    functions: '',
+    duration: '45 mins',
+    highlight: true,
+  },
+  {
+    time: '04:20 pm – 04:30 pm',
+    felicia: "Organizer's Speech/Presenting the Organizing Team",
+    banquet: '',
+    functions: '',
+    duration: '10 mins',
+    highlight: true,
+  },
+  {
+    time: '04:35 pm – 04:45 pm',
+    felicia: 'Games and Gift Presentation',
+    banquet: '',
+    functions: '',
+    duration: '10 mins',
+    highlight: true,
+  },
+  {
+    time: '04:50 pm - 5:00 pm',
+    felicia: 'Vote of Thanks',
+    banquet: '',
+    functions: '',
+    duration: '10 mins',
+    highlight: true,
+  },
+];
