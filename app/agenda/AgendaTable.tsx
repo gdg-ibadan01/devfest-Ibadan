@@ -54,17 +54,25 @@ export default function AgendaTable({ data }: Props) {
                 <td
                   className="p-3 border-[2px] border-[#1E1E1E] font-normal text-sm md:text-base align-top"
                   colSpan={shouldSpan ? 3 : 1}
-                >
-                  {item.felicia || ''}
-                </td>
+                  dangerouslySetInnerHTML={{
+                    __html: item.felicia || ''
+                  }}
+                />
                 {!shouldSpan && (
                   <>
-                    <td className="p-3 border-[2px] border-[#1E1E1E] font-normal text-sm md:text-base align-top">
-                      {item.banquet || ''}
-                    </td>
-                    <td className="p-3 border-[2px] border-[#1E1E1E] font-normal text-sm md:text-base align-top">
-                      {item.functions || ''}
-                    </td>
+                    <td
+                      className="p-3 border-[2px] border-[#1E1E1E] font-normal text-sm md:text-base align-top"
+                      dangerouslySetInnerHTML={{
+                        __html: item.banquet || ''
+                      }}
+                    />
+                    <td
+                      className="p-3 border-[2px] border-[#1E1E1E] font-normal text-sm md:text-base align-top"
+                      dangerouslySetInnerHTML={{
+                        __html: item.functions || ''
+                      }}
+                    />
+
                   </>
                 )}
                 <td className="p-3 border-[2px] border-[#1E1E1E] whitespace-nowrap font-normal text-sm md:text-base align-top">
