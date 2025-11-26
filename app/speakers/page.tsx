@@ -4,10 +4,8 @@ import { Fragment, useState } from 'react';
 import SpeakerCard, {
   TspeakerProps,
 } from '../_module/components/cards/SpeakerCard';
-import { Button } from '../_module/components/ui/button';
 import { SpeakersList } from '../_module/data/speakers-list';
 import { speakersClass as Styles } from './speakers';
-import ComingSoon from '../_module/components/common/ComingSoon';
 import SpeakerModal from './components/speaker-modal';
 import { StaticImageData } from 'next/image';
 import clsx from 'clsx';

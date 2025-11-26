@@ -102,7 +102,7 @@ export const agendaData: AgendaItem[] = [
   },
   {
     time: '12:55 pm - 01:20 pm',
-    felicia: 'Speaker Session 13\nAtuoha Anthony',
+    felicia: 'Speaker Session 13\nJohn O. Emmanuel',
     banquet: 'Workshop 1\nMileke Kolawole',
     functions: 'Workshop 2\nGideon Ogunkola',
     duration: '25 mins',

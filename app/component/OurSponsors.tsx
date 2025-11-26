@@ -3,16 +3,10 @@ import { ArrowUpRight } from 'lucide-react';
 import Link from 'next/link';
 import Image, { StaticImageData } from 'next/image';
 import oneapp from '@/public/1appnewlogo.8e95dfd0.png';
-import turing from '@/public/turing.png';
-import altschool from '@/public/altschool-africa-logo-4365C6B160-seeklogo.com.png';
-import cardify from '@/public/Cardify-Africa-Logo-Black-544-by-180.png';
+import agentPesa from '@/public/agentpesa_logo.png';
+import foodbolt from '@/public/foodbolt.jpeg';
 import codemagic from '@/public/codemagic.svg';
-import digitalocean from '@/public/digitalocean-2.svg';
 import google from '@/public/Google_Icons-09-512.webp';
-import youverify from '@/public/logo_iffgzd.svg';
-import heyfood from '@/public/logo-long.svg';
-import ship from '@/public/shiip.png';
-import halal from '@/public/SuegFTtO_400x400.jpg';
 import ton from '@/public/TONSociety.png';
 import github from '@/public/White2.png';
 import lorry from '@/public/lorry.jpg';
@@ -76,6 +70,16 @@ const OurSponsors = () => {
             />
             <SponsorImage
               imageSrc={notzero}
+              alt="Codemagic"
+              divClassName="bg-white p-5 md:p-10 border-[1px] border-[#f0f0f0] rounded-2xl h-[100px] md:h-[200px]"
+            />
+            <SponsorImage
+              imageSrc={agentPesa}
+              alt="Codemagic"
+              divClassName="bg-white p-5 md:p-10 border-[1px] border-[#f0f0f0] rounded-2xl h-[100px] md:h-[200px]"
+            />
+            <SponsorImage
+              imageSrc={foodbolt}
               alt="Codemagic"
               divClassName="bg-white p-5 md:p-10 border-[1px] border-[#f0f0f0] rounded-2xl h-[100px] md:h-[200px]"
             />
