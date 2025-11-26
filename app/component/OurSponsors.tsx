@@ -4,6 +4,7 @@ import Link from 'next/link';
 import Image, { StaticImageData } from 'next/image';
 import oneapp from '@/public/1appnewlogo.8e95dfd0.png';
 import agentPesa from '@/public/agentpesa_logo.png';
+import etionary from '@/public/etionary-logo-.png';
 import foodbolt from '@/public/foodbolt.jpeg';
 import codemagic from '@/public/codemagic.svg';
 import google from '@/public/Google_Icons-09-512.webp';
@@ -80,6 +81,11 @@ const OurSponsors = () => {
             />
             <SponsorImage
               imageSrc={foodbolt}
+              alt="Codemagic"
+              divClassName="bg-white p-5 md:p-10 border-[1px] border-[#f0f0f0] rounded-2xl h-[100px] md:h-[200px]"
+            />
+            <SponsorImage
+              imageSrc={etionary}
               alt="Codemagic"
               divClassName="bg-white p-5 md:p-10 border-[1px] border-[#f0f0f0] rounded-2xl h-[100px] md:h-[200px]"
             />
