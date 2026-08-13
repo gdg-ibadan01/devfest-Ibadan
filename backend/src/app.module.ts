@@ -7,7 +7,6 @@ import { APP_FILTER, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 import { HttpExceptionFilter } from './common/filters/exception.filter';
 import { ValidationPipe422 } from './common/pipe/validation.pipe';
 import { TransformerInterceptor } from './common/interceptor/transformer.interceptor';
-import { DatabaseModule } from './modules/database/prisma.module';
 import { AppService } from './app.service';
 import { AttendeeModule } from './modules/attendee/attendee.module';
 import { EventsModule } from './modules/events/events.module';
@@ -38,7 +37,6 @@ import { UploadModule } from './modules/upload/upload.module';
     }),
     // Logging
     WinstonModule.forRootAsync(winstonConfig),
-    DatabaseModule,
     AttendeeModule,
     EventsModule,
     MailModule,

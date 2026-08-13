@@ -1,10 +1,8 @@
-import { Role } from '@prisma/client';
-
 export interface IAdmin {
   id: string;
   fullName: string;
   email: string;
-  role: Role;
+  role: string;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -14,7 +12,7 @@ export interface IAdminResponse {
   id: string;
   fullName: string;
   email: string;
-  role: Role;
+  role: string;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -29,7 +27,7 @@ export interface ILoginResponse {
 export interface IJwtPayload {
   sub: string;
   email: string;
-  role: Role;
+  role: string;
   iat?: number;
   exp?: number;
 }
