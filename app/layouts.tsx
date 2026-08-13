@@ -61,11 +61,11 @@ const HomeLayout = ({
   children: React.ReactNode;
 }>) => {
   const pathname = usePathname();
-  // Define routes where you want to hide the header/footer
-  const hideUIRoutes = ['/ticket'];
-  const hideUI = hideUIRoutes.includes(pathname);
+  // Define routes where you want to hide the header
+  const hideHeaderRoutes = ['/ticket'];
+  const shouldHideHeader = hideHeaderRoutes.includes(pathname);
   // Define the route where you want to hide the footer
-  const hideFooterRoutes = ['/schedule'];
+  const hideFooterRoutes = ['/ticket', '/rsvp'];
   const shouldHideFooter = hideFooterRoutes.includes(pathname);
   return (
     <html lang="en">
@@ -77,9 +77,9 @@ const HomeLayout = ({
               showErrorDetails={process.env.NODE_ENV === 'development'}
             >
               <Suspense fallback={<PageLoader />}>
-                {!hideUI && <DFIHeader />}
+                {!shouldHideHeader && <DFIHeader />}
                 {children}
-                {!hideUI && !shouldHideFooter && <DFIFooter />}
+                {!shouldHideHeader && !shouldHideFooter && <DFIFooter />}
                 <Toaster richColors position={'top-right'} duration={6000} />
               </Suspense>
             </ErrorBoundary>
