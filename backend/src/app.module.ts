@@ -19,6 +19,7 @@ import jwtConfig from './config/jwt.config';
 import gmailConfig from './config/mail.config';
 import paystackConfig from './config/paystack.config';
 import cloudinaryConfig from './config/cloudinary.config';
+import superadminConfig from './config/superadmin.config';
 import { TicketsModule } from './modules/ticket/ticket.module';
 import { UploadModule } from './modules/upload/upload.module';
 
@@ -33,6 +34,7 @@ import { UploadModule } from './modules/upload/upload.module';
         gmailConfig,
         cloudinaryConfig,
         paystackConfig,
+        superadminConfig,
       ],
     }),
     // Logging
