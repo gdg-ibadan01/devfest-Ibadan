@@ -79,9 +79,7 @@ export class AdminController {
     description: 'Attendee with this email already exists',
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async createAttendee(
-    @Body() adminCreateAttendeeDto: AdminCreateAttendeeDto,
-  ): Promise<ICreateResponse> {
+  async createAttendee(@Body() adminCreateAttendeeDto: AdminCreateAttendeeDto) {
     return this.adminService.create(adminCreateAttendeeDto);
   }
 
@@ -95,10 +93,7 @@ export class AdminController {
     status: 403,
     description: 'Only SUPER_ADMIN can invite other admins.',
   })
-  async inviteAdmin(
-    @Body() inviteDto: InviteAdminDto,
-    @Req() req: Request,
-  ): Promise<{ message: string }> {
+  async inviteAdmin(@Body() inviteDto: InviteAdminDto, @Req() req: Request) {
     const inviterId = req.user?.id ?? req.user?.sub;
     return this.adminService.inviteAdmin(inviteDto, inviterId);
   }

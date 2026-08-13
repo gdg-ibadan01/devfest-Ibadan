@@ -2,7 +2,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
-import { PrismaService } from '../../database/prisma.service';
+import { PrismaService } from 'src/prisma/prisma.service';
 import { IJwtPayload } from '../interfaces/admin.interface';
 
 @Injectable()
@@ -21,12 +21,19 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   async validate(payload: IJwtPayload) {
     const admin = await this.prisma.admin.findUnique({
       where: { id: payload.sub },
+      include: {
+        role: true,
+      },
     });
 
     if (!admin || !admin.isActive) {
       throw new UnauthorizedException('Invalid token or inactive user');
     }
 
-    return { id: admin.id, email: admin.email, role: admin.role };
+    return {
+      id: admin.id,
+      email: admin.email,
+      role: { id: admin.role.id, name: admin.role.name },
+    };
   }
 }

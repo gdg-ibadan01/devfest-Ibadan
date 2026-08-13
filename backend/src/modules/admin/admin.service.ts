@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { PrismaService } from '../database/prisma.service';
+import { PrismaService } from 'src/prisma/prisma.service';
 import { hashSync, genSaltSync, compareSync } from 'bcrypt';
 import * as crypto from 'crypto';
 import { CreateAdminDto } from './dto/create-admin.dto';
@@ -24,8 +24,6 @@ import {
   IDashboardStats,
 } from './interfaces/admin.interface';
 // import { EventStatus } from '@prisma/client';
-import { Role } from '@prisma/client';
-import { PaymentStatus } from '@prisma/client';
 import { MailService } from '../mail/mail.service';
 import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
@@ -66,7 +64,7 @@ export class AdminService {
         fullName,
         email,
         password: hashedPassword,
-        role: Role.SUPER_ADMIN,
+        roleId: '',
       },
     });
 
@@ -74,7 +72,7 @@ export class AdminService {
     const tokens = await this.generateTokens({
       sub: admin.id,
       email: admin.email,
-      role: Role.SUPER_ADMIN,
+      role: '',
     });
 
     return {
@@ -110,7 +108,7 @@ export class AdminService {
     const tokens = await this.generateTokens({
       sub: admin.id,
       email: admin.email,
-      role: Role.ADMIN,
+      role: '',
     });
 
     return {
@@ -119,58 +117,7 @@ export class AdminService {
     };
   }
 
-  async inviteAdmin(
-    inviteDto: InviteAdminDto,
-    invitedBy: string,
-  ): Promise<{ message: string }> {
-    const { fullName, email, role } = inviteDto;
-    if (!invitedBy) {
-      throw new UnauthorizedException('Missing inviter id from auth context');
-    }
-
-    // Verify inviter exists & is SUPER_ADMIN
-    const inviter = await this.prisma.admin.findUnique({
-      where: { id: invitedBy },
-    });
-    if (!inviter) {
-      throw new UnauthorizedException('Inviter not found');
-    }
-    if (inviter.role !== Role.SUPER_ADMIN) {
-      throw new ForbiddenException('Only SUPER_ADMIN can invite other admins');
-    }
-
-    // Prevent duplicates
-    const existingAdmin = await this.prisma.admin.findUnique({
-      where: { email },
-    });
-    if (existingAdmin) {
-      throw new ConflictException('Admin with this email already exists');
-    }
-
-    // Create admin with temp password
-    const tempPassword = crypto.randomBytes(12).toString('hex');
-    const salt = genSaltSync(10);
-    const hashedPassword = hashSync(tempPassword, salt);
-
-    const admin = await this.prisma.admin.create({
-      data: {
-        fullName,
-        email,
-        password: hashedPassword,
-        role,
-        isActive: true,
-        invitedById: inviter.id,
-      },
-    });
-
-    await this.mailService.sendInviteEmail(
-      admin.email,
-      admin.fullName,
-      tempPassword,
-    );
-
-    return { message: 'Admin invited successfully' };
-  }
+  async inviteAdmin(inviteDto: InviteAdminDto, invitedBy: string) {}
 
   async refreshToken(
     refreshToken: string,
@@ -191,7 +138,7 @@ export class AdminService {
       return this.generateTokens({
         sub: admin.id,
         email: admin.email,
-        role: Role.ADMIN,
+        role: '',
       });
     } catch (error) {
       throw new UnauthorizedException('Invalid refresh token');
@@ -234,56 +181,7 @@ export class AdminService {
     return { message: 'Password changed successfully' };
   }
 
-  async create(
-    adminCreateAttendeeDto: AdminCreateAttendeeDto,
-  ): Promise<ICreateResponse> {
-    const { email, fullName, amount, phoneNumber, company, jobTitle } =
-      adminCreateAttendeeDto;
-
-    // Check if attendee already exists
-    const existingAttendee = await this.prisma.attendee.findUnique({
-      where: { email },
-    });
-    if (existingAttendee) {
-      throw new ConflictException('Attendee with this email already exists');
-    }
-
-    // Create attendee
-    const attendee = await this.prisma.attendee.create({
-      data: { email, fullName, phoneNumber, company, jobTitle },
-    });
-
-    // Initialize payment
-    const paystackResponse = await this.paymentsService.initiatePayment({
-      attendeeId: attendee.id,
-      email,
-      amount,
-    });
-
-    // Send payment link email
-    const paymentUrl = paystackResponse.data.authorization_url;
-    await this.mailService.sendPaymentLinkEmail(
-      attendee.email,
-      attendee.fullName,
-      paymentUrl,
-      amount,
-    );
-
-    // Shape attendee response
-    const attendeeResponse: IAttendee = {
-      ...attendee,
-      phoneNumber: attendee.phoneNumber ?? undefined,
-      company: attendee.company ?? undefined,
-      jobTitle: attendee.jobTitle ?? undefined,
-      amount,
-    };
-
-    return {
-      attendee: attendeeResponse,
-      payment: paystackResponse,
-      paymentUrl,
-    };
-  }
+  async create(adminCreateAttendeeDto: AdminCreateAttendeeDto) {}
 
   async deactivateAdmin(
     adminId: string,
@@ -297,7 +195,7 @@ export class AdminService {
       where: { id: deactivatedBy },
     });
 
-    if (!deactivator || deactivator.role !== 'SUPER_ADMIN') {
+    if (!deactivator || deactivator.roleId !== 'SUPER_ADMIN') {
       throw new ForbiddenException('Only SUPER_ADMIN can deactivate admins');
     }
 
@@ -326,15 +224,15 @@ export class AdminService {
       throw new Error('Refresh secret is not configured');
     }
 
-    const refreshToken = await this.jwtService.sign(payload, {
+    const refreshToken = await this.jwtService.sign<IJwtPayload>(payload, {
       secret: refreshSecret,
-      expiresIn: refreshExpiresIn,
+      expiresIn: refreshExpiresIn as `${number}`,
     });
 
     return { accessToken, refreshToken };
   }
 
-  private excludePassword(admin: any): IAdminResponse {
+  private excludePassword(admin: any) {
     const { password, ...adminWithoutPassword } = admin;
     return adminWithoutPassword;
   }
@@ -419,13 +317,13 @@ export class AdminService {
     return this.excludePassword(admin);
   }
 
-  async findByEmail(email: string): Promise<IAdmin | null> {
+  async findByEmail(email: string) {
     return await this.prisma.admin.findUnique({
       where: { email },
     });
   }
 
-  async updateStatus(id: string, isActive: boolean): Promise<IAdmin> {
+  async updateStatus(id: string, isActive: boolean) {
     await this.findOne(id);
     return await this.prisma.admin.update({
       where: { id },

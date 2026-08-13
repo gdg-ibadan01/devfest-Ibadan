@@ -1,5 +1,3 @@
-import { PaymentStatus } from '@prisma/client';
-
 export interface IPayment {
   id: string;
   attendeeId: string;
@@ -7,7 +5,7 @@ export interface IPayment {
   currency: string;
   paystackReference: string;
   paymentReference: string;
-  status: PaymentStatus;
+  status: 'SUCCESS' | 'FAILED';
   paymentMethod?: string | null;
   paidAt: Date | null;
   failureReason?: string | null;
