@@ -11,6 +11,7 @@ import { PaymentsModule } from '../payment/payment.module';
 import { RolesController } from './roles.controller';
 import { RolesService } from './roles.service';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { SuperadminSeedService } from './superadmin-seed.service';
 
 @Module({
   imports: [
@@ -38,7 +39,13 @@ import { PrismaService } from 'src/prisma/prisma.service';
     }),
   ],
   controllers: [AdminController, RolesController],
-  providers: [AdminService, JwtStrategy, RolesService, PrismaService],
+  providers: [
+    AdminService,
+    JwtStrategy,
+    RolesService,
+    PrismaService,
+    SuperadminSeedService,
+  ],
   exports: [AdminService],
 })
 export class AdminModule {}
