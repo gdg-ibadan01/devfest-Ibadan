@@ -18,6 +18,8 @@ model Role {
   permissions String[]
   isActive    Boolean  @default(true)
   admins      Admin[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt @default(now())
 
   @@map("roles")
 }
