@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
-import { CreateRoleDto, ListRolesResponseDto } from './dto/role.dto';
+import { CreateRoleDto, ListPermissionsResponse } from './dto/role.dto';
 import { RolesService } from './roles.service';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
@@ -14,13 +14,13 @@ export class RolesController {
     return await this.roleService.create(payload);
   }
 
-  @Get()
+  @Get('permissions')
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   @ApiResponse({
-    type: ListRolesResponseDto,
+    type: ListPermissionsResponse,
   })
   list() {
-    return this.roleService.list();
+    return this.roleService.listPermissions();
   }
 }

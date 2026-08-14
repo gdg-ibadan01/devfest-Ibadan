@@ -55,7 +55,7 @@ export class CreateRoleDto {
   isActive: boolean;
 }
 
-export class ListRolesResponseDto {
+export class ListPermissionsResponse {
   @ApiProperty({ type: [PermissionDto] })
-  roles: PermissionDto[];
+  permissions: PermissionDto[];
 }
