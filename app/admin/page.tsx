@@ -6,9 +6,6 @@ import RecentAttendeesTable from './_components/RecentAttendeesTable';
 export default function AdminHomePage() {
   return (
     <div className="px-8 py-8">
-      <h1 className="text-[28px] font-bold text-black mb-8 leading-tight">
-        Home
-      </h1>
 
       {/* Stat Cards */}
       <div className="grid grid-cols-4 gap-5 mb-8">
