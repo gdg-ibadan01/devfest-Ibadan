@@ -21,10 +21,12 @@ export default function PricingStep({
     onChange({ ...data, [key]: value });
 
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl p-8">
-      <h2 className="text-[18px] font-bold text-black mb-6">Pricing</h2>
+    <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+      <div className="py-[24px] px-[32px] bg-[#FAFAFA]">
+        <h2 className="text-[18px] font-bold text-black">Pricing</h2>
+      </div>
 
-      <div className="flex flex-col gap-5">
+      <div className="flex flex-col gap-5 py-[24px] px-[32px]">
         <CurrencyInput
           label="Price"
           id="price"
@@ -48,7 +50,7 @@ export default function PricingStep({
         />
       </div>
 
-      <div className="mt-8">
+      <div className="p-[30px] border-t border-[#E6E6E6]">
         <FormActions
           onCancel={onCancel}
           onNext={onNext}

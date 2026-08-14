@@ -1,6 +1,6 @@
 'use client';
 
-import { X } from 'lucide-react';
+import { X, XCircle } from 'lucide-react';
 import type { TicketFormData } from '../_types/ticket.types';
 
 const LABEL_DATE_MAP: Record<string, string> = {
@@ -14,9 +14,13 @@ interface PreviewSectionProps {
   children: React.ReactNode;
 }
 
+const SeparatorLine = () => {
+  return <div className="bg-[#E4E7EC] w-full h-[0.5px]"></div>;
+};
+
 function PreviewSection({ title, children }: PreviewSectionProps) {
   return (
-    <div className="border border-gray-200 rounded-xl p-6">
+    <div className="bg-[#FAFAFA] rounded-xl p-5">
       <h3 className="text-[16px] font-bold text-black mb-5">{title}</h3>
       {children}
     </div>
@@ -95,15 +99,15 @@ export default function TicketPreviewModal({
       />
 
       {/* Drawer panel */}
-      <div className="fixed right-0 top-0 h-full w-[480px] bg-white shadow-2xl z-50 flex flex-col">
+      <div className="fixed right-[10px] top-[10px] bottom-[10px] w-[480px] bg-white shadow-2xl z-50 flex flex-col rounded-[12px]">
         {/* Header */}
         <div className="flex items-center justify-between px-7 py-5 border-b border-gray-200">
           <h2 className="text-[18px] font-bold text-black">Ticket Preview</h2>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors"
+            className="rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors"
           >
-            <X size={18} className="text-gray-600" />
+            <XCircle size={22} className="text-gray-600" />
           </button>
         </div>
 
@@ -121,7 +125,7 @@ export default function TicketPreviewModal({
               />
             </div>
           </PreviewSection>
-
+          <SeparatorLine />
           {/* Pricing */}
           <PreviewSection title="Pricing">
             <div className="grid grid-cols-2 gap-x-6 gap-y-5">
@@ -134,7 +138,7 @@ export default function TicketPreviewModal({
               />
             </div>
           </PreviewSection>
-
+          <SeparatorLine />
           {/* Advanced Settings */}
           <PreviewSection title="Advanced Settings">
             <div className="grid grid-cols-2 gap-x-6 gap-y-5">

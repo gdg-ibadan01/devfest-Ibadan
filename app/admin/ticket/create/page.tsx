@@ -7,10 +7,8 @@ import CreateTicketStepper from '../_components/CreateTicketStepper';
 import BasicInfoStep from '../_components/BasicInfoStep';
 import PricingStep from '../_components/PricingStep';
 import AdvancedSettingsStep from '../_components/AdvancedSettingsStep';
-import type {
-  CreateTicketStep,
-  TicketFormData,
-} from '../_types/ticket.types';
+import type { CreateTicketStep, TicketFormData } from '../_types/ticket.types';
+import AdminWrapper from '@/app/_module/components/common/AdminWrapper';
 
 const INITIAL_FORM: TicketFormData = {
   basicInfo: {
@@ -36,50 +34,53 @@ export default function CreateTicketPage() {
   const [step, setStep] = useState<CreateTicketStep>('basicInfo');
   const [form, setForm] = useState<TicketFormData>(INITIAL_FORM);
 
-  const handleCancel = () => router.push('/admin/tickets');
+  const handleCancel = () => router.push('/admin/ticket');
 
   const handleSubmit = () => {
-    // TODO: wire up API call here
     toast.success('Ticket created successfully!');
-    router.push('/admin/tickets');
+    router.push('/admin/ticket');
   };
 
   return (
-    <div className="px-8 py-8 max-w-[780px] mx-auto">
-      {/* Stepper */}
-      <div className="mb-6">
-        <CreateTicketStepper currentStep={step} />
+    <AdminWrapper title="Ticket">
+      <div className="px-[32px] py-[24px] max-w-[780px] mx-auto">
+        {/* Stepper */}
+        <div className="mb-6">
+          <CreateTicketStepper currentStep={step} />
+        </div>
+
+        {/* Step content */}
+        {step === 'basicInfo' && (
+          <BasicInfoStep
+            data={form.basicInfo}
+            onChange={(basicInfo) =>
+              setForm((prev) => ({ ...prev, basicInfo }))
+            }
+            onCancel={handleCancel}
+            onNext={() => setStep('pricing')}
+          />
+        )}
+
+        {step === 'pricing' && (
+          <PricingStep
+            data={form.pricing}
+            onChange={(pricing) => setForm((prev) => ({ ...prev, pricing }))}
+            onCancel={handleCancel}
+            onNext={() => setStep('advancedSettings')}
+          />
+        )}
+
+        {step === 'advancedSettings' && (
+          <AdvancedSettingsStep
+            data={form.advancedSettings}
+            onChange={(advancedSettings) =>
+              setForm((prev) => ({ ...prev, advancedSettings }))
+            }
+            onCancel={handleCancel}
+            onSubmit={handleSubmit}
+          />
+        )}
       </div>
-
-      {/* Step content */}
-      {step === 'basicInfo' && (
-        <BasicInfoStep
-          data={form.basicInfo}
-          onChange={(basicInfo) => setForm((prev) => ({ ...prev, basicInfo }))}
-          onCancel={handleCancel}
-          onNext={() => setStep('pricing')}
-        />
-      )}
-
-      {step === 'pricing' && (
-        <PricingStep
-          data={form.pricing}
-          onChange={(pricing) => setForm((prev) => ({ ...prev, pricing }))}
-          onCancel={handleCancel}
-          onNext={() => setStep('advancedSettings')}
-        />
-      )}
-
-      {step === 'advancedSettings' && (
-        <AdvancedSettingsStep
-          data={form.advancedSettings}
-          onChange={(advancedSettings) =>
-            setForm((prev) => ({ ...prev, advancedSettings }))
-          }
-          onCancel={handleCancel}
-          onSubmit={handleSubmit}
-        />
-      )}
-    </div>
+    </AdminWrapper>
   );
 }

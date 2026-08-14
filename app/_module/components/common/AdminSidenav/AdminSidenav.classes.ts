@@ -2,8 +2,8 @@ export const adminSidenavClass = {
   aside:
     'bg-[#1f1f1f] text-white lg:sticky lg:top-0 lg:flex lg:h-screen lg:flex-col',
   logoPanel:
-    'flex h-[80px] items-center justify-center bg-white px-8 lg:h-[90px]',
-  logoLink: 'flex w-[125px] items-center justify-center',
+    'flex h-[80px] items-center justify-center bg-white px-8 lg:h-[80px]',
+  logoLink: 'flex w-[120px] items-center justify-center',
   mobileNav:
     'flex gap-1 overflow-x-auto border-y border-white/10 bg-[#1f1f1f] p-3 lg:hidden',
   desktopNav: 'hidden flex-1 flex-col pt-0 lg:flex',

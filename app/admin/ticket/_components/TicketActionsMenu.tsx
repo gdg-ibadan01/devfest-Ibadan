@@ -1,12 +1,13 @@
 'use client';
 
-import { MoreVertical, Eye, Pencil, Trash2 } from 'lucide-react';
+import { MoreVertical, Eye, Pencil, Trash2, } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import Ellipsis from '@/app/_module/components/icons/Ellipsis';
 
 interface TicketActionsMenuProps {
   onPreview: () => void;
@@ -22,8 +23,8 @@ export default function TicketActionsMenu({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-gray-100 transition-colors">
-          <MoreVertical size={16} className="text-gray-500" />
+        <button className="flex items-center justify-center rounded-md hover:bg-gray-100 transition-colors">
+          <Ellipsis />
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-36">

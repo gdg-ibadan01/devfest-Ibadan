@@ -31,10 +31,11 @@ export default function BasicInfoStep({
     onChange({ ...data, [key]: value });
 
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl p-8">
-      <h2 className="text-[18px] font-bold text-black mb-6">Basic Info</h2>
-
-      <div className="flex flex-col gap-5">
+    <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+      <div className="py-[24px] px-[32px] bg-[#FAFAFA]">
+        <h2 className="text-[18px] font-bold text-black">Basic Info</h2>
+      </div>
+      <div className="flex flex-col gap-5 py-[24px] px-[32px]">
         <TextInput
           label="Ticket Name"
           id="ticketName"
@@ -54,12 +55,14 @@ export default function BasicInfoStep({
         <DeclarationDatePicker
           label="Declaration Date"
           value={data.declarationDate}
-          onChange={(val) => set('declarationDate', val as TicketBasicInfo['declarationDate'])}
+          onChange={(val) =>
+            set('declarationDate', val as TicketBasicInfo['declarationDate'])
+          }
           options={DECLARATION_OPTIONS}
         />
       </div>
 
-      <div className="mt-8">
+      <div className="p-[30px] border-t border-[#E6E6E6]">
         <FormActions
           onCancel={onCancel}
           onNext={onNext}

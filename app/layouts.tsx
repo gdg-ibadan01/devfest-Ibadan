@@ -7,7 +7,13 @@ import { ReactLenis } from '@/utils/lenis';
 import { Toaster } from 'sonner';
 import { usePathname } from 'next/navigation';
 import { Fragment } from 'react';
-import AdminHeaderWrapper from './_module/components/common/AdminHeaderWrapper';
+import AdminSidenav from './_module/components/common/AdminSidenav';
+
+export const wrapperClass = {
+  layout:
+    'min-h-screen bg-[#f7f7f7] text-[#1e1e1e] lg:grid lg:grid-cols-[260px_minmax(0,1fr)]',
+  main: 'min-w-0 bg-[#fafafa]',
+};
 
 const AdminLayout = ({
   children,
@@ -18,7 +24,10 @@ const AdminLayout = ({
     <html lang="en">
       <ReactLenis root>
         <body className={`${google_sans.className}`}>
-          <AdminHeaderWrapper>{children}</AdminHeaderWrapper>
+          <div className={wrapperClass.layout}>
+            <AdminSidenav />
+            <main className={wrapperClass.main}>{children}</main>
+          </div>
           <Toaster
             position="top-right"
             toastOptions={{

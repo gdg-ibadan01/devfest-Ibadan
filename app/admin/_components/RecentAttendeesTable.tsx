@@ -1,3 +1,7 @@
+'use client';
+
+import DashboardCard from '@/app/_module/components/cards/DashboardCard';
+
 type PaymentStatus = 'Successful' | 'Failed' | 'Pending';
 
 interface Attendee {
@@ -88,58 +92,65 @@ const COLUMNS = [
 
 export default function RecentAttendeesTable() {
   return (
-    <div className="border border-gray-200 rounded-xl overflow-hidden">
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="bg-gray-50 border-b border-gray-200">
-            {COLUMNS.map((col) => (
-              <th
-                key={col}
-                className="text-left px-6 py-4 text-[13px] font-medium text-gray-500 whitespace-nowrap"
-              >
-                {col}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {attendees.map((row, index) => {
-            const style = statusConfig[row.status];
-            return (
-              <tr
-                key={index}
-                className="bg-white border-b border-gray-100 last:border-0 hover:bg-gray-50/50 transition-colors"
-              >
-                <td className="px-6 py-[18px] text-[13px] text-gray-700 font-medium">
-                  {row.id}
-                </td>
-                <td className="px-6 py-[18px] text-[13px] text-gray-600">
-                  {row.date}
-                </td>
-                <td className="px-6 py-[18px] text-[13px] text-gray-700">
-                  {row.name}
-                </td>
-                <td className="px-6 py-[18px] text-[13px] text-gray-500">
-                  {row.email}
-                </td>
-                <td className="px-6 py-[18px] text-[13px] text-gray-700 font-medium">
-                  {row.amount}
-                </td>
-                <td className="px-6 py-[18px]">
-                  <span
-                    className={`inline-flex items-center gap-[6px] px-3 py-[5px] rounded-full text-[12px] font-medium ${style.bg} ${style.text}`}
-                  >
+    <DashboardCard className="mt-8 p-8 lg:p-[20px]">
+      {' '}
+      <h2 className="text-[16px] font-bold leading-7 text-[#252525]">
+        {' '}
+        Recent Attendees{' '}
+      </h2>
+      <div className="border border-gray-200 rounded-xl overflow-hidden mt-5 overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="bg-gray-50 border-b border-gray-200">
+              {COLUMNS.map((col) => (
+                <th
+                  key={col}
+                  className="text-left px-6 py-4 text-[13px] font-medium text-gray-500 whitespace-nowrap"
+                >
+                  {col}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {attendees.map((row, index) => {
+              const style = statusConfig[row.status];
+              return (
+                <tr
+                  key={index}
+                  className="bg-white border-b border-gray-100 last:border-0 hover:bg-gray-50/50 transition-colors"
+                >
+                  <td className="px-6 py-[18px] text-[13px] text-gray-700 font-medium">
+                    {row.id}
+                  </td>
+                  <td className="px-6 py-[18px] text-[13px] text-gray-600">
+                    {row.date}
+                  </td>
+                  <td className="px-6 py-[18px] text-[13px] text-gray-700">
+                    {row.name}
+                  </td>
+                  <td className="px-6 py-[18px] text-[13px] text-gray-500">
+                    {row.email}
+                  </td>
+                  <td className="px-6 py-[18px] text-[13px] text-gray-700 font-medium">
+                    {row.amount}
+                  </td>
+                  <td className="px-6 py-[18px]">
                     <span
-                      className={`w-[6px] h-[6px] rounded-full flex-shrink-0 ${style.dot}`}
-                    />
-                    {row.status}
-                  </span>
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
+                      className={`inline-flex items-center gap-[6px] px-3 py-[5px] rounded-full text-[12px] font-medium ${style.bg} ${style.text}`}
+                    >
+                      <span
+                        className={`w-[6px] h-[6px] rounded-full flex-shrink-0 ${style.dot}`}
+                      />
+                      {row.status}
+                    </span>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </DashboardCard>
   );
 }

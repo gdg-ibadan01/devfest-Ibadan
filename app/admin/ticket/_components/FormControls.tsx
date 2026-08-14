@@ -127,7 +127,7 @@ export function DeclarationDatePicker({
               type="button"
               onClick={() => onChange(opt.value)}
               className={cn(
-                'flex items-center gap-2 px-4 py-[10px] rounded-lg border text-[13px] transition-all',
+                'flex items-center gap-2 px-4 py-[10px] rounded-md border text-[13px] transition-all',
                 isSelected
                   ? 'border-black bg-white text-black'
                   : 'border-gray-200 bg-white text-gray-600 hover:border-gray-400'
@@ -178,14 +178,14 @@ export function ToggleRow({ icon, label, description, checked, onChange }: Toggl
         aria-checked={checked}
         onClick={() => onChange(!checked)}
         className={cn(
-          'relative inline-flex w-10 h-6 rounded-full transition-colors duration-200 focus:outline-none',
+          'relative inline-flex w-[32px] h-[16px] rounded-[24px] transition-colors duration-200 focus:outline-none',
           checked ? 'bg-black' : 'bg-gray-300'
         )}
       >
         <span
           className={cn(
-            'inline-block w-4 h-4 rounded-full bg-white shadow-sm absolute top-1 transition-transform duration-200',
-            checked ? 'translate-x-5' : 'translate-x-1'
+            'inline-block w-[14px] h-[14px] rounded-full bg-white shadow-sm absolute top-[1px] transition-transform duration-200',
+            checked ? 'translate-x-4' : 'translate-x-[0.8px]'
           )}
         />
       </button>
@@ -207,18 +207,18 @@ export function FormActions({
   cancelLabel = 'Cancel',
 }: FormActionsProps) {
   return (
-    <div className="flex items-center justify-center gap-4 pt-2">
+    <div className="flex items-center justify-end gap-4 pt-2">
       <button
         type="button"
         onClick={onCancel}
-        className="px-8 py-3 rounded-lg border border-gray-200 text-[13px] font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+        className="px-[20px] py-3 rounded-lg border border-gray-200 text-[13px] font-medium text-gray-700 hover:bg-gray-50 transition-colors"
       >
         {cancelLabel}
       </button>
       <button
         type="button"
         onClick={onNext}
-        className="px-8 py-3 rounded-lg bg-black text-white text-[13px] font-medium hover:bg-gray-900 transition-colors flex items-center gap-2"
+        className="px-[32px] py-3 rounded-lg bg-black text-white text-[13px] font-medium hover:bg-gray-900 transition-colors flex items-center gap-2"
       >
         {nextLabel}
         <span aria-hidden>→</span>

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Search, Calendar } from 'lucide-react';
+import { Search, Calendar, Plus } from 'lucide-react';
 import TicketActionsMenu from './TicketActionsMenu';
 import TicketPreviewModal from './TicketPreviewModal';
 import type { TicketRecord, TicketFormData } from '../_types/ticket.types';
@@ -72,7 +72,7 @@ export default function TicketTable() {
     <>
       {/* Search + filters bar */}
       <div className="flex items-center gap-3 mb-6">
-        <div className="flex items-center flex-1 max-w-[480px] border border-gray-200 rounded-lg overflow-hidden bg-white focus-within:ring-2 focus-within:ring-black/10">
+        <div className="flex items-center flex-1 max-w-[480px] border border-gray-200 rounded-md overflow-hidden bg-white focus-within:ring-2 focus-within:ring-black/10">
           <Search size={15} className="ml-4 text-gray-400 flex-shrink-0" />
           <input
             type="text"
@@ -83,14 +83,14 @@ export default function TicketTable() {
           />
         </div>
 
-        <button className="px-5 py-[11px] bg-black text-white text-[13px] font-medium rounded-lg hover:bg-gray-900 transition-colors">
+        <button className="px-5 py-[11px] bg-black text-white text-[13px] font-medium rounded-md hover:bg-gray-900 transition-colors">
           Search
         </button>
 
         <div className="ml-auto">
-          <Link href="/admin/tickets/create">
+          <Link href="/admin/ticket/create">
             <button className="px-5 py-[11px] border border-gray-200 text-[13px] font-medium text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2">
-              + Create Ticket
+              <Plus size={20} /> Create Ticket
             </button>
           </Link>
         </div>
@@ -140,7 +140,7 @@ export default function TicketTable() {
                       {ticket.declarationDates.map((d) => (
                         <span
                           key={d.day}
-                          className="px-3 py-1 rounded-full border border-gray-300 text-[11px] text-gray-600 bg-white whitespace-nowrap"
+                          className="px-2 py-1 rounded-sm border text-[12px] text-gray-600 bg-[#F3F3F3] whitespace-nowrap"
                         >
                           {d.label}
                         </span>

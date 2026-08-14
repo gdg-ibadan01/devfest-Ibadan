@@ -1,6 +1,6 @@
 'use client';
 
-import { Calendar } from 'lucide-react';
+import InputCalendar from '@/app/_module/components/icons/InputCalendar';
 import type { TicketAdvancedSettings } from '../_types/ticket.types';
 import {
   TextInput,
@@ -34,10 +34,12 @@ export default function AdvancedSettingsStep({
   ) => onChange({ ...data, [key]: value });
 
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl p-8">
-      <h2 className="text-[18px] font-bold text-black mb-6">Advanced Settings</h2>
+    <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+      <div className="py-[24px] px-[32px] bg-[#FAFAFA]">
+        <h2 className="text-[18px] font-bold text-black">Advanced Settings</h2>
+      </div>
 
-      <div className="flex flex-col gap-5">
+      <div className="flex flex-col gap-5 py-[24px] px-[32px]">
         <DeclarationDatePicker
           label="Ticket Validity"
           value={data.validity}
@@ -69,10 +71,7 @@ export default function AdvancedSettingsStep({
               className="w-full border border-gray-200 rounded-lg px-4 py-3 text-[13px] text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-gray-400 transition-colors bg-white appearance-none"
               placeholder="DD/MM/YYYY"
             />
-            <Calendar
-              size={16}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
-            />
+            {/* <InputCalendar /> */}
           </div>
         </div>
 
@@ -88,20 +87,13 @@ export default function AdvancedSettingsStep({
               className="w-full border border-gray-200 rounded-lg px-4 py-3 text-[13px] text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-gray-400 transition-colors bg-white appearance-none"
               placeholder="DD/MM/YYYY"
             />
-            <Calendar
-              size={16}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
-            />
+            {/* <InputCalendar /> */}
           </div>
         </div>
       </div>
 
-      <div className="mt-8">
-        <FormActions
-          onCancel={onCancel}
-          onNext={onSubmit}
-          nextLabel="Submit"
-        />
+      <div className="p-[30px] border-t border-[#E6E6E6]">
+        <FormActions onCancel={onCancel} onNext={onSubmit} nextLabel="Submit" />
       </div>
     </div>
   );
