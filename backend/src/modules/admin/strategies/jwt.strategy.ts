@@ -21,19 +21,18 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   async validate(payload: IJwtPayload) {
     const admin = await this.prisma.admin.findUnique({
       where: { id: payload.sub },
-      include: {
-        role: true,
-      },
     });
 
     if (!admin || !admin.isActive) {
-      throw new UnauthorizedException('Invalid token or inactive user');
+      throw new UnauthorizedException('Invalid token or inactive account');
     }
 
+    // Return the shape that req.user will have throughout the app
     return {
       id: admin.id,
+      sub: admin.id,
       email: admin.email,
-      role: { id: admin.role.id, name: admin.role.name },
+      role: admin.role, // Role enum: 'ADMIN' | 'SUPER_ADMIN'
     };
   }
 }

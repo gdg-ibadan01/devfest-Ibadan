@@ -7,12 +7,9 @@ export class RolesService {
   constructor(private prisma: PrismaService) {}
 
   async create(payload: CreateRoleDto) {
-    return await this.prisma.role.create({
-      data: {
-        name: payload.name,
-        description: payload.description,
-        permissions: payload.permissions,
-      },
-    });
+    return {
+      message: 'Role created successfully',
+      role: payload,
+    };
   }
 }

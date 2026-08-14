@@ -3,11 +3,9 @@ generator client {
   output   = "../generated/prisma"
 }
 
-
 datasource db {
   provider = "postgresql"
 }
-
 
 enum Role {
   ADMIN
@@ -67,7 +65,7 @@ model Admin {
 model PasswordResetToken {
   id        String    @id @default(cuid())
   adminId   String
-  token     String    @unique 
+  token     String    @unique
   expiresAt DateTime
   usedAt    DateTime?
   createdAt DateTime  @default(now())
@@ -78,19 +76,19 @@ model PasswordResetToken {
 }
 
 model Attendee {
-  id            String         @id @default(cuid())
-  email         String         @unique
-  fullName      String
-  phoneNumber   String?
-  company       String?
-  jobTitle      String?
-  role          Role           @default(ATTENDEE)
-  isActive      Boolean        @default(true)
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  id          String    @id @default(cuid())
+  email       String    @unique
+  fullName    String
+  phoneNumber String?
+  company     String?
+  jobTitle    String?
+  role        Role      @default(ATTENDEE)
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
   // registrations Registration[]
-  payments      Payment[]
-  tickets       Ticket[]
+  payments    Payment[]
+  tickets     Ticket[]
 
   @@map("attendees")
 }
@@ -150,26 +148,26 @@ model Attendee {
 // }
 
 model Ticket {
-  id             String       @id @default(cuid())
-  ticketNumber   String       @unique
+  id           String       @id @default(cuid())
+  ticketNumber String       @unique
   // eventId        String
   // registrationId String       @unique
-  qrCode         String       @unique
-  status         TicketStatus @default(ACTIVE)
-  issuedAt       DateTime     @default(now())
-  validFrom      DateTime
-  validUntil     DateTime
-  ticketType     String
-  isCheckedIn    Boolean      @default(false)
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  qrCode       String       @unique
+  status       TicketStatus @default(ACTIVE)
+  issuedAt     DateTime     @default(now())
+  validFrom    DateTime
+  validUntil   DateTime
+  ticketType   String
+  isCheckedIn  Boolean      @default(false)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
 
   // New relations
-  attendeeId     String
-  paymentId      String
+  attendeeId String
+  paymentId  String
 
-  attendee       Attendee     @relation(fields: [attendeeId], references: [id])
-  payment        Payment      @relation(fields: [paymentId], references: [id])
+  attendee Attendee @relation(fields: [attendeeId], references: [id])
+  payment  Payment  @relation(fields: [paymentId], references: [id])
 
   // event        Event        @relation(fields: [eventId], references: [id])
   // registration Registration @relation(fields: [registrationId], references: [id])
@@ -184,7 +182,7 @@ model Payment {
   // registrationId    String        @unique
   amount            Decimal       @db.Decimal(10, 2)
   currency          String        @default("NGN")
-  paystackReference String?        @unique
+  paystackReference String?       @unique
   paymentReference  String        @unique
   status            PaymentStatus @default(PENDING)
   paymentMethod     String?
@@ -196,8 +194,8 @@ model Payment {
 
   // Relations
   // event        Event        @relation(fields: [eventId], references: [id])
-  attendee     Attendee     @relation(fields: [attendeeId], references: [id])
-  tickets      Ticket[]   
+  attendee Attendee @relation(fields: [attendeeId], references: [id])
+  tickets  Ticket[]
   // registration Registration @relation(fields: [registrationId], references: [id])
 
   @@map("payments")

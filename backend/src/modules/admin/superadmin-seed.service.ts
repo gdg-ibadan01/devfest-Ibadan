@@ -32,9 +32,7 @@ export class SuperadminSeedService implements OnModuleInit {
 
     const existing = await this.prisma.admin.findFirst({
       where: {
-        role: {
-          name: 'SUPERADMIN',
-        },
+        role: 'SUPER_ADMIN',
       },
     });
 
@@ -45,27 +43,13 @@ export class SuperadminSeedService implements OnModuleInit {
       return;
     }
 
-    await this.prisma.role
-      .create({
-        data: {
-          description: 'Superadmin role',
-          name: 'SUPERADMIN',
-          permissions: PERMISSIONS.map((p) => p.id),
-        },
-      })
-      .catch((err) => this.logger.error(err));
-
-    const role = await this.prisma.role.findFirstOrThrow({
-      where: { name: 'SUPERADMIN' },
-    });
-
     const hashed = await bcrypt.hash(password, 10);
     await this.prisma.admin.create({
       data: {
         email,
         password: hashed,
         fullName: 'Super Admin',
-        roleId: role.id,
+        role: 'SUPER_ADMIN',
       },
     });
 

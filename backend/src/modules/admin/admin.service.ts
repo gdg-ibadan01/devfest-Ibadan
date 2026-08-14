@@ -16,21 +16,20 @@ import { LoginAdminDto } from './dto/login-admin.dto';
 import { InviteAdminDto } from './dto/invite-admin.dto';
 import { AdminQueryDto } from './dto/admin-query.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 import {
   IAdmin,
   ILoginResponse,
   IJwtPayload,
   IAdminResponse,
   IDashboardStats,
+  IUpdateProfileResponse,
 } from './interfaces/admin.interface';
-// import { EventStatus } from '@prisma/client';
 import { MailService } from '../mail/mail.service';
-import axios from 'axios';
-import { v4 as uuidv4 } from 'uuid';
 import { AdminCreateAttendeeDto } from './dto/create-attendee.dto';
-import { IAttendee, ICreateResponse } from './interfaces/attendee.interface';
 import { PaymentsService } from '../payment/payment.service';
-import { IPaystackResponse } from '../payment/interfaces/payment.interface';
 
 @Injectable()
 export class AdminService {
@@ -38,14 +37,13 @@ export class AdminService {
     private readonly configService: ConfigService,
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
-    private mailService: MailService,
+    private readonly mailService: MailService,
     private readonly paymentsService: PaymentsService,
   ) {}
 
   async signup(signupDto: CreateAdminDto): Promise<ILoginResponse> {
     const { fullName, email, password } = signupDto;
 
-    // Check if admin already exists
     const existingAdmin = await this.prisma.admin.findUnique({
       where: { email },
     });
@@ -54,25 +52,22 @@ export class AdminService {
       throw new ConflictException('Admin with this email already exists');
     }
 
-    // Hash the password
     const salt = genSaltSync(10);
     const hashedPassword = hashSync(password, salt);
 
-    // Create admin
     const admin = await this.prisma.admin.create({
       data: {
         fullName,
         email,
         password: hashedPassword,
-        roleId: '',
+        role: signupDto.role ?? 'ADMIN',
       },
     });
 
-    // Generate tokens
     const tokens = await this.generateTokens({
       sub: admin.id,
       email: admin.email,
-      role: '',
+      role: admin.role,
     });
 
     return {
@@ -84,7 +79,6 @@ export class AdminService {
   async login(loginDto: LoginAdminDto): Promise<ILoginResponse> {
     const { email, password } = loginDto;
 
-    // Find admin by email
     const admin = await this.prisma.admin.findUnique({
       where: { email },
     });
@@ -93,22 +87,21 @@ export class AdminService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    // Check if admin is active
     if (!admin.isActive) {
-      throw new UnauthorizedException('Account is deactivated');
+      throw new UnauthorizedException(
+        'Your account has been deactivated. Please contact a super admin.',
+      );
     }
 
-    // Verify password
     const isPasswordValid = compareSync(password, admin.password);
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    // Generate tokens
     const tokens = await this.generateTokens({
       sub: admin.id,
       email: admin.email,
-      role: '',
+      role: admin.role,
     });
 
     return {
@@ -116,8 +109,6 @@ export class AdminService {
       ...tokens,
     };
   }
-
-  async inviteAdmin(inviteDto: InviteAdminDto, invitedBy: string) {}
 
   async refreshToken(
     refreshToken: string,
@@ -138,11 +129,117 @@ export class AdminService {
       return this.generateTokens({
         sub: admin.id,
         email: admin.email,
-        role: '',
+        role: admin.role,
       });
-    } catch (error) {
+    } catch {
       throw new UnauthorizedException('Invalid refresh token');
     }
+  }
+
+  async forgotPassword(
+    forgotPasswordDto: ForgotPasswordDto,
+  ): Promise<{ message: string }> {
+    const { email } = forgotPasswordDto;
+
+    const admin = await this.prisma.admin.findUnique({ where: { email } });
+
+    if (!admin || !admin.isActive) {
+      return {
+        message:
+          'If that email address is registered, you will receive a password reset link shortly.',
+      };
+    }
+
+    const rawToken = crypto.randomBytes(32).toString('hex');
+    const hashedToken = crypto
+      .createHash('sha256')
+      .update(rawToken)
+      .digest('hex');
+
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
+
+    await this.prisma.passwordResetToken.deleteMany({
+      where: { adminId: admin.id },
+    });
+
+    await this.prisma.passwordResetToken.create({
+      data: {
+        adminId: admin.id,
+        token: hashedToken,
+        expiresAt,
+      },
+    });
+
+    const frontendUrl = this.configService.get<string>('app.frontendUrl');
+
+    const resetLink = `${frontendUrl}/admin/reset-password?token=${rawToken}`;
+
+    await this.mailService.sendPasswordResetEmail(
+      admin.email,
+      admin.fullName,
+      resetLink,
+    );
+
+    return {
+      message:
+        'If that email address is registered, you will receive a password reset link shortly.',
+    };
+  }
+
+  async resetPassword(
+    resetPasswordDto: ResetPasswordDto,
+  ): Promise<{ message: string }> {
+    const { token, newPassword } = resetPasswordDto;
+
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+
+    const resetTokenRecord = await this.prisma.passwordResetToken.findUnique({
+      where: { token: hashedToken },
+      include: { admin: true },
+    });
+
+    if (!resetTokenRecord) {
+      throw new BadRequestException('Invalid or expired password reset token');
+    }
+
+    if (resetTokenRecord.usedAt) {
+      throw new BadRequestException(
+        'This reset token has already been used. Please request a new one.',
+      );
+    }
+
+    if (resetTokenRecord.expiresAt < new Date()) {
+      await this.prisma.passwordResetToken.delete({
+        where: { id: resetTokenRecord.id },
+      });
+      throw new BadRequestException(
+        'Password reset token has expired. Please request a new one.',
+      );
+    }
+
+    if (!resetTokenRecord.admin.isActive) {
+      throw new UnauthorizedException(
+        'Your account has been deactivated. Please contact a super admin.',
+      );
+    }
+
+    const salt = genSaltSync(10);
+    const hashedPassword = hashSync(newPassword, salt);
+
+    await this.prisma.$transaction([
+      this.prisma.admin.update({
+        where: { id: resetTokenRecord.adminId },
+        data: { password: hashedPassword },
+      }),
+      this.prisma.passwordResetToken.update({
+        where: { id: resetTokenRecord.id },
+        data: { usedAt: new Date() },
+      }),
+    ]);
+
+    return {
+      message: 'Password has been reset successfully. You can now log in.',
+    };
   }
 
   async changePassword(
@@ -159,27 +256,76 @@ export class AdminService {
       throw new NotFoundException('Admin not found');
     }
 
-    // Verify current password
     const isCurrentPasswordValid = compareSync(currentPassword, admin.password);
     if (!isCurrentPasswordValid) {
       throw new UnauthorizedException('Current password is incorrect');
     }
 
-    // Hash new password
+    const isSamePassword = compareSync(newPassword, admin.password);
+    if (isSamePassword) {
+      throw new BadRequestException(
+        'New password must be different from the current password',
+      );
+    }
+
     const salt = genSaltSync(10);
     const hashedNewPassword = hashSync(newPassword, salt);
 
-    // Update password and activate account if it was inactive
     await this.prisma.admin.update({
       where: { id: adminId },
       data: {
         password: hashedNewPassword,
-        isActive: true, // Activate account on password change
+        isActive: true,
       },
     });
 
     return { message: 'Password changed successfully' };
   }
+
+  async updateProfile(
+    adminId: string,
+    updateProfileDto: UpdateProfileDto,
+  ): Promise<IUpdateProfileResponse> {
+    const { fullName, email } = updateProfileDto;
+
+    if (!fullName && !email) {
+      throw new BadRequestException(
+        'At least one field (fullName or email) must be provided',
+      );
+    }
+
+    const admin = await this.prisma.admin.findUnique({
+      where: { id: adminId },
+    });
+
+    if (!admin) {
+      throw new NotFoundException('Admin not found');
+    }
+
+    if (email && email !== admin.email) {
+      const emailTaken = await this.prisma.admin.findUnique({
+        where: { email },
+      });
+      if (emailTaken) {
+        throw new ConflictException(
+          'An account with that email already exists',
+        );
+      }
+    }
+
+    const updateData: Partial<{ fullName: string; email: string }> = {};
+    if (fullName) updateData.fullName = fullName;
+    if (email) updateData.email = email;
+
+    const updatedAdmin = await this.prisma.admin.update({
+      where: { id: adminId },
+      data: updateData,
+    });
+
+    return this.excludePassword(updatedAdmin);
+  }
+
+  async inviteAdmin(inviteDto: InviteAdminDto, invitedBy: string) {}
 
   async create(adminCreateAttendeeDto: AdminCreateAttendeeDto) {}
 
@@ -195,12 +341,19 @@ export class AdminService {
       where: { id: deactivatedBy },
     });
 
-    if (!deactivator || deactivator.roleId !== 'SUPER_ADMIN') {
+    if (!deactivator || deactivator.role !== 'SUPER_ADMIN') {
       throw new ForbiddenException('Only SUPER_ADMIN can deactivate admins');
     }
 
     if (adminId === deactivatedBy) {
       throw new ForbiddenException('Cannot deactivate yourself');
+    }
+
+    const target = await this.prisma.admin.findUnique({
+      where: { id: adminId },
+    });
+    if (!target) {
+      throw new NotFoundException('Admin not found');
     }
 
     await this.prisma.admin.update({
@@ -209,32 +362,6 @@ export class AdminService {
     });
 
     return { message: 'Admin deactivated successfully' };
-  }
-
-  private async generateTokens(
-    payload: IJwtPayload,
-  ): Promise<{ accessToken: string; refreshToken: string }> {
-    const accessToken = await this.jwtService.sign(payload);
-
-    const refreshSecret =
-      await this.configService.get<string>('jwt.refreshSecret');
-    const refreshExpiresIn =
-      this.configService.get<string>('jwt.refreshExpiresIn') ?? '7d';
-    if (!refreshSecret) {
-      throw new Error('Refresh secret is not configured');
-    }
-
-    const refreshToken = await this.jwtService.sign<IJwtPayload>(payload, {
-      secret: refreshSecret,
-      expiresIn: refreshExpiresIn as `${number}`,
-    });
-
-    return { accessToken, refreshToken };
-  }
-
-  private excludePassword(admin: any) {
-    const { password, ...adminWithoutPassword } = admin;
-    return adminWithoutPassword;
   }
 
   async findAll(query: AdminQueryDto) {
@@ -264,13 +391,16 @@ export class AdminService {
         skip,
         take: limit,
         orderBy: { createdAt: 'desc' },
-        // include: {
-        //   _count: {
-        //     select: {
-        //       createdEvents: true,
-        //     },
-        //   },
-        // },
+        select: {
+          id: true,
+          fullName: true,
+          email: true,
+          role: true,
+          isActive: true,
+          invitedById: true,
+          createdAt: true,
+          updatedAt: true,
+        },
       }),
       this.prisma.admin.count({ where }),
     ]);
@@ -289,25 +419,6 @@ export class AdminService {
   async findOne(id: string): Promise<IAdminResponse> {
     const admin = await this.prisma.admin.findUnique({
       where: { id },
-      // include: {
-      // createdEvents: {
-      //   select: {
-      //     id: true,
-      //     title: true,
-      //     startDate: true,
-      //     status: true,
-      //     currentAttendees: true,
-      //     maxAttendees: true,
-      //   },
-      //   orderBy: { createdAt: 'desc' },
-      //   take: 10,
-      // },
-      // _count: {
-      //   select: {
-      //     createdEvents: true,
-      //   },
-      // },
-      // },
     });
 
     if (!admin) {
@@ -336,156 +447,32 @@ export class AdminService {
     await this.prisma.admin.delete({ where: { id } });
   }
 
-  // async getDashboardStats(): Promise<IDashboardStats> {
-  //   const [
-  //     totalEvents,
-  //     totalAttendees,
-  //     totalRegistrations,
-  //     totalRevenue,
-  //     upcomingEvents,
-  //     ongoingEvents,
-  //     completedEvents,
-  //     recentRegistrations,
-  //   ] = await Promise.all([
-  //     this.prisma.event.count(),
-  //     this.prisma.attendee.count(),
-  //     this.prisma.registration.count(),
-  //     this.prisma.payment.aggregate({
-  //       where: { status: PaymentStatus.SUCCESS },
-  //       _sum: { amount: true },
-  //     }),
-  //     this.prisma.event.count({
-  //       where: {
-  //         status: EventStatus.PUBLISHED,
-  //         startDate: { gt: new Date() },
-  //       },
-  //     }),
-  //     this.prisma.event.count({
-  //       where: { status: EventStatus.ONGOING },
-  //     }),
-  //     this.prisma.event.count({
-  //       where: { status: EventStatus.COMPLETED },
-  //     }),
-  //     this.prisma.registration.findMany({
-  //       take: 10,
-  //       orderBy: { createdAt: 'desc' },
-  //       include: {
-  //         event: {
-  //           select: { title: true },
-  //         },
-  //         attendee: {
-  //           select: { fullName: true, email: true },
-  //         },
-  //       },
-  //     }),
-  //   ]);
+  private async generateTokens(
+    payload: IJwtPayload,
+  ): Promise<{ accessToken: string; refreshToken: string }> {
+    const accessToken = await this.jwtService.sign(payload);
 
-  // Get event stats
-  //   const eventStats = await this.prisma.event.findMany({
-  //     select: {
-  //       id: true,
-  //       title: true,
-  //       startDate: true,
-  //       currentAttendees: true,
-  //       maxAttendees: true,
-  //       status: true,
-  //       _count: {
-  //         select: {
-  //           registrations: true,
-  //           payments: true,
-  //         },
-  //       },
-  //     },
-  //     orderBy: { startDate: 'desc' },
-  //     take: 5,
-  //   });
+    const refreshSecret =
+      await this.configService.get<string>('jwt.refreshSecret');
+    const refreshExpiresIn =
+      this.configService.get<string>('jwt.refreshExpiresIn') ?? '7d';
 
-  //   return {
-  //     totalEvents,
-  //     totalAttendees,
-  //     totalRegistrations,
-  //     totalRevenue: Number(totalRevenue._sum.amount) || 0,
-  //     upcomingEvents,
-  //     ongoingEvents,
-  //     completedEvents,
-  //     recentRegistrations,
-  //     eventStats,
-  //   };
-  // }
+    if (!refreshSecret) {
+      throw new Error('JWT refresh secret is not configured');
+    }
 
-  // async getEventAnalytics(eventId: string) {
-  //   const event = await this.prisma.event.findUnique({
-  //     where: { id: eventId },
-  //     include: {
-  //       registrations: {
-  //         include: {
-  //           attendee: true,
-  //           payment: true,
-  //           ticket: true,
-  //         },
-  //       },
-  //       _count: {
-  //         select: {
-  //           registrations: true,
-  //           payments: true,
-  //           tickets: true,
-  //         },
-  //       },
-  //     },
-  //   });
+    const refreshToken = await this.jwtService.sign(payload, {
+      secret: refreshSecret,
+      expiresIn: refreshExpiresIn as `${number}`,
+    });
 
-  //   if (!event) {
-  //     throw new NotFoundException('Event not found');
-  //   }
-  //   const analytics = {
-  //     event: {
-  //       id: event.id,
-  //       title: event.title,
-  //       startDate: event.startDate,
-  //       endDate: event.endDate,
-  //       maxAttendees: event.maxAttendees,
-  //       currentAttendees: event.currentAttendees,
-  //       status: event.status,
-  //     },
-  //     registrations: {
-  //       total: event._count.registrations,
-  //       confirmed: event.registrations.filter((r) => r.status === 'CONFIRMED')
-  //         .length,
-  //       pending: event.registrations.filter((r) => r.status === 'PENDING')
-  //         .length,
-  //       cancelled: event.registrations.filter((r) => r.status === 'CANCELLED')
-  //         .length,
-  //       checkedIn: event.registrations.filter((r) => r.isCheckedIn).length,
-  //     },
-  //     payments: {
-  //       total: event._count.payments,
-  //       successful: event.registrations.filter(
-  //         (r) => r.payment?.status === 'SUCCESS',
-  //       ).length,
-  //       pending: event.registrations.filter(
-  //         (r) => r.payment?.status === 'PENDING',
-  //       ).length,
-  //       failed: event.registrations.filter(
-  //         (r) => r.payment?.status === 'FAILED',
-  //       ).length,
-  //     },
-  //     revenue: event.registrations
-  //       .filter((r) => r.payment?.status === 'SUCCESS')
-  //       .reduce((sum, r) => sum + (Number(r.payment?.amount) || 0), 0),
-  //     attendeeBreakdown: {
-  //       byCompany: this.groupBy(
-  //         event.registrations.map((r) => r.attendee),
-  //         'company',
-  //       ),
-  //       byJobTitle: this.groupBy(
-  //         event.registrations.map((r) => r.attendee),
-  //         'jobTitle',
-  //       ),
-  //     },
-  //   };
+    return { accessToken, refreshToken };
+  }
 
-  //   return analytics;
-  // }
+  private excludePassword(admin: any) {
+    const { password, ...adminWithoutPassword } = admin;
+    return adminWithoutPassword;
+  }
 
   private groupBy(array: any[], key: string) {
     return array.reduce((groups, item) => {

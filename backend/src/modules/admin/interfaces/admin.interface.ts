@@ -43,3 +43,12 @@ export interface IDashboardStats {
   recentRegistrations: any[];
   eventStats: any[];
 }
+
+export interface IUpdateProfileResponse {
+  id: string;
+  fullName: string;
+  email: string;
+  role: string;
+  isActive: boolean;
+  updatedAt: Date;
+}

@@ -28,13 +28,19 @@ import { LoginAdminDto } from './dto/login-admin.dto';
 import { AdminQueryDto } from './dto/admin-query.dto';
 import { InviteAdminDto } from './dto/invite-admin.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { UpdateAdminStatusDto } from './dto/update-status.dto';
 import { AdminCreateAttendeeDto } from './dto/create-attendee.dto';
-import { ICreateResponse } from './interfaces/attendee.interface';
 import { RolesGuard } from './guards/roles.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
-import { ILoginResponse, IAdminResponse } from './interfaces/admin.interface';
+import {
+  ILoginResponse,
+  IAdminResponse,
+  IUpdateProfileResponse,
+} from './interfaces/admin.interface';
 
 @ApiTags('Admin')
 @Controller('admin')
@@ -42,25 +48,164 @@ export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
   @Post('signup')
+  @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Register a super admin account' })
   @ApiResponse({
     status: 201,
     description: 'Super admin created successfully.',
   })
-  @ApiResponse({
-    status: 409,
-    description: 'Email already exists.',
-  })
+  @ApiResponse({ status: 409, description: 'Email already exists.' })
   async signup(@Body() signupDto: CreateAdminDto): Promise<ILoginResponse> {
     return this.adminService.signup(signupDto);
   }
 
   @Post('login')
-  @ApiOperation({ summary: 'Login as an admin' })
-  @ApiResponse({ status: 200, description: 'Login successful.' })
-  @ApiResponse({ status: 401, description: 'Invalid credentials.' })
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Admin login — returns access & refresh tokens' })
+  @ApiResponse({
+    status: 200,
+    description: 'Login successful. Returns admin profile and JWT tokens.',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Invalid credentials or account deactivated.',
+  })
   async login(@Body() loginDto: LoginAdminDto): Promise<ILoginResponse> {
     return this.adminService.login(loginDto);
+  }
+
+  @Post('refresh')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Refresh JWT tokens using a valid refresh token' })
+  @ApiResponse({ status: 200, description: 'Tokens refreshed successfully.' })
+  @ApiResponse({
+    status: 401,
+    description: 'Invalid or expired refresh token.',
+  })
+  async refreshToken(
+    @Body() refreshDto: RefreshTokenDto,
+  ): Promise<{ accessToken: string; refreshToken: string }> {
+    return this.adminService.refreshToken(refreshDto.refreshToken);
+  }
+
+  @Post('forgot-password')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Request a password reset email',
+    description:
+      'Sends a time-limited password reset link to the provided email address if it belongs to a registered admin. Always returns a generic success message to prevent email enumeration.',
+  })
+  @ApiResponse({
+    status: 200,
+    description:
+      'Reset email dispatched (or silently ignored if email not found).',
+    schema: {
+      example: {
+        message:
+          'If that email address is registered, you will receive a password reset link shortly.',
+      },
+    },
+  })
+  async forgotPassword(
+    @Body() forgotPasswordDto: ForgotPasswordDto,
+  ): Promise<{ message: string }> {
+    return this.adminService.forgotPassword(forgotPasswordDto);
+  }
+
+  @Post('reset-password')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Reset admin password using a token from the reset email',
+    description:
+      'Validates the time-limited reset token and sets the new password. The token is single-use and expires after 1 hour.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Password reset successfully.',
+    schema: {
+      example: {
+        message: 'Password has been reset successfully. You can now log in.',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Token is invalid, expired, or already used.',
+  })
+  async resetPassword(
+    @Body() resetPasswordDto: ResetPasswordDto,
+  ): Promise<{ message: string }> {
+    return this.adminService.resetPassword(resetPasswordDto);
+  }
+
+  @Get('profile')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @ApiOperation({ summary: 'Get the authenticated admin profile' })
+  @ApiResponse({ status: 200, description: 'Profile retrieved successfully.' })
+  @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  async getProfile(@Req() req: Request): Promise<IAdminResponse> {
+    const adminId = req.user?.id ?? req.user?.sub;
+    if (!adminId) {
+      throw new UnauthorizedException(
+        'Invalid token payload: no user ID found.',
+      );
+    }
+    return this.adminService.findOne(adminId);
+  }
+
+  @Patch('profile')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @ApiOperation({
+    summary: 'Update authenticated admin profile',
+    description:
+      'Updates fullName and/or email. At least one field is required.',
+  })
+  @ApiResponse({ status: 200, description: 'Profile updated successfully.' })
+  @ApiResponse({ status: 400, description: 'No fields provided.' })
+  @ApiResponse({ status: 409, description: 'Email already in use.' })
+  @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  async updateProfile(
+    @Body() updateProfileDto: UpdateProfileDto,
+    @Req() req: Request,
+  ): Promise<IUpdateProfileResponse> {
+    const adminId = req.user?.id ?? req.user?.sub;
+    if (!adminId) {
+      throw new UnauthorizedException(
+        'Invalid token payload: no user ID found.',
+      );
+    }
+    return this.adminService.updateProfile(adminId, updateProfileDto);
+  }
+
+  @Patch('change-password')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @ApiOperation({
+    summary: 'Change password for the authenticated admin',
+    description:
+      'Requires the current password for verification before setting the new one.',
+  })
+  @ApiResponse({ status: 200, description: 'Password changed successfully.' })
+  @ApiResponse({ status: 401, description: 'Current password is incorrect.' })
+  @ApiResponse({
+    status: 400,
+    description: 'New password must differ from the current one.',
+  })
+  async changePassword(
+    @Body() changePasswordDto: ChangePasswordDto,
+    @Req() req: Request,
+  ): Promise<{ message: string }> {
+    const adminId = req.user?.sub ?? req.user?.id;
+    if (!adminId) {
+      throw new UnauthorizedException('User ID not found in token');
+    }
+    return this.adminService.changePassword(adminId, changePasswordDto);
   }
 
   @Post('attendee/create')
@@ -68,17 +213,13 @@ export class AdminController {
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.SUPER_ADMIN)
-  @ApiOperation({ summary: 'Add a new attendee (Super-admin only)' })
-  @ApiResponse({
-    status: 201,
-    description: 'Attendee successfully created',
-    type: AdminCreateAttendeeDto,
-  })
+  @ApiOperation({ summary: 'Add a new attendee (Super Admin only)' })
+  @ApiResponse({ status: 201, description: 'Attendee successfully created.' })
   @ApiResponse({
     status: 409,
-    description: 'Attendee with this email already exists',
+    description: 'Attendee with this email already exists.',
   })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 401, description: 'Unauthorized.' })
   async createAttendee(@Body() adminCreateAttendeeDto: AdminCreateAttendeeDto) {
     return this.adminService.create(adminCreateAttendeeDto);
   }
@@ -98,102 +239,31 @@ export class AdminController {
     return this.adminService.inviteAdmin(inviteDto, inviterId);
   }
 
-  @Post('refresh')
-  @ApiOperation({ summary: 'Refresh JWT tokens' })
-  @ApiResponse({ status: 200, description: 'Tokens refreshed successfully.' })
-  @ApiResponse({ status: 401, description: 'Invalid refresh token.' })
-  async refreshToken(
-    @Body() refreshDto: RefreshTokenDto,
-  ): Promise<{ accessToken: string; refreshToken: string }> {
-    return this.adminService.refreshToken(refreshDto.refreshToken);
-  }
-
   @Get()
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.SUPER_ADMIN)
-  @ApiOperation({ summary: 'Get all admins' })
-  @ApiResponse({ status: 200, description: 'Admins retrieved successfully' })
+  @ApiOperation({ summary: 'Get all admins (Super Admin only)' })
+  @ApiResponse({ status: 200, description: 'Admins retrieved successfully.' })
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
   async findAll(@Query() query: AdminQueryDto) {
     return this.adminService.findAll(query);
-  }
-
-  // @Get('dashboard/stats')
-  // @ApiBearerAuth()
-  // @UseGuards(JwtAuthGuard, RolesGuard)
-  // @Roles(Role.ADMIN, Role.SUPER_ADMIN)
-  // @ApiOperation({ summary: 'Get dashboard statistics' })
-  // @ApiResponse({
-  //   status: 200,
-  //   description: 'Dashboard stats retrieved successfully',
-  // })
-  // @ApiResponse({ status: 401, description: 'Unauthorized.' })
-  // async getDashboardStats(): Promise<IDashboardStats> {
-  //   return this.adminService.getDashboardStats();
-  // }
-
-  // @Get('events/analytics/:eventId')
-  // @ApiBearerAuth()
-  // @UseGuards(JwtAuthGuard, RolesGuard)
-  // @Roles(Role.ADMIN, Role.SUPER_ADMIN)
-  // @ApiOperation({ summary: 'Get event analytics' })
-  // @ApiResponse({
-  //   status: 200,
-  //   description: 'Event analytics retrieved successfully',
-  // })
-  // @ApiResponse({ status: 401, description: 'Unauthorized.' })
-  // async getEventAnalytics(@Param('eventId') eventId: string) {
-  //   return this.adminService.getEventAnalytics(eventId);
-  // }
-
-  @Get('profile')
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
-  @ApiOperation({ summary: 'Get admin by ID' })
-  @ApiResponse({ status: 200, description: 'Admin retrieved successfully' })
-  @ApiResponse({ status: 401, description: 'Unauthorized.' })
-  async findOne(@Req() req: Request): Promise<IAdminResponse> {
-    const adminId = req.user?.id ?? req.user?.sub;
-    if (!adminId) {
-      throw new UnauthorizedException(
-        'Invalid token payload: no user ID found.',
-      );
-    }
-    return this.adminService.findOne(adminId);
   }
 
   @Patch('status')
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.SUPER_ADMIN)
-  @ApiOperation({ summary: 'Update admin status' })
+  @ApiOperation({
+    summary: 'Update an admin account status (Super Admin only)',
+  })
   @ApiResponse({
     status: 200,
-    description: 'Admin status updated successfully',
+    description: 'Admin status updated successfully.',
   })
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
   async updateStatus(@Body() dto: UpdateAdminStatusDto) {
     return this.adminService.updateStatus(dto.adminId, dto.isActive);
-  }
-
-  @Patch('change-password')
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
-  @ApiOperation({ summary: 'Change current admin password' })
-  @ApiResponse({ status: 200, description: 'Password changed successfully.' })
-  @ApiResponse({ status: 400, description: 'Invalid password format.' })
-  async changePassword(
-    @Body() changePasswordDto: ChangePasswordDto,
-    @Req() req: Request,
-  ): Promise<{ message: string }> {
-    const adminId = req.user?.sub ?? req.user?.id;
-    if (!adminId) {
-      throw new UnauthorizedException('User ID not found in token');
-    }
-    return this.adminService.changePassword(adminId, changePasswordDto);
   }
 
   @Patch('deactivate/:id')
@@ -218,7 +288,7 @@ export class AdminController {
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.SUPER_ADMIN)
-  @ApiOperation({ summary: 'Delete an admin account (SUPER_ADMIN only)' })
+  @ApiOperation({ summary: 'Delete an admin account (Super Admin only)' })
   @ApiResponse({ status: 200, description: 'Admin deleted successfully.' })
   @ApiResponse({ status: 404, description: 'Admin not found.' })
   @ApiResponse({ status: 403, description: 'Forbidden.' })
