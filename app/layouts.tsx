@@ -22,7 +22,7 @@ const AdminLayout = ({
 }>) => {
   return (
     <html lang="en">
-      <ReactLenis root>
+      {/* <ReactLenis root> */}
         <body className={`${google_sans.className}`}>
           <div className={wrapperClass.layout}>
             <AdminSidenav />
@@ -36,7 +36,7 @@ const AdminLayout = ({
             closeButton={false}
           />
         </body>
-      </ReactLenis>
+      {/* </ReactLenis> */}
     </html>
   );
 };

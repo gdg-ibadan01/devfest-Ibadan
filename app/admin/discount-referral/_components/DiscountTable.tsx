@@ -5,6 +5,7 @@ import { Search, Plus } from 'lucide-react';
 import { cn } from '@/app/_module/lib/utils';
 import type { DiscountRecord, DiscountStatus } from '../_types/discount.types';
 import DiscountActionsMenu from './DiscountActionsMenu';
+import EmptyDiscount from '@/app/_module/components/icons/EmptyDiscount';
 
 const MOCK_DISCOUNTS: DiscountRecord[] = [
   {
@@ -83,98 +84,9 @@ function EmptyState() {
   return (
     <tr>
       <td colSpan={8} className="py-20">
-        <div className="flex flex-col items-center gap-3">
+        <div className="flex flex-col items-center mx-auto justify-center gap-2 border border-[#E6E6E6] rounded-[12px] w-[194px] h-[233px]">
           {/* Simple SVG illustration */}
-          <div className="w-[120px] h-[120px] flex items-center justify-center border border-gray-200 rounded-2xl bg-white">
-            <svg
-              width="72"
-              height="72"
-              viewBox="0 0 72 72"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              {/* Stack of papers */}
-              <rect
-                x="10"
-                y="18"
-                width="40"
-                height="36"
-                rx="3"
-                fill="#E5E7EB"
-              />
-              <rect
-                x="14"
-                y="14"
-                width="40"
-                height="36"
-                rx="3"
-                fill="#F3F4F6"
-              />
-              <rect
-                x="18"
-                y="10"
-                width="40"
-                height="36"
-                rx="3"
-                fill="#fff"
-                stroke="#D1D5DB"
-                strokeWidth="1.5"
-              />
-              <line
-                x1="26"
-                y1="22"
-                x2="50"
-                y2="22"
-                stroke="#D1D5DB"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-              />
-              <line
-                x1="26"
-                y1="28"
-                x2="50"
-                y2="28"
-                stroke="#D1D5DB"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-              />
-              <line
-                x1="26"
-                y1="34"
-                x2="40"
-                y2="34"
-                stroke="#D1D5DB"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-              />
-              {/* Magnifying glass */}
-              <circle
-                cx="50"
-                cy="46"
-                r="12"
-                fill="#F9FAFB"
-                stroke="#D1D5DB"
-                strokeWidth="1.5"
-              />
-              <circle
-                cx="50"
-                cy="46"
-                r="7"
-                fill="#fff"
-                stroke="#D1D5DB"
-                strokeWidth="1.5"
-              />
-              <line
-                x1="55"
-                y1="53"
-                x2="61"
-                y2="59"
-                stroke="#D1D5DB"
-                strokeWidth="2"
-                strokeLinecap="round"
-              />
-            </svg>
-          </div>
+          <EmptyDiscount />
           <div className="text-center">
             <p className="text-[14px] font-semibold text-gray-700">No Data</p>
             <p className="text-[12px] text-gray-400 mt-1">

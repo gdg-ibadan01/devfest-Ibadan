@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { X, Check, ChevronDown, Calendar, ShieldCheck } from 'lucide-react';
+import { X, Check, ChevronDown, Calendar, ShieldCheck, XCircle } from 'lucide-react';
 import { cn } from '@/app/_module/lib/utils';
 import type {
   CreateDiscountForm,
@@ -31,7 +31,6 @@ const INITIAL_FORM: CreateDiscountForm = {
   firstTimeOnly: true,
 };
 
-
 function FieldLabel({ children }: { children: React.ReactNode }) {
   return (
     <p className="text-[13px] font-medium text-gray-800 mb-2">{children}</p>
@@ -53,7 +52,7 @@ function TextInput({
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
-      className="w-full border-0 border-b border-gray-200 py-2 text-[13px] text-gray-800 placeholder:text-gray-300 focus:outline-none focus:border-gray-400 transition-colors bg-transparent"
+      className="w-full border rounded-md px-4 py-3 border-gray-200 text-[13px] text-gray-800 placeholder:text-gray-300 focus:outline-none focus:border-gray-400 transition-colors bg-transparent"
     />
   );
 }
@@ -249,23 +248,21 @@ function ToggleSwitch({
       aria-checked={checked}
       onClick={() => onChange(!checked)}
       className={cn(
-        'relative inline-flex w-[44px] h-[24px] rounded-full transition-colors duration-200 focus:outline-none flex-shrink-0',
-        checked ? 'bg-blue-500' : 'bg-gray-300'
+        'relative inline-flex w-[32px] h-[16px] rounded-[24px] transition-colors duration-200 focus:outline-none flex-shrink-0',
+        checked ? 'bg-[#2E335B]' : 'bg-gray-300'
       )}
     >
       <span
         className={cn(
-          'inline-block w-[20px] h-[20px] rounded-full bg-white shadow-sm absolute top-[2px] transition-transform duration-200',
-          checked ? 'translate-x-[22px]' : 'translate-x-[2px]'
+          'inline-block w-[14px] h-[14px] rounded-full bg-white shadow-sm absolute top-[1px] transition-transform duration-200',
+          checked ? 'translate-x-[17px]' : 'translate-x-[2px]'
         )}
       />
     </button>
   );
 }
 
-/* ------------------------------------------------------------------ */
-/* Main modal                                                           */
-/* ------------------------------------------------------------------ */
+
 
 interface CreateDiscountModalProps {
   open: boolean;
@@ -314,31 +311,26 @@ export default function CreateDiscountModal({
   return (
     <div className="fixed inset-0 z-50 flex">
       {/* Overlay */}
-      <div
-        className="flex-1 bg-black/40"
-        onClick={handleClose}
-        aria-hidden
-      />
+      <div className="flex-1 bg-black/40" onClick={handleClose} aria-hidden />
 
       {/* Panel */}
-      <div className="w-[480px] max-w-full h-screen bg-white flex flex-col shadow-2xl overflow-hidden">
+      <div className="fixed right-[10px] top-[10px] bottom-[10px] w-[520px] bg-white shadow-2xl z-50 flex flex-col overflow-hidden rounded-[12px] h-[calc(100vh-20px)]">
         {/* Header */}
-        <div className="flex items-center justify-between px-8 py-6 border-b border-gray-100 flex-shrink-0">
+        <div className="flex items-center justify-between p-[24px] border-b border-gray-100 bg-[#FAFAFA] flex-shrink-0">
           <h2 className="text-[18px] font-bold text-gray-900">
             Create Discount
           </h2>
           <button
             type="button"
             onClick={handleClose}
-            className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-50 transition-colors"
+            className="rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-50 transition-colors"
           >
-            <X size={16} />
+            <XCircle size={22} />
           </button>
         </div>
 
         {/* Scrollable body */}
-        <div className="flex-1 overflow-y-auto px-8 py-6 space-y-6">
-
+        <div className="min-h-0 flex-1 overflow-auto px-[30px] py-6 space-y-6">
           {/* Discount Name */}
           <div>
             <FieldLabel>Discount Name</FieldLabel>
@@ -471,7 +463,11 @@ export default function CreateDiscountModal({
             <div className="flex items-center justify-between bg-gray-50 rounded-xl px-5 py-4">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-full bg-white border border-gray-200 flex items-center justify-center flex-shrink-0">
-                  <ShieldCheck size={16} className="text-gray-400" strokeWidth={1.5} />
+                  <ShieldCheck
+                    size={16}
+                    className="text-gray-400"
+                    strokeWidth={1.5}
+                  />
                 </div>
                 <div>
                   <p className="text-[13px] font-medium text-gray-800">

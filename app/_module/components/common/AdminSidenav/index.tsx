@@ -1,20 +1,19 @@
 'use client';
 
 import { cn } from '@/app/_module/lib/utils';
-import {
-  BadgePercent,
-  Home,
-  LogOut,
-  ShieldCheck,
-  Ticket,
-  UserRound,
-  UsersRound,
-} from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import DevfestLogo from '../../icons/DevfestLogo.svg';
 import { adminSidenavClass as styles } from './AdminSidenav.classes';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import Home from '../../icons/Home';
+import Ticket from '../../icons/Ticket';
+import DiscountReferral from '../../icons/DiscountReferral';
+import RolesAndPermissions from '../../icons/RolesAndPermissions';
+import Attendees from '../../icons/Attendees';
+import AuditLog from '../../icons/AuditLog';
+import Logout from '../../icons/Logout';
 
 const navItems = [
   { label: 'Home', href: '/admin/home', icon: Home },
@@ -22,15 +21,15 @@ const navItems = [
   {
     label: 'Discount & Referral',
     href: '/admin/discount-referral',
-    icon: BadgePercent,
+    icon: DiscountReferral,
   },
   {
     label: 'Roles & Permission',
     href: '/admin/roles-permission',
-    icon: ShieldCheck,
+    icon: RolesAndPermissions,
   },
-  { label: 'Attendees', href: '/admin/attendees', icon: UserRound },
-  { label: 'Audit Log', href: '/admin/audit-log', icon: UsersRound },
+  { label: 'Attendees', href: '/admin/attendees', icon: Attendees },
+  { label: 'Audit Log', href: '/admin/audit-log', icon: AuditLog },
 ];
 
 const isActivePath = (pathname: string, href: string) => {
@@ -65,7 +64,7 @@ const AdminSidenav = () => {
                 active && styles.mobileActiveNavItem
               )}
             >
-              <Icon className={styles.icon} strokeWidth={1.8} />
+              <Icon />
               <span>{label}</span>
             </Link>
           );
@@ -83,21 +82,26 @@ const AdminSidenav = () => {
                 href={href}
                 className={cn(styles.navItem, active && styles.activeNavItem)}
               >
-                <Icon className={styles.icon} strokeWidth={1.8} />
+                <Icon />
                 <span>{label}</span>
               </Link>
             );
           })}
 
           <button className={cn(styles.navItem, 'mt-1')} type="button">
-            <LogOut className={styles.icon} strokeWidth={1.8} />
+            <Logout />
             <span>Log out</span>
           </button>
         </div>
 
         <div className={styles.footer}>
           <div className={styles.profile}>
-            <div className={styles.avatar}>ME</div>
+            <Avatar>
+              {/* <AvatarImage src="https://github.com/shadcn.png" /> */}
+              <AvatarFallback className="bg-[#4285F4] text-white">
+                ME
+              </AvatarFallback>
+            </Avatar>
             <div>
               <p className={styles.profileName}>Mary Esivue</p>
               <p className={styles.profileRole}>Super Admin</p>

@@ -14,7 +14,6 @@ export default function DeleteDiscountModal({
   onConfirm,
 }: DeleteDiscountModalProps) {
   if (!open) return null;
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Overlay */}
@@ -25,10 +24,10 @@ export default function DeleteDiscountModal({
       />
 
       {/* Dialog */}
-      <div className="relative bg-white rounded-2xl w-[400px] px-8 py-8 flex flex-col items-center gap-4 shadow-xl z-10">
+      <div className="relative bg-white rounded-2xl w-[400px] p-[24px] flex flex-col items-center gap-4 shadow-xl z-10">
         {/* Trash icon */}
-        <div className="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center">
-          <Trash2 size={24} className="text-red-500" strokeWidth={1.8} />
+        <div className="w-[40px] h-[40px] rounded-[8px] bg-[#FBEEF0] flex items-center justify-center">
+          <Trash2 size={24} className="text-[#EF2641]" strokeWidth={1.8} />
         </div>
 
         {/* Text */}
@@ -46,7 +45,7 @@ export default function DeleteDiscountModal({
           <button
             type="button"
             onClick={onConfirm}
-            className="w-full py-3 rounded-xl bg-red-500 text-white text-[14px] font-semibold hover:bg-red-600 transition-colors"
+            className="w-full py-3 rounded-xl bg-[#E61530] text-white text-[14px] font-medium hover:bg-red-600 transition-colors"
           >
             Delete Discount
           </button>
