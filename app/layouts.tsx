@@ -7,7 +7,7 @@ import { ReactLenis } from '@/utils/lenis';
 import { Toaster } from 'sonner';
 import { usePathname } from 'next/navigation';
 import { Fragment } from 'react';
-import AdminHeader from './_module/components/common/AdminHeader';
+import AdminHeaderWrapper from './_module/components/common/AdminHeaderWrapper';
 
 const AdminLayout = ({
   children,
@@ -18,8 +18,7 @@ const AdminLayout = ({
     <html lang="en">
       <ReactLenis root>
         <body className={`${google_sans.className}`}>
-          <AdminHeader />
-          {children}
+          <AdminHeaderWrapper>{children}</AdminHeaderWrapper>
           <Toaster
             position="top-right"
             toastOptions={{
@@ -38,7 +37,6 @@ const HomeLayout = ({
 }: Readonly<{
   children: React.ReactNode;
 }>) => {
-  // Define the route where you want to hide the footer
   const hideFooterRoutes = ['/schedule'];
   return (
     <html lang="en">
@@ -58,12 +56,11 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // Define the layout to be displayed based on the current route
   const adminRoute = '/admin';
   const pathname = usePathname();
   return (
     <Fragment>
-      {pathname === adminRoute ? (
+      {pathname.includes(adminRoute) ? (
         <AdminLayout>{children}</AdminLayout>
       ) : (
         <HomeLayout>{children}</HomeLayout>
