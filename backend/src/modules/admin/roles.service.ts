@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateRoleDto } from './dto/role.dto';
+import { PERMISSIONS } from 'src/common/constants/permissions';
 
 @Injectable()
 export class RolesService {
@@ -14,5 +15,11 @@ export class RolesService {
         permissions: payload.permissions,
       },
     });
+  }
+
+  list() {
+    return {
+      roles: [...PERMISSIONS].sort((pa, pb) => pa.id.localeCompare(pb.id)),
+    };
   }
 }

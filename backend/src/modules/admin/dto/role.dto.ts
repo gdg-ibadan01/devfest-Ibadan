@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiResponseProperty } from '@nestjs/swagger';
 import {
   ArrayUnique,
   IsArray,
@@ -6,7 +6,18 @@ import {
   IsIn,
   IsString,
 } from 'class-validator';
-import { PERMISSIONS } from 'src/common/constants/permissions';
+import { PERMISSION_ID, PERMISSIONS } from 'src/common/constants/permissions';
+
+class PermissionDto {
+  @ApiResponseProperty({
+    enum: PERMISSIONS.map((p) => p.id),
+  })
+  id: PERMISSION_ID;
+  @ApiResponseProperty({
+    enum: PERMISSIONS.map((p) => p.label),
+  })
+  label: string;
+}
 
 export interface IRole {
   id: string;
@@ -42,4 +53,9 @@ export class CreateRoleDto {
   @IsBoolean()
   @ApiProperty()
   isActive: boolean;
+}
+
+export class ListRolesResponseDto {
+  @ApiProperty({ type: [PermissionDto] })
+  roles: PermissionDto[];
 }
