@@ -36,12 +36,12 @@ export default function CreateTicketPage() {
   const [step, setStep] = useState<CreateTicketStep>('basicInfo');
   const [form, setForm] = useState<TicketFormData>(INITIAL_FORM);
 
-  const handleCancel = () => router.push('/admin/tickets');
+  const handleCancel = () => router.push('/admin/ticket');
 
   const handleSubmit = () => {
     // TODO: wire up API call here
     toast.success('Ticket created successfully!');
-    router.push('/admin/tickets');
+    router.push('/admin/ticket');
   };
 
   return (

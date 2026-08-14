@@ -88,7 +88,7 @@ export default function TicketTable() {
         </button>
 
         <div className="ml-auto">
-          <Link href="/admin/tickets/create">
+          <Link href="/admin/ticket/create">
             <button className="px-5 py-[11px] border border-gray-200 text-[13px] font-medium text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2">
               + Create Ticket
             </button>
