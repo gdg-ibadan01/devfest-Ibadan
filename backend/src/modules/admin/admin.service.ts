@@ -11,7 +11,6 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService, ConfigType } from '@nestjs/config';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { hashSync, genSaltSync, compareSync } from 'bcrypt';
-import * as crypto from 'crypto';
 import { CreateAdminDto } from './dto/create-admin.dto';
 import { LoginAdminDto } from './dto/login-admin.dto';
 import { InviteAdminDto } from './dto/invite-admin.dto';
@@ -19,7 +18,6 @@ import { AdminQueryDto } from './dto/admin-query.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import {
   IAdmin,
-  ILoginResponse,
   IJwtPayload,
   IAdminResponse,
   IDashboardStats,
@@ -54,44 +52,46 @@ export class AdminService {
     private jwtConfig: ConfigType<typeof JWTConfig>,
   ) {}
 
-  async signup(signupDto: CreateAdminDto): Promise<ILoginResponse> {
-    const { fullName, email, password } = signupDto;
+  // async signup(signupDto: CreateAdminDto): Promise<ILoginResponse> {
+  //   const { fullName, email, password } = signupDto;
 
-    // Check if admin already exists
-    const existingAdmin = await this.prisma.admin.findUnique({
-      where: { email },
-    });
+  //   // Check if admin already exists
+  //   const existingAdmin = await this.prisma.admin.findUnique({
+  //     where: { email },
+  //   });
 
-    if (existingAdmin) {
-      throw new ConflictException('Admin with this email already exists');
-    }
+  //   if (existingAdmin) {
+  //     throw new ConflictException('Admin with this email already exists');
+  //   }
 
-    // Hash the password
-    const salt = genSaltSync(10);
-    const hashedPassword = hashSync(password, salt);
+  //   // Hash the password
+  //   const salt = genSaltSync(10);
+  //   const hashedPassword = hashSync(password, salt);
 
-    // Create admin
-    const admin = await this.prisma.admin.create({
-      data: {
-        fullName,
-        email,
-        password: hashedPassword,
-        roleId: '',
-      },
-    });
+  //   // Create admin
+  //   const admin = await this.prisma.admin.create({
+  //     data: {
+  //       fullName,
+  //       email,
+  //       password: hashedPassword,
+  //       roleId: '',
+  //     },
+  //   });
 
-    // Generate tokens
-    const tokens = await this.generateTokens({
-      sub: admin.id,
-      email: admin.email,
-      role: '',
-    });
+  //   // Generate tokens
+  //   const tokens = await this.generateAuthTokens({
+  //     sub: admin.id,
+  //     email: admin.email,
+  //     role: {
+  //     id:
+  //     },
+  //   });
 
-    return {
-      admin: this.excludePassword(admin),
-      ...tokens,
-    };
-  }
+  //   return {
+  //     admin: this.excludePassword(admin),
+  //     ...tokens,
+  //   };
+  // }
 
   async login(payload: LoginAdminDto) {
     const admin = await this.prisma.admin.findUnique({

@@ -43,19 +43,19 @@ import { LoginResponseDto } from './dto/login-response.dto';
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
-  @Post('signup')
-  @ApiOperation({ summary: 'Register a super admin account' })
-  @ApiResponse({
-    status: 201,
-    description: 'Super admin created successfully.',
-  })
-  @ApiResponse({
-    status: 409,
-    description: 'Email already exists.',
-  })
-  async signup(@Body() signupDto: CreateAdminDto): Promise<ILoginResponse> {
-    return this.adminService.signup(signupDto);
-  }
+  // @Post('signup')
+  // @ApiOperation({ summary: 'Register a super admin account' })
+  // @ApiResponse({
+  //   status: 201,
+  //   description: 'Super admin created successfully.',
+  // })
+  // @ApiResponse({
+  //   status: 409,
+  //   description: 'Email already exists.',
+  // })
+  // async signup(@Body() signupDto: CreateAdminDto): Promise<ILoginResponse> {
+  //   return this.adminService.signup(signupDto);
+  // }
 
   @Post('login')
   @ApiOperation({ summary: 'Login as an admin' })
