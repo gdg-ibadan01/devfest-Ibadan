@@ -1,6 +1,5 @@
 'use client';
 
-import InputCalendar from '@/app/_module/components/icons/InputCalendar';
 import type { TicketAdvancedSettings } from '../_types/ticket.types';
 import {
   TextInput,
