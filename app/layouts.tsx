@@ -7,7 +7,6 @@ import { ReactLenis } from '@/utils/lenis';
 import { Toaster } from 'sonner';
 import { usePathname } from 'next/navigation';
 import { Fragment, Suspense } from 'react';
-import AdminHeader from './_module/components/common/AdminHeader';
 import ReactQueryProvider from '@/providers/react-query';
 import { ErrorBoundary } from '@/providers/error-boundary';
 
@@ -43,7 +42,6 @@ const AdminLayout = ({
               showErrorDetails={process.env.NODE_ENV === 'development'}
             >
               <Suspense fallback={<PageLoader />}>
-                <AdminHeader />
                 {children}
                 <Toaster richColors position={'top-right'} duration={6000} />
               </Suspense>
