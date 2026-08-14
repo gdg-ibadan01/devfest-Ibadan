@@ -1,4 +1,4 @@
-import { type PERMISSION_IDS } from 'src/common/constants/permissions';
+import { type PERMISSION_ID } from 'src/common/constants/permissions';
 
 export interface IAdmin {
   id: string;
@@ -24,9 +24,8 @@ export interface IJwtPayload {
   sub: string;
   email: string;
   role: {
-    id: string;
     name: string;
-    permissions: PERMISSION_IDS;
+    permissions: PERMISSION_ID[];
   };
   iat?: number;
   exp?: number;

@@ -5,4 +5,4 @@ export const PERMISSIONS = [
   { id: 'roles.create', label: 'Create role' },
 ] as const;
 
-export type PERMISSION_IDS = (typeof PERMISSIONS)[number]['id'][];
+export type PERMISSION_ID = (typeof PERMISSIONS)[number]['id'];
