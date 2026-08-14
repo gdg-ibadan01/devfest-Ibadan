@@ -4,6 +4,7 @@ import {
   IsArray,
   IsBoolean,
   IsIn,
+  IsNotEmpty,
   IsString,
 } from 'class-validator';
 import { PERMISSION_ID, PERMISSIONS } from 'src/common/constants/permissions';
@@ -29,6 +30,7 @@ export interface IRole {
 
 export class CreateRoleDto {
   @IsString()
+  @IsNotEmpty()
   @ApiProperty({
     description: 'Name of the role',
     example: 'VOLUNTEER',
@@ -36,6 +38,7 @@ export class CreateRoleDto {
   name!: string;
 
   @IsString()
+  @IsNotEmpty()
   @ApiProperty({
     description: 'Description of the role',
   })

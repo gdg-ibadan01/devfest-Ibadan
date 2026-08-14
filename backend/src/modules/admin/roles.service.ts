@@ -39,7 +39,10 @@ export class RolesService {
         id: role.id,
         name: role.name,
         description: role.description,
-        permissions: role.permissions,
+        permissions: role.permissions.map((pId) =>
+          permissionsMap.get(pId as PERMISSION_ID),
+        ),
+        isActive: role.isActive,
         createdAt: role.createdAt,
       };
     } catch (err) {
