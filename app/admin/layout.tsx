@@ -7,11 +7,11 @@ export default function AdminDashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex h-screen overflow-hidden bg-white">
+    <div className="flex h-screen overflow-hidden">
       <AdminSidebar />
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden bg-white">
         <AdminTopBar />
-        <main className="flex-1 overflow-y-auto bg-[#F5F5F5]">{children}</main>
+        <main className="flex-1 overflow-y-auto bg-white">{children}</main>
       </div>
     </div>
   );

@@ -130,7 +130,7 @@ export default function RecentAttendeesTable() {
                     className={`inline-flex items-center gap-[6px] px-3 py-[5px] rounded-full text-[12px] font-medium ${style.bg} ${style.text}`}
                   >
                     <span
-                      className={`w-[6px] h-[6px] rounded-full flex-shrink-0 ${style.dot}`}
+                      className={`w-[7px] h-[7px] rounded-[2px] flex-shrink-0 ${style.dot}`}
                     />
                     {row.status}
                   </span>

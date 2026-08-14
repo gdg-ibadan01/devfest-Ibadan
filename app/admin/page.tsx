@@ -9,9 +9,9 @@ export default function AdminHomePage() {
 
       {/* Stat Cards */}
       <div className="grid grid-cols-4 gap-5 mb-8">
-        <StatCard label="Total Attendees" value="1,247" bgClass="bg-halftone-blue" />
-        <StatCard label="Tickets Sold" value="892" bgClass="bg-halftone-green" />
-        <StatCard label="Revenue" value="₦4,250,000" bgClass="bg-halftone-yellow" />
+        <StatCard label="Total Attendees" value="1,247" bgClass="bg-pastel-blue" />
+        <StatCard label="Tickets Sold" value="892" bgClass="bg-pastel-green" />
+        <StatCard label="Revenue" value="₦4,250,000" bgClass="bg-pastel-yellow" />
         <StatCard label="Days to Event" value="15" bgClass="bg-halftone-red" />
       </div>
 
