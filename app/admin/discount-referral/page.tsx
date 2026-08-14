@@ -5,15 +5,19 @@ import AdminWrapper from '@/app/_module/components/common/AdminWrapper';
 import DiscountTable from './_components/DiscountTable';
 import CreateDiscountModal from './_components/CreateDiscountModal';
 import DeleteDiscountModal from './_components/DeleteDiscountModal';
-import type { DiscountRecord, CreateDiscountForm } from './_types/discount.types';
+import type {
+  DiscountRecord,
+  CreateDiscountForm,
+} from './_types/discount.types';
 
 export default function DiscountReferralPage() {
   const [createOpen, setCreateOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
-  const [selectedRecord, setSelectedRecord] = useState<DiscountRecord | null>(null);
+  const [selectedRecord, setSelectedRecord] = useState<DiscountRecord | null>(
+    null
+  );
 
   const handleCreate = (data: CreateDiscountForm) => {
-    // TODO: integrate API
     console.log('Create discount', data);
   };
 
@@ -28,7 +32,6 @@ export default function DiscountReferralPage() {
   };
 
   const handleDeleteConfirm = () => {
-    // TODO: integrate API
     console.log('Delete discount', selectedRecord?.id);
     setDeleteOpen(false);
     setSelectedRecord(null);

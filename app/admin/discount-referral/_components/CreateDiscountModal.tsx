@@ -31,9 +31,6 @@ const INITIAL_FORM: CreateDiscountForm = {
   firstTimeOnly: true,
 };
 
-/* ------------------------------------------------------------------ */
-/* Reusable sub-components                                              */
-/* ------------------------------------------------------------------ */
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
   return (
@@ -324,7 +321,7 @@ export default function CreateDiscountModal({
       />
 
       {/* Panel */}
-      <div className="w-[480px] max-w-full bg-white flex flex-col shadow-2xl overflow-hidden">
+      <div className="w-[480px] max-w-full h-screen bg-white flex flex-col shadow-2xl overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-8 py-6 border-b border-gray-100 flex-shrink-0">
           <h2 className="text-[18px] font-bold text-gray-900">

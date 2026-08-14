@@ -6,9 +6,6 @@ import { cn } from '@/app/_module/lib/utils';
 import type { DiscountRecord, DiscountStatus } from '../_types/discount.types';
 import DiscountActionsMenu from './DiscountActionsMenu';
 
-/* ------------------------------------------------------------------ */
-/* Mock data                                                            */
-/* ------------------------------------------------------------------ */
 const MOCK_DISCOUNTS: DiscountRecord[] = [
   {
     id: '1',
@@ -57,9 +54,6 @@ const MOCK_DISCOUNTS: DiscountRecord[] = [
   },
 ];
 
-/* ------------------------------------------------------------------ */
-/* Status badge config                                                  */
-/* ------------------------------------------------------------------ */
 const statusConfig: Record<
   DiscountStatus,
   { dot: string; text: string; bg: string }
@@ -81,16 +75,10 @@ const statusConfig: Record<
   },
 };
 
-/* ------------------------------------------------------------------ */
-/* Type label helper                                                    */
-/* ------------------------------------------------------------------ */
 function typeLabel(type: DiscountRecord['type']) {
   return type === 'percentage' ? 'Percentage (%)' : 'Fixed (₦)';
 }
 
-/* ------------------------------------------------------------------ */
-/* Empty state illustration                                             */
-/* ------------------------------------------------------------------ */
 function EmptyState() {
   return (
     <tr>
@@ -106,16 +94,85 @@ function EmptyState() {
               xmlns="http://www.w3.org/2000/svg"
             >
               {/* Stack of papers */}
-              <rect x="10" y="18" width="40" height="36" rx="3" fill="#E5E7EB" />
-              <rect x="14" y="14" width="40" height="36" rx="3" fill="#F3F4F6" />
-              <rect x="18" y="10" width="40" height="36" rx="3" fill="#fff" stroke="#D1D5DB" strokeWidth="1.5" />
-              <line x1="26" y1="22" x2="50" y2="22" stroke="#D1D5DB" strokeWidth="1.5" strokeLinecap="round" />
-              <line x1="26" y1="28" x2="50" y2="28" stroke="#D1D5DB" strokeWidth="1.5" strokeLinecap="round" />
-              <line x1="26" y1="34" x2="40" y2="34" stroke="#D1D5DB" strokeWidth="1.5" strokeLinecap="round" />
+              <rect
+                x="10"
+                y="18"
+                width="40"
+                height="36"
+                rx="3"
+                fill="#E5E7EB"
+              />
+              <rect
+                x="14"
+                y="14"
+                width="40"
+                height="36"
+                rx="3"
+                fill="#F3F4F6"
+              />
+              <rect
+                x="18"
+                y="10"
+                width="40"
+                height="36"
+                rx="3"
+                fill="#fff"
+                stroke="#D1D5DB"
+                strokeWidth="1.5"
+              />
+              <line
+                x1="26"
+                y1="22"
+                x2="50"
+                y2="22"
+                stroke="#D1D5DB"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+              />
+              <line
+                x1="26"
+                y1="28"
+                x2="50"
+                y2="28"
+                stroke="#D1D5DB"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+              />
+              <line
+                x1="26"
+                y1="34"
+                x2="40"
+                y2="34"
+                stroke="#D1D5DB"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+              />
               {/* Magnifying glass */}
-              <circle cx="50" cy="46" r="12" fill="#F9FAFB" stroke="#D1D5DB" strokeWidth="1.5" />
-              <circle cx="50" cy="46" r="7" fill="#fff" stroke="#D1D5DB" strokeWidth="1.5" />
-              <line x1="55" y1="53" x2="61" y2="59" stroke="#D1D5DB" strokeWidth="2" strokeLinecap="round" />
+              <circle
+                cx="50"
+                cy="46"
+                r="12"
+                fill="#F9FAFB"
+                stroke="#D1D5DB"
+                strokeWidth="1.5"
+              />
+              <circle
+                cx="50"
+                cy="46"
+                r="7"
+                fill="#fff"
+                stroke="#D1D5DB"
+                strokeWidth="1.5"
+              />
+              <line
+                x1="55"
+                y1="53"
+                x2="61"
+                y2="59"
+                stroke="#D1D5DB"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
             </svg>
           </div>
           <div className="text-center">
@@ -132,9 +189,6 @@ function EmptyState() {
   );
 }
 
-/* ------------------------------------------------------------------ */
-/* Table                                                               */
-/* ------------------------------------------------------------------ */
 const COLUMNS = [
   { key: 'check', label: '' },
   { key: 'id', label: 'Discount ID' },
@@ -213,15 +267,11 @@ export default function DiscountTable({
                 <th
                   key={col.key}
                   className={cn(
-                    'text-left px-5 py-4 text-[12px] font-medium text-gray-500 whitespace-nowrap',
+                    'text-left px-5 py-4 text-[12px] font-semibold text-[#121212] whitespace-nowrap',
                     col.key === 'check' && 'w-10 pr-0'
                   )}
                 >
-                  {col.key === 'check' ? (
-                    <span />
-                  ) : (
-                    col.label
-                  )}
+                  {col.key === 'check' ? <span /> : col.label}
                 </th>
               ))}
             </tr>
@@ -252,7 +302,12 @@ export default function DiscountTable({
                         )}
                       >
                         {isChecked && (
-                          <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
+                          <svg
+                            width="8"
+                            height="8"
+                            viewBox="0 0 8 8"
+                            fill="none"
+                          >
                             <path
                               d="M1 4L3 6L7 2"
                               stroke="white"
@@ -285,15 +340,20 @@ export default function DiscountTable({
                     <td className="px-5 py-4">
                       <span
                         className={cn(
-                          'inline-flex items-center gap-[5px] px-3 py-[4px] rounded-full text-[11px] font-medium',
+                          'flex items-center gap-[2px] px-3 py-[4px] rounded-[30px] w-fit text-[11px] font-medium',
                           badge.bg,
                           badge.text
                         )}
                       >
                         <span
                           className={cn(
-                            'w-[6px] h-[6px] rounded-full flex-shrink-0',
+                            'w-[8px] h-[8px] rounded-[1.3px]',
                             badge.dot
+                          )}
+                        />
+                        <span
+                          className={cn(
+                            'w-[6px] h-[6px] rounded-full flex-shrink-0'
                           )}
                         />
                         {record.status}
