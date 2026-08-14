@@ -65,15 +65,19 @@ const statusConfig: Record<
   { bg: string; text: string; dot: string }
 > = {
   Successful: {
-    bg: 'bg-green-50',
-    text: 'text-green-600',
-    dot: 'bg-green-500',
+    bg: 'bg-[#E8F5E9]',
+    text: 'text-[#1B873B]',
+    dot: 'bg-[#34A853]',
   },
-  Failed: { bg: 'bg-red-50', text: 'text-red-500', dot: 'bg-red-500' },
+  Failed: {
+    bg: 'bg-[#FDECEA]',
+    text: 'text-[#C5221F]',
+    dot: 'bg-[#EA4335]',
+  },
   Pending: {
-    bg: 'bg-yellow-50',
-    text: 'text-yellow-600',
-    dot: 'bg-yellow-400',
+    bg: 'bg-[#FFF8E1]',
+    text: 'text-[#B06B00]',
+    dot: 'bg-[#FBBC04]',
   },
 };
 
@@ -127,10 +131,10 @@ export default function RecentAttendeesTable() {
                 </td>
                 <td className="px-6 py-[18px]">
                   <span
-                    className={`inline-flex items-center gap-[6px] px-3 py-[5px] rounded-full text-[12px] font-medium ${style.bg} ${style.text}`}
+                    className={`inline-flex items-center gap-[5px] px-3 py-[4px] rounded-full text-[11px] font-medium ${style.bg} ${style.text}`}
                   >
                     <span
-                      className={`w-[7px] h-[7px] rounded-[2px] flex-shrink-0 ${style.dot}`}
+                      className={`w-[6px] h-[6px] rounded-full flex-shrink-0 ${style.dot}`}
                     />
                     {row.status}
                   </span>

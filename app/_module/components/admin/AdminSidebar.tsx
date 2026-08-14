@@ -82,8 +82,14 @@ export default function AdminSidebar() {
       {/* User Card */}
       <div className="px-3 py-4 border-t border-white/10">
         <div className="flex items-center gap-3 bg-white rounded-xl px-4 py-3">
-          <div className="w-9 h-9 rounded-full bg-core-blue flex items-center justify-center text-white text-[11px] font-bold flex-shrink-0 select-none">
-            ME
+          {/* Avatar */}
+          <div
+            className="w-9 h-9 rounded-full bg-core-blue flex items-center justify-center flex-shrink-0 select-none"
+            aria-label="Mary Esivue"
+          >
+            <span className="text-white text-[12px] font-bold uppercase leading-none">
+              ME
+            </span>
           </div>
           <div className="min-w-0">
             <p className="text-[13px] font-semibold text-core-blue truncate leading-tight">
