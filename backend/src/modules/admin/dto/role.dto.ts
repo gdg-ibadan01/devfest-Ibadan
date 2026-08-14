@@ -8,6 +8,17 @@ import {
 } from 'class-validator';
 import { PERMISSION_ID, PERMISSIONS } from 'src/common/constants/permissions';
 
+class PermissionDto {
+  @ApiResponseProperty({
+    enum: PERMISSIONS.map((p) => p.id),
+  })
+  id: PERMISSION_ID;
+  @ApiResponseProperty({
+    enum: PERMISSIONS.map((p) => p.label),
+  })
+  label: string;
+}
+
 export interface IRole {
   id: string;
   name: string;
@@ -55,9 +66,36 @@ export class CreateRoleResponseDto {
   @ApiResponseProperty()
   description!: string;
 
-  @ApiResponseProperty({ type: [String], enum: PERMISSIONS.map((p) => p.id) })
-  permissions!: string[];
+  @ApiResponseProperty()
+  isActive!: boolean;
+
+  @ApiResponseProperty({ type: [PermissionDto] })
+  permissions!: PermissionDto[];
 
   @ApiResponseProperty()
   createdAt!: Date;
+}
+
+class ListRolesItemResponseDto {
+  @ApiResponseProperty()
+  id!: string;
+
+  @ApiResponseProperty()
+  name!: string;
+
+  @ApiResponseProperty({ type: [PermissionDto] })
+  permissions!: PermissionDto[];
+
+  @ApiResponseProperty()
+  isActive!: boolean;
+
+  @ApiResponseProperty()
+  createdAt!: Date;
+}
+
+export class ListRolesResponseDto {
+  @ApiResponseProperty({
+    type: [ListRolesItemResponseDto],
+  })
+  roles: ListRolesItemResponseDto[];
 }

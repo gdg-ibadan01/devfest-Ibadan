@@ -2,11 +2,16 @@ import {
   Body,
   ConflictException,
   Controller,
+  Get,
   InternalServerErrorException,
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { CreateRoleDto, CreateRoleResponseDto } from './dto/role.dto';
+import {
+  CreateRoleDto,
+  CreateRoleResponseDto,
+  ListRolesResponseDto,
+} from './dto/role.dto';
 import { RolesService } from './roles.service';
 import {
   ApiBearerAuth,
@@ -43,5 +48,15 @@ export class RolesController {
           throw new InternalServerErrorException('Unable to create role');
       }
     }
+  }
+
+  @Get()
+  @ApiBearerAuth()
+  @RequirePermission('roles.list')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @ApiOperation({ summary: 'List roles' })
+  @ApiResponse({ type: ListRolesResponseDto })
+  async list() {
+    return await this.roleService.list();
   }
 }
