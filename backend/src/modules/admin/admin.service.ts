@@ -141,7 +141,9 @@ export class AdminService {
   ): Promise<{ message: string }> {
     const { email } = forgotPasswordDto;
 
-    const admin = await this.prisma.admin.findUnique({ where: { email } });
+    const admin = await this.prisma.admin.findUnique({
+      where: { email: email.toLowerCase() },
+    });
 
     if (!admin || !admin.isActive) {
       return {
@@ -203,9 +205,7 @@ export class AdminService {
     }
 
     if (resetTokenRecord.usedAt) {
-      throw new BadRequestException(
-        'This reset token has already been used. Please request a new one.',
-      );
+      throw new BadRequestException('Invalid password reset token.');
     }
 
     if (resetTokenRecord.expiresAt < new Date()) {
@@ -287,12 +287,6 @@ export class AdminService {
     updateProfileDto: UpdateProfileDto,
   ): Promise<IUpdateProfileResponse> {
     const { fullName, email } = updateProfileDto;
-
-    if (!fullName && !email) {
-      throw new BadRequestException(
-        'At least one field (fullName or email) must be provided',
-      );
-    }
 
     const admin = await this.prisma.admin.findUnique({
       where: { id: adminId },

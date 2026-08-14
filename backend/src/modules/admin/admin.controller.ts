@@ -116,8 +116,6 @@ export class AdminController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Reset admin password using a token from the reset email',
-    description:
-      'Validates the time-limited reset token and sets the new password. The token is single-use and expires after 1 hour.',
   })
   @ApiResponse({
     status: 200,

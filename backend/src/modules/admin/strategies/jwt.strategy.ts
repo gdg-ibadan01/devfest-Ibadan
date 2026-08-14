@@ -29,7 +29,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
     // Return the shape that req.user will have throughout the app
     return {
-      id: admin.id,
       sub: admin.id,
       email: admin.email,
       role: admin.role, // Role enum: 'ADMIN' | 'SUPER_ADMIN'
