@@ -19,6 +19,7 @@ import {
   ApiOperation,
   ApiResponse,
   ApiBearerAuth,
+  ApiOkResponse,
 } from '@nestjs/swagger';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { Role } from '../../common/enums/role.enum';
@@ -34,7 +35,8 @@ import { AdminCreateAttendeeDto } from './dto/create-attendee.dto';
 import { ICreateResponse } from './interfaces/attendee.interface';
 import { RolesGuard } from './guards/roles.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
-import { ILoginResponse, IAdminResponse } from './interfaces/admin.interface';
+import { IAdminResponse } from './interfaces/admin.interface';
+import { LoginResponseDto } from './dto/login-response.dto';
 
 @ApiTags('Admin')
 @Controller('admin')
@@ -57,10 +59,14 @@ export class AdminController {
 
   @Post('login')
   @ApiOperation({ summary: 'Login as an admin' })
-  @ApiResponse({ status: 200, description: 'Login successful.' })
   @ApiResponse({ status: 401, description: 'Invalid credentials.' })
-  async login(@Body() loginDto: LoginAdminDto): Promise<ILoginResponse> {
-    return this.adminService.login(loginDto);
+  @ApiOkResponse({
+    description: 'Login successful',
+    type: LoginResponseDto,
+  })
+  @HttpCode(HttpStatus.OK)
+  async login(@Body() payload: LoginAdminDto) {
+    return this.adminService.login(payload);
   }
 
   @Post('attendee/create')
