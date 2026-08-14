@@ -31,7 +31,7 @@ import { IAttendee, ICreateResponse } from './interfaces/attendee.interface';
 import { PaymentsService } from '../payment/payment.service';
 import { IPaystackResponse } from '../payment/interfaces/payment.interface';
 import JWTConfig from 'src/config/jwt.config';
-import { type PERMISSION_IDS } from 'src/common/constants/permissions';
+import { type PERMISSION_ID } from 'src/common/constants/permissions';
 
 type AuthTokens = {
   accessToken: string;
@@ -116,9 +116,8 @@ export class AdminService {
       sub: admin.id,
       email: admin.email,
       role: {
-        id: admin.roleId,
         name: admin.role.name,
-        permissions: admin.role.permissions as PERMISSION_IDS,
+        permissions: admin.role.permissions as PERMISSION_ID[],
       },
     });
 
@@ -156,9 +155,8 @@ export class AdminService {
         sub: admin.id,
         email: admin.email,
         role: {
-          id: admin.role.id,
           name: admin.role.name,
-          permissions: admin.role.permissions as PERMISSION_IDS,
+          permissions: admin.role.permissions as PERMISSION_ID[],
         },
       });
     } catch (error) {
