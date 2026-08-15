@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateRoleDto } from './dto/role.dto';
+import { PERMISSIONS } from 'src/common/constants/permissions';
 import { PrismaErrors } from 'src/common/enums/prisma-errors.enum';
 import { ServiceError } from 'src/common/errors/service-error';
 
@@ -52,5 +53,13 @@ export class RolesService {
         message: 'Unable to create role',
       });
     }
+  }
+
+  listPermissions() {
+    return {
+      permissions: [...PERMISSIONS].sort((pa, pb) =>
+        pa.id.localeCompare(pb.id),
+      ),
+    };
   }
 }

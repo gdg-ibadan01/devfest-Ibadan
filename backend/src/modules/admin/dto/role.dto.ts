@@ -8,6 +8,17 @@ import {
 } from 'class-validator';
 import { PERMISSION_ID, PERMISSIONS } from 'src/common/constants/permissions';
 
+class PermissionDto {
+  @ApiResponseProperty({
+    enum: PERMISSIONS.map((p) => p.id),
+  })
+  id: PERMISSION_ID;
+  @ApiResponseProperty({
+    enum: PERMISSIONS.map((p) => p.label),
+  })
+  label: string;
+}
+
 export interface IRole {
   id: string;
   name: string;
@@ -60,4 +71,9 @@ export class CreateRoleResponseDto {
 
   @ApiResponseProperty()
   createdAt!: Date;
+}
+
+export class ListPermissionsResponse {
+  @ApiProperty({ type: [PermissionDto] })
+  permissions: PermissionDto[];
 }
