@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Search, Download, ChevronDown } from 'lucide-react';
+import { Search, Download, ChevronDown, Plus } from 'lucide-react';
 import { cn } from '@/app/_module/lib/utils';
 import type { AttendeeRecord, AttendeeStatus } from '../_types/attendee.types';
 import AttendeeActionsMenu from './AttendeeActionsMenu';
@@ -19,7 +19,7 @@ const MOCK_ATTENDEES: AttendeeRecord[] = [
 ];
 
 /* ------------------------------------------------------------------ */
-/* Status badge config                                                   */
+/* Status badge                                                         */
 /* ------------------------------------------------------------------ */
 const STATUS_CONFIG: Record<AttendeeStatus, { dot: string; text: string; bg: string }> = {
   Successful: { dot: 'bg-[#34A853]', text: 'text-[#1B873B]', bg: 'bg-[#E8F5E9]' },
@@ -38,31 +38,60 @@ function StatusBadge({ status }: { status: AttendeeStatus }) {
 }
 
 /* ------------------------------------------------------------------ */
+/* Custom checkbox (matches Roles table style)                          */
+/* ------------------------------------------------------------------ */
+function Checkbox({ checked, onChange }: { checked: boolean; onChange: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onChange}
+      className={cn(
+        'w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 transition-colors',
+        checked ? 'bg-gray-900 border-gray-900' : 'border-gray-300 bg-white hover:border-gray-500'
+      )}
+    >
+      {checked && (
+        <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
+          <path d="M1 4L3 6L7 2" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      )}
+    </button>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /* Empty state                                                          */
 /* ------------------------------------------------------------------ */
 function EmptyState() {
   return (
-    <div className="flex flex-col items-center justify-center py-20 gap-4">
-      <svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect x="18" y="28" width="56" height="72" rx="6" fill="#F3F4F6" />
-        <rect x="26" y="40" width="40" height="6" rx="3" fill="#D1D5DB" />
-        <rect x="26" y="52" width="32" height="6" rx="3" fill="#D1D5DB" />
-        <rect x="26" y="64" width="36" height="6" rx="3" fill="#D1D5DB" />
-        <rect x="26" y="76" width="28" height="6" rx="3" fill="#E5E7EB" />
-        <rect x="28" y="18" width="56" height="72" rx="6" fill="#E5E7EB" />
-        <rect x="36" y="30" width="40" height="6" rx="3" fill="#D1D5DB" />
-        <rect x="36" y="42" width="32" height="6" rx="3" fill="#D1D5DB" />
-        <rect x="38" y="8" width="56" height="72" rx="6" fill="#D1D5DB" />
-        <rect x="46" y="20" width="32" height="6" rx="3" fill="#9CA3AF" />
-        <rect x="46" y="32" width="24" height="6" rx="3" fill="#9CA3AF" />
-        <circle cx="85" cy="72" r="22" fill="#F9FAFB" stroke="#E5E7EB" strokeWidth="2" />
-        <circle cx="85" cy="72" r="14" fill="#F3F4F6" />
-        <line x1="97" y1="85" x2="108" y2="97" stroke="#9CA3AF" strokeWidth="4" strokeLinecap="round" />
-        <circle cx="85" cy="72" r="14" fill="none" stroke="#9CA3AF" strokeWidth="3" />
-      </svg>
-      <p className="text-[15px] font-semibold text-gray-700">No Data</p>
-      <p className="text-[13px] text-gray-400">There is no data to show you right now</p>
-    </div>
+    <tr>
+      <td colSpan={10} className="py-20">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-[120px] h-[120px] flex items-center justify-center border border-gray-200 rounded-2xl bg-white">
+            <svg width="72" height="72" viewBox="0 0 72 72" fill="none">
+              <rect x="10" y="18" width="40" height="36" rx="3" fill="#E5E7EB" />
+              <rect x="14" y="14" width="40" height="36" rx="3" fill="#F3F4F6" />
+              <rect x="18" y="10" width="40" height="36" rx="3" fill="#fff" stroke="#D1D5DB" strokeWidth="1.5" />
+              <line x1="26" y1="22" x2="50" y2="22" stroke="#D1D5DB" strokeWidth="1.5" strokeLinecap="round" />
+              <line x1="26" y1="28" x2="50" y2="28" stroke="#D1D5DB" strokeWidth="1.5" strokeLinecap="round" />
+              <line x1="26" y1="34" x2="40" y2="34" stroke="#D1D5DB" strokeWidth="1.5" strokeLinecap="round" />
+              <circle cx="50" cy="46" r="12" fill="#F9FAFB" stroke="#D1D5DB" strokeWidth="1.5" />
+              <circle cx="50" cy="46" r="7" fill="#fff" stroke="#D1D5DB" strokeWidth="1.5" />
+              <line x1="55" y1="53" x2="61" y2="59" stroke="#D1D5DB" strokeWidth="2" strokeLinecap="round" />
+              <circle cx="50" cy="46" r="7" fill="none" stroke="#9CA3AF" strokeWidth="1.5" />
+            </svg>
+          </div>
+          <div className="text-center">
+            <p className="text-[14px] font-semibold text-gray-700">No Data</p>
+            <p className="text-[12px] text-gray-400 mt-1">
+              There is no data to
+              <br />
+              show you right now
+            </p>
+          </div>
+        </div>
+      </td>
+    </tr>
   );
 }
 
@@ -75,11 +104,13 @@ interface AttendeesTableProps {
 }
 
 /* ------------------------------------------------------------------ */
-/* Component                                                           */
+/* Table                                                               */
 /* ------------------------------------------------------------------ */
+const COLUMNS = ['', 'Ticket ID', 'Date', 'Full Name', 'Email Address', 'Code', 'Event Day(s)', 'Amount', 'Status', 'Action'];
+
 export default function AttendeesTable({ onAddNew, onCheckIn }: AttendeesTableProps) {
   const [search, setSearch] = useState('');
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [selected, setSelected] = useState<Set<string>>(new Set());
 
   const filtered = MOCK_ATTENDEES.filter(
     (a) =>
@@ -88,18 +119,15 @@ export default function AttendeesTable({ onAddNew, onCheckIn }: AttendeesTablePr
       a.ticketId.toLowerCase().includes(search.toLowerCase())
   );
 
-  const allChecked = filtered.length > 0 && filtered.every((a) => selectedIds.has(a.id));
+  const allChecked = filtered.length > 0 && filtered.every((a) => selected.has(a.id));
 
   const toggleAll = () => {
-    if (allChecked) {
-      setSelectedIds(new Set());
-    } else {
-      setSelectedIds(new Set(filtered.map((a) => a.id)));
-    }
+    if (allChecked) setSelected(new Set());
+    else setSelected(new Set(filtered.map((a) => a.id)));
   };
 
   const toggleOne = (id: string) => {
-    setSelectedIds((prev) => {
+    setSelected((prev) => {
       const next = new Set(prev);
       next.has(id) ? next.delete(id) : next.add(id);
       return next;
@@ -107,111 +135,119 @@ export default function AttendeesTable({ onAddNew, onCheckIn }: AttendeesTablePr
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-      {/* Toolbar */}
-      <div className="flex items-center gap-3 px-6 py-5 border-b border-gray-100 flex-wrap">
-        {/* Search */}
-        <div className="flex items-center gap-2 border border-gray-200 rounded-lg px-3 py-2 bg-white min-w-[200px] flex-1 max-w-xs">
-          <Search size={15} className="text-gray-400 flex-shrink-0" />
+    <>
+      {/* Toolbar — outside the table card, matches Roles pattern */}
+      <div className="flex items-center gap-3 mb-6 flex-wrap">
+        <div className="flex items-center flex-1 max-w-[480px] border border-gray-200 rounded-md overflow-hidden bg-white focus-within:ring-2 focus-within:ring-black/10">
+          <Search size={15} className="ml-4 text-gray-400 flex-shrink-0" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search..."
-            className="text-[13px] text-gray-700 placeholder:text-gray-400 bg-transparent outline-none w-full"
+            placeholder="Search for attendee"
+            className="flex-1 px-3 py-[11px] text-[13px] text-gray-700 placeholder:text-gray-400 focus:outline-none bg-transparent"
           />
         </div>
 
-        <button className="px-4 py-2 rounded-lg border border-gray-200 text-[13px] font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+        <button className="px-5 py-[11px] bg-gray-900 text-white text-[13px] font-medium rounded-md hover:bg-black transition-colors">
           Search
         </button>
 
         {/* Date filter */}
-        <button className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-gray-200 text-[13px] font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+        <button className="flex items-center gap-1.5 px-5 py-[11px] border border-gray-200 rounded-md text-[13px] font-medium text-gray-700 hover:bg-gray-50 transition-colors">
           Date <ChevronDown size={14} />
         </button>
 
         {/* Status filter */}
-        <button className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-gray-200 text-[13px] font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+        <button className="flex items-center gap-1.5 px-5 py-[11px] border border-gray-200 rounded-md text-[13px] font-medium text-gray-700 hover:bg-gray-50 transition-colors">
           Status <ChevronDown size={14} />
         </button>
 
-        <div className="ml-auto flex items-center gap-2">
-          {/* Add new */}
+        <div className="ml-auto flex items-center gap-3">
           <button
             onClick={onAddNew}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-900 text-white text-[13px] font-semibold hover:bg-black transition-colors"
+            className="flex items-center gap-2 px-5 py-[11px] bg-gray-900 text-white text-[13px] font-medium rounded-lg hover:bg-black transition-colors"
           >
             Add New Attendee
-            <span className="text-[16px] font-bold leading-none">+</span>
+            <Plus size={16} strokeWidth={2.5} />
           </button>
 
-          {/* Download */}
-          <button className="w-9 h-9 flex items-center justify-center rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors text-gray-600">
+          <button className="w-[42px] h-[42px] flex items-center justify-center rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors text-gray-600">
             <Download size={15} />
           </button>
         </div>
       </div>
 
-      {/* Table */}
-      {filtered.length === 0 ? (
-        <EmptyState />
-      ) : (
+      {/* Table card */}
+      <div className="border border-gray-200 rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full text-sm">
             <thead>
-              <tr className="bg-gray-50 border-b border-gray-100">
-                <th className="px-5 py-3 text-left w-10">
-                  <input
-                    type="checkbox"
-                    checked={allChecked}
-                    onChange={toggleAll}
-                    className="w-4 h-4 accent-gray-900 cursor-pointer"
-                  />
+              <tr className="border-b border-gray-200 bg-gray-50">
+                {/* Checkbox header */}
+                <th className="px-5 py-4 text-left w-10">
+                  <Checkbox checked={allChecked} onChange={toggleAll} />
                 </th>
-                {['Ticket ID', 'Date', 'Full Name', 'Email Address', 'Code', 'Event Day(s)', 'Amount', 'Status', ''].map((col) => (
-                  <th key={col} className="px-4 py-3 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">
+                {COLUMNS.slice(1).map((col) => (
+                  <th key={col} className="px-5 py-4 text-left text-[12px] font-medium text-gray-500 whitespace-nowrap">
                     {col}
                   </th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {filtered.map((attendee, i) => (
-                <tr
-                  key={attendee.id}
-                  className={cn(
-                    'border-b border-gray-50 hover:bg-gray-50/60 transition-colors',
-                    i === filtered.length - 1 && 'border-b-0'
-                  )}
-                >
-                  <td className="px-5 py-4">
-                    <input
-                      type="checkbox"
-                      checked={selectedIds.has(attendee.id)}
-                      onChange={() => toggleOne(attendee.id)}
-                      className="w-4 h-4 accent-gray-900 cursor-pointer"
-                    />
-                  </td>
-                  <td className="px-4 py-4 text-[13px] font-medium text-gray-800 whitespace-nowrap">{attendee.ticketId}</td>
-                  <td className="px-4 py-4 text-[13px] text-gray-600 whitespace-nowrap">{attendee.date}</td>
-                  <td className="px-4 py-4 text-[13px] text-gray-800 font-medium whitespace-nowrap">{attendee.fullName}</td>
-                  <td className="px-4 py-4 text-[13px] text-gray-500 whitespace-nowrap">{attendee.email}</td>
-                  <td className="px-4 py-4 text-[13px] font-mono text-gray-700 whitespace-nowrap">{attendee.code}</td>
-                  <td className="px-4 py-4 text-[13px] text-gray-600 whitespace-nowrap">{attendee.eventDays}</td>
-                  <td className="px-4 py-4 text-[13px] font-semibold text-gray-800 whitespace-nowrap">{attendee.amount}</td>
-                  <td className="px-4 py-4 whitespace-nowrap">
-                    <StatusBadge status={attendee.status} />
-                  </td>
-                  <td className="px-4 py-4">
-                    <AttendeeActionsMenu onCheckIn={() => onCheckIn(attendee)} />
-                  </td>
-                </tr>
-              ))}
+              {filtered.length === 0 ? (
+                <EmptyState />
+              ) : (
+                filtered.map((attendee) => (
+                  <tr
+                    key={attendee.id}
+                    className="border-b border-gray-100 last:border-0 hover:bg-gray-50/50 transition-colors"
+                  >
+                    {/* Checkbox — stop propagation */}
+                    <td className="px-5 py-4 w-10" onClick={(e) => e.stopPropagation()}>
+                      <Checkbox
+                        checked={selected.has(attendee.id)}
+                        onChange={() => toggleOne(attendee.id)}
+                      />
+                    </td>
+
+                    <td className="px-5 py-4 text-[13px] font-medium text-gray-800 whitespace-nowrap">
+                      {attendee.ticketId}
+                    </td>
+                    <td className="px-5 py-4 text-[13px] text-gray-600 whitespace-nowrap">
+                      {attendee.date}
+                    </td>
+                    <td className="px-5 py-4 text-[13px] font-medium text-gray-800 whitespace-nowrap">
+                      {attendee.fullName}
+                    </td>
+                    <td className="px-5 py-4 text-[13px] text-gray-500 whitespace-nowrap">
+                      {attendee.email}
+                    </td>
+                    <td className="px-5 py-4 text-[13px] font-mono text-gray-700 whitespace-nowrap">
+                      {attendee.code}
+                    </td>
+                    <td className="px-5 py-4 text-[13px] text-gray-600 whitespace-nowrap">
+                      {attendee.eventDays}
+                    </td>
+                    <td className="px-5 py-4 text-[13px] font-semibold text-gray-800 whitespace-nowrap">
+                      {attendee.amount}
+                    </td>
+                    <td className="px-5 py-4 whitespace-nowrap">
+                      <StatusBadge status={attendee.status} />
+                    </td>
+
+                    {/* Action — stop propagation */}
+                    <td className="px-5 py-4" onClick={(e) => e.stopPropagation()}>
+                      <AttendeeActionsMenu onCheckIn={() => onCheckIn(attendee)} />
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
-      )}
-    </div>
+      </div>
+    </>
   );
 }

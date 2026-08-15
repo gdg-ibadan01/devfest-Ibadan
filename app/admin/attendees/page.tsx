@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { X, CheckCircle2 } from 'lucide-react';
 import AdminWrapper from '@/app/_module/components/common/AdminWrapper';
 import AttendeesTable from './_components/AttendeesTable';
@@ -11,21 +11,14 @@ import type { AttendeeRecord } from './_types/attendee.types';
 /* Check-in Toast                                                       */
 /* ------------------------------------------------------------------ */
 interface CheckInToastProps {
-  attendee: AttendeeRecord | null;
+  visible: boolean;
   onClose: () => void;
 }
 
-function CheckInToast({ attendee, onClose }: CheckInToastProps) {
-  useEffect(() => {
-    if (!attendee) return;
-    const timer = setTimeout(onClose, 3000);
-    return () => clearTimeout(timer);
-  }, [attendee, onClose]);
-
-  if (!attendee) return null;
-
+function CheckInToast({ visible, onClose }: CheckInToastProps) {
+  if (!visible) return null;
   return (
-    <div className="fixed top-6 right-6 z-[100] animate-in slide-in-from-top-2 fade-in duration-300">
+    <div className="fixed top-6 right-6 z-[100]">
       <div className="flex items-start gap-3 bg-white rounded-xl shadow-xl border border-gray-100 px-5 py-4 w-[280px]">
         <div className="w-8 h-8 rounded-full bg-[#E8F5E9] flex items-center justify-center flex-shrink-0 mt-0.5">
           <CheckCircle2 size={18} className="text-[#34A853]" />
@@ -50,19 +43,25 @@ function CheckInToast({ attendee, onClose }: CheckInToastProps) {
 /* ------------------------------------------------------------------ */
 export default function AttendeesPage() {
   const [showAddModal, setShowAddModal] = useState(false);
-  const [checkedInAttendee, setCheckedInAttendee] = useState<AttendeeRecord | null>(null);
+  const [showToast, setShowToast] = useState(false);
+  const [toastTimer, setToastTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
 
-  const handleCheckIn = useCallback((attendee: AttendeeRecord) => {
-    setCheckedInAttendee(attendee);
-  }, []);
+  const handleCheckIn = useCallback((_attendee: AttendeeRecord) => {
+    // Clear any existing timer
+    if (toastTimer) clearTimeout(toastTimer);
+    setShowToast(true);
+    const t = setTimeout(() => setShowToast(false), 3000);
+    setToastTimer(t);
+  }, [toastTimer]);
 
   const handleToastClose = useCallback(() => {
-    setCheckedInAttendee(null);
-  }, []);
+    if (toastTimer) clearTimeout(toastTimer);
+    setShowToast(false);
+  }, [toastTimer]);
 
   return (
     <AdminWrapper title="Attendees">
-      <div className="p-6">
+      <div className="px-[32px] py-[24px]">
         <AttendeesTable
           onAddNew={() => setShowAddModal(true)}
           onCheckIn={handleCheckIn}
@@ -75,7 +74,7 @@ export default function AttendeesPage() {
       />
 
       <CheckInToast
-        attendee={checkedInAttendee}
+        visible={showToast}
         onClose={handleToastClose}
       />
     </AdminWrapper>
