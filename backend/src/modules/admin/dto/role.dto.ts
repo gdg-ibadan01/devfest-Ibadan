@@ -4,6 +4,7 @@ import {
   IsArray,
   IsBoolean,
   IsIn,
+  IsNotEmpty,
   IsString,
 } from 'class-validator';
 import { PERMISSION_ID, PERMISSIONS } from 'src/common/constants/permissions';
@@ -29,6 +30,7 @@ export interface IRole {
 
 export class CreateRoleDto {
   @IsString()
+  @IsNotEmpty()
   @ApiProperty({
     description: 'Name of the role',
     example: 'VOLUNTEER',
@@ -36,6 +38,7 @@ export class CreateRoleDto {
   name!: string;
 
   @IsString()
+  @IsNotEmpty()
   @ApiProperty({
     description: 'Description of the role',
   })
@@ -66,11 +69,38 @@ export class CreateRoleResponseDto {
   @ApiResponseProperty()
   description!: string;
 
-  @ApiResponseProperty({ type: [String], enum: PERMISSIONS.map((p) => p.id) })
-  permissions!: string[];
+  @ApiResponseProperty()
+  isActive!: boolean;
+
+  @ApiResponseProperty({ type: [PermissionDto] })
+  permissions!: PermissionDto[];
 
   @ApiResponseProperty()
   createdAt!: Date;
+}
+
+class ListRolesItemResponseDto {
+  @ApiResponseProperty()
+  id!: string;
+
+  @ApiResponseProperty()
+  name!: string;
+
+  @ApiResponseProperty({ type: [PermissionDto] })
+  permissions!: PermissionDto[];
+
+  @ApiResponseProperty()
+  isActive!: boolean;
+
+  @ApiResponseProperty()
+  createdAt!: Date;
+}
+
+export class ListRolesResponseDto {
+  @ApiResponseProperty({
+    type: [ListRolesItemResponseDto],
+  })
+  roles: ListRolesItemResponseDto[];
 }
 
 export class ListPermissionsResponse {
