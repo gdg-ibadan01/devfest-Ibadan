@@ -86,4 +86,12 @@ export class RolesService {
       })),
     };
   }
+
+  listPermissions() {
+    return {
+      permissions: [...PERMISSIONS].sort((pa, pb) =>
+        pa.id.localeCompare(pb.id),
+      ),
+    };
+  }
 }

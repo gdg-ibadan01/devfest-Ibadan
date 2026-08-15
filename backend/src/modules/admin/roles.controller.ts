@@ -11,6 +11,7 @@ import {
   CreateRoleDto,
   CreateRoleResponseDto,
   ListRolesResponseDto,
+  ListPermissionsResponse,
 } from './dto/role.dto';
 import { RolesService } from './roles.service';
 import {
@@ -58,5 +59,15 @@ export class RolesController {
   @ApiResponse({ type: ListRolesResponseDto })
   async list() {
     return await this.roleService.list();
+  }
+
+  @Get('permissions')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @ApiResponse({
+    type: ListPermissionsResponse,
+  })
+  listPermssions() {
+    return this.roleService.listPermissions();
   }
 }

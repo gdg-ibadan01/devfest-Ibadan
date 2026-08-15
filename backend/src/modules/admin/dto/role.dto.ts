@@ -102,3 +102,8 @@ export class ListRolesResponseDto {
   })
   roles: ListRolesItemResponseDto[];
 }
+
+export class ListPermissionsResponse {
+  @ApiProperty({ type: [PermissionDto] })
+  permissions: PermissionDto[];
+}
