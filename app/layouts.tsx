@@ -50,7 +50,7 @@ const AdminLayout = ({
             showErrorDetails={process.env.NODE_ENV === 'development'}
           >
             <Suspense fallback={<PageLoader />}>
-              <AdminHeader />
+              {/* <AdminHeader /> */}
               <div className={wrapperClass.layout}>
                 <AdminSidenav />
                 <main className={wrapperClass.main}>{children}</main>
