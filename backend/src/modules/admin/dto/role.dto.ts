@@ -23,7 +23,7 @@ export interface IRole {
   id: string;
   name: string;
   description: string;
-  permissions: string[];
+  permissions: PERMISSION_ID[];
   isActive: boolean;
 }
 
@@ -31,15 +31,15 @@ export class CreateRoleDto {
   @IsString()
   @ApiProperty({
     description: 'Name of the role',
-    example: 'Volunteer',
+    example: 'VOLUNTEER',
   })
-  name: string;
+  name!: string;
 
   @IsString()
   @ApiProperty({
     description: 'Description of the role',
   })
-  description: string;
+  description!: string;
 
   @IsArray()
   @ArrayUnique()
@@ -47,12 +47,30 @@ export class CreateRoleDto {
   @ApiProperty({
     description: 'Permissions for this role',
     enum: PERMISSIONS.map((p) => p.id),
+    isArray: true,
   })
-  permissions: string[];
+  permissions!: string[];
 
   @IsBoolean()
   @ApiProperty()
-  isActive: boolean;
+  isActive!: boolean;
+}
+
+export class CreateRoleResponseDto {
+  @ApiResponseProperty()
+  id!: string;
+
+  @ApiResponseProperty()
+  name!: string;
+
+  @ApiResponseProperty()
+  description!: string;
+
+  @ApiResponseProperty({ type: [String], enum: PERMISSIONS.map((p) => p.id) })
+  permissions!: string[];
+
+  @ApiResponseProperty()
+  createdAt!: Date;
 }
 
 export class ListPermissionsResponse {

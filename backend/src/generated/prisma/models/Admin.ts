@@ -562,10 +562,6 @@ export type AdminUncheckedCreateNestedManyWithoutInvitedByInput = {
   connect?: Prisma.AdminWhereUniqueInput | Prisma.AdminWhereUniqueInput[];
 };
 
-export type DateTimeFieldUpdateOperationsInput = {
-  set?: Date | string;
-};
-
 export type AdminUpdateOneWithoutAdminsNestedInput = {
   create?: Prisma.XOR<
     Prisma.AdminCreateWithoutAdminsInput,
