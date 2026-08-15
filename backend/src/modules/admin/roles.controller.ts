@@ -53,6 +53,7 @@ export class RolesController {
   @Get('permissions')
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'List permissions' })
   @ApiResponse({
     type: ListPermissionsResponse,
   })
