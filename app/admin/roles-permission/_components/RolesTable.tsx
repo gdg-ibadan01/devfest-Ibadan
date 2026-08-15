@@ -101,7 +101,7 @@ export default function RolesTable({
           {hasData && (
             <button
               onClick={onInvite}
-              className="flex items-center gap-2 px-5 py-[11px] border border-gray-300 text-gray-700 text-[13px] font-medium rounded-lg hover:bg-gray-50 transition-colors"
+              className="flex items-center gap-2 px-5 py-[11px] bg-gray-900 text-white text-[13px] font-medium rounded-lg hover:bg-black transition-colors"
             >
               Invite People
               <Plus size={16} strokeWidth={2.5} />

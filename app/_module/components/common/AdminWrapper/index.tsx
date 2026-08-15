@@ -12,7 +12,7 @@ const AdminWrapper = ({ children, title }: AdminHeaderWrapperProps) => {
     <div className={styles.layout}>
       <main className={styles.main}>
         <header className="border-b border-[#dedede] py-5 flex items-center justify-between px-6 h-[81px] bg-white border-l border-[#dedede]">
-          <h1 className="text-[26px] font-bold leading-tight text-[#1e1e1e]">
+          <h1 className="text-[25px] font-bold leading-tight text-[#1e1e1e]">
             {title}
           </h1>
           <AdminNotificationBell />

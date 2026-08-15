@@ -2,7 +2,6 @@ import React from 'react';
 import { cn } from '../../lib/utils';
 import DashboardCard from '../cards/DashboardCard';
 
-
 const recentAttendees = [
   {
     ticketId: '#DF82481',
@@ -55,21 +54,31 @@ const recentAttendees = [
 ] as const;
 
 type AttendeeStatus = (typeof recentAttendees)[number]['status'];
-const statusStyles: Record<AttendeeStatus, string> = {
-  Successful: 'bg-[#E5F6F0] text-[#087A55] before:bg-[#087A55]',
-  Failed: 'bg-[#FDEBEB] text-[#EA4335] before:bg-[#EA4335]',
-  Pending: 'bg-[#FFF4DD] text-[#D58A00] before:bg-[#D58A00]',
+const statusStyles: Record<
+  AttendeeStatus,
+  { bg: string; text: string; dot: string }
+> = {
+  Successful: {
+    bg: 'bg-[#E5F6F0]',
+    text: 'text-[#087A55]',
+    dot: 'bg-[#087A55]',
+  },
+  Failed: { bg: 'bg-[#FDEBEB]', text: 'text-[#EA4335]', dot: 'bg-[#EA4335]' },
+  Pending: { bg: 'bg-[#FFF4DD]', text: 'text-[#D58A00]', dot: 'bg-[#D58A00]' },
 };
 
 function StatusBadge({ status }: { status: AttendeeStatus }) {
+  const styles = statusStyles[status];
   return (
     <span
       className={cn(
-        'inline-flex h-8 w-auto items-center justify-center gap-2 rounded-full text-[13px] font-medium before:h-[9px] before:w-[9px] before:rounded-[2px]',
-        statusStyles[status]
+        'flex items-center gap-[5px] px-3 py-[3px] rounded-[30px] w-fit text-[11px] font-medium',
+        styles.bg,
+        styles.text
       )}
     >
-      {status}
+      <span className={cn('w-[7px] h-[7px] rounded-[2px]', styles.dot)} />
+      <span>{status}</span>
     </span>
   );
 }

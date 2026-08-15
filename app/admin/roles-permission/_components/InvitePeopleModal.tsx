@@ -6,9 +6,7 @@ import { cn } from '@/app/_module/lib/utils';
 import { PERMISSION_GROUPS } from './RoleFormModal';
 import type { InviteFormData, RoleRecord } from '../_types/role.types';
 
-/* ------------------------------------------------------------------ */
-/* Permission checkbox (same style as RoleFormModal)                    */
-/* ------------------------------------------------------------------ */
+
 function PermissionCheckbox({
   label,
   checked,
@@ -49,9 +47,7 @@ function PermissionCheckbox({
   );
 }
 
-/* ------------------------------------------------------------------ */
-/* Props                                                               */
-/* ------------------------------------------------------------------ */
+
 interface InvitePeopleModalProps {
   open: boolean;
   roles: RoleRecord[];
@@ -66,9 +62,7 @@ const EMPTY: InviteFormData = {
   permissions: [],
 };
 
-/* ------------------------------------------------------------------ */
-/* Modal                                                               */
-/* ------------------------------------------------------------------ */
+
 export default function InvitePeopleModal({
   open,
   roles,
@@ -83,7 +77,6 @@ export default function InvitePeopleModal({
     if (open) setForm(EMPTY);
   }, [open]);
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     if (!roleOpen) return;
     const handler = (e: MouseEvent) => {

@@ -3,7 +3,7 @@ import { cn } from '@/app/_module/lib/utils';
 import AdminWrapper from '@/app/_module/components/common/AdminWrapper';
 import TicketBreakdown from '@/app/_module/components/charts/TicketBreakdown';
 import RegistrationTrendChart from '@/app/_module/components/charts/RegistrationTrendChart';
-import RecentAttendeesTable from '../_components/RecentAttendeesTable';
+import RecentAttendeesTable from '@/app/_module/components/tables/RecentAttendeesTable';
 import DashboardCard from '@/app/_module/components/cards/DashboardCard';
 
 

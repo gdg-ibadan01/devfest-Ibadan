@@ -5,55 +5,8 @@ import { Search, Plus } from 'lucide-react';
 import { cn } from '@/app/_module/lib/utils';
 import type { DiscountRecord, DiscountStatus } from '../_types/discount.types';
 import DiscountActionsMenu from './DiscountActionsMenu';
-import EmptyDiscount from '@/app/_module/components/icons/EmptyDiscount';
-
-const MOCK_DISCOUNTS: DiscountRecord[] = [
-  {
-    id: '1',
-    discountId: 'DevFest1029',
-    type: 'percentage',
-    value: '10%',
-    usage: '34/1000',
-    validity: '15th Mar - 23rd Oct',
-    status: 'Active',
-  },
-  {
-    id: '2',
-    discountId: 'DevFest1029',
-    type: 'fixed',
-    value: '₦1000',
-    usage: '0/12',
-    validity: '15th Mar - 23rd Oct',
-    status: 'Active',
-  },
-  {
-    id: '3',
-    discountId: 'DevFest1029',
-    type: 'percentage',
-    value: '10%',
-    usage: '33/4000',
-    validity: '15th Mar - 23rd Oct',
-    status: 'Expired',
-  },
-  {
-    id: '4',
-    discountId: 'DevFest1029',
-    type: 'percentage',
-    value: '10%',
-    usage: '1000/1000',
-    validity: '15th Mar - 23rd Oct',
-    status: 'Scheduled',
-  },
-  {
-    id: '5',
-    discountId: 'DevFest1029',
-    type: 'percentage',
-    value: '₦1000',
-    usage: '12/1000',
-    validity: '15th Mar - 23rd Oct',
-    status: 'Active',
-  },
-];
+import EmptyState from '@/app/_module/components/common/EmptyState';
+import MOCK_DISCOUNTS from './MockData';
 
 const statusConfig: Record<
   DiscountStatus,
@@ -78,27 +31,6 @@ const statusConfig: Record<
 
 function typeLabel(type: DiscountRecord['type']) {
   return type === 'percentage' ? 'Percentage (%)' : 'Fixed (₦)';
-}
-
-function EmptyState() {
-  return (
-    <tr>
-      <td colSpan={8} className="py-20">
-        <div className="flex flex-col items-center mx-auto justify-center gap-2 border border-[#E6E6E6] rounded-[12px] w-[194px] h-[233px]">
-          {/* Simple SVG illustration */}
-          <EmptyDiscount />
-          <div className="text-center">
-            <p className="text-[14px] font-semibold text-gray-700">No Data</p>
-            <p className="text-[12px] text-gray-400 mt-1">
-              There is no data to
-              <br />
-              show you right now
-            </p>
-          </div>
-        </div>
-      </td>
-    </tr>
-  );
 }
 
 const COLUMNS = [
@@ -252,7 +184,7 @@ export default function DiscountTable({
                     <td className="px-5 py-4">
                       <span
                         className={cn(
-                          'flex items-center gap-[2px] px-3 py-[4px] rounded-[30px] w-fit text-[11px] font-medium',
+                          'flex items-center gap-[2px] px-3 py-[3px] rounded-[30px] w-fit text-[11px] font-medium',
                           badge.bg,
                           badge.text
                         )}

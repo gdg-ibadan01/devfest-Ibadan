@@ -5,9 +5,7 @@ import { ArrowRight, XCircle } from 'lucide-react';
 import { cn } from '@/app/_module/lib/utils';
 import type { RoleFormData } from '../_types/role.types';
 
-/* ------------------------------------------------------------------ */
-/* Permissions data                                                     */
-/* ------------------------------------------------------------------ */
+
 export const PERMISSION_GROUPS: string[][] = [
   ['Create Tickets', 'Edit Tickets', 'Delete Tickets'],
   ['Manage all User Roles', 'Assign permissions to Users'],
