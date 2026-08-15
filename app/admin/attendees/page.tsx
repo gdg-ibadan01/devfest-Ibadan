@@ -1,110 +1,83 @@
 'use client';
 
-import React, { Fragment } from 'react';
-import { AdminClass as styles } from '../styles/admin.classes';
-import AttendeesList from '../components/AttendeesList';
-import ExportIcon from '../../_module/components/icons/ExportIcon';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { ChevronDown } from 'lucide-react';
-import CheckCircleIcon from '../../_module/components/icons/CheckCircleIcon';
-import AddAttendeesModal from '../components/AddAttendeesModal';
+import { useState, useEffect, useCallback } from 'react';
+import { X, CheckCircle2 } from 'lucide-react';
+import AdminWrapper from '@/app/_module/components/common/AdminWrapper';
+import AttendeesTable from './_components/AttendeesTable';
+import AddAttendeeModal from './_components/AddAttendeeModal';
+import type { AttendeeRecord } from './_types/attendee.types';
 
-const AttendeesPage = () => {
-  const [day, setDay] = React.useState('Day');
-  const [status, setStatus] = React.useState('All');
-  const [open, setOpen] = React.useState<boolean>(false);
+/* ------------------------------------------------------------------ */
+/* Check-in Toast                                                       */
+/* ------------------------------------------------------------------ */
+interface CheckInToastProps {
+  attendee: AttendeeRecord | null;
+  onClose: () => void;
+}
 
-  const days = ['Day', 'Sat + Fri', 'Sat', 'Fri'];
-  const statuses = ['All', 'Successful', 'Pending', 'Failed'];
-  const exports = ['CSV', 'PDF', 'Excel'];
+function CheckInToast({ attendee, onClose }: CheckInToastProps) {
+  useEffect(() => {
+    if (!attendee) return;
+    const timer = setTimeout(onClose, 3000);
+    return () => clearTimeout(timer);
+  }, [attendee, onClose]);
+
+  if (!attendee) return null;
 
   return (
-    <Fragment>
-      <div className={styles.container}>
-        <div className={styles.wrapper}>
-          <h3 className={styles.title}>all attendees</h3>
-          <div className={styles.searchInputContainer}>
-            <div className={styles.inputContainer}>
-              <input
-                type="text"
-                placeholder="Search by name/email/code"
-                className={styles.searchInput}
-              />
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild className={styles.dropdown}>
-                  <button className="flex items-center justify-between">
-                    {day} <ChevronDown className="h-4 w-4" />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-[150px]">
-                  {days.map((d) => (
-                    <DropdownMenuItem
-                      key={d}
-                      onClick={() => setDay(d)}
-                      className="flex items-center justify-between text-[14px] font-normal text-[#474C52]"
-                    >
-                      {d}
-                      {day === d && <CheckCircleIcon />}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild className={styles.dropdown}>
-                  <button className="flex items-center justify-between">
-                    {status} <ChevronDown className="h-4 w-4" />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-[150px]">
-                  {statuses.map((s) => (
-                    <DropdownMenuItem
-                      key={s}
-                      onClick={() => setStatus(s)}
-                      className="flex items-center justify-between text-[14px] font-normal text-[#474C52]"
-                    >
-                      {s}
-                      {status === s && <CheckCircleIcon />}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-            <div className={styles.actionBtnsContainer}>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className={styles.exportBtn}>
-                    <ExportIcon /> <span>Export</span>
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  {exports.map((e) => (
-                    <DropdownMenuItem
-                      key={e}
-                      onClick={() => alert(`Exporting as ${e}`)}
-                      className="text-[14px] font-normal text-[#474C52]"
-                    >
-                      {e}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-              <button className={styles.addBtn} onClick={() => setOpen(true)}>
-                Add attendee
-              </button>
-            </div>
-          </div>
-          <AttendeesList />
+    <div className="fixed top-6 right-6 z-[100] animate-in slide-in-from-top-2 fade-in duration-300">
+      <div className="flex items-start gap-3 bg-white rounded-xl shadow-xl border border-gray-100 px-5 py-4 w-[280px]">
+        <div className="w-8 h-8 rounded-full bg-[#E8F5E9] flex items-center justify-center flex-shrink-0 mt-0.5">
+          <CheckCircle2 size={18} className="text-[#34A853]" />
         </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-[13px] font-bold text-gray-900">Check In</p>
+          <p className="text-[12px] text-gray-500 mt-0.5">Checked In Successfully</p>
+        </div>
+        <button
+          onClick={onClose}
+          className="text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0 mt-0.5"
+        >
+          <X size={15} />
+        </button>
       </div>
-      <AddAttendeesModal open={open} onOpenChange={setOpen} />
-    </Fragment>
+    </div>
   );
-};
+}
 
-export default AttendeesPage;
+/* ------------------------------------------------------------------ */
+/* Page                                                                 */
+/* ------------------------------------------------------------------ */
+export default function AttendeesPage() {
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [checkedInAttendee, setCheckedInAttendee] = useState<AttendeeRecord | null>(null);
+
+  const handleCheckIn = useCallback((attendee: AttendeeRecord) => {
+    setCheckedInAttendee(attendee);
+  }, []);
+
+  const handleToastClose = useCallback(() => {
+    setCheckedInAttendee(null);
+  }, []);
+
+  return (
+    <AdminWrapper title="Attendees">
+      <div className="p-6">
+        <AttendeesTable
+          onAddNew={() => setShowAddModal(true)}
+          onCheckIn={handleCheckIn}
+        />
+      </div>
+
+      <AddAttendeeModal
+        open={showAddModal}
+        onClose={() => setShowAddModal(false)}
+      />
+
+      <CheckInToast
+        attendee={checkedInAttendee}
+        onClose={handleToastClose}
+      />
+    </AdminWrapper>
+  );
+}
