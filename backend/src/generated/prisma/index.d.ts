@@ -12,6 +12,11 @@ import $Result = runtime.Types.Result;
 export type PrismaPromise<T> = $Public.PrismaPromise<T>;
 
 /**
+ * Model Role
+ *
+ */
+export type Role = $Result.DefaultSelection<Prisma.$RolePayload>;
+/**
  * Model Admin
  *
  */
@@ -42,14 +47,6 @@ export type Payment = $Result.DefaultSelection<Prisma.$PaymentPayload>;
  * Enums
  */
 export namespace $Enums {
-  export const Role: {
-    ADMIN: 'ADMIN';
-    SUPER_ADMIN: 'SUPER_ADMIN';
-    ATTENDEE: 'ATTENDEE';
-  };
-
-  export type Role = (typeof Role)[keyof typeof Role];
-
   export const TicketStatus: {
     ACTIVE: 'ACTIVE';
     USED: 'USED';
@@ -71,10 +68,6 @@ export namespace $Enums {
     (typeof PaymentStatus)[keyof typeof PaymentStatus];
 }
 
-export type Role = $Enums.Role;
-
-export const Role: typeof $Enums.Role;
-
 export type TicketStatus = $Enums.TicketStatus;
 
 export const TicketStatus: typeof $Enums.TicketStatus;
@@ -92,8 +85,8 @@ export const PaymentStatus: typeof $Enums.PaymentStatus;
  * const prisma = new PrismaClient({
  *   adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL })
  * })
- * // Fetch zero or more Admins
- * const admins = await prisma.admin.findMany()
+ * // Fetch zero or more Roles
+ * const roles = await prisma.role.findMany()
  * ```
  *
  *
@@ -119,8 +112,8 @@ export class PrismaClient<
    * const prisma = new PrismaClient({
    *   adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL })
    * })
-   * // Fetch zero or more Admins
-   * const admins = await prisma.admin.findMany()
+   * // Fetch zero or more Roles
+   * const roles = await prisma.role.findMany()
    * ```
    *
    *
@@ -247,6 +240,16 @@ export class PrismaClient<
       }
     >
   >;
+
+  /**
+   * `prisma.role`: Exposes CRUD operations for the **Role** model.
+   * Example usage:
+   * ```ts
+   * // Fetch zero or more Roles
+   * const roles = await prisma.role.findMany()
+   * ```
+   */
+  get role(): Prisma.RoleDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.admin`: Exposes CRUD operations for the **Admin** model.
@@ -767,6 +770,7 @@ export namespace Prisma {
     : FieldRef<Model, FieldType>;
 
   export const ModelName: {
+    Role: 'Role';
     Admin: 'Admin';
     PasswordResetToken: 'PasswordResetToken';
     Attendee: 'Attendee';
@@ -796,6 +800,7 @@ export namespace Prisma {
     };
     meta: {
       modelProps:
+        | 'role'
         | 'admin'
         | 'passwordResetToken'
         | 'attendee'
@@ -804,6 +809,80 @@ export namespace Prisma {
       txIsolationLevel: Prisma.TransactionIsolationLevel;
     };
     model: {
+      Role: {
+        payload: Prisma.$RolePayload<ExtArgs>;
+        fields: Prisma.RoleFieldRefs;
+        operations: {
+          findUnique: {
+            args: Prisma.RoleFindUniqueArgs<ExtArgs>;
+            result: $Utils.PayloadToResult<Prisma.$RolePayload> | null;
+          };
+          findUniqueOrThrow: {
+            args: Prisma.RoleFindUniqueOrThrowArgs<ExtArgs>;
+            result: $Utils.PayloadToResult<Prisma.$RolePayload>;
+          };
+          findFirst: {
+            args: Prisma.RoleFindFirstArgs<ExtArgs>;
+            result: $Utils.PayloadToResult<Prisma.$RolePayload> | null;
+          };
+          findFirstOrThrow: {
+            args: Prisma.RoleFindFirstOrThrowArgs<ExtArgs>;
+            result: $Utils.PayloadToResult<Prisma.$RolePayload>;
+          };
+          findMany: {
+            args: Prisma.RoleFindManyArgs<ExtArgs>;
+            result: $Utils.PayloadToResult<Prisma.$RolePayload>[];
+          };
+          create: {
+            args: Prisma.RoleCreateArgs<ExtArgs>;
+            result: $Utils.PayloadToResult<Prisma.$RolePayload>;
+          };
+          createMany: {
+            args: Prisma.RoleCreateManyArgs<ExtArgs>;
+            result: BatchPayload;
+          };
+          createManyAndReturn: {
+            args: Prisma.RoleCreateManyAndReturnArgs<ExtArgs>;
+            result: $Utils.PayloadToResult<Prisma.$RolePayload>[];
+          };
+          delete: {
+            args: Prisma.RoleDeleteArgs<ExtArgs>;
+            result: $Utils.PayloadToResult<Prisma.$RolePayload>;
+          };
+          update: {
+            args: Prisma.RoleUpdateArgs<ExtArgs>;
+            result: $Utils.PayloadToResult<Prisma.$RolePayload>;
+          };
+          deleteMany: {
+            args: Prisma.RoleDeleteManyArgs<ExtArgs>;
+            result: BatchPayload;
+          };
+          updateMany: {
+            args: Prisma.RoleUpdateManyArgs<ExtArgs>;
+            result: BatchPayload;
+          };
+          updateManyAndReturn: {
+            args: Prisma.RoleUpdateManyAndReturnArgs<ExtArgs>;
+            result: $Utils.PayloadToResult<Prisma.$RolePayload>[];
+          };
+          upsert: {
+            args: Prisma.RoleUpsertArgs<ExtArgs>;
+            result: $Utils.PayloadToResult<Prisma.$RolePayload>;
+          };
+          aggregate: {
+            args: Prisma.RoleAggregateArgs<ExtArgs>;
+            result: $Utils.Optional<AggregateRole>;
+          };
+          groupBy: {
+            args: Prisma.RoleGroupByArgs<ExtArgs>;
+            result: $Utils.Optional<RoleGroupByOutputType>[];
+          };
+          count: {
+            args: Prisma.RoleCountArgs<ExtArgs>;
+            result: $Utils.Optional<RoleCountAggregateOutputType> | number;
+          };
+        };
+      };
       Admin: {
         payload: Prisma.$AdminPayload<ExtArgs>;
         fields: Prisma.AdminFieldRefs;
@@ -1303,6 +1382,7 @@ export namespace Prisma {
     comments?: runtime.SqlCommenterPlugin[];
   }
   export type GlobalOmitConfig = {
+    role?: RoleOmit;
     admin?: AdminOmit;
     passwordResetToken?: PasswordResetTokenOmit;
     attendee?: AttendeeOmit;
@@ -1384,6 +1464,53 @@ export namespace Prisma {
   /**
    * Count Types
    */
+
+  /**
+   * Count Type RoleCountOutputType
+   */
+
+  export type RoleCountOutputType = {
+    admins: number;
+    attendees: number;
+  };
+
+  export type RoleCountOutputTypeSelect<
+    ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
+  > = {
+    admins?: boolean | RoleCountOutputTypeCountAdminsArgs;
+    attendees?: boolean | RoleCountOutputTypeCountAttendeesArgs;
+  };
+
+  // Custom InputTypes
+  /**
+   * RoleCountOutputType without action
+   */
+  export type RoleCountOutputTypeDefaultArgs<
+    ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
+  > = {
+    /**
+     * Select specific fields to fetch from the RoleCountOutputType
+     */
+    select?: RoleCountOutputTypeSelect<ExtArgs> | null;
+  };
+
+  /**
+   * RoleCountOutputType without action
+   */
+  export type RoleCountOutputTypeCountAdminsArgs<
+    ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
+  > = {
+    where?: AdminWhereInput;
+  };
+
+  /**
+   * RoleCountOutputType without action
+   */
+  export type RoleCountOutputTypeCountAttendeesArgs<
+    ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
+  > = {
+    where?: AttendeeWhereInput;
+  };
 
   /**
    * Count Type AdminCountOutputType
@@ -1522,6 +1649,1382 @@ export namespace Prisma {
    */
 
   /**
+   * Model Role
+   */
+
+  export type AggregateRole = {
+    _count: RoleCountAggregateOutputType | null;
+    _min: RoleMinAggregateOutputType | null;
+    _max: RoleMaxAggregateOutputType | null;
+  };
+
+  export type RoleMinAggregateOutputType = {
+    id: string | null;
+    name: string | null;
+    description: string | null;
+    isActive: boolean | null;
+    createdAt: Date | null;
+    updatedAt: Date | null;
+  };
+
+  export type RoleMaxAggregateOutputType = {
+    id: string | null;
+    name: string | null;
+    description: string | null;
+    isActive: boolean | null;
+    createdAt: Date | null;
+    updatedAt: Date | null;
+  };
+
+  export type RoleCountAggregateOutputType = {
+    id: number;
+    name: number;
+    description: number;
+    permissions: number;
+    isActive: number;
+    createdAt: number;
+    updatedAt: number;
+    _all: number;
+  };
+
+  export type RoleMinAggregateInputType = {
+    id?: true;
+    name?: true;
+    description?: true;
+    isActive?: true;
+    createdAt?: true;
+    updatedAt?: true;
+  };
+
+  export type RoleMaxAggregateInputType = {
+    id?: true;
+    name?: true;
+    description?: true;
+    isActive?: true;
+    createdAt?: true;
+    updatedAt?: true;
+  };
+
+  export type RoleCountAggregateInputType = {
+    id?: true;
+    name?: true;
+    description?: true;
+    permissions?: true;
+    isActive?: true;
+    createdAt?: true;
+    updatedAt?: true;
+    _all?: true;
+  };
+
+  export type RoleAggregateArgs<
+    ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
+  > = {
+    /**
+     * Filter which Role to aggregate.
+     */
+    where?: RoleWhereInput;
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     *
+     * Determine the order of Roles to fetch.
+     */
+    orderBy?: RoleOrderByWithRelationInput | RoleOrderByWithRelationInput[];
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     *
+     * Sets the start position
+     */
+    cursor?: RoleWhereUniqueInput;
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     *
+     * Take `±n` Roles from the position of the cursor.
+     */
+    take?: number;
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     *
+     * Skip the first `n` Roles.
+     */
+    skip?: number;
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     *
+     * Count returned Roles
+     **/
+    _count?: true | RoleCountAggregateInputType;
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     *
+     * Select which fields to find the minimum value
+     **/
+    _min?: RoleMinAggregateInputType;
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     *
+     * Select which fields to find the maximum value
+     **/
+    _max?: RoleMaxAggregateInputType;
+  };
+
+  export type GetRoleAggregateType<T extends RoleAggregateArgs> = {
+    [P in keyof T & keyof AggregateRole]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateRole[P]>
+      : GetScalarType<T[P], AggregateRole[P]>;
+  };
+
+  export type RoleGroupByArgs<
+    ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
+  > = {
+    where?: RoleWhereInput;
+    orderBy?:
+      | RoleOrderByWithAggregationInput
+      | RoleOrderByWithAggregationInput[];
+    by: RoleScalarFieldEnum[] | RoleScalarFieldEnum;
+    having?: RoleScalarWhereWithAggregatesInput;
+    take?: number;
+    skip?: number;
+    _count?: RoleCountAggregateInputType | true;
+    _min?: RoleMinAggregateInputType;
+    _max?: RoleMaxAggregateInputType;
+  };
+
+  export type RoleGroupByOutputType = {
+    id: string;
+    name: string;
+    description: string;
+    permissions: string[];
+    isActive: boolean;
+    createdAt: Date;
+    updatedAt: Date;
+    _count: RoleCountAggregateOutputType | null;
+    _min: RoleMinAggregateOutputType | null;
+    _max: RoleMaxAggregateOutputType | null;
+  };
+
+  type GetRoleGroupByPayload<T extends RoleGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<RoleGroupByOutputType, T['by']> & {
+        [P in keyof T & keyof RoleGroupByOutputType]: P extends '_count'
+          ? T[P] extends boolean
+            ? number
+            : GetScalarType<T[P], RoleGroupByOutputType[P]>
+          : GetScalarType<T[P], RoleGroupByOutputType[P]>;
+      }
+    >
+  >;
+
+  export type RoleSelect<
+    ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
+  > = $Extensions.GetSelect<
+    {
+      id?: boolean;
+      name?: boolean;
+      description?: boolean;
+      permissions?: boolean;
+      isActive?: boolean;
+      createdAt?: boolean;
+      updatedAt?: boolean;
+      admins?: boolean | Role$adminsArgs<ExtArgs>;
+      attendees?: boolean | Role$attendeesArgs<ExtArgs>;
+      _count?: boolean | RoleCountOutputTypeDefaultArgs<ExtArgs>;
+    },
+    ExtArgs['result']['role']
+  >;
+
+  export type RoleSelectCreateManyAndReturn<
+    ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
+  > = $Extensions.GetSelect<
+    {
+      id?: boolean;
+      name?: boolean;
+      description?: boolean;
+      permissions?: boolean;
+      isActive?: boolean;
+      createdAt?: boolean;
+      updatedAt?: boolean;
+    },
+    ExtArgs['result']['role']
+  >;
+
+  export type RoleSelectUpdateManyAndReturn<
+    ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
+  > = $Extensions.GetSelect<
+    {
+      id?: boolean;
+      name?: boolean;
+      description?: boolean;
+      permissions?: boolean;
+      isActive?: boolean;
+      createdAt?: boolean;
+      updatedAt?: boolean;
+    },
+    ExtArgs['result']['role']
+  >;
+
+  export type RoleSelectScalar = {
+    id?: boolean;
+    name?: boolean;
+    description?: boolean;
+    permissions?: boolean;
+    isActive?: boolean;
+    createdAt?: boolean;
+    updatedAt?: boolean;
+  };
+
+  export type RoleOmit<
+    ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
+  > = $Extensions.GetOmit<
+    | 'id'
+    | 'name'
+    | 'description'
+    | 'permissions'
+    | 'isActive'
+    | 'createdAt'
+    | 'updatedAt',
+    ExtArgs['result']['role']
+  >;
+  export type RoleInclude<
+    ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
+  > = {
+    admins?: boolean | Role$adminsArgs<ExtArgs>;
+    attendees?: boolean | Role$attendeesArgs<ExtArgs>;
+    _count?: boolean | RoleCountOutputTypeDefaultArgs<ExtArgs>;
+  };
+  export type RoleIncludeCreateManyAndReturn<
+    ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
+  > = {};
+  export type RoleIncludeUpdateManyAndReturn<
+    ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
+  > = {};
+
+  export type $RolePayload<
+    ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
+  > = {
+    name: 'Role';
+    objects: {
+      admins: Prisma.$AdminPayload<ExtArgs>[];
+      attendees: Prisma.$AttendeePayload<ExtArgs>[];
+    };
+    scalars: $Extensions.GetPayloadResult<
+      {
+        id: string;
+        name: string;
+        description: string;
+        permissions: string[];
+        isActive: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+      },
+      ExtArgs['result']['role']
+    >;
+    composites: {};
+  };
+
+  type RoleGetPayload<S extends boolean | null | undefined | RoleDefaultArgs> =
+    $Result.GetResult<Prisma.$RolePayload, S>;
+
+  type RoleCountArgs<
+    ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
+  > = Omit<RoleFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+    select?: RoleCountAggregateInputType | true;
+  };
+
+  export interface RoleDelegate<
+    ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
+    GlobalOmitOptions = {},
+  > {
+    [K: symbol]: {
+      types: Prisma.TypeMap<ExtArgs>['model']['Role'];
+      meta: { name: 'Role' };
+    };
+    /**
+     * Find zero or one Role that matches the filter.
+     * @param {RoleFindUniqueArgs} args - Arguments to find a Role
+     * @example
+     * // Get one Role
+     * const role = await prisma.role.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends RoleFindUniqueArgs>(
+      args: SelectSubset<T, RoleFindUniqueArgs<ExtArgs>>,
+    ): Prisma__RoleClient<
+      $Result.GetResult<
+        Prisma.$RolePayload<ExtArgs>,
+        T,
+        'findUnique',
+        GlobalOmitOptions
+      > | null,
+      null,
+      ExtArgs,
+      GlobalOmitOptions
+    >;
+
+    /**
+     * Find one Role that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {RoleFindUniqueOrThrowArgs} args - Arguments to find a Role
+     * @example
+     * // Get one Role
+     * const role = await prisma.role.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends RoleFindUniqueOrThrowArgs>(
+      args: SelectSubset<T, RoleFindUniqueOrThrowArgs<ExtArgs>>,
+    ): Prisma__RoleClient<
+      $Result.GetResult<
+        Prisma.$RolePayload<ExtArgs>,
+        T,
+        'findUniqueOrThrow',
+        GlobalOmitOptions
+      >,
+      never,
+      ExtArgs,
+      GlobalOmitOptions
+    >;
+
+    /**
+     * Find the first Role that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RoleFindFirstArgs} args - Arguments to find a Role
+     * @example
+     * // Get one Role
+     * const role = await prisma.role.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends RoleFindFirstArgs>(
+      args?: SelectSubset<T, RoleFindFirstArgs<ExtArgs>>,
+    ): Prisma__RoleClient<
+      $Result.GetResult<
+        Prisma.$RolePayload<ExtArgs>,
+        T,
+        'findFirst',
+        GlobalOmitOptions
+      > | null,
+      null,
+      ExtArgs,
+      GlobalOmitOptions
+    >;
+
+    /**
+     * Find the first Role that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RoleFindFirstOrThrowArgs} args - Arguments to find a Role
+     * @example
+     * // Get one Role
+     * const role = await prisma.role.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends RoleFindFirstOrThrowArgs>(
+      args?: SelectSubset<T, RoleFindFirstOrThrowArgs<ExtArgs>>,
+    ): Prisma__RoleClient<
+      $Result.GetResult<
+        Prisma.$RolePayload<ExtArgs>,
+        T,
+        'findFirstOrThrow',
+        GlobalOmitOptions
+      >,
+      never,
+      ExtArgs,
+      GlobalOmitOptions
+    >;
+
+    /**
+     * Find zero or more Roles that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RoleFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all Roles
+     * const roles = await prisma.role.findMany()
+     *
+     * // Get first 10 Roles
+     * const roles = await prisma.role.findMany({ take: 10 })
+     *
+     * // Only select the `id`
+     * const roleWithIdOnly = await prisma.role.findMany({ select: { id: true } })
+     *
+     */
+    findMany<T extends RoleFindManyArgs>(
+      args?: SelectSubset<T, RoleFindManyArgs<ExtArgs>>,
+    ): Prisma.PrismaPromise<
+      $Result.GetResult<
+        Prisma.$RolePayload<ExtArgs>,
+        T,
+        'findMany',
+        GlobalOmitOptions
+      >
+    >;
+
+    /**
+     * Create a Role.
+     * @param {RoleCreateArgs} args - Arguments to create a Role.
+     * @example
+     * // Create one Role
+     * const Role = await prisma.role.create({
+     *   data: {
+     *     // ... data to create a Role
+     *   }
+     * })
+     *
+     */
+    create<T extends RoleCreateArgs>(
+      args: SelectSubset<T, RoleCreateArgs<ExtArgs>>,
+    ): Prisma__RoleClient<
+      $Result.GetResult<
+        Prisma.$RolePayload<ExtArgs>,
+        T,
+        'create',
+        GlobalOmitOptions
+      >,
+      never,
+      ExtArgs,
+      GlobalOmitOptions
+    >;
+
+    /**
+     * Create many Roles.
+     * @param {RoleCreateManyArgs} args - Arguments to create many Roles.
+     * @example
+     * // Create many Roles
+     * const role = await prisma.role.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *
+     */
+    createMany<T extends RoleCreateManyArgs>(
+      args?: SelectSubset<T, RoleCreateManyArgs<ExtArgs>>,
+    ): Prisma.PrismaPromise<BatchPayload>;
+
+    /**
+     * Create many Roles and returns the data saved in the database.
+     * @param {RoleCreateManyAndReturnArgs} args - Arguments to create many Roles.
+     * @example
+     * // Create many Roles
+     * const role = await prisma.role.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *
+     * // Create many Roles and only return the `id`
+     * const roleWithIdOnly = await prisma.role.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     *
+     */
+    createManyAndReturn<T extends RoleCreateManyAndReturnArgs>(
+      args?: SelectSubset<T, RoleCreateManyAndReturnArgs<ExtArgs>>,
+    ): Prisma.PrismaPromise<
+      $Result.GetResult<
+        Prisma.$RolePayload<ExtArgs>,
+        T,
+        'createManyAndReturn',
+        GlobalOmitOptions
+      >
+    >;
+
+    /**
+     * Delete a Role.
+     * @param {RoleDeleteArgs} args - Arguments to delete one Role.
+     * @example
+     * // Delete one Role
+     * const Role = await prisma.role.delete({
+     *   where: {
+     *     // ... filter to delete one Role
+     *   }
+     * })
+     *
+     */
+    delete<T extends RoleDeleteArgs>(
+      args: SelectSubset<T, RoleDeleteArgs<ExtArgs>>,
+    ): Prisma__RoleClient<
+      $Result.GetResult<
+        Prisma.$RolePayload<ExtArgs>,
+        T,
+        'delete',
+        GlobalOmitOptions
+      >,
+      never,
+      ExtArgs,
+      GlobalOmitOptions
+    >;
+
+    /**
+     * Update one Role.
+     * @param {RoleUpdateArgs} args - Arguments to update one Role.
+     * @example
+     * // Update one Role
+     * const role = await prisma.role.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     *
+     */
+    update<T extends RoleUpdateArgs>(
+      args: SelectSubset<T, RoleUpdateArgs<ExtArgs>>,
+    ): Prisma__RoleClient<
+      $Result.GetResult<
+        Prisma.$RolePayload<ExtArgs>,
+        T,
+        'update',
+        GlobalOmitOptions
+      >,
+      never,
+      ExtArgs,
+      GlobalOmitOptions
+    >;
+
+    /**
+     * Delete zero or more Roles.
+     * @param {RoleDeleteManyArgs} args - Arguments to filter Roles to delete.
+     * @example
+     * // Delete a few Roles
+     * const { count } = await prisma.role.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     *
+     */
+    deleteMany<T extends RoleDeleteManyArgs>(
+      args?: SelectSubset<T, RoleDeleteManyArgs<ExtArgs>>,
+    ): Prisma.PrismaPromise<BatchPayload>;
+
+    /**
+     * Update zero or more Roles.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RoleUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many Roles
+     * const role = await prisma.role.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     *
+     */
+    updateMany<T extends RoleUpdateManyArgs>(
+      args: SelectSubset<T, RoleUpdateManyArgs<ExtArgs>>,
+    ): Prisma.PrismaPromise<BatchPayload>;
+
+    /**
+     * Update zero or more Roles and returns the data updated in the database.
+     * @param {RoleUpdateManyAndReturnArgs} args - Arguments to update many Roles.
+     * @example
+     * // Update many Roles
+     * const role = await prisma.role.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *
+     * // Update zero or more Roles and only return the `id`
+     * const roleWithIdOnly = await prisma.role.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     *
+     */
+    updateManyAndReturn<T extends RoleUpdateManyAndReturnArgs>(
+      args: SelectSubset<T, RoleUpdateManyAndReturnArgs<ExtArgs>>,
+    ): Prisma.PrismaPromise<
+      $Result.GetResult<
+        Prisma.$RolePayload<ExtArgs>,
+        T,
+        'updateManyAndReturn',
+        GlobalOmitOptions
+      >
+    >;
+
+    /**
+     * Create or update one Role.
+     * @param {RoleUpsertArgs} args - Arguments to update or create a Role.
+     * @example
+     * // Update or create a Role
+     * const role = await prisma.role.upsert({
+     *   create: {
+     *     // ... data to create a Role
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the Role we want to update
+     *   }
+     * })
+     */
+    upsert<T extends RoleUpsertArgs>(
+      args: SelectSubset<T, RoleUpsertArgs<ExtArgs>>,
+    ): Prisma__RoleClient<
+      $Result.GetResult<
+        Prisma.$RolePayload<ExtArgs>,
+        T,
+        'upsert',
+        GlobalOmitOptions
+      >,
+      never,
+      ExtArgs,
+      GlobalOmitOptions
+    >;
+
+    /**
+     * Count the number of Roles.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RoleCountArgs} args - Arguments to filter Roles to count.
+     * @example
+     * // Count the number of Roles
+     * const count = await prisma.role.count({
+     *   where: {
+     *     // ... the filter for the Roles we want to count
+     *   }
+     * })
+     **/
+    count<T extends RoleCountArgs>(
+      args?: Subset<T, RoleCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], RoleCountAggregateOutputType>
+        : number
+    >;
+
+    /**
+     * Allows you to perform aggregations operations on a Role.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RoleAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+     **/
+    aggregate<T extends RoleAggregateArgs>(
+      args: Subset<T, RoleAggregateArgs>,
+    ): Prisma.PrismaPromise<GetRoleAggregateType<T>>;
+
+    /**
+     * Group by Role.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RoleGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     *
+     **/
+    groupBy<
+      T extends RoleGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: RoleGroupByArgs['orderBy'] }
+        : { orderBy?: RoleGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<
+        Keys<MaybeTupleToUnion<T['orderBy']>>
+      >,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+        ? `Error: "by" must not be empty.`
+        : HavingValid extends False
+          ? {
+              [P in HavingFields]: P extends ByFields
+                ? never
+                : P extends string
+                  ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+                  : [
+                      Error,
+                      'Field ',
+                      P,
+                      ` in "having" needs to be provided in "by"`,
+                    ];
+            }[HavingFields]
+          : 'take' extends Keys<T>
+            ? 'orderBy' extends Keys<T>
+              ? ByValid extends True
+                ? {}
+                : {
+                    [P in OrderFields]: P extends ByFields
+                      ? never
+                      : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`;
+                  }[OrderFields]
+              : 'Error: If you provide "take", you also need to provide "orderBy"'
+            : 'skip' extends Keys<T>
+              ? 'orderBy' extends Keys<T>
+                ? ByValid extends True
+                  ? {}
+                  : {
+                      [P in OrderFields]: P extends ByFields
+                        ? never
+                        : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`;
+                    }[OrderFields]
+                : 'Error: If you provide "skip", you also need to provide "orderBy"'
+              : ByValid extends True
+                ? {}
+                : {
+                    [P in OrderFields]: P extends ByFields
+                      ? never
+                      : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`;
+                  }[OrderFields],
+    >(
+      args: SubsetIntersection<T, RoleGroupByArgs, OrderByArg> & InputErrors,
+    ): {} extends InputErrors
+      ? GetRoleGroupByPayload<T>
+      : Prisma.PrismaPromise<InputErrors>;
+    /**
+     * Fields of the Role model
+     */
+    readonly fields: RoleFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for Role.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__RoleClient<
+    T,
+    Null = never,
+    ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
+    GlobalOmitOptions = {},
+  > extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: 'PrismaPromise';
+    admins<T extends Role$adminsArgs<ExtArgs> = {}>(
+      args?: Subset<T, Role$adminsArgs<ExtArgs>>,
+    ): Prisma.PrismaPromise<
+      | $Result.GetResult<
+          Prisma.$AdminPayload<ExtArgs>,
+          T,
+          'findMany',
+          GlobalOmitOptions
+        >
+      | Null
+    >;
+    attendees<T extends Role$attendeesArgs<ExtArgs> = {}>(
+      args?: Subset<T, Role$attendeesArgs<ExtArgs>>,
+    ): Prisma.PrismaPromise<
+      | $Result.GetResult<
+          Prisma.$AttendeePayload<ExtArgs>,
+          T,
+          'findMany',
+          GlobalOmitOptions
+        >
+      | Null
+    >;
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(
+      onfulfilled?:
+        | ((value: T) => TResult1 | PromiseLike<TResult1>)
+        | undefined
+        | null,
+      onrejected?:
+        | ((reason: any) => TResult2 | PromiseLike<TResult2>)
+        | undefined
+        | null,
+    ): $Utils.JsPromise<TResult1 | TResult2>;
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(
+      onrejected?:
+        | ((reason: any) => TResult | PromiseLike<TResult>)
+        | undefined
+        | null,
+    ): $Utils.JsPromise<T | TResult>;
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>;
+  }
+
+  /**
+   * Fields of the Role model
+   */
+  interface RoleFieldRefs {
+    readonly id: FieldRef<'Role', 'String'>;
+    readonly name: FieldRef<'Role', 'String'>;
+    readonly description: FieldRef<'Role', 'String'>;
+    readonly permissions: FieldRef<'Role', 'String[]'>;
+    readonly isActive: FieldRef<'Role', 'Boolean'>;
+    readonly createdAt: FieldRef<'Role', 'DateTime'>;
+    readonly updatedAt: FieldRef<'Role', 'DateTime'>;
+  }
+
+  // Custom InputTypes
+  /**
+   * Role findUnique
+   */
+  export type RoleFindUniqueArgs<
+    ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
+  > = {
+    /**
+     * Select specific fields to fetch from the Role
+     */
+    select?: RoleSelect<ExtArgs> | null;
+    /**
+     * Omit specific fields from the Role
+     */
+    omit?: RoleOmit<ExtArgs> | null;
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RoleInclude<ExtArgs> | null;
+    /**
+     * Filter, which Role to fetch.
+     */
+    where: RoleWhereUniqueInput;
+  };
+
+  /**
+   * Role findUniqueOrThrow
+   */
+  export type RoleFindUniqueOrThrowArgs<
+    ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
+  > = {
+    /**
+     * Select specific fields to fetch from the Role
+     */
+    select?: RoleSelect<ExtArgs> | null;
+    /**
+     * Omit specific fields from the Role
+     */
+    omit?: RoleOmit<ExtArgs> | null;
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RoleInclude<ExtArgs> | null;
+    /**
+     * Filter, which Role to fetch.
+     */
+    where: RoleWhereUniqueInput;
+  };
+
+  /**
+   * Role findFirst
+   */
+  export type RoleFindFirstArgs<
+    ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
+  > = {
+    /**
+     * Select specific fields to fetch from the Role
+     */
+    select?: RoleSelect<ExtArgs> | null;
+    /**
+     * Omit specific fields from the Role
+     */
+    omit?: RoleOmit<ExtArgs> | null;
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RoleInclude<ExtArgs> | null;
+    /**
+     * Filter, which Role to fetch.
+     */
+    where?: RoleWhereInput;
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     *
+     * Determine the order of Roles to fetch.
+     */
+    orderBy?: RoleOrderByWithRelationInput | RoleOrderByWithRelationInput[];
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     *
+     * Sets the position for searching for Roles.
+     */
+    cursor?: RoleWhereUniqueInput;
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     *
+     * Take `±n` Roles from the position of the cursor.
+     */
+    take?: number;
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     *
+     * Skip the first `n` Roles.
+     */
+    skip?: number;
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     *
+     * Filter by unique combinations of Roles.
+     */
+    distinct?: RoleScalarFieldEnum | RoleScalarFieldEnum[];
+  };
+
+  /**
+   * Role findFirstOrThrow
+   */
+  export type RoleFindFirstOrThrowArgs<
+    ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
+  > = {
+    /**
+     * Select specific fields to fetch from the Role
+     */
+    select?: RoleSelect<ExtArgs> | null;
+    /**
+     * Omit specific fields from the Role
+     */
+    omit?: RoleOmit<ExtArgs> | null;
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RoleInclude<ExtArgs> | null;
+    /**
+     * Filter, which Role to fetch.
+     */
+    where?: RoleWhereInput;
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     *
+     * Determine the order of Roles to fetch.
+     */
+    orderBy?: RoleOrderByWithRelationInput | RoleOrderByWithRelationInput[];
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     *
+     * Sets the position for searching for Roles.
+     */
+    cursor?: RoleWhereUniqueInput;
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     *
+     * Take `±n` Roles from the position of the cursor.
+     */
+    take?: number;
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     *
+     * Skip the first `n` Roles.
+     */
+    skip?: number;
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     *
+     * Filter by unique combinations of Roles.
+     */
+    distinct?: RoleScalarFieldEnum | RoleScalarFieldEnum[];
+  };
+
+  /**
+   * Role findMany
+   */
+  export type RoleFindManyArgs<
+    ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
+  > = {
+    /**
+     * Select specific fields to fetch from the Role
+     */
+    select?: RoleSelect<ExtArgs> | null;
+    /**
+     * Omit specific fields from the Role
+     */
+    omit?: RoleOmit<ExtArgs> | null;
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RoleInclude<ExtArgs> | null;
+    /**
+     * Filter, which Roles to fetch.
+     */
+    where?: RoleWhereInput;
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     *
+     * Determine the order of Roles to fetch.
+     */
+    orderBy?: RoleOrderByWithRelationInput | RoleOrderByWithRelationInput[];
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     *
+     * Sets the position for listing Roles.
+     */
+    cursor?: RoleWhereUniqueInput;
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     *
+     * Take `±n` Roles from the position of the cursor.
+     */
+    take?: number;
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     *
+     * Skip the first `n` Roles.
+     */
+    skip?: number;
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     *
+     * Filter by unique combinations of Roles.
+     */
+    distinct?: RoleScalarFieldEnum | RoleScalarFieldEnum[];
+  };
+
+  /**
+   * Role create
+   */
+  export type RoleCreateArgs<
+    ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
+  > = {
+    /**
+     * Select specific fields to fetch from the Role
+     */
+    select?: RoleSelect<ExtArgs> | null;
+    /**
+     * Omit specific fields from the Role
+     */
+    omit?: RoleOmit<ExtArgs> | null;
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RoleInclude<ExtArgs> | null;
+    /**
+     * The data needed to create a Role.
+     */
+    data: XOR<RoleCreateInput, RoleUncheckedCreateInput>;
+  };
+
+  /**
+   * Role createMany
+   */
+  export type RoleCreateManyArgs<
+    ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
+  > = {
+    /**
+     * The data used to create many Roles.
+     */
+    data: RoleCreateManyInput | RoleCreateManyInput[];
+    skipDuplicates?: boolean;
+  };
+
+  /**
+   * Role createManyAndReturn
+   */
+  export type RoleCreateManyAndReturnArgs<
+    ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
+  > = {
+    /**
+     * Select specific fields to fetch from the Role
+     */
+    select?: RoleSelectCreateManyAndReturn<ExtArgs> | null;
+    /**
+     * Omit specific fields from the Role
+     */
+    omit?: RoleOmit<ExtArgs> | null;
+    /**
+     * The data used to create many Roles.
+     */
+    data: RoleCreateManyInput | RoleCreateManyInput[];
+    skipDuplicates?: boolean;
+  };
+
+  /**
+   * Role update
+   */
+  export type RoleUpdateArgs<
+    ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
+  > = {
+    /**
+     * Select specific fields to fetch from the Role
+     */
+    select?: RoleSelect<ExtArgs> | null;
+    /**
+     * Omit specific fields from the Role
+     */
+    omit?: RoleOmit<ExtArgs> | null;
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RoleInclude<ExtArgs> | null;
+    /**
+     * The data needed to update a Role.
+     */
+    data: XOR<RoleUpdateInput, RoleUncheckedUpdateInput>;
+    /**
+     * Choose, which Role to update.
+     */
+    where: RoleWhereUniqueInput;
+  };
+
+  /**
+   * Role updateMany
+   */
+  export type RoleUpdateManyArgs<
+    ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
+  > = {
+    /**
+     * The data used to update Roles.
+     */
+    data: XOR<RoleUpdateManyMutationInput, RoleUncheckedUpdateManyInput>;
+    /**
+     * Filter which Roles to update
+     */
+    where?: RoleWhereInput;
+    /**
+     * Limit how many Roles to update.
+     */
+    limit?: number;
+  };
+
+  /**
+   * Role updateManyAndReturn
+   */
+  export type RoleUpdateManyAndReturnArgs<
+    ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
+  > = {
+    /**
+     * Select specific fields to fetch from the Role
+     */
+    select?: RoleSelectUpdateManyAndReturn<ExtArgs> | null;
+    /**
+     * Omit specific fields from the Role
+     */
+    omit?: RoleOmit<ExtArgs> | null;
+    /**
+     * The data used to update Roles.
+     */
+    data: XOR<RoleUpdateManyMutationInput, RoleUncheckedUpdateManyInput>;
+    /**
+     * Filter which Roles to update
+     */
+    where?: RoleWhereInput;
+    /**
+     * Limit how many Roles to update.
+     */
+    limit?: number;
+  };
+
+  /**
+   * Role upsert
+   */
+  export type RoleUpsertArgs<
+    ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
+  > = {
+    /**
+     * Select specific fields to fetch from the Role
+     */
+    select?: RoleSelect<ExtArgs> | null;
+    /**
+     * Omit specific fields from the Role
+     */
+    omit?: RoleOmit<ExtArgs> | null;
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RoleInclude<ExtArgs> | null;
+    /**
+     * The filter to search for the Role to update in case it exists.
+     */
+    where: RoleWhereUniqueInput;
+    /**
+     * In case the Role found by the `where` argument doesn't exist, create a new Role with this data.
+     */
+    create: XOR<RoleCreateInput, RoleUncheckedCreateInput>;
+    /**
+     * In case the Role was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<RoleUpdateInput, RoleUncheckedUpdateInput>;
+  };
+
+  /**
+   * Role delete
+   */
+  export type RoleDeleteArgs<
+    ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
+  > = {
+    /**
+     * Select specific fields to fetch from the Role
+     */
+    select?: RoleSelect<ExtArgs> | null;
+    /**
+     * Omit specific fields from the Role
+     */
+    omit?: RoleOmit<ExtArgs> | null;
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RoleInclude<ExtArgs> | null;
+    /**
+     * Filter which Role to delete.
+     */
+    where: RoleWhereUniqueInput;
+  };
+
+  /**
+   * Role deleteMany
+   */
+  export type RoleDeleteManyArgs<
+    ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
+  > = {
+    /**
+     * Filter which Roles to delete
+     */
+    where?: RoleWhereInput;
+    /**
+     * Limit how many Roles to delete.
+     */
+    limit?: number;
+  };
+
+  /**
+   * Role.admins
+   */
+  export type Role$adminsArgs<
+    ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
+  > = {
+    /**
+     * Select specific fields to fetch from the Admin
+     */
+    select?: AdminSelect<ExtArgs> | null;
+    /**
+     * Omit specific fields from the Admin
+     */
+    omit?: AdminOmit<ExtArgs> | null;
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AdminInclude<ExtArgs> | null;
+    where?: AdminWhereInput;
+    orderBy?: AdminOrderByWithRelationInput | AdminOrderByWithRelationInput[];
+    cursor?: AdminWhereUniqueInput;
+    take?: number;
+    skip?: number;
+    distinct?: AdminScalarFieldEnum | AdminScalarFieldEnum[];
+  };
+
+  /**
+   * Role.attendees
+   */
+  export type Role$attendeesArgs<
+    ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
+  > = {
+    /**
+     * Select specific fields to fetch from the Attendee
+     */
+    select?: AttendeeSelect<ExtArgs> | null;
+    /**
+     * Omit specific fields from the Attendee
+     */
+    omit?: AttendeeOmit<ExtArgs> | null;
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AttendeeInclude<ExtArgs> | null;
+    where?: AttendeeWhereInput;
+    orderBy?:
+      | AttendeeOrderByWithRelationInput
+      | AttendeeOrderByWithRelationInput[];
+    cursor?: AttendeeWhereUniqueInput;
+    take?: number;
+    skip?: number;
+    distinct?: AttendeeScalarFieldEnum | AttendeeScalarFieldEnum[];
+  };
+
+  /**
+   * Role without action
+   */
+  export type RoleDefaultArgs<
+    ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
+  > = {
+    /**
+     * Select specific fields to fetch from the Role
+     */
+    select?: RoleSelect<ExtArgs> | null;
+    /**
+     * Omit specific fields from the Role
+     */
+    omit?: RoleOmit<ExtArgs> | null;
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RoleInclude<ExtArgs> | null;
+  };
+
+  /**
    * Model Admin
    */
 
@@ -1536,7 +3039,7 @@ export namespace Prisma {
     fullName: string | null;
     email: string | null;
     password: string | null;
-    role: $Enums.Role | null;
+    roleId: string | null;
     isActive: boolean | null;
     invitedById: string | null;
     createdAt: Date | null;
@@ -1548,7 +3051,7 @@ export namespace Prisma {
     fullName: string | null;
     email: string | null;
     password: string | null;
-    role: $Enums.Role | null;
+    roleId: string | null;
     isActive: boolean | null;
     invitedById: string | null;
     createdAt: Date | null;
@@ -1560,7 +3063,7 @@ export namespace Prisma {
     fullName: number;
     email: number;
     password: number;
-    role: number;
+    roleId: number;
     isActive: number;
     invitedById: number;
     createdAt: number;
@@ -1573,7 +3076,7 @@ export namespace Prisma {
     fullName?: true;
     email?: true;
     password?: true;
-    role?: true;
+    roleId?: true;
     isActive?: true;
     invitedById?: true;
     createdAt?: true;
@@ -1585,7 +3088,7 @@ export namespace Prisma {
     fullName?: true;
     email?: true;
     password?: true;
-    role?: true;
+    roleId?: true;
     isActive?: true;
     invitedById?: true;
     createdAt?: true;
@@ -1597,7 +3100,7 @@ export namespace Prisma {
     fullName?: true;
     email?: true;
     password?: true;
-    role?: true;
+    roleId?: true;
     isActive?: true;
     invitedById?: true;
     createdAt?: true;
@@ -1685,7 +3188,7 @@ export namespace Prisma {
     fullName: string;
     email: string;
     password: string;
-    role: $Enums.Role;
+    roleId: string;
     isActive: boolean;
     invitedById: string | null;
     createdAt: Date;
@@ -1716,11 +3219,12 @@ export namespace Prisma {
       fullName?: boolean;
       email?: boolean;
       password?: boolean;
-      role?: boolean;
+      roleId?: boolean;
       isActive?: boolean;
       invitedById?: boolean;
       createdAt?: boolean;
       updatedAt?: boolean;
+      role?: boolean | RoleDefaultArgs<ExtArgs>;
       inviter?: boolean | Admin$inviterArgs<ExtArgs>;
       invitedAdmins?: boolean | Admin$invitedAdminsArgs<ExtArgs>;
       passwordResetTokens?: boolean | Admin$passwordResetTokensArgs<ExtArgs>;
@@ -1737,11 +3241,12 @@ export namespace Prisma {
       fullName?: boolean;
       email?: boolean;
       password?: boolean;
-      role?: boolean;
+      roleId?: boolean;
       isActive?: boolean;
       invitedById?: boolean;
       createdAt?: boolean;
       updatedAt?: boolean;
+      role?: boolean | RoleDefaultArgs<ExtArgs>;
       inviter?: boolean | Admin$inviterArgs<ExtArgs>;
     },
     ExtArgs['result']['admin']
@@ -1755,11 +3260,12 @@ export namespace Prisma {
       fullName?: boolean;
       email?: boolean;
       password?: boolean;
-      role?: boolean;
+      roleId?: boolean;
       isActive?: boolean;
       invitedById?: boolean;
       createdAt?: boolean;
       updatedAt?: boolean;
+      role?: boolean | RoleDefaultArgs<ExtArgs>;
       inviter?: boolean | Admin$inviterArgs<ExtArgs>;
     },
     ExtArgs['result']['admin']
@@ -1770,7 +3276,7 @@ export namespace Prisma {
     fullName?: boolean;
     email?: boolean;
     password?: boolean;
-    role?: boolean;
+    roleId?: boolean;
     isActive?: boolean;
     invitedById?: boolean;
     createdAt?: boolean;
@@ -1784,7 +3290,7 @@ export namespace Prisma {
     | 'fullName'
     | 'email'
     | 'password'
-    | 'role'
+    | 'roleId'
     | 'isActive'
     | 'invitedById'
     | 'createdAt'
@@ -1794,6 +3300,7 @@ export namespace Prisma {
   export type AdminInclude<
     ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
   > = {
+    role?: boolean | RoleDefaultArgs<ExtArgs>;
     inviter?: boolean | Admin$inviterArgs<ExtArgs>;
     invitedAdmins?: boolean | Admin$invitedAdminsArgs<ExtArgs>;
     passwordResetTokens?: boolean | Admin$passwordResetTokensArgs<ExtArgs>;
@@ -1802,11 +3309,13 @@ export namespace Prisma {
   export type AdminIncludeCreateManyAndReturn<
     ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
   > = {
+    role?: boolean | RoleDefaultArgs<ExtArgs>;
     inviter?: boolean | Admin$inviterArgs<ExtArgs>;
   };
   export type AdminIncludeUpdateManyAndReturn<
     ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
   > = {
+    role?: boolean | RoleDefaultArgs<ExtArgs>;
     inviter?: boolean | Admin$inviterArgs<ExtArgs>;
   };
 
@@ -1815,6 +3324,7 @@ export namespace Prisma {
   > = {
     name: 'Admin';
     objects: {
+      role: Prisma.$RolePayload<ExtArgs>;
       inviter: Prisma.$AdminPayload<ExtArgs> | null;
       invitedAdmins: Prisma.$AdminPayload<ExtArgs>[];
       passwordResetTokens: Prisma.$PasswordResetTokenPayload<ExtArgs>[];
@@ -1825,7 +3335,7 @@ export namespace Prisma {
         fullName: string;
         email: string;
         password: string;
-        role: $Enums.Role;
+        roleId: string;
         isActive: boolean;
         invitedById: string | null;
         createdAt: Date;
@@ -2376,6 +3886,20 @@ export namespace Prisma {
     GlobalOmitOptions = {},
   > extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: 'PrismaPromise';
+    role<T extends RoleDefaultArgs<ExtArgs> = {}>(
+      args?: Subset<T, RoleDefaultArgs<ExtArgs>>,
+    ): Prisma__RoleClient<
+      | $Result.GetResult<
+          Prisma.$RolePayload<ExtArgs>,
+          T,
+          'findUniqueOrThrow',
+          GlobalOmitOptions
+        >
+      | Null,
+      Null,
+      ExtArgs,
+      GlobalOmitOptions
+    >;
     inviter<T extends Admin$inviterArgs<ExtArgs> = {}>(
       args?: Subset<T, Admin$inviterArgs<ExtArgs>>,
     ): Prisma__AdminClient<
@@ -2455,7 +3979,7 @@ export namespace Prisma {
     readonly fullName: FieldRef<'Admin', 'String'>;
     readonly email: FieldRef<'Admin', 'String'>;
     readonly password: FieldRef<'Admin', 'String'>;
-    readonly role: FieldRef<'Admin', 'Role'>;
+    readonly roleId: FieldRef<'Admin', 'String'>;
     readonly isActive: FieldRef<'Admin', 'Boolean'>;
     readonly invitedById: FieldRef<'Admin', 'String'>;
     readonly createdAt: FieldRef<'Admin', 'DateTime'>;
@@ -4363,7 +5887,7 @@ export namespace Prisma {
     phoneNumber: string | null;
     company: string | null;
     jobTitle: string | null;
-    role: $Enums.Role | null;
+    roleId: string | null;
     isActive: boolean | null;
     createdAt: Date | null;
     updatedAt: Date | null;
@@ -4376,7 +5900,7 @@ export namespace Prisma {
     phoneNumber: string | null;
     company: string | null;
     jobTitle: string | null;
-    role: $Enums.Role | null;
+    roleId: string | null;
     isActive: boolean | null;
     createdAt: Date | null;
     updatedAt: Date | null;
@@ -4389,7 +5913,7 @@ export namespace Prisma {
     phoneNumber: number;
     company: number;
     jobTitle: number;
-    role: number;
+    roleId: number;
     isActive: number;
     createdAt: number;
     updatedAt: number;
@@ -4403,7 +5927,7 @@ export namespace Prisma {
     phoneNumber?: true;
     company?: true;
     jobTitle?: true;
-    role?: true;
+    roleId?: true;
     isActive?: true;
     createdAt?: true;
     updatedAt?: true;
@@ -4416,7 +5940,7 @@ export namespace Prisma {
     phoneNumber?: true;
     company?: true;
     jobTitle?: true;
-    role?: true;
+    roleId?: true;
     isActive?: true;
     createdAt?: true;
     updatedAt?: true;
@@ -4429,7 +5953,7 @@ export namespace Prisma {
     phoneNumber?: true;
     company?: true;
     jobTitle?: true;
-    role?: true;
+    roleId?: true;
     isActive?: true;
     createdAt?: true;
     updatedAt?: true;
@@ -4520,7 +6044,7 @@ export namespace Prisma {
     phoneNumber: string | null;
     company: string | null;
     jobTitle: string | null;
-    role: $Enums.Role;
+    roleId: string | null;
     isActive: boolean;
     createdAt: Date;
     updatedAt: Date;
@@ -4552,10 +6076,11 @@ export namespace Prisma {
       phoneNumber?: boolean;
       company?: boolean;
       jobTitle?: boolean;
-      role?: boolean;
+      roleId?: boolean;
       isActive?: boolean;
       createdAt?: boolean;
       updatedAt?: boolean;
+      role?: boolean | Attendee$roleArgs<ExtArgs>;
       payments?: boolean | Attendee$paymentsArgs<ExtArgs>;
       tickets?: boolean | Attendee$ticketsArgs<ExtArgs>;
       _count?: boolean | AttendeeCountOutputTypeDefaultArgs<ExtArgs>;
@@ -4573,10 +6098,11 @@ export namespace Prisma {
       phoneNumber?: boolean;
       company?: boolean;
       jobTitle?: boolean;
-      role?: boolean;
+      roleId?: boolean;
       isActive?: boolean;
       createdAt?: boolean;
       updatedAt?: boolean;
+      role?: boolean | Attendee$roleArgs<ExtArgs>;
     },
     ExtArgs['result']['attendee']
   >;
@@ -4591,10 +6117,11 @@ export namespace Prisma {
       phoneNumber?: boolean;
       company?: boolean;
       jobTitle?: boolean;
-      role?: boolean;
+      roleId?: boolean;
       isActive?: boolean;
       createdAt?: boolean;
       updatedAt?: boolean;
+      role?: boolean | Attendee$roleArgs<ExtArgs>;
     },
     ExtArgs['result']['attendee']
   >;
@@ -4606,7 +6133,7 @@ export namespace Prisma {
     phoneNumber?: boolean;
     company?: boolean;
     jobTitle?: boolean;
-    role?: boolean;
+    roleId?: boolean;
     isActive?: boolean;
     createdAt?: boolean;
     updatedAt?: boolean;
@@ -4621,7 +6148,7 @@ export namespace Prisma {
     | 'phoneNumber'
     | 'company'
     | 'jobTitle'
-    | 'role'
+    | 'roleId'
     | 'isActive'
     | 'createdAt'
     | 'updatedAt',
@@ -4630,22 +6157,28 @@ export namespace Prisma {
   export type AttendeeInclude<
     ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
   > = {
+    role?: boolean | Attendee$roleArgs<ExtArgs>;
     payments?: boolean | Attendee$paymentsArgs<ExtArgs>;
     tickets?: boolean | Attendee$ticketsArgs<ExtArgs>;
     _count?: boolean | AttendeeCountOutputTypeDefaultArgs<ExtArgs>;
   };
   export type AttendeeIncludeCreateManyAndReturn<
     ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
-  > = {};
+  > = {
+    role?: boolean | Attendee$roleArgs<ExtArgs>;
+  };
   export type AttendeeIncludeUpdateManyAndReturn<
     ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
-  > = {};
+  > = {
+    role?: boolean | Attendee$roleArgs<ExtArgs>;
+  };
 
   export type $AttendeePayload<
     ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
   > = {
     name: 'Attendee';
     objects: {
+      role: Prisma.$RolePayload<ExtArgs> | null;
       payments: Prisma.$PaymentPayload<ExtArgs>[];
       tickets: Prisma.$TicketPayload<ExtArgs>[];
     };
@@ -4657,7 +6190,7 @@ export namespace Prisma {
         phoneNumber: string | null;
         company: string | null;
         jobTitle: string | null;
-        role: $Enums.Role;
+        roleId: string | null;
         isActive: boolean;
         createdAt: Date;
         updatedAt: Date;
@@ -5208,6 +6741,19 @@ export namespace Prisma {
     GlobalOmitOptions = {},
   > extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: 'PrismaPromise';
+    role<T extends Attendee$roleArgs<ExtArgs> = {}>(
+      args?: Subset<T, Attendee$roleArgs<ExtArgs>>,
+    ): Prisma__RoleClient<
+      $Result.GetResult<
+        Prisma.$RolePayload<ExtArgs>,
+        T,
+        'findUniqueOrThrow',
+        GlobalOmitOptions
+      > | null,
+      null,
+      ExtArgs,
+      GlobalOmitOptions
+    >;
     payments<T extends Attendee$paymentsArgs<ExtArgs> = {}>(
       args?: Subset<T, Attendee$paymentsArgs<ExtArgs>>,
     ): Prisma.PrismaPromise<
@@ -5276,7 +6822,7 @@ export namespace Prisma {
     readonly phoneNumber: FieldRef<'Attendee', 'String'>;
     readonly company: FieldRef<'Attendee', 'String'>;
     readonly jobTitle: FieldRef<'Attendee', 'String'>;
-    readonly role: FieldRef<'Attendee', 'Role'>;
+    readonly roleId: FieldRef<'Attendee', 'String'>;
     readonly isActive: FieldRef<'Attendee', 'Boolean'>;
     readonly createdAt: FieldRef<'Attendee', 'DateTime'>;
     readonly updatedAt: FieldRef<'Attendee', 'DateTime'>;
@@ -5555,6 +7101,10 @@ export namespace Prisma {
      */
     data: AttendeeCreateManyInput | AttendeeCreateManyInput[];
     skipDuplicates?: boolean;
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AttendeeIncludeCreateManyAndReturn<ExtArgs> | null;
   };
 
   /**
@@ -5637,6 +7187,10 @@ export namespace Prisma {
      * Limit how many Attendees to update.
      */
     limit?: number;
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AttendeeIncludeUpdateManyAndReturn<ExtArgs> | null;
   };
 
   /**
@@ -5709,6 +7263,27 @@ export namespace Prisma {
      * Limit how many Attendees to delete.
      */
     limit?: number;
+  };
+
+  /**
+   * Attendee.role
+   */
+  export type Attendee$roleArgs<
+    ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs,
+  > = {
+    /**
+     * Select specific fields to fetch from the Role
+     */
+    select?: RoleSelect<ExtArgs> | null;
+    /**
+     * Omit specific fields from the Role
+     */
+    omit?: RoleOmit<ExtArgs> | null;
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: RoleInclude<ExtArgs> | null;
+    where?: RoleWhereInput;
   };
 
   /**
@@ -8726,12 +10301,25 @@ export namespace Prisma {
   export type TransactionIsolationLevel =
     (typeof TransactionIsolationLevel)[keyof typeof TransactionIsolationLevel];
 
+  export const RoleScalarFieldEnum: {
+    id: 'id';
+    name: 'name';
+    description: 'description';
+    permissions: 'permissions';
+    isActive: 'isActive';
+    createdAt: 'createdAt';
+    updatedAt: 'updatedAt';
+  };
+
+  export type RoleScalarFieldEnum =
+    (typeof RoleScalarFieldEnum)[keyof typeof RoleScalarFieldEnum];
+
   export const AdminScalarFieldEnum: {
     id: 'id';
     fullName: 'fullName';
     email: 'email';
     password: 'password';
-    role: 'role';
+    roleId: 'roleId';
     isActive: 'isActive';
     invitedById: 'invitedById';
     createdAt: 'createdAt';
@@ -8760,7 +10348,7 @@ export namespace Prisma {
     phoneNumber: 'phoneNumber';
     company: 'company';
     jobTitle: 'jobTitle';
-    role: 'role';
+    roleId: 'roleId';
     isActive: 'isActive';
     createdAt: 'createdAt';
     updatedAt: 'updatedAt';
@@ -8863,22 +10451,6 @@ export namespace Prisma {
   export type ListStringFieldRefInput<$PrismaModel> = FieldRefInputType<
     $PrismaModel,
     'String[]'
-  >;
-
-  /**
-   * Reference to a field of type 'Role'
-   */
-  export type EnumRoleFieldRefInput<$PrismaModel> = FieldRefInputType<
-    $PrismaModel,
-    'Role'
-  >;
-
-  /**
-   * Reference to a field of type 'Role[]'
-   */
-  export type ListEnumRoleFieldRefInput<$PrismaModel> = FieldRefInputType<
-    $PrismaModel,
-    'Role[]'
   >;
 
   /**
@@ -8985,6 +10557,81 @@ export namespace Prisma {
    * Deep Input Types
    */
 
+  export type RoleWhereInput = {
+    AND?: RoleWhereInput | RoleWhereInput[];
+    OR?: RoleWhereInput[];
+    NOT?: RoleWhereInput | RoleWhereInput[];
+    id?: StringFilter<'Role'> | string;
+    name?: StringFilter<'Role'> | string;
+    description?: StringFilter<'Role'> | string;
+    permissions?: StringNullableListFilter<'Role'>;
+    isActive?: BoolFilter<'Role'> | boolean;
+    createdAt?: DateTimeFilter<'Role'> | Date | string;
+    updatedAt?: DateTimeFilter<'Role'> | Date | string;
+    admins?: AdminListRelationFilter;
+    attendees?: AttendeeListRelationFilter;
+  };
+
+  export type RoleOrderByWithRelationInput = {
+    id?: SortOrder;
+    name?: SortOrder;
+    description?: SortOrder;
+    permissions?: SortOrder;
+    isActive?: SortOrder;
+    createdAt?: SortOrder;
+    updatedAt?: SortOrder;
+    admins?: AdminOrderByRelationAggregateInput;
+    attendees?: AttendeeOrderByRelationAggregateInput;
+  };
+
+  export type RoleWhereUniqueInput = Prisma.AtLeast<
+    {
+      id?: string;
+      name?: string;
+      AND?: RoleWhereInput | RoleWhereInput[];
+      OR?: RoleWhereInput[];
+      NOT?: RoleWhereInput | RoleWhereInput[];
+      description?: StringFilter<'Role'> | string;
+      permissions?: StringNullableListFilter<'Role'>;
+      isActive?: BoolFilter<'Role'> | boolean;
+      createdAt?: DateTimeFilter<'Role'> | Date | string;
+      updatedAt?: DateTimeFilter<'Role'> | Date | string;
+      admins?: AdminListRelationFilter;
+      attendees?: AttendeeListRelationFilter;
+    },
+    'id' | 'name'
+  >;
+
+  export type RoleOrderByWithAggregationInput = {
+    id?: SortOrder;
+    name?: SortOrder;
+    description?: SortOrder;
+    permissions?: SortOrder;
+    isActive?: SortOrder;
+    createdAt?: SortOrder;
+    updatedAt?: SortOrder;
+    _count?: RoleCountOrderByAggregateInput;
+    _max?: RoleMaxOrderByAggregateInput;
+    _min?: RoleMinOrderByAggregateInput;
+  };
+
+  export type RoleScalarWhereWithAggregatesInput = {
+    AND?:
+      | RoleScalarWhereWithAggregatesInput
+      | RoleScalarWhereWithAggregatesInput[];
+    OR?: RoleScalarWhereWithAggregatesInput[];
+    NOT?:
+      | RoleScalarWhereWithAggregatesInput
+      | RoleScalarWhereWithAggregatesInput[];
+    id?: StringWithAggregatesFilter<'Role'> | string;
+    name?: StringWithAggregatesFilter<'Role'> | string;
+    description?: StringWithAggregatesFilter<'Role'> | string;
+    permissions?: StringNullableListFilter<'Role'>;
+    isActive?: BoolWithAggregatesFilter<'Role'> | boolean;
+    createdAt?: DateTimeWithAggregatesFilter<'Role'> | Date | string;
+    updatedAt?: DateTimeWithAggregatesFilter<'Role'> | Date | string;
+  };
+
   export type AdminWhereInput = {
     AND?: AdminWhereInput | AdminWhereInput[];
     OR?: AdminWhereInput[];
@@ -8993,11 +10640,12 @@ export namespace Prisma {
     fullName?: StringFilter<'Admin'> | string;
     email?: StringFilter<'Admin'> | string;
     password?: StringFilter<'Admin'> | string;
-    role?: EnumRoleFilter<'Admin'> | $Enums.Role;
+    roleId?: StringFilter<'Admin'> | string;
     isActive?: BoolFilter<'Admin'> | boolean;
     invitedById?: StringNullableFilter<'Admin'> | string | null;
     createdAt?: DateTimeFilter<'Admin'> | Date | string;
     updatedAt?: DateTimeFilter<'Admin'> | Date | string;
+    role?: XOR<RoleScalarRelationFilter, RoleWhereInput>;
     inviter?: XOR<AdminNullableScalarRelationFilter, AdminWhereInput> | null;
     invitedAdmins?: AdminListRelationFilter;
     passwordResetTokens?: PasswordResetTokenListRelationFilter;
@@ -9008,11 +10656,12 @@ export namespace Prisma {
     fullName?: SortOrder;
     email?: SortOrder;
     password?: SortOrder;
-    role?: SortOrder;
+    roleId?: SortOrder;
     isActive?: SortOrder;
     invitedById?: SortOrderInput | SortOrder;
     createdAt?: SortOrder;
     updatedAt?: SortOrder;
+    role?: RoleOrderByWithRelationInput;
     inviter?: AdminOrderByWithRelationInput;
     invitedAdmins?: AdminOrderByRelationAggregateInput;
     passwordResetTokens?: PasswordResetTokenOrderByRelationAggregateInput;
@@ -9027,11 +10676,12 @@ export namespace Prisma {
       NOT?: AdminWhereInput | AdminWhereInput[];
       fullName?: StringFilter<'Admin'> | string;
       password?: StringFilter<'Admin'> | string;
-      role?: EnumRoleFilter<'Admin'> | $Enums.Role;
+      roleId?: StringFilter<'Admin'> | string;
       isActive?: BoolFilter<'Admin'> | boolean;
       invitedById?: StringNullableFilter<'Admin'> | string | null;
       createdAt?: DateTimeFilter<'Admin'> | Date | string;
       updatedAt?: DateTimeFilter<'Admin'> | Date | string;
+      role?: XOR<RoleScalarRelationFilter, RoleWhereInput>;
       inviter?: XOR<AdminNullableScalarRelationFilter, AdminWhereInput> | null;
       invitedAdmins?: AdminListRelationFilter;
       passwordResetTokens?: PasswordResetTokenListRelationFilter;
@@ -9044,7 +10694,7 @@ export namespace Prisma {
     fullName?: SortOrder;
     email?: SortOrder;
     password?: SortOrder;
-    role?: SortOrder;
+    roleId?: SortOrder;
     isActive?: SortOrder;
     invitedById?: SortOrderInput | SortOrder;
     createdAt?: SortOrder;
@@ -9066,7 +10716,7 @@ export namespace Prisma {
     fullName?: StringWithAggregatesFilter<'Admin'> | string;
     email?: StringWithAggregatesFilter<'Admin'> | string;
     password?: StringWithAggregatesFilter<'Admin'> | string;
-    role?: EnumRoleWithAggregatesFilter<'Admin'> | $Enums.Role;
+    roleId?: StringWithAggregatesFilter<'Admin'> | string;
     isActive?: BoolWithAggregatesFilter<'Admin'> | boolean;
     invitedById?: StringNullableWithAggregatesFilter<'Admin'> | string | null;
     createdAt?: DateTimeWithAggregatesFilter<'Admin'> | Date | string;
@@ -9168,10 +10818,11 @@ export namespace Prisma {
     phoneNumber?: StringNullableFilter<'Attendee'> | string | null;
     company?: StringNullableFilter<'Attendee'> | string | null;
     jobTitle?: StringNullableFilter<'Attendee'> | string | null;
-    role?: EnumRoleFilter<'Attendee'> | $Enums.Role;
+    roleId?: StringNullableFilter<'Attendee'> | string | null;
     isActive?: BoolFilter<'Attendee'> | boolean;
     createdAt?: DateTimeFilter<'Attendee'> | Date | string;
     updatedAt?: DateTimeFilter<'Attendee'> | Date | string;
+    role?: XOR<RoleNullableScalarRelationFilter, RoleWhereInput> | null;
     payments?: PaymentListRelationFilter;
     tickets?: TicketListRelationFilter;
   };
@@ -9183,10 +10834,11 @@ export namespace Prisma {
     phoneNumber?: SortOrderInput | SortOrder;
     company?: SortOrderInput | SortOrder;
     jobTitle?: SortOrderInput | SortOrder;
-    role?: SortOrder;
+    roleId?: SortOrderInput | SortOrder;
     isActive?: SortOrder;
     createdAt?: SortOrder;
     updatedAt?: SortOrder;
+    role?: RoleOrderByWithRelationInput;
     payments?: PaymentOrderByRelationAggregateInput;
     tickets?: TicketOrderByRelationAggregateInput;
   };
@@ -9202,10 +10854,11 @@ export namespace Prisma {
       phoneNumber?: StringNullableFilter<'Attendee'> | string | null;
       company?: StringNullableFilter<'Attendee'> | string | null;
       jobTitle?: StringNullableFilter<'Attendee'> | string | null;
-      role?: EnumRoleFilter<'Attendee'> | $Enums.Role;
+      roleId?: StringNullableFilter<'Attendee'> | string | null;
       isActive?: BoolFilter<'Attendee'> | boolean;
       createdAt?: DateTimeFilter<'Attendee'> | Date | string;
       updatedAt?: DateTimeFilter<'Attendee'> | Date | string;
+      role?: XOR<RoleNullableScalarRelationFilter, RoleWhereInput> | null;
       payments?: PaymentListRelationFilter;
       tickets?: TicketListRelationFilter;
     },
@@ -9219,7 +10872,7 @@ export namespace Prisma {
     phoneNumber?: SortOrderInput | SortOrder;
     company?: SortOrderInput | SortOrder;
     jobTitle?: SortOrderInput | SortOrder;
-    role?: SortOrder;
+    roleId?: SortOrderInput | SortOrder;
     isActive?: SortOrder;
     createdAt?: SortOrder;
     updatedAt?: SortOrder;
@@ -9245,7 +10898,7 @@ export namespace Prisma {
       | null;
     company?: StringNullableWithAggregatesFilter<'Attendee'> | string | null;
     jobTitle?: StringNullableWithAggregatesFilter<'Attendee'> | string | null;
-    role?: EnumRoleWithAggregatesFilter<'Attendee'> | $Enums.Role;
+    roleId?: StringNullableWithAggregatesFilter<'Attendee'> | string | null;
     isActive?: BoolWithAggregatesFilter<'Attendee'> | boolean;
     createdAt?: DateTimeWithAggregatesFilter<'Attendee'> | Date | string;
     updatedAt?: DateTimeWithAggregatesFilter<'Attendee'> | Date | string;
@@ -9495,15 +11148,93 @@ export namespace Prisma {
     updatedAt?: DateTimeWithAggregatesFilter<'Payment'> | Date | string;
   };
 
+  export type RoleCreateInput = {
+    id?: string;
+    name: string;
+    description: string;
+    permissions?: RoleCreatepermissionsInput | string[];
+    isActive?: boolean;
+    createdAt?: Date | string;
+    updatedAt?: Date | string;
+    admins?: AdminCreateNestedManyWithoutRoleInput;
+    attendees?: AttendeeCreateNestedManyWithoutRoleInput;
+  };
+
+  export type RoleUncheckedCreateInput = {
+    id?: string;
+    name: string;
+    description: string;
+    permissions?: RoleCreatepermissionsInput | string[];
+    isActive?: boolean;
+    createdAt?: Date | string;
+    updatedAt?: Date | string;
+    admins?: AdminUncheckedCreateNestedManyWithoutRoleInput;
+    attendees?: AttendeeUncheckedCreateNestedManyWithoutRoleInput;
+  };
+
+  export type RoleUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string;
+    name?: StringFieldUpdateOperationsInput | string;
+    description?: StringFieldUpdateOperationsInput | string;
+    permissions?: RoleUpdatepermissionsInput | string[];
+    isActive?: BoolFieldUpdateOperationsInput | boolean;
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string;
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string;
+    admins?: AdminUpdateManyWithoutRoleNestedInput;
+    attendees?: AttendeeUpdateManyWithoutRoleNestedInput;
+  };
+
+  export type RoleUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string;
+    name?: StringFieldUpdateOperationsInput | string;
+    description?: StringFieldUpdateOperationsInput | string;
+    permissions?: RoleUpdatepermissionsInput | string[];
+    isActive?: BoolFieldUpdateOperationsInput | boolean;
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string;
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string;
+    admins?: AdminUncheckedUpdateManyWithoutRoleNestedInput;
+    attendees?: AttendeeUncheckedUpdateManyWithoutRoleNestedInput;
+  };
+
+  export type RoleCreateManyInput = {
+    id?: string;
+    name: string;
+    description: string;
+    permissions?: RoleCreatepermissionsInput | string[];
+    isActive?: boolean;
+    createdAt?: Date | string;
+    updatedAt?: Date | string;
+  };
+
+  export type RoleUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string;
+    name?: StringFieldUpdateOperationsInput | string;
+    description?: StringFieldUpdateOperationsInput | string;
+    permissions?: RoleUpdatepermissionsInput | string[];
+    isActive?: BoolFieldUpdateOperationsInput | boolean;
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string;
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string;
+  };
+
+  export type RoleUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string;
+    name?: StringFieldUpdateOperationsInput | string;
+    description?: StringFieldUpdateOperationsInput | string;
+    permissions?: RoleUpdatepermissionsInput | string[];
+    isActive?: BoolFieldUpdateOperationsInput | boolean;
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string;
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string;
+  };
+
   export type AdminCreateInput = {
     id?: string;
     fullName: string;
     email: string;
     password: string;
-    role?: $Enums.Role;
     isActive?: boolean;
     createdAt?: Date | string;
     updatedAt?: Date | string;
+    role: RoleCreateNestedOneWithoutAdminsInput;
     inviter?: AdminCreateNestedOneWithoutInvitedAdminsInput;
     invitedAdmins?: AdminCreateNestedManyWithoutInviterInput;
     passwordResetTokens?: PasswordResetTokenCreateNestedManyWithoutAdminInput;
@@ -9514,7 +11245,7 @@ export namespace Prisma {
     fullName: string;
     email: string;
     password: string;
-    role?: $Enums.Role;
+    roleId: string;
     isActive?: boolean;
     invitedById?: string | null;
     createdAt?: Date | string;
@@ -9528,10 +11259,10 @@ export namespace Prisma {
     fullName?: StringFieldUpdateOperationsInput | string;
     email?: StringFieldUpdateOperationsInput | string;
     password?: StringFieldUpdateOperationsInput | string;
-    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role;
     isActive?: BoolFieldUpdateOperationsInput | boolean;
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string;
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string;
+    role?: RoleUpdateOneRequiredWithoutAdminsNestedInput;
     inviter?: AdminUpdateOneWithoutInvitedAdminsNestedInput;
     invitedAdmins?: AdminUpdateManyWithoutInviterNestedInput;
     passwordResetTokens?: PasswordResetTokenUpdateManyWithoutAdminNestedInput;
@@ -9542,7 +11273,7 @@ export namespace Prisma {
     fullName?: StringFieldUpdateOperationsInput | string;
     email?: StringFieldUpdateOperationsInput | string;
     password?: StringFieldUpdateOperationsInput | string;
-    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role;
+    roleId?: StringFieldUpdateOperationsInput | string;
     isActive?: BoolFieldUpdateOperationsInput | boolean;
     invitedById?: NullableStringFieldUpdateOperationsInput | string | null;
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string;
@@ -9556,7 +11287,7 @@ export namespace Prisma {
     fullName: string;
     email: string;
     password: string;
-    role?: $Enums.Role;
+    roleId: string;
     isActive?: boolean;
     invitedById?: string | null;
     createdAt?: Date | string;
@@ -9568,7 +11299,6 @@ export namespace Prisma {
     fullName?: StringFieldUpdateOperationsInput | string;
     email?: StringFieldUpdateOperationsInput | string;
     password?: StringFieldUpdateOperationsInput | string;
-    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role;
     isActive?: BoolFieldUpdateOperationsInput | boolean;
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string;
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string;
@@ -9579,7 +11309,7 @@ export namespace Prisma {
     fullName?: StringFieldUpdateOperationsInput | string;
     email?: StringFieldUpdateOperationsInput | string;
     password?: StringFieldUpdateOperationsInput | string;
-    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role;
+    roleId?: StringFieldUpdateOperationsInput | string;
     isActive?: BoolFieldUpdateOperationsInput | boolean;
     invitedById?: NullableStringFieldUpdateOperationsInput | string | null;
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string;
@@ -9655,10 +11385,10 @@ export namespace Prisma {
     phoneNumber?: string | null;
     company?: string | null;
     jobTitle?: string | null;
-    role?: $Enums.Role;
     isActive?: boolean;
     createdAt?: Date | string;
     updatedAt?: Date | string;
+    role?: RoleCreateNestedOneWithoutAttendeesInput;
     payments?: PaymentCreateNestedManyWithoutAttendeeInput;
     tickets?: TicketCreateNestedManyWithoutAttendeeInput;
   };
@@ -9670,7 +11400,7 @@ export namespace Prisma {
     phoneNumber?: string | null;
     company?: string | null;
     jobTitle?: string | null;
-    role?: $Enums.Role;
+    roleId?: string | null;
     isActive?: boolean;
     createdAt?: Date | string;
     updatedAt?: Date | string;
@@ -9685,10 +11415,10 @@ export namespace Prisma {
     phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null;
     company?: NullableStringFieldUpdateOperationsInput | string | null;
     jobTitle?: NullableStringFieldUpdateOperationsInput | string | null;
-    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role;
     isActive?: BoolFieldUpdateOperationsInput | boolean;
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string;
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string;
+    role?: RoleUpdateOneWithoutAttendeesNestedInput;
     payments?: PaymentUpdateManyWithoutAttendeeNestedInput;
     tickets?: TicketUpdateManyWithoutAttendeeNestedInput;
   };
@@ -9700,7 +11430,7 @@ export namespace Prisma {
     phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null;
     company?: NullableStringFieldUpdateOperationsInput | string | null;
     jobTitle?: NullableStringFieldUpdateOperationsInput | string | null;
-    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role;
+    roleId?: NullableStringFieldUpdateOperationsInput | string | null;
     isActive?: BoolFieldUpdateOperationsInput | boolean;
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string;
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string;
@@ -9715,7 +11445,7 @@ export namespace Prisma {
     phoneNumber?: string | null;
     company?: string | null;
     jobTitle?: string | null;
-    role?: $Enums.Role;
+    roleId?: string | null;
     isActive?: boolean;
     createdAt?: Date | string;
     updatedAt?: Date | string;
@@ -9728,7 +11458,6 @@ export namespace Prisma {
     phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null;
     company?: NullableStringFieldUpdateOperationsInput | string | null;
     jobTitle?: NullableStringFieldUpdateOperationsInput | string | null;
-    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role;
     isActive?: BoolFieldUpdateOperationsInput | boolean;
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string;
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string;
@@ -9741,7 +11470,7 @@ export namespace Prisma {
     phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null;
     company?: NullableStringFieldUpdateOperationsInput | string | null;
     jobTitle?: NullableStringFieldUpdateOperationsInput | string | null;
-    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role;
+    roleId?: NullableStringFieldUpdateOperationsInput | string | null;
     isActive?: BoolFieldUpdateOperationsInput | boolean;
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string;
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string;
@@ -10019,31 +11748,17 @@ export namespace Prisma {
     not?: NestedStringFilter<$PrismaModel> | string;
   };
 
-  export type EnumRoleFilter<$PrismaModel = never> = {
-    equals?: $Enums.Role | EnumRoleFieldRefInput<$PrismaModel>;
-    in?: $Enums.Role[] | ListEnumRoleFieldRefInput<$PrismaModel>;
-    notIn?: $Enums.Role[] | ListEnumRoleFieldRefInput<$PrismaModel>;
-    not?: NestedEnumRoleFilter<$PrismaModel> | $Enums.Role;
+  export type StringNullableListFilter<$PrismaModel = never> = {
+    equals?: string[] | ListStringFieldRefInput<$PrismaModel> | null;
+    has?: string | StringFieldRefInput<$PrismaModel> | null;
+    hasEvery?: string[] | ListStringFieldRefInput<$PrismaModel>;
+    hasSome?: string[] | ListStringFieldRefInput<$PrismaModel>;
+    isEmpty?: boolean;
   };
 
   export type BoolFilter<$PrismaModel = never> = {
     equals?: boolean | BooleanFieldRefInput<$PrismaModel>;
     not?: NestedBoolFilter<$PrismaModel> | boolean;
-  };
-
-  export type StringNullableFilter<$PrismaModel = never> = {
-    equals?: string | StringFieldRefInput<$PrismaModel> | null;
-    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null;
-    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null;
-    lt?: string | StringFieldRefInput<$PrismaModel>;
-    lte?: string | StringFieldRefInput<$PrismaModel>;
-    gt?: string | StringFieldRefInput<$PrismaModel>;
-    gte?: string | StringFieldRefInput<$PrismaModel>;
-    contains?: string | StringFieldRefInput<$PrismaModel>;
-    startsWith?: string | StringFieldRefInput<$PrismaModel>;
-    endsWith?: string | StringFieldRefInput<$PrismaModel>;
-    mode?: QueryMode;
-    not?: NestedStringNullableFilter<$PrismaModel> | string | null;
   };
 
   export type DateTimeFilter<$PrismaModel = never> = {
@@ -10057,68 +11772,50 @@ export namespace Prisma {
     not?: NestedDateTimeFilter<$PrismaModel> | Date | string;
   };
 
-  export type AdminNullableScalarRelationFilter = {
-    is?: AdminWhereInput | null;
-    isNot?: AdminWhereInput | null;
-  };
-
   export type AdminListRelationFilter = {
     every?: AdminWhereInput;
     some?: AdminWhereInput;
     none?: AdminWhereInput;
   };
 
-  export type PasswordResetTokenListRelationFilter = {
-    every?: PasswordResetTokenWhereInput;
-    some?: PasswordResetTokenWhereInput;
-    none?: PasswordResetTokenWhereInput;
-  };
-
-  export type SortOrderInput = {
-    sort: SortOrder;
-    nulls?: NullsOrder;
+  export type AttendeeListRelationFilter = {
+    every?: AttendeeWhereInput;
+    some?: AttendeeWhereInput;
+    none?: AttendeeWhereInput;
   };
 
   export type AdminOrderByRelationAggregateInput = {
     _count?: SortOrder;
   };
 
-  export type PasswordResetTokenOrderByRelationAggregateInput = {
+  export type AttendeeOrderByRelationAggregateInput = {
     _count?: SortOrder;
   };
 
-  export type AdminCountOrderByAggregateInput = {
+  export type RoleCountOrderByAggregateInput = {
     id?: SortOrder;
-    fullName?: SortOrder;
-    email?: SortOrder;
-    password?: SortOrder;
-    role?: SortOrder;
+    name?: SortOrder;
+    description?: SortOrder;
+    permissions?: SortOrder;
     isActive?: SortOrder;
-    invitedById?: SortOrder;
     createdAt?: SortOrder;
     updatedAt?: SortOrder;
   };
 
-  export type AdminMaxOrderByAggregateInput = {
+  export type RoleMaxOrderByAggregateInput = {
     id?: SortOrder;
-    fullName?: SortOrder;
-    email?: SortOrder;
-    password?: SortOrder;
-    role?: SortOrder;
+    name?: SortOrder;
+    description?: SortOrder;
     isActive?: SortOrder;
-    invitedById?: SortOrder;
     createdAt?: SortOrder;
     updatedAt?: SortOrder;
   };
 
-  export type AdminMinOrderByAggregateInput = {
+  export type RoleMinOrderByAggregateInput = {
     id?: SortOrder;
-    fullName?: SortOrder;
-    email?: SortOrder;
-    password?: SortOrder;
-    role?: SortOrder;
+    name?: SortOrder;
+    description?: SortOrder;
     isActive?: SortOrder;
-    invitedById?: SortOrder;
     createdAt?: SortOrder;
     updatedAt?: SortOrder;
   };
@@ -10141,22 +11838,102 @@ export namespace Prisma {
     _max?: NestedStringFilter<$PrismaModel>;
   };
 
-  export type EnumRoleWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: $Enums.Role | EnumRoleFieldRefInput<$PrismaModel>;
-    in?: $Enums.Role[] | ListEnumRoleFieldRefInput<$PrismaModel>;
-    notIn?: $Enums.Role[] | ListEnumRoleFieldRefInput<$PrismaModel>;
-    not?: NestedEnumRoleWithAggregatesFilter<$PrismaModel> | $Enums.Role;
-    _count?: NestedIntFilter<$PrismaModel>;
-    _min?: NestedEnumRoleFilter<$PrismaModel>;
-    _max?: NestedEnumRoleFilter<$PrismaModel>;
-  };
-
   export type BoolWithAggregatesFilter<$PrismaModel = never> = {
     equals?: boolean | BooleanFieldRefInput<$PrismaModel>;
     not?: NestedBoolWithAggregatesFilter<$PrismaModel> | boolean;
     _count?: NestedIntFilter<$PrismaModel>;
     _min?: NestedBoolFilter<$PrismaModel>;
     _max?: NestedBoolFilter<$PrismaModel>;
+  };
+
+  export type DateTimeWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>;
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>;
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
+    not?: NestedDateTimeWithAggregatesFilter<$PrismaModel> | Date | string;
+    _count?: NestedIntFilter<$PrismaModel>;
+    _min?: NestedDateTimeFilter<$PrismaModel>;
+    _max?: NestedDateTimeFilter<$PrismaModel>;
+  };
+
+  export type StringNullableFilter<$PrismaModel = never> = {
+    equals?: string | StringFieldRefInput<$PrismaModel> | null;
+    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null;
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null;
+    lt?: string | StringFieldRefInput<$PrismaModel>;
+    lte?: string | StringFieldRefInput<$PrismaModel>;
+    gt?: string | StringFieldRefInput<$PrismaModel>;
+    gte?: string | StringFieldRefInput<$PrismaModel>;
+    contains?: string | StringFieldRefInput<$PrismaModel>;
+    startsWith?: string | StringFieldRefInput<$PrismaModel>;
+    endsWith?: string | StringFieldRefInput<$PrismaModel>;
+    mode?: QueryMode;
+    not?: NestedStringNullableFilter<$PrismaModel> | string | null;
+  };
+
+  export type RoleScalarRelationFilter = {
+    is?: RoleWhereInput;
+    isNot?: RoleWhereInput;
+  };
+
+  export type AdminNullableScalarRelationFilter = {
+    is?: AdminWhereInput | null;
+    isNot?: AdminWhereInput | null;
+  };
+
+  export type PasswordResetTokenListRelationFilter = {
+    every?: PasswordResetTokenWhereInput;
+    some?: PasswordResetTokenWhereInput;
+    none?: PasswordResetTokenWhereInput;
+  };
+
+  export type SortOrderInput = {
+    sort: SortOrder;
+    nulls?: NullsOrder;
+  };
+
+  export type PasswordResetTokenOrderByRelationAggregateInput = {
+    _count?: SortOrder;
+  };
+
+  export type AdminCountOrderByAggregateInput = {
+    id?: SortOrder;
+    fullName?: SortOrder;
+    email?: SortOrder;
+    password?: SortOrder;
+    roleId?: SortOrder;
+    isActive?: SortOrder;
+    invitedById?: SortOrder;
+    createdAt?: SortOrder;
+    updatedAt?: SortOrder;
+  };
+
+  export type AdminMaxOrderByAggregateInput = {
+    id?: SortOrder;
+    fullName?: SortOrder;
+    email?: SortOrder;
+    password?: SortOrder;
+    roleId?: SortOrder;
+    isActive?: SortOrder;
+    invitedById?: SortOrder;
+    createdAt?: SortOrder;
+    updatedAt?: SortOrder;
+  };
+
+  export type AdminMinOrderByAggregateInput = {
+    id?: SortOrder;
+    fullName?: SortOrder;
+    email?: SortOrder;
+    password?: SortOrder;
+    roleId?: SortOrder;
+    isActive?: SortOrder;
+    invitedById?: SortOrder;
+    createdAt?: SortOrder;
+    updatedAt?: SortOrder;
   };
 
   export type StringNullableWithAggregatesFilter<$PrismaModel = never> = {
@@ -10178,20 +11955,6 @@ export namespace Prisma {
     _count?: NestedIntNullableFilter<$PrismaModel>;
     _min?: NestedStringNullableFilter<$PrismaModel>;
     _max?: NestedStringNullableFilter<$PrismaModel>;
-  };
-
-  export type DateTimeWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
-    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>;
-    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>;
-    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
-    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
-    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
-    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
-    not?: NestedDateTimeWithAggregatesFilter<$PrismaModel> | Date | string;
-    _count?: NestedIntFilter<$PrismaModel>;
-    _min?: NestedDateTimeFilter<$PrismaModel>;
-    _max?: NestedDateTimeFilter<$PrismaModel>;
   };
 
   export type DateTimeNullableFilter<$PrismaModel = never> = {
@@ -10255,6 +12018,11 @@ export namespace Prisma {
     _max?: NestedDateTimeNullableFilter<$PrismaModel>;
   };
 
+  export type RoleNullableScalarRelationFilter = {
+    is?: RoleWhereInput | null;
+    isNot?: RoleWhereInput | null;
+  };
+
   export type PaymentListRelationFilter = {
     every?: PaymentWhereInput;
     some?: PaymentWhereInput;
@@ -10282,7 +12050,7 @@ export namespace Prisma {
     phoneNumber?: SortOrder;
     company?: SortOrder;
     jobTitle?: SortOrder;
-    role?: SortOrder;
+    roleId?: SortOrder;
     isActive?: SortOrder;
     createdAt?: SortOrder;
     updatedAt?: SortOrder;
@@ -10295,7 +12063,7 @@ export namespace Prisma {
     phoneNumber?: SortOrder;
     company?: SortOrder;
     jobTitle?: SortOrder;
-    role?: SortOrder;
+    roleId?: SortOrder;
     isActive?: SortOrder;
     createdAt?: SortOrder;
     updatedAt?: SortOrder;
@@ -10308,7 +12076,7 @@ export namespace Prisma {
     phoneNumber?: SortOrder;
     company?: SortOrder;
     jobTitle?: SortOrder;
-    role?: SortOrder;
+    roleId?: SortOrder;
     isActive?: SortOrder;
     createdAt?: SortOrder;
     updatedAt?: SortOrder;
@@ -10668,6 +12436,196 @@ export namespace Prisma {
     _max?: NestedJsonNullableFilter<$PrismaModel>;
   };
 
+  export type RoleCreatepermissionsInput = {
+    set: string[];
+  };
+
+  export type AdminCreateNestedManyWithoutRoleInput = {
+    create?:
+      | XOR<AdminCreateWithoutRoleInput, AdminUncheckedCreateWithoutRoleInput>
+      | AdminCreateWithoutRoleInput[]
+      | AdminUncheckedCreateWithoutRoleInput[];
+    connectOrCreate?:
+      | AdminCreateOrConnectWithoutRoleInput
+      | AdminCreateOrConnectWithoutRoleInput[];
+    createMany?: AdminCreateManyRoleInputEnvelope;
+    connect?: AdminWhereUniqueInput | AdminWhereUniqueInput[];
+  };
+
+  export type AttendeeCreateNestedManyWithoutRoleInput = {
+    create?:
+      | XOR<
+          AttendeeCreateWithoutRoleInput,
+          AttendeeUncheckedCreateWithoutRoleInput
+        >
+      | AttendeeCreateWithoutRoleInput[]
+      | AttendeeUncheckedCreateWithoutRoleInput[];
+    connectOrCreate?:
+      | AttendeeCreateOrConnectWithoutRoleInput
+      | AttendeeCreateOrConnectWithoutRoleInput[];
+    createMany?: AttendeeCreateManyRoleInputEnvelope;
+    connect?: AttendeeWhereUniqueInput | AttendeeWhereUniqueInput[];
+  };
+
+  export type AdminUncheckedCreateNestedManyWithoutRoleInput = {
+    create?:
+      | XOR<AdminCreateWithoutRoleInput, AdminUncheckedCreateWithoutRoleInput>
+      | AdminCreateWithoutRoleInput[]
+      | AdminUncheckedCreateWithoutRoleInput[];
+    connectOrCreate?:
+      | AdminCreateOrConnectWithoutRoleInput
+      | AdminCreateOrConnectWithoutRoleInput[];
+    createMany?: AdminCreateManyRoleInputEnvelope;
+    connect?: AdminWhereUniqueInput | AdminWhereUniqueInput[];
+  };
+
+  export type AttendeeUncheckedCreateNestedManyWithoutRoleInput = {
+    create?:
+      | XOR<
+          AttendeeCreateWithoutRoleInput,
+          AttendeeUncheckedCreateWithoutRoleInput
+        >
+      | AttendeeCreateWithoutRoleInput[]
+      | AttendeeUncheckedCreateWithoutRoleInput[];
+    connectOrCreate?:
+      | AttendeeCreateOrConnectWithoutRoleInput
+      | AttendeeCreateOrConnectWithoutRoleInput[];
+    createMany?: AttendeeCreateManyRoleInputEnvelope;
+    connect?: AttendeeWhereUniqueInput | AttendeeWhereUniqueInput[];
+  };
+
+  export type StringFieldUpdateOperationsInput = {
+    set?: string;
+  };
+
+  export type RoleUpdatepermissionsInput = {
+    set?: string[];
+    push?: string | string[];
+  };
+
+  export type BoolFieldUpdateOperationsInput = {
+    set?: boolean;
+  };
+
+  export type DateTimeFieldUpdateOperationsInput = {
+    set?: Date | string;
+  };
+
+  export type AdminUpdateManyWithoutRoleNestedInput = {
+    create?:
+      | XOR<AdminCreateWithoutRoleInput, AdminUncheckedCreateWithoutRoleInput>
+      | AdminCreateWithoutRoleInput[]
+      | AdminUncheckedCreateWithoutRoleInput[];
+    connectOrCreate?:
+      | AdminCreateOrConnectWithoutRoleInput
+      | AdminCreateOrConnectWithoutRoleInput[];
+    upsert?:
+      | AdminUpsertWithWhereUniqueWithoutRoleInput
+      | AdminUpsertWithWhereUniqueWithoutRoleInput[];
+    createMany?: AdminCreateManyRoleInputEnvelope;
+    set?: AdminWhereUniqueInput | AdminWhereUniqueInput[];
+    disconnect?: AdminWhereUniqueInput | AdminWhereUniqueInput[];
+    delete?: AdminWhereUniqueInput | AdminWhereUniqueInput[];
+    connect?: AdminWhereUniqueInput | AdminWhereUniqueInput[];
+    update?:
+      | AdminUpdateWithWhereUniqueWithoutRoleInput
+      | AdminUpdateWithWhereUniqueWithoutRoleInput[];
+    updateMany?:
+      | AdminUpdateManyWithWhereWithoutRoleInput
+      | AdminUpdateManyWithWhereWithoutRoleInput[];
+    deleteMany?: AdminScalarWhereInput | AdminScalarWhereInput[];
+  };
+
+  export type AttendeeUpdateManyWithoutRoleNestedInput = {
+    create?:
+      | XOR<
+          AttendeeCreateWithoutRoleInput,
+          AttendeeUncheckedCreateWithoutRoleInput
+        >
+      | AttendeeCreateWithoutRoleInput[]
+      | AttendeeUncheckedCreateWithoutRoleInput[];
+    connectOrCreate?:
+      | AttendeeCreateOrConnectWithoutRoleInput
+      | AttendeeCreateOrConnectWithoutRoleInput[];
+    upsert?:
+      | AttendeeUpsertWithWhereUniqueWithoutRoleInput
+      | AttendeeUpsertWithWhereUniqueWithoutRoleInput[];
+    createMany?: AttendeeCreateManyRoleInputEnvelope;
+    set?: AttendeeWhereUniqueInput | AttendeeWhereUniqueInput[];
+    disconnect?: AttendeeWhereUniqueInput | AttendeeWhereUniqueInput[];
+    delete?: AttendeeWhereUniqueInput | AttendeeWhereUniqueInput[];
+    connect?: AttendeeWhereUniqueInput | AttendeeWhereUniqueInput[];
+    update?:
+      | AttendeeUpdateWithWhereUniqueWithoutRoleInput
+      | AttendeeUpdateWithWhereUniqueWithoutRoleInput[];
+    updateMany?:
+      | AttendeeUpdateManyWithWhereWithoutRoleInput
+      | AttendeeUpdateManyWithWhereWithoutRoleInput[];
+    deleteMany?: AttendeeScalarWhereInput | AttendeeScalarWhereInput[];
+  };
+
+  export type AdminUncheckedUpdateManyWithoutRoleNestedInput = {
+    create?:
+      | XOR<AdminCreateWithoutRoleInput, AdminUncheckedCreateWithoutRoleInput>
+      | AdminCreateWithoutRoleInput[]
+      | AdminUncheckedCreateWithoutRoleInput[];
+    connectOrCreate?:
+      | AdminCreateOrConnectWithoutRoleInput
+      | AdminCreateOrConnectWithoutRoleInput[];
+    upsert?:
+      | AdminUpsertWithWhereUniqueWithoutRoleInput
+      | AdminUpsertWithWhereUniqueWithoutRoleInput[];
+    createMany?: AdminCreateManyRoleInputEnvelope;
+    set?: AdminWhereUniqueInput | AdminWhereUniqueInput[];
+    disconnect?: AdminWhereUniqueInput | AdminWhereUniqueInput[];
+    delete?: AdminWhereUniqueInput | AdminWhereUniqueInput[];
+    connect?: AdminWhereUniqueInput | AdminWhereUniqueInput[];
+    update?:
+      | AdminUpdateWithWhereUniqueWithoutRoleInput
+      | AdminUpdateWithWhereUniqueWithoutRoleInput[];
+    updateMany?:
+      | AdminUpdateManyWithWhereWithoutRoleInput
+      | AdminUpdateManyWithWhereWithoutRoleInput[];
+    deleteMany?: AdminScalarWhereInput | AdminScalarWhereInput[];
+  };
+
+  export type AttendeeUncheckedUpdateManyWithoutRoleNestedInput = {
+    create?:
+      | XOR<
+          AttendeeCreateWithoutRoleInput,
+          AttendeeUncheckedCreateWithoutRoleInput
+        >
+      | AttendeeCreateWithoutRoleInput[]
+      | AttendeeUncheckedCreateWithoutRoleInput[];
+    connectOrCreate?:
+      | AttendeeCreateOrConnectWithoutRoleInput
+      | AttendeeCreateOrConnectWithoutRoleInput[];
+    upsert?:
+      | AttendeeUpsertWithWhereUniqueWithoutRoleInput
+      | AttendeeUpsertWithWhereUniqueWithoutRoleInput[];
+    createMany?: AttendeeCreateManyRoleInputEnvelope;
+    set?: AttendeeWhereUniqueInput | AttendeeWhereUniqueInput[];
+    disconnect?: AttendeeWhereUniqueInput | AttendeeWhereUniqueInput[];
+    delete?: AttendeeWhereUniqueInput | AttendeeWhereUniqueInput[];
+    connect?: AttendeeWhereUniqueInput | AttendeeWhereUniqueInput[];
+    update?:
+      | AttendeeUpdateWithWhereUniqueWithoutRoleInput
+      | AttendeeUpdateWithWhereUniqueWithoutRoleInput[];
+    updateMany?:
+      | AttendeeUpdateManyWithWhereWithoutRoleInput
+      | AttendeeUpdateManyWithWhereWithoutRoleInput[];
+    deleteMany?: AttendeeScalarWhereInput | AttendeeScalarWhereInput[];
+  };
+
+  export type RoleCreateNestedOneWithoutAdminsInput = {
+    create?: XOR<
+      RoleCreateWithoutAdminsInput,
+      RoleUncheckedCreateWithoutAdminsInput
+    >;
+    connectOrCreate?: RoleCreateOrConnectWithoutAdminsInput;
+    connect?: RoleWhereUniqueInput;
+  };
+
   export type AdminCreateNestedOneWithoutInvitedAdminsInput = {
     create?: XOR<
       AdminCreateWithoutInvitedAdminsInput,
@@ -10741,20 +12699,21 @@ export namespace Prisma {
       | PasswordResetTokenWhereUniqueInput[];
   };
 
-  export type StringFieldUpdateOperationsInput = {
-    set?: string;
-  };
-
-  export type EnumRoleFieldUpdateOperationsInput = {
-    set?: $Enums.Role;
-  };
-
-  export type BoolFieldUpdateOperationsInput = {
-    set?: boolean;
-  };
-
-  export type DateTimeFieldUpdateOperationsInput = {
-    set?: Date | string;
+  export type RoleUpdateOneRequiredWithoutAdminsNestedInput = {
+    create?: XOR<
+      RoleCreateWithoutAdminsInput,
+      RoleUncheckedCreateWithoutAdminsInput
+    >;
+    connectOrCreate?: RoleCreateOrConnectWithoutAdminsInput;
+    upsert?: RoleUpsertWithoutAdminsInput;
+    connect?: RoleWhereUniqueInput;
+    update?: XOR<
+      XOR<
+        RoleUpdateToOneWithWhereWithoutAdminsInput,
+        RoleUpdateWithoutAdminsInput
+      >,
+      RoleUncheckedUpdateWithoutAdminsInput
+    >;
   };
 
   export type AdminUpdateOneWithoutInvitedAdminsNestedInput = {
@@ -10942,6 +12901,15 @@ export namespace Prisma {
     >;
   };
 
+  export type RoleCreateNestedOneWithoutAttendeesInput = {
+    create?: XOR<
+      RoleCreateWithoutAttendeesInput,
+      RoleUncheckedCreateWithoutAttendeesInput
+    >;
+    connectOrCreate?: RoleCreateOrConnectWithoutAttendeesInput;
+    connect?: RoleWhereUniqueInput;
+  };
+
   export type PaymentCreateNestedManyWithoutAttendeeInput = {
     create?:
       | XOR<
@@ -11000,6 +12968,25 @@ export namespace Prisma {
       | TicketCreateOrConnectWithoutAttendeeInput[];
     createMany?: TicketCreateManyAttendeeInputEnvelope;
     connect?: TicketWhereUniqueInput | TicketWhereUniqueInput[];
+  };
+
+  export type RoleUpdateOneWithoutAttendeesNestedInput = {
+    create?: XOR<
+      RoleCreateWithoutAttendeesInput,
+      RoleUncheckedCreateWithoutAttendeesInput
+    >;
+    connectOrCreate?: RoleCreateOrConnectWithoutAttendeesInput;
+    upsert?: RoleUpsertWithoutAttendeesInput;
+    disconnect?: RoleWhereInput | boolean;
+    delete?: RoleWhereInput | boolean;
+    connect?: RoleWhereUniqueInput;
+    update?: XOR<
+      XOR<
+        RoleUpdateToOneWithWhereWithoutAttendeesInput,
+        RoleUpdateWithoutAttendeesInput
+      >,
+      RoleUncheckedUpdateWithoutAttendeesInput
+    >;
   };
 
   export type PaymentUpdateManyWithoutAttendeeNestedInput = {
@@ -11308,30 +13295,9 @@ export namespace Prisma {
     not?: NestedStringFilter<$PrismaModel> | string;
   };
 
-  export type NestedEnumRoleFilter<$PrismaModel = never> = {
-    equals?: $Enums.Role | EnumRoleFieldRefInput<$PrismaModel>;
-    in?: $Enums.Role[] | ListEnumRoleFieldRefInput<$PrismaModel>;
-    notIn?: $Enums.Role[] | ListEnumRoleFieldRefInput<$PrismaModel>;
-    not?: NestedEnumRoleFilter<$PrismaModel> | $Enums.Role;
-  };
-
   export type NestedBoolFilter<$PrismaModel = never> = {
     equals?: boolean | BooleanFieldRefInput<$PrismaModel>;
     not?: NestedBoolFilter<$PrismaModel> | boolean;
-  };
-
-  export type NestedStringNullableFilter<$PrismaModel = never> = {
-    equals?: string | StringFieldRefInput<$PrismaModel> | null;
-    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null;
-    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null;
-    lt?: string | StringFieldRefInput<$PrismaModel>;
-    lte?: string | StringFieldRefInput<$PrismaModel>;
-    gt?: string | StringFieldRefInput<$PrismaModel>;
-    gte?: string | StringFieldRefInput<$PrismaModel>;
-    contains?: string | StringFieldRefInput<$PrismaModel>;
-    startsWith?: string | StringFieldRefInput<$PrismaModel>;
-    endsWith?: string | StringFieldRefInput<$PrismaModel>;
-    not?: NestedStringNullableFilter<$PrismaModel> | string | null;
   };
 
   export type NestedDateTimeFilter<$PrismaModel = never> = {
@@ -11373,22 +13339,40 @@ export namespace Prisma {
     not?: NestedIntFilter<$PrismaModel> | number;
   };
 
-  export type NestedEnumRoleWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: $Enums.Role | EnumRoleFieldRefInput<$PrismaModel>;
-    in?: $Enums.Role[] | ListEnumRoleFieldRefInput<$PrismaModel>;
-    notIn?: $Enums.Role[] | ListEnumRoleFieldRefInput<$PrismaModel>;
-    not?: NestedEnumRoleWithAggregatesFilter<$PrismaModel> | $Enums.Role;
-    _count?: NestedIntFilter<$PrismaModel>;
-    _min?: NestedEnumRoleFilter<$PrismaModel>;
-    _max?: NestedEnumRoleFilter<$PrismaModel>;
-  };
-
   export type NestedBoolWithAggregatesFilter<$PrismaModel = never> = {
     equals?: boolean | BooleanFieldRefInput<$PrismaModel>;
     not?: NestedBoolWithAggregatesFilter<$PrismaModel> | boolean;
     _count?: NestedIntFilter<$PrismaModel>;
     _min?: NestedBoolFilter<$PrismaModel>;
     _max?: NestedBoolFilter<$PrismaModel>;
+  };
+
+  export type NestedDateTimeWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>;
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>;
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
+    not?: NestedDateTimeWithAggregatesFilter<$PrismaModel> | Date | string;
+    _count?: NestedIntFilter<$PrismaModel>;
+    _min?: NestedDateTimeFilter<$PrismaModel>;
+    _max?: NestedDateTimeFilter<$PrismaModel>;
+  };
+
+  export type NestedStringNullableFilter<$PrismaModel = never> = {
+    equals?: string | StringFieldRefInput<$PrismaModel> | null;
+    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null;
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null;
+    lt?: string | StringFieldRefInput<$PrismaModel>;
+    lte?: string | StringFieldRefInput<$PrismaModel>;
+    gt?: string | StringFieldRefInput<$PrismaModel>;
+    gte?: string | StringFieldRefInput<$PrismaModel>;
+    contains?: string | StringFieldRefInput<$PrismaModel>;
+    startsWith?: string | StringFieldRefInput<$PrismaModel>;
+    endsWith?: string | StringFieldRefInput<$PrismaModel>;
+    not?: NestedStringNullableFilter<$PrismaModel> | string | null;
   };
 
   export type NestedStringNullableWithAggregatesFilter<$PrismaModel = never> = {
@@ -11420,20 +13404,6 @@ export namespace Prisma {
     gt?: number | IntFieldRefInput<$PrismaModel>;
     gte?: number | IntFieldRefInput<$PrismaModel>;
     not?: NestedIntNullableFilter<$PrismaModel> | number | null;
-  };
-
-  export type NestedDateTimeWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
-    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>;
-    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>;
-    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
-    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
-    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
-    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>;
-    not?: NestedDateTimeWithAggregatesFilter<$PrismaModel> | Date | string;
-    _count?: NestedIntFilter<$PrismaModel>;
-    _min?: NestedDateTimeFilter<$PrismaModel>;
-    _max?: NestedDateTimeFilter<$PrismaModel>;
   };
 
   export type NestedDateTimeNullableFilter<$PrismaModel = never> = {
@@ -11677,15 +13647,212 @@ export namespace Prisma {
       | JsonNullValueFilter;
   };
 
+  export type AdminCreateWithoutRoleInput = {
+    id?: string;
+    fullName: string;
+    email: string;
+    password: string;
+    isActive?: boolean;
+    createdAt?: Date | string;
+    updatedAt?: Date | string;
+    inviter?: AdminCreateNestedOneWithoutInvitedAdminsInput;
+    invitedAdmins?: AdminCreateNestedManyWithoutInviterInput;
+    passwordResetTokens?: PasswordResetTokenCreateNestedManyWithoutAdminInput;
+  };
+
+  export type AdminUncheckedCreateWithoutRoleInput = {
+    id?: string;
+    fullName: string;
+    email: string;
+    password: string;
+    isActive?: boolean;
+    invitedById?: string | null;
+    createdAt?: Date | string;
+    updatedAt?: Date | string;
+    invitedAdmins?: AdminUncheckedCreateNestedManyWithoutInviterInput;
+    passwordResetTokens?: PasswordResetTokenUncheckedCreateNestedManyWithoutAdminInput;
+  };
+
+  export type AdminCreateOrConnectWithoutRoleInput = {
+    where: AdminWhereUniqueInput;
+    create: XOR<
+      AdminCreateWithoutRoleInput,
+      AdminUncheckedCreateWithoutRoleInput
+    >;
+  };
+
+  export type AdminCreateManyRoleInputEnvelope = {
+    data: AdminCreateManyRoleInput | AdminCreateManyRoleInput[];
+    skipDuplicates?: boolean;
+  };
+
+  export type AttendeeCreateWithoutRoleInput = {
+    id?: string;
+    email: string;
+    fullName: string;
+    phoneNumber?: string | null;
+    company?: string | null;
+    jobTitle?: string | null;
+    isActive?: boolean;
+    createdAt?: Date | string;
+    updatedAt?: Date | string;
+    payments?: PaymentCreateNestedManyWithoutAttendeeInput;
+    tickets?: TicketCreateNestedManyWithoutAttendeeInput;
+  };
+
+  export type AttendeeUncheckedCreateWithoutRoleInput = {
+    id?: string;
+    email: string;
+    fullName: string;
+    phoneNumber?: string | null;
+    company?: string | null;
+    jobTitle?: string | null;
+    isActive?: boolean;
+    createdAt?: Date | string;
+    updatedAt?: Date | string;
+    payments?: PaymentUncheckedCreateNestedManyWithoutAttendeeInput;
+    tickets?: TicketUncheckedCreateNestedManyWithoutAttendeeInput;
+  };
+
+  export type AttendeeCreateOrConnectWithoutRoleInput = {
+    where: AttendeeWhereUniqueInput;
+    create: XOR<
+      AttendeeCreateWithoutRoleInput,
+      AttendeeUncheckedCreateWithoutRoleInput
+    >;
+  };
+
+  export type AttendeeCreateManyRoleInputEnvelope = {
+    data: AttendeeCreateManyRoleInput | AttendeeCreateManyRoleInput[];
+    skipDuplicates?: boolean;
+  };
+
+  export type AdminUpsertWithWhereUniqueWithoutRoleInput = {
+    where: AdminWhereUniqueInput;
+    update: XOR<
+      AdminUpdateWithoutRoleInput,
+      AdminUncheckedUpdateWithoutRoleInput
+    >;
+    create: XOR<
+      AdminCreateWithoutRoleInput,
+      AdminUncheckedCreateWithoutRoleInput
+    >;
+  };
+
+  export type AdminUpdateWithWhereUniqueWithoutRoleInput = {
+    where: AdminWhereUniqueInput;
+    data: XOR<
+      AdminUpdateWithoutRoleInput,
+      AdminUncheckedUpdateWithoutRoleInput
+    >;
+  };
+
+  export type AdminUpdateManyWithWhereWithoutRoleInput = {
+    where: AdminScalarWhereInput;
+    data: XOR<
+      AdminUpdateManyMutationInput,
+      AdminUncheckedUpdateManyWithoutRoleInput
+    >;
+  };
+
+  export type AdminScalarWhereInput = {
+    AND?: AdminScalarWhereInput | AdminScalarWhereInput[];
+    OR?: AdminScalarWhereInput[];
+    NOT?: AdminScalarWhereInput | AdminScalarWhereInput[];
+    id?: StringFilter<'Admin'> | string;
+    fullName?: StringFilter<'Admin'> | string;
+    email?: StringFilter<'Admin'> | string;
+    password?: StringFilter<'Admin'> | string;
+    roleId?: StringFilter<'Admin'> | string;
+    isActive?: BoolFilter<'Admin'> | boolean;
+    invitedById?: StringNullableFilter<'Admin'> | string | null;
+    createdAt?: DateTimeFilter<'Admin'> | Date | string;
+    updatedAt?: DateTimeFilter<'Admin'> | Date | string;
+  };
+
+  export type AttendeeUpsertWithWhereUniqueWithoutRoleInput = {
+    where: AttendeeWhereUniqueInput;
+    update: XOR<
+      AttendeeUpdateWithoutRoleInput,
+      AttendeeUncheckedUpdateWithoutRoleInput
+    >;
+    create: XOR<
+      AttendeeCreateWithoutRoleInput,
+      AttendeeUncheckedCreateWithoutRoleInput
+    >;
+  };
+
+  export type AttendeeUpdateWithWhereUniqueWithoutRoleInput = {
+    where: AttendeeWhereUniqueInput;
+    data: XOR<
+      AttendeeUpdateWithoutRoleInput,
+      AttendeeUncheckedUpdateWithoutRoleInput
+    >;
+  };
+
+  export type AttendeeUpdateManyWithWhereWithoutRoleInput = {
+    where: AttendeeScalarWhereInput;
+    data: XOR<
+      AttendeeUpdateManyMutationInput,
+      AttendeeUncheckedUpdateManyWithoutRoleInput
+    >;
+  };
+
+  export type AttendeeScalarWhereInput = {
+    AND?: AttendeeScalarWhereInput | AttendeeScalarWhereInput[];
+    OR?: AttendeeScalarWhereInput[];
+    NOT?: AttendeeScalarWhereInput | AttendeeScalarWhereInput[];
+    id?: StringFilter<'Attendee'> | string;
+    email?: StringFilter<'Attendee'> | string;
+    fullName?: StringFilter<'Attendee'> | string;
+    phoneNumber?: StringNullableFilter<'Attendee'> | string | null;
+    company?: StringNullableFilter<'Attendee'> | string | null;
+    jobTitle?: StringNullableFilter<'Attendee'> | string | null;
+    roleId?: StringNullableFilter<'Attendee'> | string | null;
+    isActive?: BoolFilter<'Attendee'> | boolean;
+    createdAt?: DateTimeFilter<'Attendee'> | Date | string;
+    updatedAt?: DateTimeFilter<'Attendee'> | Date | string;
+  };
+
+  export type RoleCreateWithoutAdminsInput = {
+    id?: string;
+    name: string;
+    description: string;
+    permissions?: RoleCreatepermissionsInput | string[];
+    isActive?: boolean;
+    createdAt?: Date | string;
+    updatedAt?: Date | string;
+    attendees?: AttendeeCreateNestedManyWithoutRoleInput;
+  };
+
+  export type RoleUncheckedCreateWithoutAdminsInput = {
+    id?: string;
+    name: string;
+    description: string;
+    permissions?: RoleCreatepermissionsInput | string[];
+    isActive?: boolean;
+    createdAt?: Date | string;
+    updatedAt?: Date | string;
+    attendees?: AttendeeUncheckedCreateNestedManyWithoutRoleInput;
+  };
+
+  export type RoleCreateOrConnectWithoutAdminsInput = {
+    where: RoleWhereUniqueInput;
+    create: XOR<
+      RoleCreateWithoutAdminsInput,
+      RoleUncheckedCreateWithoutAdminsInput
+    >;
+  };
+
   export type AdminCreateWithoutInvitedAdminsInput = {
     id?: string;
     fullName: string;
     email: string;
     password: string;
-    role?: $Enums.Role;
     isActive?: boolean;
     createdAt?: Date | string;
     updatedAt?: Date | string;
+    role: RoleCreateNestedOneWithoutAdminsInput;
     inviter?: AdminCreateNestedOneWithoutInvitedAdminsInput;
     passwordResetTokens?: PasswordResetTokenCreateNestedManyWithoutAdminInput;
   };
@@ -11695,7 +13862,7 @@ export namespace Prisma {
     fullName: string;
     email: string;
     password: string;
-    role?: $Enums.Role;
+    roleId: string;
     isActive?: boolean;
     invitedById?: string | null;
     createdAt?: Date | string;
@@ -11716,10 +13883,10 @@ export namespace Prisma {
     fullName: string;
     email: string;
     password: string;
-    role?: $Enums.Role;
     isActive?: boolean;
     createdAt?: Date | string;
     updatedAt?: Date | string;
+    role: RoleCreateNestedOneWithoutAdminsInput;
     invitedAdmins?: AdminCreateNestedManyWithoutInviterInput;
     passwordResetTokens?: PasswordResetTokenCreateNestedManyWithoutAdminInput;
   };
@@ -11729,7 +13896,7 @@ export namespace Prisma {
     fullName: string;
     email: string;
     password: string;
-    role?: $Enums.Role;
+    roleId: string;
     isActive?: boolean;
     createdAt?: Date | string;
     updatedAt?: Date | string;
@@ -11781,6 +13948,48 @@ export namespace Prisma {
     skipDuplicates?: boolean;
   };
 
+  export type RoleUpsertWithoutAdminsInput = {
+    update: XOR<
+      RoleUpdateWithoutAdminsInput,
+      RoleUncheckedUpdateWithoutAdminsInput
+    >;
+    create: XOR<
+      RoleCreateWithoutAdminsInput,
+      RoleUncheckedCreateWithoutAdminsInput
+    >;
+    where?: RoleWhereInput;
+  };
+
+  export type RoleUpdateToOneWithWhereWithoutAdminsInput = {
+    where?: RoleWhereInput;
+    data: XOR<
+      RoleUpdateWithoutAdminsInput,
+      RoleUncheckedUpdateWithoutAdminsInput
+    >;
+  };
+
+  export type RoleUpdateWithoutAdminsInput = {
+    id?: StringFieldUpdateOperationsInput | string;
+    name?: StringFieldUpdateOperationsInput | string;
+    description?: StringFieldUpdateOperationsInput | string;
+    permissions?: RoleUpdatepermissionsInput | string[];
+    isActive?: BoolFieldUpdateOperationsInput | boolean;
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string;
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string;
+    attendees?: AttendeeUpdateManyWithoutRoleNestedInput;
+  };
+
+  export type RoleUncheckedUpdateWithoutAdminsInput = {
+    id?: StringFieldUpdateOperationsInput | string;
+    name?: StringFieldUpdateOperationsInput | string;
+    description?: StringFieldUpdateOperationsInput | string;
+    permissions?: RoleUpdatepermissionsInput | string[];
+    isActive?: BoolFieldUpdateOperationsInput | boolean;
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string;
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string;
+    attendees?: AttendeeUncheckedUpdateManyWithoutRoleNestedInput;
+  };
+
   export type AdminUpsertWithoutInvitedAdminsInput = {
     update: XOR<
       AdminUpdateWithoutInvitedAdminsInput,
@@ -11806,10 +14015,10 @@ export namespace Prisma {
     fullName?: StringFieldUpdateOperationsInput | string;
     email?: StringFieldUpdateOperationsInput | string;
     password?: StringFieldUpdateOperationsInput | string;
-    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role;
     isActive?: BoolFieldUpdateOperationsInput | boolean;
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string;
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string;
+    role?: RoleUpdateOneRequiredWithoutAdminsNestedInput;
     inviter?: AdminUpdateOneWithoutInvitedAdminsNestedInput;
     passwordResetTokens?: PasswordResetTokenUpdateManyWithoutAdminNestedInput;
   };
@@ -11819,7 +14028,7 @@ export namespace Prisma {
     fullName?: StringFieldUpdateOperationsInput | string;
     email?: StringFieldUpdateOperationsInput | string;
     password?: StringFieldUpdateOperationsInput | string;
-    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role;
+    roleId?: StringFieldUpdateOperationsInput | string;
     isActive?: BoolFieldUpdateOperationsInput | boolean;
     invitedById?: NullableStringFieldUpdateOperationsInput | string | null;
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string;
@@ -11853,21 +14062,6 @@ export namespace Prisma {
       AdminUpdateManyMutationInput,
       AdminUncheckedUpdateManyWithoutInviterInput
     >;
-  };
-
-  export type AdminScalarWhereInput = {
-    AND?: AdminScalarWhereInput | AdminScalarWhereInput[];
-    OR?: AdminScalarWhereInput[];
-    NOT?: AdminScalarWhereInput | AdminScalarWhereInput[];
-    id?: StringFilter<'Admin'> | string;
-    fullName?: StringFilter<'Admin'> | string;
-    email?: StringFilter<'Admin'> | string;
-    password?: StringFilter<'Admin'> | string;
-    role?: EnumRoleFilter<'Admin'> | $Enums.Role;
-    isActive?: BoolFilter<'Admin'> | boolean;
-    invitedById?: StringNullableFilter<'Admin'> | string | null;
-    createdAt?: DateTimeFilter<'Admin'> | Date | string;
-    updatedAt?: DateTimeFilter<'Admin'> | Date | string;
   };
 
   export type PasswordResetTokenUpsertWithWhereUniqueWithoutAdminInput = {
@@ -11923,10 +14117,10 @@ export namespace Prisma {
     fullName: string;
     email: string;
     password: string;
-    role?: $Enums.Role;
     isActive?: boolean;
     createdAt?: Date | string;
     updatedAt?: Date | string;
+    role: RoleCreateNestedOneWithoutAdminsInput;
     inviter?: AdminCreateNestedOneWithoutInvitedAdminsInput;
     invitedAdmins?: AdminCreateNestedManyWithoutInviterInput;
   };
@@ -11936,7 +14130,7 @@ export namespace Prisma {
     fullName: string;
     email: string;
     password: string;
-    role?: $Enums.Role;
+    roleId: string;
     isActive?: boolean;
     invitedById?: string | null;
     createdAt?: Date | string;
@@ -11977,10 +14171,10 @@ export namespace Prisma {
     fullName?: StringFieldUpdateOperationsInput | string;
     email?: StringFieldUpdateOperationsInput | string;
     password?: StringFieldUpdateOperationsInput | string;
-    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role;
     isActive?: BoolFieldUpdateOperationsInput | boolean;
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string;
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string;
+    role?: RoleUpdateOneRequiredWithoutAdminsNestedInput;
     inviter?: AdminUpdateOneWithoutInvitedAdminsNestedInput;
     invitedAdmins?: AdminUpdateManyWithoutInviterNestedInput;
   };
@@ -11990,12 +14184,42 @@ export namespace Prisma {
     fullName?: StringFieldUpdateOperationsInput | string;
     email?: StringFieldUpdateOperationsInput | string;
     password?: StringFieldUpdateOperationsInput | string;
-    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role;
+    roleId?: StringFieldUpdateOperationsInput | string;
     isActive?: BoolFieldUpdateOperationsInput | boolean;
     invitedById?: NullableStringFieldUpdateOperationsInput | string | null;
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string;
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string;
     invitedAdmins?: AdminUncheckedUpdateManyWithoutInviterNestedInput;
+  };
+
+  export type RoleCreateWithoutAttendeesInput = {
+    id?: string;
+    name: string;
+    description: string;
+    permissions?: RoleCreatepermissionsInput | string[];
+    isActive?: boolean;
+    createdAt?: Date | string;
+    updatedAt?: Date | string;
+    admins?: AdminCreateNestedManyWithoutRoleInput;
+  };
+
+  export type RoleUncheckedCreateWithoutAttendeesInput = {
+    id?: string;
+    name: string;
+    description: string;
+    permissions?: RoleCreatepermissionsInput | string[];
+    isActive?: boolean;
+    createdAt?: Date | string;
+    updatedAt?: Date | string;
+    admins?: AdminUncheckedCreateNestedManyWithoutRoleInput;
+  };
+
+  export type RoleCreateOrConnectWithoutAttendeesInput = {
+    where: RoleWhereUniqueInput;
+    create: XOR<
+      RoleCreateWithoutAttendeesInput,
+      RoleUncheckedCreateWithoutAttendeesInput
+    >;
   };
 
   export type PaymentCreateWithoutAttendeeInput = {
@@ -12084,6 +14308,48 @@ export namespace Prisma {
   export type TicketCreateManyAttendeeInputEnvelope = {
     data: TicketCreateManyAttendeeInput | TicketCreateManyAttendeeInput[];
     skipDuplicates?: boolean;
+  };
+
+  export type RoleUpsertWithoutAttendeesInput = {
+    update: XOR<
+      RoleUpdateWithoutAttendeesInput,
+      RoleUncheckedUpdateWithoutAttendeesInput
+    >;
+    create: XOR<
+      RoleCreateWithoutAttendeesInput,
+      RoleUncheckedCreateWithoutAttendeesInput
+    >;
+    where?: RoleWhereInput;
+  };
+
+  export type RoleUpdateToOneWithWhereWithoutAttendeesInput = {
+    where?: RoleWhereInput;
+    data: XOR<
+      RoleUpdateWithoutAttendeesInput,
+      RoleUncheckedUpdateWithoutAttendeesInput
+    >;
+  };
+
+  export type RoleUpdateWithoutAttendeesInput = {
+    id?: StringFieldUpdateOperationsInput | string;
+    name?: StringFieldUpdateOperationsInput | string;
+    description?: StringFieldUpdateOperationsInput | string;
+    permissions?: RoleUpdatepermissionsInput | string[];
+    isActive?: BoolFieldUpdateOperationsInput | boolean;
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string;
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string;
+    admins?: AdminUpdateManyWithoutRoleNestedInput;
+  };
+
+  export type RoleUncheckedUpdateWithoutAttendeesInput = {
+    id?: StringFieldUpdateOperationsInput | string;
+    name?: StringFieldUpdateOperationsInput | string;
+    description?: StringFieldUpdateOperationsInput | string;
+    permissions?: RoleUpdatepermissionsInput | string[];
+    isActive?: BoolFieldUpdateOperationsInput | boolean;
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string;
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string;
+    admins?: AdminUncheckedUpdateManyWithoutRoleNestedInput;
   };
 
   export type PaymentUpsertWithWhereUniqueWithoutAttendeeInput = {
@@ -12192,10 +14458,10 @@ export namespace Prisma {
     phoneNumber?: string | null;
     company?: string | null;
     jobTitle?: string | null;
-    role?: $Enums.Role;
     isActive?: boolean;
     createdAt?: Date | string;
     updatedAt?: Date | string;
+    role?: RoleCreateNestedOneWithoutAttendeesInput;
     payments?: PaymentCreateNestedManyWithoutAttendeeInput;
   };
 
@@ -12206,7 +14472,7 @@ export namespace Prisma {
     phoneNumber?: string | null;
     company?: string | null;
     jobTitle?: string | null;
-    role?: $Enums.Role;
+    roleId?: string | null;
     isActive?: boolean;
     createdAt?: Date | string;
     updatedAt?: Date | string;
@@ -12288,10 +14554,10 @@ export namespace Prisma {
     phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null;
     company?: NullableStringFieldUpdateOperationsInput | string | null;
     jobTitle?: NullableStringFieldUpdateOperationsInput | string | null;
-    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role;
     isActive?: BoolFieldUpdateOperationsInput | boolean;
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string;
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string;
+    role?: RoleUpdateOneWithoutAttendeesNestedInput;
     payments?: PaymentUpdateManyWithoutAttendeeNestedInput;
   };
 
@@ -12302,7 +14568,7 @@ export namespace Prisma {
     phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null;
     company?: NullableStringFieldUpdateOperationsInput | string | null;
     jobTitle?: NullableStringFieldUpdateOperationsInput | string | null;
-    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role;
+    roleId?: NullableStringFieldUpdateOperationsInput | string | null;
     isActive?: BoolFieldUpdateOperationsInput | boolean;
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string;
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string;
@@ -12384,10 +14650,10 @@ export namespace Prisma {
     phoneNumber?: string | null;
     company?: string | null;
     jobTitle?: string | null;
-    role?: $Enums.Role;
     isActive?: boolean;
     createdAt?: Date | string;
     updatedAt?: Date | string;
+    role?: RoleCreateNestedOneWithoutAttendeesInput;
     tickets?: TicketCreateNestedManyWithoutAttendeeInput;
   };
 
@@ -12398,7 +14664,7 @@ export namespace Prisma {
     phoneNumber?: string | null;
     company?: string | null;
     jobTitle?: string | null;
-    role?: $Enums.Role;
+    roleId?: string | null;
     isActive?: boolean;
     createdAt?: Date | string;
     updatedAt?: Date | string;
@@ -12483,10 +14749,10 @@ export namespace Prisma {
     phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null;
     company?: NullableStringFieldUpdateOperationsInput | string | null;
     jobTitle?: NullableStringFieldUpdateOperationsInput | string | null;
-    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role;
     isActive?: BoolFieldUpdateOperationsInput | boolean;
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string;
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string;
+    role?: RoleUpdateOneWithoutAttendeesNestedInput;
     tickets?: TicketUpdateManyWithoutAttendeeNestedInput;
   };
 
@@ -12497,7 +14763,7 @@ export namespace Prisma {
     phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null;
     company?: NullableStringFieldUpdateOperationsInput | string | null;
     jobTitle?: NullableStringFieldUpdateOperationsInput | string | null;
-    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role;
+    roleId?: NullableStringFieldUpdateOperationsInput | string | null;
     isActive?: BoolFieldUpdateOperationsInput | boolean;
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string;
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string;
@@ -12532,12 +14798,112 @@ export namespace Prisma {
     >;
   };
 
+  export type AdminCreateManyRoleInput = {
+    id?: string;
+    fullName: string;
+    email: string;
+    password: string;
+    isActive?: boolean;
+    invitedById?: string | null;
+    createdAt?: Date | string;
+    updatedAt?: Date | string;
+  };
+
+  export type AttendeeCreateManyRoleInput = {
+    id?: string;
+    email: string;
+    fullName: string;
+    phoneNumber?: string | null;
+    company?: string | null;
+    jobTitle?: string | null;
+    isActive?: boolean;
+    createdAt?: Date | string;
+    updatedAt?: Date | string;
+  };
+
+  export type AdminUpdateWithoutRoleInput = {
+    id?: StringFieldUpdateOperationsInput | string;
+    fullName?: StringFieldUpdateOperationsInput | string;
+    email?: StringFieldUpdateOperationsInput | string;
+    password?: StringFieldUpdateOperationsInput | string;
+    isActive?: BoolFieldUpdateOperationsInput | boolean;
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string;
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string;
+    inviter?: AdminUpdateOneWithoutInvitedAdminsNestedInput;
+    invitedAdmins?: AdminUpdateManyWithoutInviterNestedInput;
+    passwordResetTokens?: PasswordResetTokenUpdateManyWithoutAdminNestedInput;
+  };
+
+  export type AdminUncheckedUpdateWithoutRoleInput = {
+    id?: StringFieldUpdateOperationsInput | string;
+    fullName?: StringFieldUpdateOperationsInput | string;
+    email?: StringFieldUpdateOperationsInput | string;
+    password?: StringFieldUpdateOperationsInput | string;
+    isActive?: BoolFieldUpdateOperationsInput | boolean;
+    invitedById?: NullableStringFieldUpdateOperationsInput | string | null;
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string;
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string;
+    invitedAdmins?: AdminUncheckedUpdateManyWithoutInviterNestedInput;
+    passwordResetTokens?: PasswordResetTokenUncheckedUpdateManyWithoutAdminNestedInput;
+  };
+
+  export type AdminUncheckedUpdateManyWithoutRoleInput = {
+    id?: StringFieldUpdateOperationsInput | string;
+    fullName?: StringFieldUpdateOperationsInput | string;
+    email?: StringFieldUpdateOperationsInput | string;
+    password?: StringFieldUpdateOperationsInput | string;
+    isActive?: BoolFieldUpdateOperationsInput | boolean;
+    invitedById?: NullableStringFieldUpdateOperationsInput | string | null;
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string;
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string;
+  };
+
+  export type AttendeeUpdateWithoutRoleInput = {
+    id?: StringFieldUpdateOperationsInput | string;
+    email?: StringFieldUpdateOperationsInput | string;
+    fullName?: StringFieldUpdateOperationsInput | string;
+    phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null;
+    company?: NullableStringFieldUpdateOperationsInput | string | null;
+    jobTitle?: NullableStringFieldUpdateOperationsInput | string | null;
+    isActive?: BoolFieldUpdateOperationsInput | boolean;
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string;
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string;
+    payments?: PaymentUpdateManyWithoutAttendeeNestedInput;
+    tickets?: TicketUpdateManyWithoutAttendeeNestedInput;
+  };
+
+  export type AttendeeUncheckedUpdateWithoutRoleInput = {
+    id?: StringFieldUpdateOperationsInput | string;
+    email?: StringFieldUpdateOperationsInput | string;
+    fullName?: StringFieldUpdateOperationsInput | string;
+    phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null;
+    company?: NullableStringFieldUpdateOperationsInput | string | null;
+    jobTitle?: NullableStringFieldUpdateOperationsInput | string | null;
+    isActive?: BoolFieldUpdateOperationsInput | boolean;
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string;
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string;
+    payments?: PaymentUncheckedUpdateManyWithoutAttendeeNestedInput;
+    tickets?: TicketUncheckedUpdateManyWithoutAttendeeNestedInput;
+  };
+
+  export type AttendeeUncheckedUpdateManyWithoutRoleInput = {
+    id?: StringFieldUpdateOperationsInput | string;
+    email?: StringFieldUpdateOperationsInput | string;
+    fullName?: StringFieldUpdateOperationsInput | string;
+    phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null;
+    company?: NullableStringFieldUpdateOperationsInput | string | null;
+    jobTitle?: NullableStringFieldUpdateOperationsInput | string | null;
+    isActive?: BoolFieldUpdateOperationsInput | boolean;
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string;
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string;
+  };
+
   export type AdminCreateManyInviterInput = {
     id?: string;
     fullName: string;
     email: string;
     password: string;
-    role?: $Enums.Role;
+    roleId: string;
     isActive?: boolean;
     createdAt?: Date | string;
     updatedAt?: Date | string;
@@ -12556,10 +14922,10 @@ export namespace Prisma {
     fullName?: StringFieldUpdateOperationsInput | string;
     email?: StringFieldUpdateOperationsInput | string;
     password?: StringFieldUpdateOperationsInput | string;
-    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role;
     isActive?: BoolFieldUpdateOperationsInput | boolean;
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string;
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string;
+    role?: RoleUpdateOneRequiredWithoutAdminsNestedInput;
     invitedAdmins?: AdminUpdateManyWithoutInviterNestedInput;
     passwordResetTokens?: PasswordResetTokenUpdateManyWithoutAdminNestedInput;
   };
@@ -12569,7 +14935,7 @@ export namespace Prisma {
     fullName?: StringFieldUpdateOperationsInput | string;
     email?: StringFieldUpdateOperationsInput | string;
     password?: StringFieldUpdateOperationsInput | string;
-    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role;
+    roleId?: StringFieldUpdateOperationsInput | string;
     isActive?: BoolFieldUpdateOperationsInput | boolean;
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string;
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string;
@@ -12582,7 +14948,7 @@ export namespace Prisma {
     fullName?: StringFieldUpdateOperationsInput | string;
     email?: StringFieldUpdateOperationsInput | string;
     password?: StringFieldUpdateOperationsInput | string;
-    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role;
+    roleId?: StringFieldUpdateOperationsInput | string;
     isActive?: BoolFieldUpdateOperationsInput | boolean;
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string;
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string;

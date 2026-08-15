@@ -116,12 +116,22 @@ exports.Prisma.TransactionIsolationLevel = makeStrictEnum({
   Serializable: 'Serializable',
 });
 
+exports.Prisma.RoleScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  description: 'description',
+  permissions: 'permissions',
+  isActive: 'isActive',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+};
+
 exports.Prisma.AdminScalarFieldEnum = {
   id: 'id',
   fullName: 'fullName',
   email: 'email',
   password: 'password',
-  role: 'role',
+  roleId: 'roleId',
   isActive: 'isActive',
   invitedById: 'invitedById',
   createdAt: 'createdAt',
@@ -144,7 +154,7 @@ exports.Prisma.AttendeeScalarFieldEnum = {
   phoneNumber: 'phoneNumber',
   company: 'company',
   jobTitle: 'jobTitle',
-  role: 'role',
+  roleId: 'roleId',
   isActive: 'isActive',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
@@ -207,12 +217,6 @@ exports.Prisma.JsonNullValueFilter = {
   JsonNull: Prisma.JsonNull,
   AnyNull: Prisma.AnyNull,
 };
-exports.Role = exports.$Enums.Role = {
-  ADMIN: 'ADMIN',
-  SUPER_ADMIN: 'SUPER_ADMIN',
-  ATTENDEE: 'ATTENDEE',
-};
-
 exports.TicketStatus = exports.$Enums.TicketStatus = {
   ACTIVE: 'ACTIVE',
   USED: 'USED',
@@ -229,6 +233,7 @@ exports.PaymentStatus = exports.$Enums.PaymentStatus = {
 };
 
 exports.Prisma.ModelName = {
+  Role: 'Role',
   Admin: 'Admin',
   PasswordResetToken: 'PasswordResetToken',
   Attendee: 'Attendee',

@@ -5,13 +5,14 @@ import {
   NotFoundException,
   ForbiddenException,
   BadRequestException,
+  Inject,
+  Logger,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { ConfigService } from '@nestjs/config';
+import { ConfigService, ConfigType } from '@nestjs/config';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { hashSync, genSaltSync, compareSync } from 'bcrypt';
-import * as crypto from 'crypto';
-import { CreateAdminDto } from './dto/create-admin.dto';
+import * as nodeCrypto from 'crypto';
 import { LoginAdminDto } from './dto/login-admin.dto';
 import { InviteAdminDto } from './dto/invite-admin.dto';
 import { AdminQueryDto } from './dto/admin-query.dto';
@@ -20,67 +21,39 @@ import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import {
-  IAdmin,
-  ILoginResponse,
   IJwtPayload,
   IAdminResponse,
-  IDashboardStats,
   IUpdateProfileResponse,
 } from './interfaces/admin.interface';
 import { MailService } from '../mail/mail.service';
 import { AdminCreateAttendeeDto } from './dto/create-attendee.dto';
 import { PaymentsService } from '../payment/payment.service';
+import JWTConfig from 'src/config/jwt.config';
+import { type PERMISSION_ID } from 'src/common/constants/permissions';
+
+type AuthTokens = {
+  accessToken: string;
+  refreshToken: string;
+};
 
 @Injectable()
 export class AdminService {
+  private readonly logger = new Logger(AdminService.name);
+
   constructor(
     private readonly configService: ConfigService,
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
     private readonly mailService: MailService,
     private readonly paymentsService: PaymentsService,
+    @Inject(JWTConfig.KEY)
+    private jwtConfig: ConfigType<typeof JWTConfig>,
   ) {}
 
-  async signup(signupDto: CreateAdminDto): Promise<ILoginResponse> {
-    const { fullName, email, password } = signupDto;
-
-    const existingAdmin = await this.prisma.admin.findUnique({
-      where: { email },
-    });
-
-    if (existingAdmin) {
-      throw new ConflictException('Admin with this email already exists');
-    }
-
-    const salt = genSaltSync(10);
-    const hashedPassword = hashSync(password, salt);
-
-    const admin = await this.prisma.admin.create({
-      data: {
-        fullName,
-        email,
-        password: hashedPassword,
-        role: signupDto.role ?? 'ADMIN',
-      },
-    });
-
-    const tokens = await this.generateTokens({
-      sub: admin.id,
-      email: admin.email,
-      role: admin.role,
-    });
-
-    return {
-      admin: this.excludePassword(admin),
-      ...tokens,
-    };
-  }
-
-  async login(loginDto: LoginAdminDto): Promise<ILoginResponse> {
-    const { email, password } = loginDto;
-
+  async login(payload: LoginAdminDto) {
     const admin = await this.prisma.admin.findUnique({
-      where: { email },
+      where: { email: payload.email.toLowerCase() },
+      include: { role: true },
     });
 
     if (!admin) {
@@ -93,19 +66,33 @@ export class AdminService {
       );
     }
 
-    const isPasswordValid = compareSync(password, admin.password);
+    if (!admin.role) {
+      throw new UnauthorizedException(
+        'Your account has no assigned role. Please contact a super admin.',
+      );
+    }
+
+    const isPasswordValid = compareSync(payload.password, admin.password);
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const tokens = await this.generateTokens({
+    const tokens = this.generateAuthTokens({
       sub: admin.id,
       email: admin.email,
-      role: admin.role,
+      role: {
+        name: admin.role.name,
+        permissions: admin.role.permissions as PERMISSION_ID[],
+      },
     });
 
     return {
-      admin: this.excludePassword(admin),
+      admin: {
+        id: admin.id,
+        fullName: admin.fullName,
+        email: admin.email.toLowerCase(),
+        role: admin.role.name,
+      },
       ...tokens,
     };
   }
@@ -115,23 +102,28 @@ export class AdminService {
   ): Promise<{ accessToken: string; refreshToken: string }> {
     try {
       const payload = this.jwtService.verify(refreshToken, {
-        secret: process.env.JWT_REFRESH_SECRET,
+        secret: this.jwtConfig.refreshSecret,
       });
 
       const admin = await this.prisma.admin.findUnique({
         where: { id: payload.sub },
+        include: { role: true },
       });
 
-      if (!admin || !admin.isActive) {
+      if (!admin || !admin.isActive || !admin.role) {
         throw new UnauthorizedException('Invalid refresh token');
       }
 
-      return this.generateTokens({
+      return this.generateAuthTokens({
         sub: admin.id,
         email: admin.email,
-        role: admin.role,
+        role: {
+          name: admin.role.name,
+          permissions: admin.role.permissions as PERMISSION_ID[],
+        },
       });
-    } catch {
+    } catch (error) {
+      this.logger.error(error);
       throw new UnauthorizedException('Invalid refresh token');
     }
   }
@@ -141,25 +133,29 @@ export class AdminService {
   ): Promise<{ message: string }> {
     const { email } = forgotPasswordDto;
 
+    // Always return the same generic message to prevent email enumeration
+    const genericResponse = {
+      message:
+        'If that email address is registered, you will receive a password reset link shortly.',
+    };
+
     const admin = await this.prisma.admin.findUnique({
       where: { email: email.toLowerCase() },
     });
 
     if (!admin || !admin.isActive) {
-      return {
-        message:
-          'If that email address is registered, you will receive a password reset link shortly.',
-      };
+      return genericResponse;
     }
 
-    const rawToken = crypto.randomBytes(32).toString('hex');
-    const hashedToken = crypto
+    const rawToken = nodeCrypto.randomBytes(32).toString('hex');
+    const hashedToken = nodeCrypto
       .createHash('sha256')
       .update(rawToken)
       .digest('hex');
 
-    const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
 
+    // Invalidate any existing reset tokens before creating a new one
     await this.prisma.passwordResetToken.deleteMany({
       where: { adminId: admin.id },
     });
@@ -173,7 +169,6 @@ export class AdminService {
     });
 
     const frontendUrl = this.configService.get<string>('app.frontendUrl');
-
     const resetLink = `${frontendUrl}/admin/reset-password?token=${rawToken}`;
 
     await this.mailService.sendPasswordResetEmail(
@@ -182,10 +177,7 @@ export class AdminService {
       resetLink,
     );
 
-    return {
-      message:
-        'If that email address is registered, you will receive a password reset link shortly.',
-    };
+    return genericResponse;
   }
 
   async resetPassword(
@@ -193,7 +185,10 @@ export class AdminService {
   ): Promise<{ message: string }> {
     const { token, newPassword } = resetPasswordDto;
 
-    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+    const hashedToken = nodeCrypto
+      .createHash('sha256')
+      .update(token)
+      .digest('hex');
 
     const resetTokenRecord = await this.prisma.passwordResetToken.findUnique({
       where: { token: hashedToken },
@@ -205,7 +200,9 @@ export class AdminService {
     }
 
     if (resetTokenRecord.usedAt) {
-      throw new BadRequestException('Invalid password reset token.');
+      throw new BadRequestException(
+        'This reset link has already been used. Please request a new one.',
+      );
     }
 
     if (resetTokenRecord.expiresAt < new Date()) {
@@ -226,6 +223,7 @@ export class AdminService {
     const salt = genSaltSync(10);
     const hashedPassword = hashSync(newPassword, salt);
 
+    // Atomically update the password and mark the token as used
     await this.prisma.$transaction([
       this.prisma.admin.update({
         where: { id: resetTokenRecord.adminId },
@@ -273,10 +271,7 @@ export class AdminService {
 
     await this.prisma.admin.update({
       where: { id: adminId },
-      data: {
-        password: hashedNewPassword,
-        isActive: true,
-      },
+      data: { password: hashedNewPassword },
     });
 
     return { message: 'Password changed successfully' };
@@ -290,15 +285,16 @@ export class AdminService {
 
     const admin = await this.prisma.admin.findUnique({
       where: { id: adminId },
+      include: { role: true },
     });
 
     if (!admin) {
       throw new NotFoundException('Admin not found');
     }
 
-    if (email && email !== admin.email) {
+    if (email && email.toLowerCase() !== admin.email) {
       const emailTaken = await this.prisma.admin.findUnique({
-        where: { email },
+        where: { email: email.toLowerCase() },
       });
       if (emailTaken) {
         throw new ConflictException(
@@ -309,14 +305,22 @@ export class AdminService {
 
     const updateData: Partial<{ fullName: string; email: string }> = {};
     if (fullName) updateData.fullName = fullName;
-    if (email) updateData.email = email;
+    if (email) updateData.email = email.toLowerCase();
 
     const updatedAdmin = await this.prisma.admin.update({
       where: { id: adminId },
       data: updateData,
+      include: { role: true },
     });
 
-    return this.excludePassword(updatedAdmin);
+    return {
+      id: updatedAdmin.id,
+      fullName: updatedAdmin.fullName,
+      email: updatedAdmin.email,
+      role: updatedAdmin.role?.name ?? '',
+      isActive: updatedAdmin.isActive,
+      updatedAt: updatedAdmin.updatedAt,
+    };
   }
 
   async inviteAdmin(inviteDto: InviteAdminDto, invitedBy: string) {}
@@ -327,27 +331,20 @@ export class AdminService {
     adminId: string,
     deactivatedBy: string,
   ): Promise<{ message: string }> {
-    if (!deactivatedBy) {
-      throw new UnauthorizedException('Invalid authentication token');
-    }
-
-    const deactivator = await this.prisma.admin.findUnique({
-      where: { id: deactivatedBy },
-    });
-
-    if (!deactivator || deactivator.role !== 'SUPER_ADMIN') {
-      throw new ForbiddenException('Only SUPER_ADMIN can deactivate admins');
-    }
-
     if (adminId === deactivatedBy) {
-      throw new ForbiddenException('Cannot deactivate yourself');
+      throw new ForbiddenException('You cannot deactivate your own account');
     }
 
     const target = await this.prisma.admin.findUnique({
       where: { id: adminId },
     });
+
     if (!target) {
       throw new NotFoundException('Admin not found');
+    }
+
+    if (!target.isActive) {
+      throw new BadRequestException('Admin account is already deactivated');
     }
 
     await this.prisma.admin.update({
@@ -371,8 +368,9 @@ export class AdminService {
       ];
     }
 
+    // Filter by role name via the relation
     if (role) {
-      where.role = role;
+      where.role = { name: role };
     }
 
     if (typeof isActive === 'boolean') {
@@ -389,7 +387,7 @@ export class AdminService {
           id: true,
           fullName: true,
           email: true,
-          role: true,
+          role: { select: { name: true, permissions: true } },
           isActive: true,
           invitedById: true,
           createdAt: true,
@@ -413,18 +411,24 @@ export class AdminService {
   async findOne(id: string): Promise<IAdminResponse> {
     const admin = await this.prisma.admin.findUnique({
       where: { id },
+      include: { role: true },
     });
 
     if (!admin) {
       throw new NotFoundException('Admin not found');
     }
 
-    return this.excludePassword(admin);
+    const { password, ...adminWithoutPassword } = admin;
+    return {
+      ...adminWithoutPassword,
+      role: admin.role?.name ?? '',
+    } as IAdminResponse;
   }
 
   async findByEmail(email: string) {
     return await this.prisma.admin.findUnique({
-      where: { email },
+      where: { email: email.toLowerCase() },
+      include: { role: true },
     });
   }
 
@@ -433,6 +437,7 @@ export class AdminService {
     return await this.prisma.admin.update({
       where: { id },
       data: { isActive },
+      include: { role: true },
     });
   }
 
@@ -441,41 +446,19 @@ export class AdminService {
     await this.prisma.admin.delete({ where: { id } });
   }
 
-  private async generateTokens(
-    payload: IJwtPayload,
-  ): Promise<{ accessToken: string; refreshToken: string }> {
-    const accessToken = await this.jwtService.sign(payload);
+  private generateAuthTokens(payload: IJwtPayload): AuthTokens {
+    const accessToken = this.jwtService.sign(payload, {
+      expiresIn: this.jwtConfig.expiresIn,
+      secret: this.jwtConfig.accessSecret,
+      algorithm: 'HS256',
+    });
 
-    const refreshSecret =
-      await this.configService.get<string>('jwt.refreshSecret');
-    const refreshExpiresIn =
-      this.configService.get<string>('jwt.refreshExpiresIn') ?? '7d';
-
-    if (!refreshSecret) {
-      throw new Error('JWT refresh secret is not configured');
-    }
-
-    const refreshToken = await this.jwtService.sign(payload, {
-      secret: refreshSecret,
-      expiresIn: refreshExpiresIn as `${number}`,
+    const refreshToken = this.jwtService.sign(payload, {
+      secret: this.jwtConfig.refreshSecret,
+      expiresIn: this.jwtConfig.refreshExpiresIn,
+      algorithm: 'HS256',
     });
 
     return { accessToken, refreshToken };
-  }
-
-  private excludePassword(admin: any) {
-    const { password, ...adminWithoutPassword } = admin;
-    return adminWithoutPassword;
-  }
-
-  private groupBy(array: any[], key: string) {
-    return array.reduce((groups, item) => {
-      const group = item[key] || 'Not specified';
-      if (!groups[group]) {
-        groups[group] = 0;
-      }
-      groups[group]++;
-      return groups;
-    }, {});
   }
 }

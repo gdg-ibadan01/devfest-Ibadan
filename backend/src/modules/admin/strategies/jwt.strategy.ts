@@ -15,23 +15,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
       secretOrKey: configService.get<string>('jwt.accessSecret')!,
+      algorithms: ['HS256'],
     });
   }
 
-  async validate(payload: IJwtPayload) {
-    const admin = await this.prisma.admin.findUnique({
-      where: { id: payload.sub },
-    });
-
-    if (!admin || !admin.isActive) {
-      throw new UnauthorizedException('Invalid token or inactive account');
-    }
-
-    // Return the shape that req.user will have throughout the app
-    return {
-      sub: admin.id,
-      email: admin.email,
-      role: admin.role, // Role enum: 'ADMIN' | 'SUPER_ADMIN'
-    };
+  validate(payload: IJwtPayload) {
+    return payload;
   }
 }

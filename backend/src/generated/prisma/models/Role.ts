@@ -29,6 +29,8 @@ export type RoleMinAggregateOutputType = {
   name: string | null;
   description: string | null;
   isActive: boolean | null;
+  createdAt: Date | null;
+  updatedAt: Date | null;
 };
 
 export type RoleMaxAggregateOutputType = {
@@ -36,6 +38,8 @@ export type RoleMaxAggregateOutputType = {
   name: string | null;
   description: string | null;
   isActive: boolean | null;
+  createdAt: Date | null;
+  updatedAt: Date | null;
 };
 
 export type RoleCountAggregateOutputType = {
@@ -44,6 +48,8 @@ export type RoleCountAggregateOutputType = {
   description: number;
   permissions: number;
   isActive: number;
+  createdAt: number;
+  updatedAt: number;
   _all: number;
 };
 
@@ -52,6 +58,8 @@ export type RoleMinAggregateInputType = {
   name?: true;
   description?: true;
   isActive?: true;
+  createdAt?: true;
+  updatedAt?: true;
 };
 
 export type RoleMaxAggregateInputType = {
@@ -59,6 +67,8 @@ export type RoleMaxAggregateInputType = {
   name?: true;
   description?: true;
   isActive?: true;
+  createdAt?: true;
+  updatedAt?: true;
 };
 
 export type RoleCountAggregateInputType = {
@@ -67,12 +77,14 @@ export type RoleCountAggregateInputType = {
   description?: true;
   permissions?: true;
   isActive?: true;
+  createdAt?: true;
+  updatedAt?: true;
   _all?: true;
 };
 
 export type RoleAggregateArgs<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   /**
    * Filter which Role to aggregate.
@@ -84,7 +96,8 @@ export type RoleAggregateArgs<
    * Determine the order of Roles to fetch.
    */
   orderBy?:
-    Prisma.RoleOrderByWithRelationInput | Prisma.RoleOrderByWithRelationInput[];
+    | Prisma.RoleOrderByWithRelationInput
+    | Prisma.RoleOrderByWithRelationInput[];
   /**
    * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
    *
@@ -132,8 +145,8 @@ export type GetRoleAggregateType<T extends RoleAggregateArgs> = {
 };
 
 export type RoleGroupByArgs<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   where?: Prisma.RoleWhereInput;
   orderBy?:
@@ -154,6 +167,8 @@ export type RoleGroupByOutputType = {
   description: string;
   permissions: string[];
   isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
   _count: RoleCountAggregateOutputType | null;
   _min: RoleMinAggregateOutputType | null;
   _max: RoleMaxAggregateOutputType | null;
@@ -181,6 +196,8 @@ export type RoleWhereInput = {
   description?: Prisma.StringFilter<'Role'> | string;
   permissions?: Prisma.StringNullableListFilter<'Role'>;
   isActive?: Prisma.BoolFilter<'Role'> | boolean;
+  createdAt?: Prisma.DateTimeFilter<'Role'> | Date | string;
+  updatedAt?: Prisma.DateTimeFilter<'Role'> | Date | string;
   admins?: Prisma.AdminListRelationFilter;
 };
 
@@ -190,6 +207,8 @@ export type RoleOrderByWithRelationInput = {
   description?: Prisma.SortOrder;
   permissions?: Prisma.SortOrder;
   isActive?: Prisma.SortOrder;
+  createdAt?: Prisma.SortOrder;
+  updatedAt?: Prisma.SortOrder;
   admins?: Prisma.AdminOrderByRelationAggregateInput;
 };
 
@@ -203,6 +222,8 @@ export type RoleWhereUniqueInput = Prisma.AtLeast<
     description?: Prisma.StringFilter<'Role'> | string;
     permissions?: Prisma.StringNullableListFilter<'Role'>;
     isActive?: Prisma.BoolFilter<'Role'> | boolean;
+    createdAt?: Prisma.DateTimeFilter<'Role'> | Date | string;
+    updatedAt?: Prisma.DateTimeFilter<'Role'> | Date | string;
     admins?: Prisma.AdminListRelationFilter;
   },
   'id' | 'name'
@@ -214,6 +235,8 @@ export type RoleOrderByWithAggregationInput = {
   description?: Prisma.SortOrder;
   permissions?: Prisma.SortOrder;
   isActive?: Prisma.SortOrder;
+  createdAt?: Prisma.SortOrder;
+  updatedAt?: Prisma.SortOrder;
   _count?: Prisma.RoleCountOrderByAggregateInput;
   _max?: Prisma.RoleMaxOrderByAggregateInput;
   _min?: Prisma.RoleMinOrderByAggregateInput;
@@ -232,6 +255,8 @@ export type RoleScalarWhereWithAggregatesInput = {
   description?: Prisma.StringWithAggregatesFilter<'Role'> | string;
   permissions?: Prisma.StringNullableListFilter<'Role'>;
   isActive?: Prisma.BoolWithAggregatesFilter<'Role'> | boolean;
+  createdAt?: Prisma.DateTimeWithAggregatesFilter<'Role'> | Date | string;
+  updatedAt?: Prisma.DateTimeWithAggregatesFilter<'Role'> | Date | string;
 };
 
 export type RoleCreateInput = {
@@ -240,6 +265,8 @@ export type RoleCreateInput = {
   description: string;
   permissions?: Prisma.RoleCreatepermissionsInput | string[];
   isActive?: boolean;
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
   admins?: Prisma.AdminCreateNestedManyWithoutRoleInput;
 };
 
@@ -249,6 +276,8 @@ export type RoleUncheckedCreateInput = {
   description: string;
   permissions?: Prisma.RoleCreatepermissionsInput | string[];
   isActive?: boolean;
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
   admins?: Prisma.AdminUncheckedCreateNestedManyWithoutRoleInput;
 };
 
@@ -258,6 +287,8 @@ export type RoleUpdateInput = {
   description?: Prisma.StringFieldUpdateOperationsInput | string;
   permissions?: Prisma.RoleUpdatepermissionsInput | string[];
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean;
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   admins?: Prisma.AdminUpdateManyWithoutRoleNestedInput;
 };
 
@@ -267,6 +298,8 @@ export type RoleUncheckedUpdateInput = {
   description?: Prisma.StringFieldUpdateOperationsInput | string;
   permissions?: Prisma.RoleUpdatepermissionsInput | string[];
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean;
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   admins?: Prisma.AdminUncheckedUpdateManyWithoutRoleNestedInput;
 };
 
@@ -276,6 +309,8 @@ export type RoleCreateManyInput = {
   description: string;
   permissions?: Prisma.RoleCreatepermissionsInput | string[];
   isActive?: boolean;
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
 };
 
 export type RoleUpdateManyMutationInput = {
@@ -284,6 +319,8 @@ export type RoleUpdateManyMutationInput = {
   description?: Prisma.StringFieldUpdateOperationsInput | string;
   permissions?: Prisma.RoleUpdatepermissionsInput | string[];
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean;
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
 };
 
 export type RoleUncheckedUpdateManyInput = {
@@ -292,6 +329,8 @@ export type RoleUncheckedUpdateManyInput = {
   description?: Prisma.StringFieldUpdateOperationsInput | string;
   permissions?: Prisma.RoleUpdatepermissionsInput | string[];
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean;
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
 };
 
 export type StringNullableListFilter<$PrismaModel = never> = {
@@ -308,6 +347,8 @@ export type RoleCountOrderByAggregateInput = {
   description?: Prisma.SortOrder;
   permissions?: Prisma.SortOrder;
   isActive?: Prisma.SortOrder;
+  createdAt?: Prisma.SortOrder;
+  updatedAt?: Prisma.SortOrder;
 };
 
 export type RoleMaxOrderByAggregateInput = {
@@ -315,6 +356,8 @@ export type RoleMaxOrderByAggregateInput = {
   name?: Prisma.SortOrder;
   description?: Prisma.SortOrder;
   isActive?: Prisma.SortOrder;
+  createdAt?: Prisma.SortOrder;
+  updatedAt?: Prisma.SortOrder;
 };
 
 export type RoleMinOrderByAggregateInput = {
@@ -322,6 +365,8 @@ export type RoleMinOrderByAggregateInput = {
   name?: Prisma.SortOrder;
   description?: Prisma.SortOrder;
   isActive?: Prisma.SortOrder;
+  createdAt?: Prisma.SortOrder;
+  updatedAt?: Prisma.SortOrder;
 };
 
 export type RoleScalarRelationFilter = {
@@ -344,6 +389,10 @@ export type RoleUpdatepermissionsInput = {
 
 export type BoolFieldUpdateOperationsInput = {
   set?: boolean;
+};
+
+export type DateTimeFieldUpdateOperationsInput = {
+  set?: Date | string;
 };
 
 export type RoleCreateNestedOneWithoutAdminsInput = {
@@ -378,6 +427,8 @@ export type RoleCreateWithoutAdminsInput = {
   description: string;
   permissions?: Prisma.RoleCreatepermissionsInput | string[];
   isActive?: boolean;
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
 };
 
 export type RoleUncheckedCreateWithoutAdminsInput = {
@@ -386,6 +437,8 @@ export type RoleUncheckedCreateWithoutAdminsInput = {
   description: string;
   permissions?: Prisma.RoleCreatepermissionsInput | string[];
   isActive?: boolean;
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
 };
 
 export type RoleCreateOrConnectWithoutAdminsInput = {
@@ -422,6 +475,8 @@ export type RoleUpdateWithoutAdminsInput = {
   description?: Prisma.StringFieldUpdateOperationsInput | string;
   permissions?: Prisma.RoleUpdatepermissionsInput | string[];
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean;
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
 };
 
 export type RoleUncheckedUpdateWithoutAdminsInput = {
@@ -430,6 +485,8 @@ export type RoleUncheckedUpdateWithoutAdminsInput = {
   description?: Prisma.StringFieldUpdateOperationsInput | string;
   permissions?: Prisma.RoleUpdatepermissionsInput | string[];
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean;
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
 };
 
 /**
@@ -441,8 +498,8 @@ export type RoleCountOutputType = {
 };
 
 export type RoleCountOutputTypeSelect<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   admins?: boolean | RoleCountOutputTypeCountAdminsArgs;
 };
@@ -451,8 +508,8 @@ export type RoleCountOutputTypeSelect<
  * RoleCountOutputType without action
  */
 export type RoleCountOutputTypeDefaultArgs<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   /**
    * Select specific fields to fetch from the RoleCountOutputType
@@ -464,15 +521,15 @@ export type RoleCountOutputTypeDefaultArgs<
  * RoleCountOutputType without action
  */
 export type RoleCountOutputTypeCountAdminsArgs<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   where?: Prisma.AdminWhereInput;
 };
 
 export type RoleSelect<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = runtime.Types.Extensions.GetSelect<
   {
     id?: boolean;
@@ -480,6 +537,8 @@ export type RoleSelect<
     description?: boolean;
     permissions?: boolean;
     isActive?: boolean;
+    createdAt?: boolean;
+    updatedAt?: boolean;
     admins?: boolean | Prisma.Role$adminsArgs<ExtArgs>;
     _count?: boolean | Prisma.RoleCountOutputTypeDefaultArgs<ExtArgs>;
   },
@@ -487,8 +546,8 @@ export type RoleSelect<
 >;
 
 export type RoleSelectCreateManyAndReturn<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = runtime.Types.Extensions.GetSelect<
   {
     id?: boolean;
@@ -496,13 +555,15 @@ export type RoleSelectCreateManyAndReturn<
     description?: boolean;
     permissions?: boolean;
     isActive?: boolean;
+    createdAt?: boolean;
+    updatedAt?: boolean;
   },
   ExtArgs['result']['role']
 >;
 
 export type RoleSelectUpdateManyAndReturn<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = runtime.Types.Extensions.GetSelect<
   {
     id?: boolean;
@@ -510,6 +571,8 @@ export type RoleSelectUpdateManyAndReturn<
     description?: boolean;
     permissions?: boolean;
     isActive?: boolean;
+    createdAt?: boolean;
+    updatedAt?: boolean;
   },
   ExtArgs['result']['role']
 >;
@@ -520,34 +583,42 @@ export type RoleSelectScalar = {
   description?: boolean;
   permissions?: boolean;
   isActive?: boolean;
+  createdAt?: boolean;
+  updatedAt?: boolean;
 };
 
 export type RoleOmit<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = runtime.Types.Extensions.GetOmit<
-  'id' | 'name' | 'description' | 'permissions' | 'isActive',
+  | 'id'
+  | 'name'
+  | 'description'
+  | 'permissions'
+  | 'isActive'
+  | 'createdAt'
+  | 'updatedAt',
   ExtArgs['result']['role']
 >;
 export type RoleInclude<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   admins?: boolean | Prisma.Role$adminsArgs<ExtArgs>;
   _count?: boolean | Prisma.RoleCountOutputTypeDefaultArgs<ExtArgs>;
 };
 export type RoleIncludeCreateManyAndReturn<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {};
 export type RoleIncludeUpdateManyAndReturn<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {};
 
 export type $RolePayload<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   name: 'Role';
   objects: {
@@ -560,6 +631,8 @@ export type $RolePayload<
       description: string;
       permissions: string[];
       isActive: boolean;
+      createdAt: Date;
+      updatedAt: Date;
     },
     ExtArgs['result']['role']
   >;
@@ -571,15 +644,15 @@ export type RoleGetPayload<
 > = runtime.Types.Result.GetResult<Prisma.$RolePayload, S>;
 
 export type RoleCountArgs<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = Omit<RoleFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
   select?: RoleCountAggregateInputType | true;
 };
 
 export interface RoleDelegate<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
   GlobalOmitOptions = {},
 > {
   [K: symbol]: {
@@ -1031,9 +1104,9 @@ export interface RoleDelegate<
       Prisma.Extends<'skip', Prisma.Keys<T>>,
       Prisma.Extends<'take', Prisma.Keys<T>>
     >,
-    OrderByArg extends (Prisma.True extends HasSelectOrTake
+    OrderByArg extends Prisma.True extends HasSelectOrTake
       ? { orderBy: RoleGroupByArgs['orderBy'] }
-      : { orderBy?: RoleGroupByArgs['orderBy'] }),
+      : { orderBy?: RoleGroupByArgs['orderBy'] },
     OrderFields extends Prisma.ExcludeUnderscoreKeys<
       Prisma.Keys<Prisma.MaybeTupleToUnion<T['orderBy']>>
     >,
@@ -1041,8 +1114,8 @@ export interface RoleDelegate<
     ByValid extends Prisma.Has<ByFields, OrderFields>,
     HavingFields extends Prisma.GetHavingFields<T['having']>,
     HavingValid extends Prisma.Has<ByFields, HavingFields>,
-    ByEmpty extends (T['by'] extends never[] ? Prisma.True : Prisma.False),
-    InputErrors extends (ByEmpty extends Prisma.True
+    ByEmpty extends T['by'] extends never[] ? Prisma.True : Prisma.False,
+    InputErrors extends ByEmpty extends Prisma.True
       ? `Error: "by" must not be empty.`
       : HavingValid extends Prisma.False
         ? {
@@ -1083,7 +1156,7 @@ export interface RoleDelegate<
                   [P in OrderFields]: P extends ByFields
                     ? never
                     : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`;
-                }[OrderFields]),
+                }[OrderFields],
   >(
     args: Prisma.SubsetIntersection<T, RoleGroupByArgs, OrderByArg> &
       InputErrors,
@@ -1105,8 +1178,8 @@ export interface RoleDelegate<
 export interface Prisma__RoleClient<
   T,
   Null = never,
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
   GlobalOmitOptions = {},
 > extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: 'PrismaPromise';
@@ -1129,9 +1202,13 @@ export interface Prisma__RoleClient<
    */
   then<TResult1 = T, TResult2 = never>(
     onfulfilled?:
-      ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null,
+      | ((value: T) => TResult1 | PromiseLike<TResult1>)
+      | undefined
+      | null,
     onrejected?:
-      ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null,
+      | ((reason: any) => TResult2 | PromiseLike<TResult2>)
+      | undefined
+      | null,
   ): runtime.Types.Utils.JsPromise<TResult1 | TResult2>;
   /**
    * Attaches a callback for only the rejection of the Promise.
@@ -1140,7 +1217,9 @@ export interface Prisma__RoleClient<
    */
   catch<TResult = never>(
     onrejected?:
-      ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null,
+      | ((reason: any) => TResult | PromiseLike<TResult>)
+      | undefined
+      | null,
   ): runtime.Types.Utils.JsPromise<T | TResult>;
   /**
    * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
@@ -1162,6 +1241,8 @@ export interface RoleFieldRefs {
   readonly description: Prisma.FieldRef<'Role', 'String'>;
   readonly permissions: Prisma.FieldRef<'Role', 'String[]'>;
   readonly isActive: Prisma.FieldRef<'Role', 'Boolean'>;
+  readonly createdAt: Prisma.FieldRef<'Role', 'DateTime'>;
+  readonly updatedAt: Prisma.FieldRef<'Role', 'DateTime'>;
 }
 
 // Custom InputTypes
@@ -1169,8 +1250,8 @@ export interface RoleFieldRefs {
  * Role findUnique
  */
 export type RoleFindUniqueArgs<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   /**
    * Select specific fields to fetch from the Role
@@ -1194,8 +1275,8 @@ export type RoleFindUniqueArgs<
  * Role findUniqueOrThrow
  */
 export type RoleFindUniqueOrThrowArgs<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   /**
    * Select specific fields to fetch from the Role
@@ -1219,8 +1300,8 @@ export type RoleFindUniqueOrThrowArgs<
  * Role findFirst
  */
 export type RoleFindFirstArgs<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   /**
    * Select specific fields to fetch from the Role
@@ -1244,7 +1325,8 @@ export type RoleFindFirstArgs<
    * Determine the order of Roles to fetch.
    */
   orderBy?:
-    Prisma.RoleOrderByWithRelationInput | Prisma.RoleOrderByWithRelationInput[];
+    | Prisma.RoleOrderByWithRelationInput
+    | Prisma.RoleOrderByWithRelationInput[];
   /**
    * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
    *
@@ -1275,8 +1357,8 @@ export type RoleFindFirstArgs<
  * Role findFirstOrThrow
  */
 export type RoleFindFirstOrThrowArgs<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   /**
    * Select specific fields to fetch from the Role
@@ -1300,7 +1382,8 @@ export type RoleFindFirstOrThrowArgs<
    * Determine the order of Roles to fetch.
    */
   orderBy?:
-    Prisma.RoleOrderByWithRelationInput | Prisma.RoleOrderByWithRelationInput[];
+    | Prisma.RoleOrderByWithRelationInput
+    | Prisma.RoleOrderByWithRelationInput[];
   /**
    * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
    *
@@ -1331,8 +1414,8 @@ export type RoleFindFirstOrThrowArgs<
  * Role findMany
  */
 export type RoleFindManyArgs<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   /**
    * Select specific fields to fetch from the Role
@@ -1356,7 +1439,8 @@ export type RoleFindManyArgs<
    * Determine the order of Roles to fetch.
    */
   orderBy?:
-    Prisma.RoleOrderByWithRelationInput | Prisma.RoleOrderByWithRelationInput[];
+    | Prisma.RoleOrderByWithRelationInput
+    | Prisma.RoleOrderByWithRelationInput[];
   /**
    * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
    *
@@ -1387,8 +1471,8 @@ export type RoleFindManyArgs<
  * Role create
  */
 export type RoleCreateArgs<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   /**
    * Select specific fields to fetch from the Role
@@ -1412,8 +1496,8 @@ export type RoleCreateArgs<
  * Role createMany
  */
 export type RoleCreateManyArgs<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   /**
    * The data used to create many Roles.
@@ -1426,8 +1510,8 @@ export type RoleCreateManyArgs<
  * Role createManyAndReturn
  */
 export type RoleCreateManyAndReturnArgs<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   /**
    * Select specific fields to fetch from the Role
@@ -1448,8 +1532,8 @@ export type RoleCreateManyAndReturnArgs<
  * Role update
  */
 export type RoleUpdateArgs<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   /**
    * Select specific fields to fetch from the Role
@@ -1477,8 +1561,8 @@ export type RoleUpdateArgs<
  * Role updateMany
  */
 export type RoleUpdateManyArgs<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   /**
    * The data used to update Roles.
@@ -1501,8 +1585,8 @@ export type RoleUpdateManyArgs<
  * Role updateManyAndReturn
  */
 export type RoleUpdateManyAndReturnArgs<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   /**
    * Select specific fields to fetch from the Role
@@ -1533,8 +1617,8 @@ export type RoleUpdateManyAndReturnArgs<
  * Role upsert
  */
 export type RoleUpsertArgs<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   /**
    * Select specific fields to fetch from the Role
@@ -1566,8 +1650,8 @@ export type RoleUpsertArgs<
  * Role delete
  */
 export type RoleDeleteArgs<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   /**
    * Select specific fields to fetch from the Role
@@ -1591,8 +1675,8 @@ export type RoleDeleteArgs<
  * Role deleteMany
  */
 export type RoleDeleteManyArgs<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   /**
    * Filter which Roles to delete
@@ -1608,8 +1692,8 @@ export type RoleDeleteManyArgs<
  * Role.admins
  */
 export type Role$adminsArgs<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   /**
    * Select specific fields to fetch from the Admin
@@ -1637,8 +1721,8 @@ export type Role$adminsArgs<
  * Role without action
  */
 export type RoleDefaultArgs<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   /**
    * Select specific fields to fetch from the Role

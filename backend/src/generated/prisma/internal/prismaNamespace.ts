@@ -323,8 +323,9 @@ type NoExpand<T> = T extends unknown ? T : never;
 // this type assumes the passed object is entirely optional
 export type AtLeast<O extends object, K extends string> = NoExpand<
   O extends unknown
-    ? | (K extends keyof O ? { [P in K]: O[P] } & O : O)
-      | ({ [P in keyof O as P extends K ? P : never]-?: O[P] } & O)
+    ?
+        | (K extends keyof O ? { [P in K]: O[P] } & O : O)
+        | ({ [P in keyof O as P extends K ? P : never]-?: O[P] } & O)
     : never
 >;
 
@@ -433,17 +434,17 @@ export const ModelName = {
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName];
 
-export interface TypeMapCb<GlobalOmitOptions = {}> extends runtime.Types.Utils
-  .Fn<
-  { extArgs: runtime.Types.Extensions.InternalArgs },
-  runtime.Types.Utils.Record<string, any>
-> {
+export interface TypeMapCb<GlobalOmitOptions = {}>
+  extends runtime.Types.Utils.Fn<
+    { extArgs: runtime.Types.Extensions.InternalArgs },
+    runtime.Types.Utils.Record<string, any>
+  > {
   returns: TypeMap<this['params']['extArgs'], GlobalOmitOptions>;
 }
 
 export type TypeMap<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
   GlobalOmitOptions = {},
 > = {
   globalOmitOptions: {
@@ -651,6 +652,8 @@ export const RoleScalarFieldEnum = {
   description: 'description',
   permissions: 'permissions',
   isActive: 'isActive',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
 } as const;
 
 export type RoleScalarFieldEnum =
@@ -863,7 +866,8 @@ export interface PrismaClientBaseOptions {
  *
  * Learn more: https://pris.ly/d/accelerate
  */
-export interface PrismaClientOptionsWithAccelerateUrl extends PrismaClientBaseOptions {
+export interface PrismaClientOptionsWithAccelerateUrl
+  extends PrismaClientBaseOptions {
   /**
    * The Prisma Accelerate connection URL. Use this option to connect to your database through Prisma Accelerate instead of using a driver adapter to connect directly.
    *
@@ -878,7 +882,8 @@ export interface PrismaClientOptionsWithAccelerateUrl extends PrismaClientBaseOp
  *
  * Learn more: https://pris.ly/d/driver-adapters
  */
-export interface PrismaClientOptionsWithAdapter extends PrismaClientBaseOptions {
+export interface PrismaClientOptionsWithAdapter
+  extends PrismaClientBaseOptions {
   /**
    * A driver adapter that PrismaClient uses to connect to your database, such as the ones provided by `@prisma/adapter-pg`, `@prisma/adapter-libsql`, `@prisma/adapter-planetscale`, etc.
    *
@@ -907,7 +912,8 @@ export interface PrismaClientOptionsWithAdapter extends PrismaClientBaseOptions 
  * Learn more about driver adapters: https://pris.ly/d/driver-adapters
  */
 export type PrismaClientOptions =
-  PrismaClientOptionsWithAccelerateUrl | PrismaClientOptionsWithAdapter;
+  | PrismaClientOptionsWithAccelerateUrl
+  | PrismaClientOptionsWithAdapter;
 export type GlobalOmitConfig = {
   role?: Prisma.RoleOmit;
   admin?: Prisma.AdminOmit;

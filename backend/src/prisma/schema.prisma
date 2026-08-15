@@ -8,11 +8,18 @@ datasource db {
   provider = "postgresql"
 }
 
+model Role {
+  id          String   @id @default(uuid(7))
+  name        String   @unique
+  description String
+  permissions String[]
+  isActive    Boolean  @default(true)
+  admins      Admin[]
+  attendees   Attendee[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt @default(now())
 
-enum Role {
-  ADMIN
-  SUPER_ADMIN
-  ATTENDEE
+  @@map("roles")
 }
 
 // enum EventStatus {
@@ -50,7 +57,8 @@ model Admin {
   fullName            String
   email               String               @unique
   password            String
-  role                Role                 @default(ADMIN)
+  roleId              String
+  role                Role                 @relation(fields: [roleId], references: [id])
   isActive            Boolean              @default(true)
   invitedById         String?
   inviter             Admin?               @relation("AdminInvitations", fields: [invitedById], references: [id])
@@ -84,7 +92,8 @@ model Attendee {
   phoneNumber   String?
   company       String?
   jobTitle      String?
-  role          Role           @default(ATTENDEE)
+  roleId        String?
+  role          Role?          @relation(fields: [roleId], references: [id])
   isActive      Boolean        @default(true)
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt

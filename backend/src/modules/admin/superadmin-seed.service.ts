@@ -3,7 +3,6 @@ import { ConfigType } from '@nestjs/config';
 import { PrismaService } from 'src/prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import superadminConfig from 'src/config/superadmin.config';
-import { PERMISSIONS } from 'src/common/constants/permissions';
 
 @Injectable()
 export class SuperadminSeedService implements OnModuleInit {
@@ -30,9 +29,28 @@ export class SuperadminSeedService implements OnModuleInit {
       return;
     }
 
+    // Check if a SUPER_ADMIN role exists
+    let superAdminRole = await this.prisma.role.findUnique({
+      where: { name: 'SUPER_ADMIN' },
+    });
+
+    // If not, create it
+    if (!superAdminRole) {
+      superAdminRole = await this.prisma.role.create({
+        data: {
+          name: 'SUPER_ADMIN',
+          description: 'Super Administrator with full system access',
+          permissions: [],
+          isActive: true,
+        },
+      });
+      this.logger.log('Created SUPER_ADMIN role.');
+    }
+
+    // Check if a super admin already exists
     const existing = await this.prisma.admin.findFirst({
       where: {
-        role: 'SUPER_ADMIN',
+        role: { name: 'SUPER_ADMIN' },
       },
     });
 
@@ -49,7 +67,9 @@ export class SuperadminSeedService implements OnModuleInit {
         email,
         password: hashed,
         fullName: 'Super Admin',
-        role: 'SUPER_ADMIN',
+        role: {
+          connect: { id: superAdminRole.id },
+        },
       },
     });
 

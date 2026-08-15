@@ -99,8 +99,8 @@ export type AdminCountAggregateInputType = {
 };
 
 export type AdminAggregateArgs<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   /**
    * Filter which Admin to aggregate.
@@ -161,8 +161,8 @@ export type GetAdminAggregateType<T extends AdminAggregateArgs> = {
 };
 
 export type AdminGroupByArgs<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   where?: Prisma.AdminWhereInput;
   orderBy?:
@@ -295,7 +295,9 @@ export type AdminScalarWhereWithAggregatesInput = {
   roleId?: Prisma.StringWithAggregatesFilter<'Admin'> | string;
   isActive?: Prisma.BoolWithAggregatesFilter<'Admin'> | boolean;
   invitedById?:
-    Prisma.StringNullableWithAggregatesFilter<'Admin'> | string | null;
+    | Prisma.StringNullableWithAggregatesFilter<'Admin'>
+    | string
+    | null;
   createdAt?: Prisma.DateTimeWithAggregatesFilter<'Admin'> | Date | string;
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<'Admin'> | Date | string;
 };
@@ -560,10 +562,6 @@ export type AdminUncheckedCreateNestedManyWithoutInvitedByInput = {
     | Prisma.AdminCreateOrConnectWithoutInvitedByInput[];
   createMany?: Prisma.AdminCreateManyInvitedByInputEnvelope;
   connect?: Prisma.AdminWhereUniqueInput | Prisma.AdminWhereUniqueInput[];
-};
-
-export type DateTimeFieldUpdateOperationsInput = {
-  set?: Date | string;
 };
 
 export type AdminUpdateOneWithoutAdminsNestedInput = {
@@ -969,8 +967,8 @@ export type AdminCountOutputType = {
 };
 
 export type AdminCountOutputTypeSelect<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   admins?: boolean | AdminCountOutputTypeCountAdminsArgs;
 };
@@ -979,8 +977,8 @@ export type AdminCountOutputTypeSelect<
  * AdminCountOutputType without action
  */
 export type AdminCountOutputTypeDefaultArgs<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   /**
    * Select specific fields to fetch from the AdminCountOutputType
@@ -992,15 +990,15 @@ export type AdminCountOutputTypeDefaultArgs<
  * AdminCountOutputType without action
  */
 export type AdminCountOutputTypeCountAdminsArgs<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   where?: Prisma.AdminWhereInput;
 };
 
 export type AdminSelect<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = runtime.Types.Extensions.GetSelect<
   {
     id?: boolean;
@@ -1021,8 +1019,8 @@ export type AdminSelect<
 >;
 
 export type AdminSelectCreateManyAndReturn<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = runtime.Types.Extensions.GetSelect<
   {
     id?: boolean;
@@ -1041,8 +1039,8 @@ export type AdminSelectCreateManyAndReturn<
 >;
 
 export type AdminSelectUpdateManyAndReturn<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = runtime.Types.Extensions.GetSelect<
   {
     id?: boolean;
@@ -1073,8 +1071,8 @@ export type AdminSelectScalar = {
 };
 
 export type AdminOmit<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = runtime.Types.Extensions.GetOmit<
   | 'id'
   | 'fullName'
@@ -1088,8 +1086,8 @@ export type AdminOmit<
   ExtArgs['result']['admin']
 >;
 export type AdminInclude<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   role?: boolean | Prisma.RoleDefaultArgs<ExtArgs>;
   invitedBy?: boolean | Prisma.Admin$invitedByArgs<ExtArgs>;
@@ -1097,23 +1095,23 @@ export type AdminInclude<
   _count?: boolean | Prisma.AdminCountOutputTypeDefaultArgs<ExtArgs>;
 };
 export type AdminIncludeCreateManyAndReturn<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   role?: boolean | Prisma.RoleDefaultArgs<ExtArgs>;
   invitedBy?: boolean | Prisma.Admin$invitedByArgs<ExtArgs>;
 };
 export type AdminIncludeUpdateManyAndReturn<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   role?: boolean | Prisma.RoleDefaultArgs<ExtArgs>;
   invitedBy?: boolean | Prisma.Admin$invitedByArgs<ExtArgs>;
 };
 
 export type $AdminPayload<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   name: 'Admin';
   objects: {
@@ -1143,15 +1141,15 @@ export type AdminGetPayload<
 > = runtime.Types.Result.GetResult<Prisma.$AdminPayload, S>;
 
 export type AdminCountArgs<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = Omit<AdminFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
   select?: AdminCountAggregateInputType | true;
 };
 
 export interface AdminDelegate<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
   GlobalOmitOptions = {},
 > {
   [K: symbol]: {
@@ -1603,9 +1601,9 @@ export interface AdminDelegate<
       Prisma.Extends<'skip', Prisma.Keys<T>>,
       Prisma.Extends<'take', Prisma.Keys<T>>
     >,
-    OrderByArg extends (Prisma.True extends HasSelectOrTake
+    OrderByArg extends Prisma.True extends HasSelectOrTake
       ? { orderBy: AdminGroupByArgs['orderBy'] }
-      : { orderBy?: AdminGroupByArgs['orderBy'] }),
+      : { orderBy?: AdminGroupByArgs['orderBy'] },
     OrderFields extends Prisma.ExcludeUnderscoreKeys<
       Prisma.Keys<Prisma.MaybeTupleToUnion<T['orderBy']>>
     >,
@@ -1613,8 +1611,8 @@ export interface AdminDelegate<
     ByValid extends Prisma.Has<ByFields, OrderFields>,
     HavingFields extends Prisma.GetHavingFields<T['having']>,
     HavingValid extends Prisma.Has<ByFields, HavingFields>,
-    ByEmpty extends (T['by'] extends never[] ? Prisma.True : Prisma.False),
-    InputErrors extends (ByEmpty extends Prisma.True
+    ByEmpty extends T['by'] extends never[] ? Prisma.True : Prisma.False,
+    InputErrors extends ByEmpty extends Prisma.True
       ? `Error: "by" must not be empty.`
       : HavingValid extends Prisma.False
         ? {
@@ -1655,7 +1653,7 @@ export interface AdminDelegate<
                   [P in OrderFields]: P extends ByFields
                     ? never
                     : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`;
-                }[OrderFields]),
+                }[OrderFields],
   >(
     args: Prisma.SubsetIntersection<T, AdminGroupByArgs, OrderByArg> &
       InputErrors,
@@ -1677,8 +1675,8 @@ export interface AdminDelegate<
 export interface Prisma__AdminClient<
   T,
   Null = never,
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
   GlobalOmitOptions = {},
 > extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: 'PrismaPromise';
@@ -1728,9 +1726,13 @@ export interface Prisma__AdminClient<
    */
   then<TResult1 = T, TResult2 = never>(
     onfulfilled?:
-      ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null,
+      | ((value: T) => TResult1 | PromiseLike<TResult1>)
+      | undefined
+      | null,
     onrejected?:
-      ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null,
+      | ((reason: any) => TResult2 | PromiseLike<TResult2>)
+      | undefined
+      | null,
   ): runtime.Types.Utils.JsPromise<TResult1 | TResult2>;
   /**
    * Attaches a callback for only the rejection of the Promise.
@@ -1739,7 +1741,9 @@ export interface Prisma__AdminClient<
    */
   catch<TResult = never>(
     onrejected?:
-      ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null,
+      | ((reason: any) => TResult | PromiseLike<TResult>)
+      | undefined
+      | null,
   ): runtime.Types.Utils.JsPromise<T | TResult>;
   /**
    * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
@@ -1772,8 +1776,8 @@ export interface AdminFieldRefs {
  * Admin findUnique
  */
 export type AdminFindUniqueArgs<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   /**
    * Select specific fields to fetch from the Admin
@@ -1797,8 +1801,8 @@ export type AdminFindUniqueArgs<
  * Admin findUniqueOrThrow
  */
 export type AdminFindUniqueOrThrowArgs<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   /**
    * Select specific fields to fetch from the Admin
@@ -1822,8 +1826,8 @@ export type AdminFindUniqueOrThrowArgs<
  * Admin findFirst
  */
 export type AdminFindFirstArgs<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   /**
    * Select specific fields to fetch from the Admin
@@ -1879,8 +1883,8 @@ export type AdminFindFirstArgs<
  * Admin findFirstOrThrow
  */
 export type AdminFindFirstOrThrowArgs<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   /**
    * Select specific fields to fetch from the Admin
@@ -1936,8 +1940,8 @@ export type AdminFindFirstOrThrowArgs<
  * Admin findMany
  */
 export type AdminFindManyArgs<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   /**
    * Select specific fields to fetch from the Admin
@@ -1993,8 +1997,8 @@ export type AdminFindManyArgs<
  * Admin create
  */
 export type AdminCreateArgs<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   /**
    * Select specific fields to fetch from the Admin
@@ -2018,8 +2022,8 @@ export type AdminCreateArgs<
  * Admin createMany
  */
 export type AdminCreateManyArgs<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   /**
    * The data used to create many Admins.
@@ -2032,8 +2036,8 @@ export type AdminCreateManyArgs<
  * Admin createManyAndReturn
  */
 export type AdminCreateManyAndReturnArgs<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   /**
    * Select specific fields to fetch from the Admin
@@ -2058,8 +2062,8 @@ export type AdminCreateManyAndReturnArgs<
  * Admin update
  */
 export type AdminUpdateArgs<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   /**
    * Select specific fields to fetch from the Admin
@@ -2087,8 +2091,8 @@ export type AdminUpdateArgs<
  * Admin updateMany
  */
 export type AdminUpdateManyArgs<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   /**
    * The data used to update Admins.
@@ -2111,8 +2115,8 @@ export type AdminUpdateManyArgs<
  * Admin updateManyAndReturn
  */
 export type AdminUpdateManyAndReturnArgs<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   /**
    * Select specific fields to fetch from the Admin
@@ -2147,8 +2151,8 @@ export type AdminUpdateManyAndReturnArgs<
  * Admin upsert
  */
 export type AdminUpsertArgs<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   /**
    * Select specific fields to fetch from the Admin
@@ -2180,8 +2184,8 @@ export type AdminUpsertArgs<
  * Admin delete
  */
 export type AdminDeleteArgs<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   /**
    * Select specific fields to fetch from the Admin
@@ -2205,8 +2209,8 @@ export type AdminDeleteArgs<
  * Admin deleteMany
  */
 export type AdminDeleteManyArgs<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   /**
    * Filter which Admins to delete
@@ -2222,8 +2226,8 @@ export type AdminDeleteManyArgs<
  * Admin.invitedBy
  */
 export type Admin$invitedByArgs<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   /**
    * Select specific fields to fetch from the Admin
@@ -2244,8 +2248,8 @@ export type Admin$invitedByArgs<
  * Admin.admins
  */
 export type Admin$adminsArgs<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   /**
    * Select specific fields to fetch from the Admin
@@ -2273,8 +2277,8 @@ export type Admin$adminsArgs<
  * Admin without action
  */
 export type AdminDefaultArgs<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   /**
    * Select specific fields to fetch from the Admin

@@ -1,3 +1,5 @@
+import { type PERMISSION_ID } from 'src/common/constants/permissions';
+
 export interface IAdmin {
   id: string;
   fullName: string;
@@ -18,16 +20,13 @@ export interface IAdminResponse {
   updatedAt: Date;
 }
 
-export interface ILoginResponse {
-  admin: IAdminResponse;
-  accessToken: string;
-  refreshToken: string;
-}
-
 export interface IJwtPayload {
   sub: string;
   email: string;
-  role: string;
+  role: {
+    name: string;
+    permissions: PERMISSION_ID[];
+  };
   iat?: number;
   exp?: number;
 }

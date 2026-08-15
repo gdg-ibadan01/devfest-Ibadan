@@ -19,6 +19,7 @@ import {
   ApiOperation,
   ApiResponse,
   ApiBearerAuth,
+  ApiOkResponse,
 } from '@nestjs/swagger';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { Role } from '../../common/enums/role.enum';
@@ -37,41 +38,40 @@ import { AdminCreateAttendeeDto } from './dto/create-attendee.dto';
 import { RolesGuard } from './guards/roles.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import {
-  ILoginResponse,
   IAdminResponse,
   IUpdateProfileResponse,
 } from './interfaces/admin.interface';
+import { LoginResponseDto } from './dto/login-response.dto';
 
 @ApiTags('Admin')
 @Controller('admin')
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
-  @Post('signup')
-  @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ summary: 'Register a super admin account' })
-  @ApiResponse({
-    status: 201,
-    description: 'Super admin created successfully.',
-  })
-  @ApiResponse({ status: 409, description: 'Email already exists.' })
-  async signup(@Body() signupDto: CreateAdminDto): Promise<ILoginResponse> {
-    return this.adminService.signup(signupDto);
-  }
+  // @Post('signup')
+  // @ApiOperation({ summary: 'Register a super admin account' })
+  // @ApiResponse({
+  //   status: 201,
+  //   description: 'Super admin created successfully.',
+  // })
+  // @ApiResponse({
+  //   status: 409,
+  //   description: 'Email already exists.',
+  // })
+  // async signup(@Body() signupDto: CreateAdminDto) {
+  //   return this.adminService.signup(signupDto);
+  // }
 
   @Post('login')
+  @ApiOperation({ summary: 'Login as an admin' })
+  @ApiResponse({ status: 401, description: 'Invalid credentials.' })
+  @ApiOkResponse({
+    description: 'Login successful',
+    type: LoginResponseDto,
+  })
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Admin login — returns access & refresh tokens' })
-  @ApiResponse({
-    status: 200,
-    description: 'Login successful. Returns admin profile and JWT tokens.',
-  })
-  @ApiResponse({
-    status: 401,
-    description: 'Invalid credentials or account deactivated.',
-  })
-  async login(@Body() loginDto: LoginAdminDto): Promise<ILoginResponse> {
-    return this.adminService.login(loginDto);
+  async login(@Body() payload: LoginAdminDto) {
+    return this.adminService.login(payload);
   }
 
   @Post('refresh')
