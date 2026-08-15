@@ -1,6 +1,6 @@
 'use client';
 
-import { X, ArrowRight } from 'lucide-react';
+import { ArrowRight, XCircle } from 'lucide-react';
 import type { RoleRecord } from '../_types/role.types';
 
 interface RoleDetailModalProps {
@@ -26,23 +26,23 @@ export default function RoleDetailModal({
       <div className="flex-1 bg-black/40" onClick={onClose} aria-hidden />
 
       {/* Panel */}
-      <div className="w-[480px] max-w-full h-screen bg-white flex flex-col shadow-2xl">
+      <div className="fixed right-[10px] top-[10px] bottom-[10px] w-[480px] bg-white shadow-2xl z-50 flex flex-col overflow-hidden rounded-[12px] h-[calc(100vh-20px)]">
         {/* Header */}
-        <div className="flex items-center justify-between px-8 py-6 border-b border-gray-100 flex-shrink-0">
+        <div className="flex items-center justify-between px-[32px] py-[24px] bg-[#FAFAFA] border-b border-gray-100 flex-shrink-0">
           <h2 className="text-[18px] font-bold text-gray-900">
             Role &amp; Permission
           </h2>
           <button
             type="button"
             onClick={onClose}
-            className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-50 transition-colors"
+            className="flex items-center justify-center text-gray-500 hover:bg-gray-50 transition-colors"
           >
-            <X size={16} />
+            <XCircle size={25} color="#0D121C" />
           </button>
         </div>
 
         {/* Body */}
-        <div className="flex-1 overflow-y-auto px-8 py-6">
+        <div className="flex-1 overflow-y-auto px-[30px] py-6">
           {/* Role name heading */}
           <h3 className="text-[22px] font-bold text-gray-900 mb-5">
             {role.name}

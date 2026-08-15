@@ -20,3 +20,10 @@ export interface RoleFormData {
   description: string;
   permissions: string[];
 }
+
+export interface InviteFormData {
+  role: string;
+  fullName: string;
+  email: string;
+  permissions: string[];
+}

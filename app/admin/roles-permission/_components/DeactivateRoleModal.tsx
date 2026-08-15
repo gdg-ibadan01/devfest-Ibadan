@@ -17,10 +17,14 @@ export default function DeactivateRoleModal({
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} aria-hidden />
-      <div className="relative bg-white rounded-2xl w-[400px] px-8 py-8 flex flex-col items-center gap-4 shadow-xl z-10">
-        <div className="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center">
-          <Trash2 size={24} className="text-red-500" strokeWidth={1.8} />
+      <div
+        className="absolute inset-0 bg-black/40"
+        onClick={onClose}
+        aria-hidden
+      />
+      <div className="relative bg-white rounded-2xl w-[400px] p-[24px] flex flex-col items-center gap-4 shadow-xl z-10">
+        <div className="w-[40px] h-[40px] rounded-[8px] bg-[#FBEEF0] flex items-center justify-center">
+          <Trash2 size={24} className="text-[#EF2641]" strokeWidth={1.8} />
         </div>
         <div className="text-center">
           <h2 className="text-[18px] font-bold text-gray-900 mb-1">
@@ -34,7 +38,7 @@ export default function DeactivateRoleModal({
           <button
             type="button"
             onClick={onConfirm}
-            className="w-full py-3 rounded-xl bg-red-500 text-white text-[14px] font-semibold hover:bg-red-600 transition-colors"
+            className="w-full py-3 rounded-xl bg-[#E61530] text-white text-[14px] font-medium hover:bg-red-600 transition-colors"
           >
             Deactivate Role
           </button>

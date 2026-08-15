@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, ArrowRight } from 'lucide-react';
+import { ArrowRight, XCircle } from 'lucide-react';
 import { cn } from '@/app/_module/lib/utils';
 import type { RoleFormData } from '../_types/role.types';
 
@@ -24,9 +24,7 @@ const EMPTY_FORM: RoleFormData = {
   permissions: [],
 };
 
-/* ------------------------------------------------------------------ */
-/* Checkbox                                                             */
-/* ------------------------------------------------------------------ */
+
 function PermissionCheckbox({
   label,
   checked,
@@ -40,11 +38,11 @@ function PermissionCheckbox({
     <button
       type="button"
       onClick={onChange}
-      className="flex items-center gap-2 text-left"
+      className="flex items-center gap-2 text-left border border-[#D1D1D1] rounded-lg px-[10px] py-[8px]"
     >
       <span
         className={cn(
-          'w-[18px] h-[18px] rounded-[3px] border flex items-center justify-center flex-shrink-0 transition-colors',
+          'w-[16px] h-[16px] rounded-[3px] border flex items-center justify-center flex-shrink-0 transition-colors',
           checked
             ? 'bg-gray-900 border-gray-900'
             : 'border-gray-300 bg-white hover:border-gray-500'
@@ -67,9 +65,7 @@ function PermissionCheckbox({
   );
 }
 
-/* ------------------------------------------------------------------ */
-/* Modal                                                                */
-/* ------------------------------------------------------------------ */
+
 interface RoleFormModalProps {
   open: boolean;
   mode: 'add' | 'edit';
@@ -115,23 +111,23 @@ export default function RoleFormModal({
       <div className="flex-1 bg-black/40" onClick={handleClose} aria-hidden />
 
       {/* Panel */}
-      <div className="w-[480px] max-w-full h-screen bg-white flex flex-col shadow-2xl">
+      <div className="fixed right-[10px] top-[10px] bottom-[10px] w-[480px] bg-white shadow-2xl z-50 flex flex-col overflow-hidden rounded-[12px] h-[calc(100vh-20px)]">
         {/* Header */}
-        <div className="flex items-center justify-between px-8 py-6 border-b border-gray-100 flex-shrink-0">
+        <div className="flex items-center justify-between px-[32px] py-[24px] bg-[#FAFAFA] border-b border-gray-100 flex-shrink-0">
           <h2 className="text-[18px] font-bold text-gray-900">
             {mode === 'add' ? 'Add New Role' : 'Edit Role'}
           </h2>
           <button
             type="button"
             onClick={handleClose}
-            className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-50 transition-colors"
+            className="flex items-center justify-center text-gray-500 hover:bg-gray-50 transition-colors"
           >
-            <X size={16} />
+            <XCircle size={25} />
           </button>
         </div>
 
         {/* Body */}
-        <div className="flex-1 overflow-y-auto px-8 py-6 space-y-6">
+        <div className="flex-1 overflow-y-auto px-[30px] py-6 space-y-6">
           {/* Role Name */}
           <div>
             <p className="text-[13px] font-medium text-gray-800 mb-2">
@@ -142,15 +138,14 @@ export default function RoleFormModal({
               value={form.name}
               onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
               placeholder="Input Role Name"
-              className="w-full border-0 border-b border-gray-200 py-2 text-[13px] text-gray-800 placeholder:text-gray-300 focus:outline-none focus:border-gray-500 transition-colors bg-transparent"
+              className="w-full border border-[#E6E6E6] rounded-[8px] p-[12px] text-[13px] text-gray-800 placeholder:text-gray-300 focus:outline-none focus:border-gray-500 transition-colors bg-transparent"
             />
           </div>
 
           {/* Role Description */}
           <div>
             <p className="text-[13px] font-medium text-gray-800 mb-2">
-              Role Description{' '}
-              <span className="text-red-500">*</span>
+              Role Description <span className="text-red-500">*</span>
             </p>
             <textarea
               value={form.description}
@@ -168,7 +163,7 @@ export default function RoleFormModal({
             <p className="text-[13px] font-medium text-gray-800 mb-4">
               Select Permissions
             </p>
-            <div className="flex flex-col divide-y divide-gray-100">
+            <div className="flex flex-col">
               {PERMISSION_GROUPS.map((group, gi) => (
                 <div key={gi} className="flex flex-wrap gap-x-6 gap-y-3 py-3">
                   {group.map((perm) => (
