@@ -4,9 +4,14 @@ import {
   Controller,
   InternalServerErrorException,
   Post,
+  Get,
   UseGuards,
 } from '@nestjs/common';
-import { CreateRoleDto, CreateRoleResponseDto } from './dto/role.dto';
+import {
+  CreateRoleDto,
+  CreateRoleResponseDto,
+  ListPermissionsResponse,
+} from './dto/role.dto';
 import { RolesService } from './roles.service';
 import {
   ApiBearerAuth,
@@ -43,5 +48,15 @@ export class RolesController {
           throw new InternalServerErrorException('Unable to create role');
       }
     }
+  }
+
+  @Get('permissions')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @ApiResponse({
+    type: ListPermissionsResponse,
+  })
+  list() {
+    return this.roleService.listPermissions();
   }
 }
