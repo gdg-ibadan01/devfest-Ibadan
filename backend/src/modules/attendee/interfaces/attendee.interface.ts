@@ -1,4 +1,4 @@
-import { Role } from '@prisma/client';
+import { IPaystackResponse } from '../../payment/interfaces/payment.interface';
 
 export interface IAttendee {
   id: string;
@@ -7,16 +7,16 @@ export interface IAttendee {
   phoneNumber?: string | null;
   company?: string | null;
   jobTitle?: string | null;
-  role: Role;
+  amount?: number;
+  role: 'ATTENDEE' | 'ADMIN';
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
 
 export interface ICreateAttendee {
-  email: string;
-  fullName: string;
-  phoneNumber?: string | null; // allow null
-  company?: string | null;
-  jobTitle?: string | null;
+  attendee: IAttendee;
+  payment?: IPaystackResponse;
+  paymentUrl?: string;
+  message?: string;
 }

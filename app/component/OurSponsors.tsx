@@ -3,20 +3,15 @@ import { ArrowUpRight } from 'lucide-react';
 import Link from 'next/link';
 import Image, { StaticImageData } from 'next/image';
 import oneapp from '@/public/1appnewlogo.8e95dfd0.png';
-import turing from '@/public/turing.png';
-import altschool from '@/public/altschool-africa-logo-4365C6B160-seeklogo.com.png';
-import cardify from '@/public/Cardify-Africa-Logo-Black-544-by-180.png';
+import agentPesa from '@/public/agentpesa_logo.png';
+import etionary from '@/public/etionary-logo-.png';
+import foodbolt from '@/public/foodbolt.jpeg';
 import codemagic from '@/public/codemagic.svg';
-import digitalocean from '@/public/digitalocean-2.svg';
 import google from '@/public/Google_Icons-09-512.webp';
-import youverify from '@/public/logo_iffgzd.svg';
-import heyfood from '@/public/logo-long.svg';
-import ship from '@/public/shiip.png';
-import halal from '@/public/SuegFTtO_400x400.jpg';
 import ton from '@/public/TONSociety.png';
 import github from '@/public/White2.png';
 import lorry from '@/public/lorry.jpg';
-// import interswitch from '@/public/interswitch.jpg';
+import notzero from '@/public/notzero.jpeg';
 import interswitch from '@/public/inter-switch.png';
 import { Button } from '../_module/components/ui/button';
 import { cn } from '../_module/lib/utils';
@@ -55,7 +50,7 @@ const OurSponsors = () => {
               </p>
             </div>
             <Link
-              href="https://drive.google.com/file/d/11f8zdyoxljJ4TYRcHBDMfYtLqFkQDl_0/view"
+              href="https://wa.me/2348136023230?text=I'm%20ready%20to%20power%20the%20future%20of%20tech%20at%20DevFest%20Ibadan%202025.%20I%20would%20like%20to%20inquire%20about%20sponsorship%20opportunities%21%20Let's%20connect%20to%20build%20something%20great."
               target="_blank"
             >
               <Button className="text-sm md:text-xl rounded-[100px] bg-black text-white hover:bg-core-blue hover:border border-solid border-black px-20 md:px-52 py-4 md:py-10 flex items-center">
@@ -75,28 +70,23 @@ const OurSponsors = () => {
               divClassName="bg-white p-5 md:p-10 border-[1px] border-[#f0f0f0] rounded-2xl h-[100px] md:h-[200px]"
             />
             <SponsorImage
-              imageSrc={ton}
-              alt="Ton Society"
+              imageSrc={notzero}
+              alt="Codemagic"
               divClassName="bg-white p-5 md:p-10 border-[1px] border-[#f0f0f0] rounded-2xl h-[100px] md:h-[200px]"
             />
             <SponsorImage
-              imageSrc={interswitch}
-              alt="Interswitch"
+              imageSrc={agentPesa}
+              alt="Codemagic"
               divClassName="bg-white p-5 md:p-10 border-[1px] border-[#f0f0f0] rounded-2xl h-[100px] md:h-[200px]"
             />
             <SponsorImage
-              imageSrc={github}
-              alt="Github Campus"
+              imageSrc={foodbolt}
+              alt="Codemagic"
               divClassName="bg-white p-5 md:p-10 border-[1px] border-[#f0f0f0] rounded-2xl h-[100px] md:h-[200px]"
             />
             <SponsorImage
-              imageSrc={lorry}
-              alt="Lorry Project"
-              divClassName="bg-white p-5 md:p-10 border-[1px] border-[#f0f0f0] rounded-2xl h-[100px] md:h-[200px]"
-            />
-            <SponsorImage
-              imageSrc={oneapp}
-              alt="OneApp"
+              imageSrc={etionary}
+              alt="Codemagic"
               divClassName="bg-white p-5 md:p-10 border-[1px] border-[#f0f0f0] rounded-2xl h-[100px] md:h-[200px]"
             />
           </div>
@@ -108,43 +98,28 @@ const OurSponsors = () => {
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-24 overflow-hidden">
               <SponsorImage
-                imageSrc={turing}
-                alt="Turing"
+                imageSrc={ton}
+                alt="Ton Society"
                 divClassName="bg-white p-5 md:p-10 border-[1px] border-[#f0f0f0] rounded-2xl h-[100px] md:h-[200px]"
               />
               <SponsorImage
-                imageSrc={altschool}
-                alt="AltSchool"
+                imageSrc={interswitch}
+                alt="Interswitch"
                 divClassName="bg-white p-5 md:p-10 border-[1px] border-[#f0f0f0] rounded-2xl h-[100px] md:h-[200px]"
               />
               <SponsorImage
-                imageSrc={cardify}
-                alt="Cardify"
+                imageSrc={github}
+                alt="Github Campus"
                 divClassName="bg-white p-5 md:p-10 border-[1px] border-[#f0f0f0] rounded-2xl h-[100px] md:h-[200px]"
               />
               <SponsorImage
-                imageSrc={digitalocean}
-                alt="DigitalOcean"
+                imageSrc={lorry}
+                alt="Lorry Project"
                 divClassName="bg-white p-5 md:p-10 border-[1px] border-[#f0f0f0] rounded-2xl h-[100px] md:h-[200px]"
               />
               <SponsorImage
-                imageSrc={youverify}
-                alt="YouVerify"
-                divClassName="bg-white p-5 md:p-10 border-[1px] border-[#f0f0f0] rounded-2xl h-[100px] md:h-[200px]"
-              />
-              <SponsorImage
-                imageSrc={heyfood}
-                alt="Heyfood"
-                divClassName="bg-white p-5 md:p-10 border-[1px] border-[#f0f0f0] rounded-2xl h-[100px] md:h-[200px]"
-              />
-              <SponsorImage
-                imageSrc={ship}
-                alt="Ship"
-                divClassName="bg-white p-5 md:p-10 border-[1px] border-[#f0f0f0] rounded-2xl h-[100px] md:h-[200px]"
-              />
-              <SponsorImage
-                imageSrc={halal}
-                alt="Halal"
+                imageSrc={oneapp}
+                alt="OneApp"
                 divClassName="bg-white p-5 md:p-10 border-[1px] border-[#f0f0f0] rounded-2xl h-[100px] md:h-[200px]"
               />
             </div>

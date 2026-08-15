@@ -1,7 +1,7 @@
 export const agendaClass = {
   container: 'bg-white min-h-[100vh] pb-[100px]',
-  main: 'pt-[160px] px-7 md:px-[70px] lg:px-[100px] flex flex-col gap-[85px]',
-  header: 'flex flex-col items-center justify-center mb-[65px]',
+  main: 'container mx-auto pt-[160px] flex flex-col font-sans',
+  header: 'flex flex-col items-center justify-center mb-[54px]',
   headerSection: 'w-full lg:w-[60%]',
   headerSectionHeading: 'font-bold text-[32px] md:text-[52px] leading-[1.5]',
   headerSectionParagraph: 'text-md md:text-2xl text-opacity-70 font-thin',
@@ -9,14 +9,16 @@ export const agendaClass = {
     'bg-white border border-black text-black rounded-[100px] px-[70px] py-[35px] hover:text-white',
   speakersListWrapper:
     'grid grid-cols-1 gap-9 md:grid-cols-2 lg:grid-cols-3 mt-10',
-  headerHeading: 'text-[38px] lg:text-[52px] font-bold mb-[24px] text-center',
+  headerHeading:
+    'text-[24px] lg:text-[52px] font-medium lg:mb-[24px] mb-[23px] text-center text-[#1E1E1E]',
   dateContainer:
-    'flex items-center justify-center gap-[29px] max-w-[500px] mx-auto mb-[17px]',
-  date: 'font-bold text-[20px] lg:text-[24px]',
-  headerText: 'text-[20px] lg:text-[24px] font-bold text-center',
-  inspirationText: 'text-[accordionButton2]',
-  innovationText: 'text-[accordionButton1]',
-  connectionText: 'text-[accordionButton4]',
+    'flex items-center justify-center md:gap-[29px] gap-[16px] max-w-[500px] max-auto px-[10px] mb-[17px]',
+  date: 'font-medium text-[#1E1E1E] md:text-[20px] text-[16px] lg:text-[24px]',
+  headerText:
+    'text-[20px] lg:text-[24px] font-medium text-[#1E1E1E] w-[330px] md:w-full text-center',
+  inspirationText: 'text-[20px] lg:text-[24px] font-medium text-[#4285F4]',
+  innovationText: 'text-[20px] lg:text-[24px] font-medium text-[#FF7DAF]',
+  connectionText: 'text-[20px] lg:text-[24px] font-medium text-[#5CDB6D]',
   accordionItem: 'px-[10px] lg:px-[38px] border-y border-x-2 border-[#1E1E1E]',
   accordionContentContainer: 'mb-[30px] flex flex-col gap-[35px]',
   accordionTrigger:

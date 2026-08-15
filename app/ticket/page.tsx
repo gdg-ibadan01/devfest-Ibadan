@@ -3,21 +3,16 @@ import { useState } from 'react';
 import CheckOut from './components/CheckOut';
 import Summary from './components/Summary';
 import { AnimatePresence, motion } from 'framer-motion';
-import TicketComp from './components/TicketComp';
 import useMediaQueryWatcher from '../_module/config/hooks/useMediaQueryWatcher';
 
 export default function Ticket() {
   const isTablet = useMediaQueryWatcher('(min-width: 1024px)');
-  const [selectedPackage, setSelectedPackage] = useState({
-    key: '',
-    day: '',
-    activityType: '',
-    price: 0,
-  });
   const [view, setView] = useState('checkout');
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
+    phoneNumber: '',
+    jobTitle: '',
   });
 
   const renderFn = () => {
@@ -25,22 +20,16 @@ export default function Ticket() {
       case 'checkout':
         return (
           <CheckOut
-            selectedPackage={selectedPackage}
-            setSelectedPackage={setSelectedPackage}
             formData={formData}
             setFormData={setFormData}
             setView={setView}
           />
         );
       case 'summary':
-        return <Summary setView={setView} selectedPackage={selectedPackage} />;
-      case 'success':
-        return <TicketComp selectedPackage={selectedPackage} />;
+        return <Summary setView={setView} formData={formData} />;
       default:
         return (
           <CheckOut
-            selectedPackage={selectedPackage}
-            setSelectedPackage={setSelectedPackage}
             formData={formData}
             setFormData={setFormData}
             setView={setView}

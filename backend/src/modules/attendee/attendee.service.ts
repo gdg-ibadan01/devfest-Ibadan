@@ -3,186 +3,108 @@ import {
   NotFoundException,
   ConflictException,
 } from '@nestjs/common';
-import { PrismaService } from '../database/prisma.service';
+import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateAttendeeDto } from './dto/create-attendee.dto';
-import { RegisterEventDto } from './dto/register-event.dto';
 import { IAttendee, ICreateAttendee } from './interfaces/attendee.interface';
-
+import { MailService } from '../mail/mail.service';
+import { PaymentsService } from '../payment/payment.service';
 @Injectable()
 export class AttendeeService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private mailService: MailService,
+    private readonly paymentsService: PaymentsService,
+  ) {}
 
-  async create(createAttendeeDto: CreateAttendeeDto): Promise<ICreateAttendee> {
-    // Check if attendee already exists
-    const existingAttendee = await this.prisma.attendee.findUnique({
-      where: { email: createAttendeeDto.email },
-    });
+  async create(createAttendeeDto: CreateAttendeeDto) {}
 
-    if (existingAttendee) {
-      throw new ConflictException('Attendee with this email already exists');
-    }
+  async findAll(page: number = 1, limit: number = 10) {}
 
-    return await this.prisma.attendee.create({
-      data: createAttendeeDto,
-    });
-  }
+  async findOne(id: string) {}
 
-  async findAll(page: number = 1, limit: number = 10) {
-    const skip = (page - 1) * limit;
+  async findByEmail(email: string) {}
 
-    const [attendees, total] = await Promise.all([
-      this.prisma.attendee.findMany({
-        skip,
-        take: limit,
-        orderBy: { createdAt: 'desc' },
-        include: {
-          _count: {
-            select: {
-              registrations: true,
-            },
-          },
-        },
-      }),
-      this.prisma.attendee.count(),
-    ]);
+  // async registerForEvent(
+  //   attendeeId: string,
+  //   registerEventDto: RegisterEventDto,
+  // ) {
+  //   const { eventId, specialRequests, dietaryRestrictions } = registerEventDto;
 
-    return {
-      data: attendees,
-      meta: {
-        total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit),
-      },
-    };
-  }
+  //   const event = await this.prisma.event.findUnique({
+  //     where: { id: eventId },
+  //   });
 
-  async findOne(id: string): Promise<IAttendee> {
-    const attendee = await this.prisma.attendee.findUnique({
-      where: { id },
-      include: {
-        registrations: {
-          include: {
-            event: {
-              select: {
-                id: true,
-                title: true,
-                startDate: true,
-                endDate: true,
-                venue: true,
-                status: true,
-              },
-            },
-            ticket: true,
-            payment: true,
-          },
-        },
-      },
-    });
+  //   if (!event) {
+  //     throw new NotFoundException('Event not found');
+  //   }
 
-    if (!attendee) {
-      throw new NotFoundException('Attendee not found');
-    }
+  //   if (event.status !== 'PUBLISHED') {
+  //     throw new ConflictException('Event is not available for registration');
+  //   }
 
-    return attendee;
-  }
+  //   // Current UTC time
+  //   const nowUTC = new Date();
 
-  async findByEmail(email: string): Promise<IAttendee | null> {
-    return await this.prisma.attendee.findUnique({
-      where: { email },
-      include: {
-        registrations: {
-          include: {
-            event: true,
-            ticket: true,
-            payment: true,
-          },
-        },
-      },
-    });
-  }
+  //   // Registration starts at event.registrationStart
+  //   const startUTC = new Date(event.registrationStart);
 
-  async registerForEvent(
-    attendeeId: string,
-    registerEventDto: RegisterEventDto,
-  ) {
-    const { eventId, specialRequests, dietaryRestrictions } = registerEventDto;
+  //   // Registration ends exactly when event starts
+  //   const eventStartUTC = new Date(event.startDate);
 
-    const event = await this.prisma.event.findUnique({
-      where: { id: eventId },
-    });
+  //   // // Too early
+  //   // if (nowUTC.getTime() < startUTC.getTime()) {
+  //   //   throw new ConflictException('Registration has not yet started');
+  //   // }
 
-    if (!event) {
-      throw new NotFoundException('Event not found');
-    }
+  //   // Too late
+  //   if (nowUTC.getTime() >= eventStartUTC.getTime()) {
+  //     throw new ConflictException(
+  //       'Registration has closed because the event has started',
+  //     );
+  //   }
 
-    if (event.status !== 'PUBLISHED') {
-      throw new ConflictException('Event is not available for registration');
-    }
+  //   // Check if event is full
+  //   if (event.currentAttendees >= event.maxAttendees) {
+  //     throw new ConflictException('Event is fully booked');
+  //   }
 
-    // Current UTC time
-    const nowUTC = new Date();
+  //   // Check if already registered
+  //   const existingRegistration = await this.prisma.registration.findUnique({
+  //     where: {
+  //       eventId_attendeeId: { eventId, attendeeId },
+  //     },
+  //   });
 
-    // Registration starts at event.registrationStart
-    const startUTC = new Date(event.registrationStart);
+  //   if (existingRegistration) {
+  //     throw new ConflictException('Already registered for this event');
+  //   }
 
-    // Registration ends exactly when event starts
-    const eventStartUTC = new Date(event.startDate);
+  //   // Register
+  //   const registration = await this.prisma.registration.create({
+  //     data: {
+  //       eventId,
+  //       attendeeId,
+  //       specialRequests,
+  //       dietaryRestrictions,
+  //     },
+  //     include: { event: true, attendee: true },
+  //   });
 
-    // // Too early
-    // if (nowUTC.getTime() < startUTC.getTime()) {
-    //   throw new ConflictException('Registration has not yet started');
-    // }
+  //   // Increment count
+  //   await this.prisma.event.update({
+  //     where: { id: eventId },
+  //     data: { currentAttendees: { increment: 1 } },
+  //   });
 
-    // Too late
-    if (nowUTC.getTime() >= eventStartUTC.getTime()) {
-      throw new ConflictException(
-        'Registration has closed because the event has started',
-      );
-    }
+  //   return registration;
+  // }
 
-    // Check if event is full
-    if (event.currentAttendees >= event.maxAttendees) {
-      throw new ConflictException('Event is fully booked');
-    }
+  // async getRegistrations(attendeeId: string) {
+  //   const attendee = await this.prisma.attendee.findUnique({
+  //     where: { id: attendeeId },
+  //     include: { registrations: true },
+  //   });
 
-    // Check if already registered
-    const existingRegistration = await this.prisma.registration.findUnique({
-      where: {
-        eventId_attendeeId: { eventId, attendeeId },
-      },
-    });
-
-    if (existingRegistration) {
-      throw new ConflictException('Already registered for this event');
-    }
-
-    // Register
-    const registration = await this.prisma.registration.create({
-      data: {
-        eventId,
-        attendeeId,
-        specialRequests,
-        dietaryRestrictions,
-      },
-      include: { event: true, attendee: true },
-    });
-
-    // Increment count
-    await this.prisma.event.update({
-      where: { id: eventId },
-      data: { currentAttendees: { increment: 1 } },
-    });
-
-    return registration;
-  }
-
-  async getRegistrations(attendeeId: string) {
-    const attendee = await this.prisma.attendee.findUnique({
-      where: { id: attendeeId },
-      include: { registrations: true },
-    });
-
-    return attendee?.registrations ?? [];
-  }
+  //   return attendee?.registrations ?? [];
+  // }
 }

@@ -4,10 +4,8 @@ import { Fragment, useState } from 'react';
 import SpeakerCard, {
   TspeakerProps,
 } from '../_module/components/cards/SpeakerCard';
-import { Button } from '../_module/components/ui/button';
 import { SpeakersList } from '../_module/data/speakers-list';
 import { speakersClass as Styles } from './speakers';
-import ComingSoon from '../_module/components/common/ComingSoon';
 import SpeakerModal from './components/speaker-modal';
 import { StaticImageData } from 'next/image';
 import clsx from 'clsx';
@@ -28,7 +26,7 @@ export default function Speakers() {
   return (
     <div className={clsx(Styles.container)}>
       <main className={clsx(Styles.main, '3xl:max-w-[1440px] mx-auto')}>
-        <section className="flex gap-5 flex-col items-center py-24">
+        {/* <section className="flex gap-5 flex-col items-center py-24">
           <h1 className="text-5xl font-bold text-center">
             Speakers Coming Soon
           </h1>
@@ -37,9 +35,9 @@ export default function Speakers() {
             industry leaders, tech innovators, and creative thinkers who will
             transform your DevFest experience.
           </p>
-        </section>
+        </section> */}
 
-        {/* <header className={Styles.header}>
+        <header className={Styles.header}>
           <section className={Styles.headerSection}>
             <h1 className={Styles.headerSectionHeading}>
               Meet our amazing speakers
@@ -50,17 +48,17 @@ export default function Speakers() {
               and experiences with you.{' '}
             </p>
           </section>
-        </header> */}
+        </header>
         {/* <Button className={Styles.headerButton}> Apply to Speak </Button> */}
-        {/* <section className={Styles.speakersListWrapper}>
+        <section className={Styles.speakersListWrapper}>
           {SpeakersList.map((data, idx) => (
             <Fragment key={idx}>
               <SpeakerCard handleClick={handleClick} {...data} />
             </Fragment>
           ))}
-        </section> */}
+        </section>
       </main>
-      {/* {modal && <SpeakerModal setModal={setModal} speakerData={speakerData} />} */}
+      {modal && <SpeakerModal setModal={setModal} speakerData={speakerData} />}
     </div>
   );
 }

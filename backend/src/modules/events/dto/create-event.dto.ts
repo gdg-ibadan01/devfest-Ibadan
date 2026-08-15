@@ -9,123 +9,93 @@ import {
   IsPositive,
   Min,
   Max,
-  IsUrl,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 
 export class CreateEventDto {
-  @ApiProperty({
-    description: 'The title of the event.',
-    example: 'Google Developer Group Summit 2025',
-  })
+  @ApiProperty({ example: 'Google Developer Group Summit 2025' })
   @IsString()
   @IsNotEmpty()
   title: string;
 
-  @ApiProperty({
-    description: 'A detailed description of the event.',
-    example:
-      'An annual tech conference bringing together developers, designers, and tech enthusiasts.',
-  })
+  @ApiProperty({ example: 'Annual tech conference...' })
   @IsString()
   @IsNotEmpty()
   description: string;
 
-  @ApiProperty({
-    description: 'The venue where the event will be held.',
-    example: 'Lagos Tech Hub',
-  })
+  @ApiProperty({ example: 'Lagos Tech Hub' })
   @IsString()
   @IsNotEmpty()
   venue: string;
 
-  @ApiProperty({
-    description: 'The complete address of the event location.',
-    example: '123 Tech Street, Victoria Island, Lagos, Nigeria',
-  })
+  @ApiProperty({ example: '123 Tech Street, Victoria Island, Lagos' })
   @IsString()
   @IsNotEmpty()
   address: string;
 
-  @ApiProperty({
-    description: 'The start date and time of the event (ISO 8601 format).',
-    example: '2025-09-15T09:00:00Z',
-  })
+  @ApiProperty({ example: '2025-09-15T09:00:00Z' })
   @IsDateString()
   startDate: string;
 
-  @ApiProperty({
-    description: 'The end date and time of the event (ISO 8601 format).',
-    example: '2025-09-17T17:00:00Z',
-  })
+  @ApiProperty({ example: '2025-09-17T17:00:00Z' })
   @IsDateString()
   endDate: string;
 
-  @ApiProperty({
-    description: 'The date and time when registration opens (ISO 8601 format).',
-    example: '2025-08-01T00:00:00Z',
-  })
+  @ApiProperty({ example: '2025-08-01T00:00:00Z' })
   @IsDateString()
   registrationStart: string;
 
-  @ApiProperty({
-    description:
-      'The date and time when registration closes (ISO 8601 format).',
-    example: '2025-09-10T23:59:59Z',
-  })
+  @ApiProperty({ example: '2025-09-10T23:59:59Z' })
   @IsDateString()
   registrationEnd: string;
 
-  @ApiProperty({
-    description: 'Maximum number of attendees allowed for the event.',
-    example: 500,
-  })
+  @ApiProperty({ example: 500 })
+  @Transform(({ value }) => Number(value))
   @IsNumber()
   @IsPositive()
   @Min(1)
   @Max(10000)
-  @Transform(({ value }) => parseInt(value))
   maxAttendees: number;
 
-  @ApiProperty({
-    description: 'Indicates if the event is paid (true) or free (false).',
-    example: true,
-  })
-  @IsBoolean()
+  @ApiProperty({ example: true })
   @Transform(({ value }) => value === 'true' || value === true)
+  @IsBoolean()
   isPaid: boolean;
 
-  @ApiPropertyOptional({
-    description: 'Price of the event ticket (if paid).',
-    example: 150.0,
-  })
+  @ApiPropertyOptional({ example: 150 })
+  @Transform(({ value }) => (value ? Number(value) : undefined))
   @IsOptional()
   @IsNumber()
   @IsPositive()
-  @Transform(({ value }) => (value ? parseFloat(value) : undefined))
   price?: number;
 
-  @ApiPropertyOptional({
-    description: 'URL of the banner image for the event.',
-    example: 'https://example.com/images/event-banner.jpg',
-  })
+  @ApiPropertyOptional({ type: 'string', format: 'binary' })
   @IsOptional()
-  @IsUrl()
-  bannerImage?: string;
+  bannerImage?: any;
 
-  @ApiPropertyOptional({
-    description: 'Tags for categorizing the event.',
-    example: ['Technology', 'Conference', 'Networking'],
+  @ApiPropertyOptional({ example: ['Technology', 'Conference'] })
+  @Transform(({ value }) => {
+    if (Array.isArray(value)) return value;
+    try {
+      return JSON.parse(value);
+    } catch {
+      return [value];
+    }
   })
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
   tags?: string[];
 
-  @ApiPropertyOptional({
-    description: 'List of requirements for attending the event.',
-    example: ['Bring a laptop', 'Install Node.js', 'Register online'],
+  @ApiPropertyOptional({ example: ['Bring a laptop', 'Install Node.js'] })
+  @Transform(({ value }) => {
+    if (Array.isArray(value)) return value;
+    try {
+      return JSON.parse(value);
+    } catch {
+      return [value];
+    }
   })
   @IsOptional()
   @IsArray()
@@ -133,12 +103,18 @@ export class CreateEventDto {
   requirements?: string[];
 
   @ApiPropertyOptional({
-    description: 'Event agenda in JSON format.',
     example: {
-      day1: ['Opening keynote', 'Workshop: NestJS Basics'],
-      day2: ['Panel discussion', 'Hackathon'],
+      day1: ['Opening keynote'],
+      day2: ['Hackathon'],
     },
   })
+  @Transform(({ value }) => {
+    try {
+      return typeof value === 'string' ? JSON.parse(value) : value;
+    } catch {
+      return value;
+    }
+  })
   @IsOptional()
-  agenda?: any;
+  agenda?: Record<string, string[]>;
 }

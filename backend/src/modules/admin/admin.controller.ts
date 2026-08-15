@@ -10,6 +10,8 @@ import {
   UnauthorizedException,
   Query,
   Delete,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { Request } from 'express';
 import {
@@ -17,6 +19,7 @@ import {
   ApiOperation,
   ApiResponse,
   ApiBearerAuth,
+  ApiOkResponse,
 } from '@nestjs/swagger';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { Role } from '../../common/enums/role.enum';
@@ -28,39 +31,62 @@ import { InviteAdminDto } from './dto/invite-admin.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { UpdateAdminStatusDto } from './dto/update-status.dto';
+import { AdminCreateAttendeeDto } from './dto/create-attendee.dto';
+import { ICreateResponse } from './interfaces/attendee.interface';
 import { RolesGuard } from './guards/roles.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
-import {
-  ILoginResponse,
-  IAdminResponse,
-  IDashboardStats,
-} from './interfaces/admin.interface';
+import { IAdminResponse } from './interfaces/admin.interface';
+import { LoginResponseDto } from './dto/login-response.dto';
 
 @ApiTags('Admin')
 @Controller('admin')
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
-  @Post('signup')
-  @ApiOperation({ summary: 'Register a super admin account' })
-  @ApiResponse({
-    status: 201,
-    description: 'Super admin created successfully.',
-  })
-  @ApiResponse({
-    status: 409,
-    description: 'Email already exists.',
-  })
-  async signup(@Body() signupDto: CreateAdminDto): Promise<ILoginResponse> {
-    return this.adminService.signup(signupDto);
-  }
+  // @Post('signup')
+  // @ApiOperation({ summary: 'Register a super admin account' })
+  // @ApiResponse({
+  //   status: 201,
+  //   description: 'Super admin created successfully.',
+  // })
+  // @ApiResponse({
+  //   status: 409,
+  //   description: 'Email already exists.',
+  // })
+  // async signup(@Body() signupDto: CreateAdminDto): Promise<ILoginResponse> {
+  //   return this.adminService.signup(signupDto);
+  // }
 
   @Post('login')
   @ApiOperation({ summary: 'Login as an admin' })
-  @ApiResponse({ status: 200, description: 'Login successful.' })
   @ApiResponse({ status: 401, description: 'Invalid credentials.' })
-  async login(@Body() loginDto: LoginAdminDto): Promise<ILoginResponse> {
-    return this.adminService.login(loginDto);
+  @ApiOkResponse({
+    description: 'Login successful',
+    type: LoginResponseDto,
+  })
+  @HttpCode(HttpStatus.OK)
+  async login(@Body() payload: LoginAdminDto) {
+    return this.adminService.login(payload);
+  }
+
+  @Post('attendee/create')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.SUPER_ADMIN)
+  @ApiOperation({ summary: 'Add a new attendee (Super-admin only)' })
+  @ApiResponse({
+    status: 201,
+    description: 'Attendee successfully created',
+    type: AdminCreateAttendeeDto,
+  })
+  @ApiResponse({
+    status: 409,
+    description: 'Attendee with this email already exists',
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async createAttendee(@Body() adminCreateAttendeeDto: AdminCreateAttendeeDto) {
+    return this.adminService.create(adminCreateAttendeeDto);
   }
 
   @Post('invite')
@@ -73,10 +99,7 @@ export class AdminController {
     status: 403,
     description: 'Only SUPER_ADMIN can invite other admins.',
   })
-  async inviteAdmin(
-    @Body() inviteDto: InviteAdminDto,
-    @Req() req: Request,
-  ): Promise<{ message: string; tempPassword: string }> {
+  async inviteAdmin(@Body() inviteDto: InviteAdminDto, @Req() req: Request) {
     const inviterId = req.user?.id ?? req.user?.sub;
     return this.adminService.inviteAdmin(inviteDto, inviterId);
   }
@@ -102,33 +125,33 @@ export class AdminController {
     return this.adminService.findAll(query);
   }
 
-  @Get('dashboard/stats')
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
-  @ApiOperation({ summary: 'Get dashboard statistics' })
-  @ApiResponse({
-    status: 200,
-    description: 'Dashboard stats retrieved successfully',
-  })
-  @ApiResponse({ status: 401, description: 'Unauthorized.' })
-  async getDashboardStats(): Promise<IDashboardStats> {
-    return this.adminService.getDashboardStats();
-  }
+  // @Get('dashboard/stats')
+  // @ApiBearerAuth()
+  // @UseGuards(JwtAuthGuard, RolesGuard)
+  // @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  // @ApiOperation({ summary: 'Get dashboard statistics' })
+  // @ApiResponse({
+  //   status: 200,
+  //   description: 'Dashboard stats retrieved successfully',
+  // })
+  // @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  // async getDashboardStats(): Promise<IDashboardStats> {
+  //   return this.adminService.getDashboardStats();
+  // }
 
-  @Get('events/analytics/:eventId')
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
-  @ApiOperation({ summary: 'Get event analytics' })
-  @ApiResponse({
-    status: 200,
-    description: 'Event analytics retrieved successfully',
-  })
-  @ApiResponse({ status: 401, description: 'Unauthorized.' })
-  async getEventAnalytics(@Param('eventId') eventId: string) {
-    return this.adminService.getEventAnalytics(eventId);
-  }
+  // @Get('events/analytics/:eventId')
+  // @ApiBearerAuth()
+  // @UseGuards(JwtAuthGuard, RolesGuard)
+  // @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  // @ApiOperation({ summary: 'Get event analytics' })
+  // @ApiResponse({
+  //   status: 200,
+  //   description: 'Event analytics retrieved successfully',
+  // })
+  // @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  // async getEventAnalytics(@Param('eventId') eventId: string) {
+  //   return this.adminService.getEventAnalytics(eventId);
+  // }
 
   @Get('profile')
   @ApiBearerAuth()

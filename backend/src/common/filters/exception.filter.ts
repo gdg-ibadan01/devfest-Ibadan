@@ -43,10 +43,10 @@ export class HttpExceptionFilter implements ExceptionFilter {
 
     /** return a custom response object to client */
     response.status(statusCode).json({
-      statusCode,
+      // statusCode,
       success: false,
       message,
-      timestamp: new Date().toISOString(),
+      // timestamp: new Date().toISOString(),
     });
   }
 }

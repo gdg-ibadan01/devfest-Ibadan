@@ -1,51 +1,19 @@
-import { formatAmount } from '@/utils/formatAmount';
 import { ArrowLeft, ArrowUpRight } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import React from 'react';
 
-const TicketPackages = [
-  {
-    key: 'dayOne',
-    day: 'Friday',
-    activityType: 'Workshop',
-    price: 4_000,
-  },
-  {
-    key: 'dayTwo',
-    day: 'Saturday',
-    activityType: 'Main event & Workshop',
-    price: 4_000,
-  },
-  {
-    key: 'bothDays',
-    day: 'Friday & Saturday',
-    activityType: 'Main event & Workshop',
-    price: 8_000,
-  },
-];
-
 interface CheckOutProps {
-  selectedPackage: {
-    key: string;
-    day: string;
-    activityType: string;
-    price: number;
-  };
-  setSelectedPackage: React.Dispatch<
-    React.SetStateAction<{
-      key: string;
-      day: string;
-      activityType: string;
-      price: number;
-    }>
-  >;
   formData: {
     fullName: string;
+    phoneNumber: string;
+    jobTitle?: string;
     email: string;
   };
   setFormData: React.Dispatch<
     React.SetStateAction<{
       fullName: string;
+      phoneNumber: string;
+      jobTitle: string;
       email: string;
     }>
   >;
@@ -53,8 +21,6 @@ interface CheckOutProps {
 }
 
 const CheckOut: React.FC<CheckOutProps> = ({
-  selectedPackage,
-  setSelectedPackage,
   formData,
   setFormData,
   setView,
@@ -65,7 +31,8 @@ const CheckOut: React.FC<CheckOutProps> = ({
       className="bg-white px-4 md:px-28 py-28 rounded-2xl flex flex-col gap-5 border md:border-none"
       onSubmit={(e) => {
         e.preventDefault();
-        setView('summary');
+        return
+        // setView('summary');
       }}
     >
       <button
@@ -73,7 +40,7 @@ const CheckOut: React.FC<CheckOutProps> = ({
         onClick={() => router.back()}
       >
         <ArrowLeft />
-        <p className="font-bold text-xl md:text-2xl">Check Out</p>
+        <p className="font-bold text-xl md:text-2xl">Registration</p>
       </button>
 
       <div className="flex flex-col md:flex-row justify-center gap-3">
@@ -113,42 +80,52 @@ const CheckOut: React.FC<CheckOutProps> = ({
           />
         </div>
       </div>
-
-      <div>
-        <p className="text-sm text-gray-400 mb-4">
-          Kindly Select your Ticket Package
-        </p>
-        <div className="flex flex-col gap-4">
-          {TicketPackages.map((option) => {
-            const isActive = option.key === selectedPackage.key;
-            return (
-              <label
-                key={option.key}
-                htmlFor={option.key}
-                className={`border border-gray-200 p-3 rounded-md flex items-center gap-5 cursor-pointer ${isActive ? 'text-core-blue bg-pastel-blue border-[#9AE0F1]' : 'text-gray-500'}`}
-              >
-                <input
-                  type="radio"
-                  className="accent-core-blue bg-pastel-blue h-6 w-6"
-                  id={option.key}
-                  checked={isActive}
-                  name="ticketPackages"
-                  required
-                  onChange={(e) => setSelectedPackage(option)}
-                />
-                <div>
-                  <p>
-                    {option.day}{' '}
-                    <span className="text-[14px]">({option.activityType})</span>
-                  </p>
-                  <p>{formatAmount(option.price)}</p>
-                </div>
-              </label>
-            );
-          })}
+      <div className="flex flex-col md:flex-row justify-center gap-3">
+        <div className="w-full md:w-1/2 flex flex-col gap-1">
+          <label
+            htmlFor="phoneNumber"
+            className="text-gray-600 text-sm md:text-base"
+          >
+            Phone Number
+          </label>
+          <input
+            type="text"
+            id="phoneNumber"
+            placeholder="e.g +23359605494"
+            required
+            value={formData.phoneNumber}
+            onChange={(e) =>
+              setFormData((prev) => ({ ...prev, phoneNumber: e.target.value }))
+            }
+            className="border border-gray-200 px-4 py-2 rounded-md outline-none text-gray-400 text-sm md:text-base"
+          />
+        </div>
+        <div className="w-full md:w-1/2 flex flex-col gap-1">
+          <label
+            htmlFor="jobTitle"
+            className="text-gray-600 text-sm md:text-base"
+          >
+            Job Title
+          </label>
+          <input
+            type="text"
+            id="jobTitle"
+            required
+            placeholder="Enter job title"
+            value={formData.jobTitle}
+            onChange={(e) =>
+              setFormData((prev) => ({ ...prev, jobTitle: e.target.value }))
+            }
+            className="border border-gray-200 px-4 py-2 rounded-md outline-none text-gray-400 text-sm md:text-base"
+          />
         </div>
       </div>
-      <button className="bg-[#1E1E1E] py-5 md:py-7 text-white hover:bg-core-blue rounded-[100px] flex gap-2 justify-center transition-colors duration-500">
+
+      <button
+        type="submit"
+        disabled
+        className="bg-[#1E1E1E] py-3 md:py-4 text-white hover:bg-core-blue rounded-[100px] flex gap-2 justify-center transition-colors duration-500 mt-6"
+      >
         Get Ticket <ArrowUpRight />
       </button>
     </form>

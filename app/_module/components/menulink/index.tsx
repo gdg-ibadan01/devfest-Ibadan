@@ -35,7 +35,11 @@ const MenuLink: FC<MenuLinkProps> = ({ slur, label }) => {
         <Link
           href={`/${slur}`}
           aria-label={label}
-          className={`${(menulinkClasses.link, currentPath === slur ? 'font-semibold' : '')}`}
+          className={`${menulinkClasses.link} ${
+            currentPath === slur
+              ? 'font-semibold text-[14px]'
+              : 'font-normal text-[14px]'
+          }`}
         >
           {label}
         </Link>

@@ -3,11 +3,13 @@ import {
   IsNotEmpty,
   IsEmail,
   IsOptional,
+  IsNumber,
+  IsPositive,
   Length,
   Matches,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsValidPhoneNumber } from '../../../common/validators/phone.validator';
+// import { IsValidPhoneNumber } from '../../../common/validators/phone.validator';
 
 export class CreateAttendeeDto {
   @ApiProperty({
@@ -28,10 +30,10 @@ export class CreateAttendeeDto {
   fullName: string;
 
   @ApiPropertyOptional({
-    description: 'Attendee phone number (E.164 format)',
-    example: '+2348012345678',
+    description: 'Attendee phone number',
+    example: '08012345678',
   })
-  @IsValidPhoneNumber()
+  // @IsValidPhoneNumber()
   @IsOptional({ message: 'Phone number must be a string' })
   @IsString()
   phoneNumber?: string;
@@ -53,4 +55,13 @@ export class CreateAttendeeDto {
   @IsString()
   @Length(2, 100)
   jobTitle?: string;
+
+  @ApiPropertyOptional({
+    description: 'Amount paid by the attendee',
+    example: 5000,
+  })
+  @IsOptional()
+  @IsNumber()
+  @IsPositive()
+  amount?: number;
 }

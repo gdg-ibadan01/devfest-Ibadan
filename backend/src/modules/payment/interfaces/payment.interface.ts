@@ -1,21 +1,22 @@
-import { PaymentStatus } from '@prisma/client';
-
 export interface IPayment {
   id: string;
-  eventId: string;
   attendeeId: string;
-  registrationId: string;
   amount: number;
   currency: string;
   paystackReference: string;
   paymentReference: string;
-  status: PaymentStatus;
+  status: 'SUCCESS' | 'FAILED';
   paymentMethod?: string | null;
   paidAt: Date | null;
   failureReason?: string | null;
   metadata?: any;
   createdAt: Date;
   updatedAt: Date;
+  attendee: {
+    id: string;
+    email: string;
+    fullName: string;
+  };
 }
 
 export interface IPaystackResponse {

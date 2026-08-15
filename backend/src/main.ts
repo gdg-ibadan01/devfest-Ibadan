@@ -3,7 +3,7 @@ import { ValidationPipe, Logger, BadRequestException } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
-import { TransformerInterceptor } from './common/interceptor/transformer.interceptor';
+// import { TransformerInterceptor } from './common/interceptor/transformer.interceptor';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
 
@@ -32,7 +32,7 @@ async function bootstrap() {
 
   // Enable CORS
   app.enableCors({
-    origin: configService.get('ALLOWED_ORIGINS', '').split(','),
+    origin: true,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
   });
@@ -55,7 +55,7 @@ async function bootstrap() {
   );
   logger.log('Global validation pipe applied');
 
-  app.useGlobalInterceptors(new TransformerInterceptor());
+  // app.useGlobalInterceptors(new TransformerInterceptor());
 
   // Global prefix
   app.setGlobalPrefix('api/v1');
@@ -73,10 +73,12 @@ async function bootstrap() {
 
   // Load environment variables
   const port = configService.get<number>('PORT') || 3000;
+  const appUrl =
+    configService.get<string>('APP_URL') || `http://localhost:${port}`;
 
   await app.listen(port);
-  logger.log(`🚀 Application is running on: http://localhost:${port}`);
-  logger.log(`Swagger documentation: http://localhost:${port}/api/docs`);
+  logger.log(`🚀 Application is running on:${appUrl}`);
+  logger.log(`Swagger documentation: ${appUrl}/api/docs`);
   logger.log(`🔧 Environment: ${configService.get('NODE_ENV', 'development')}`);
 }
 bootstrap();

@@ -7,14 +7,54 @@ import Venue from './component/Venue';
 import OurSponsors from './component/OurSponsors';
 import OurMerch from './component/OurMerch';
 
+
+export const metadata = {
+  title: 'DevFest Ibadan 2025',
+  description: 'Join us at DevFest Ibadan 2025 - The largest developer conference in Southwest Nigeria. Connect with tech experts, learn about the latest technologies, and be part of an inclusive tech community.',
+  keywords: ['DevFest', 'GDG Ibadan', 'Tech Conference', 'Developers', 'Technology', 'Google', 'Tech community', 'open source'],
+  openGraph: {
+    title: 'DevFest Ibadan 2025',
+    description: 'Join us at DevFest Ibadan 2025 - The largest developer conference in Southwest Nigeria. Connect with tech experts, learn about the latest technologies, and be part of an inclusive tech community.',
+    images: [
+      'https://res.cloudinary.com/dh8trnu8w/image/upload/q_auto/v1755685267/email-template-banner.png',
+      'https://res.cloudinary.com/dh8trnu8w/image/upload/v1756199854/devfestlogo.jpg'
+    ],
+    siteName: 'DevFest Ibadan 2025',
+    locale: 'en_US',
+    type: 'website',
+    url: 'https://devfestibadan.com',
+  },
+  canonical: 'https://devfestibadan.com',
+  themeColor: '#4285f4',
+  lang: 'en',
+  langDir: 'ltr',
+  locale: 'en_US',
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      image: true,
+    },
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'DevFest Ibadan 2025',
+    description: 'Join us at DevFest Ibadan 2025 - The largest developer conference in Southwest Nigeria. Connect with tech experts, learn about the latest technologies, and be part of an inclusive tech community.',
+    images: [
+      'https://res.cloudinary.com/dh8trnu8w/image/upload/q_auto/v1755685267/email-template-banner.png',
+      'https://res.cloudinary.com/dh8trnu8w/image/upload/v1756199854/devfestlogo.jpg'
+    ],
+    type: 'website',
+    url: 'https://devfestibadan.com',
+  }
+};
+
+
 export default function Home() {
   return (
     <>
-      {/* <main className="flex gap-5 flex-col items-center justify-between px-24 pt-124">
-        <h1 className={`text-3xl`}>Devfest Ibadan &apos;24</h1>
-        <DevfestLogo />
-        <Button size={'lg'}>Proceed</Button>
-      </main> */}
       <DevfestHero />
       <Inclusivity />
       <Recap />

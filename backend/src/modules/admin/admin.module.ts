@@ -5,13 +5,19 @@ import { PassportModule } from '@nestjs/passport';
 import { AdminController } from './admin.controller';
 import { AdminService } from './admin.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
-import { DatabaseModule } from '../database/prisma.module';
 import { MailModule } from '../mail/mail.module';
+import { AttendeeModule } from '../attendee/attendee.module';
+import { PaymentsModule } from '../payment/payment.module';
+import { RolesController } from './roles.controller';
+import { RolesService } from './roles.service';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { SuperadminSeedService } from './superadmin-seed.service';
 
 @Module({
   imports: [
+    AttendeeModule,
     ConfigModule,
-    DatabaseModule,
+    PaymentsModule,
     MailModule,
     PassportModule,
     JwtModule.registerAsync({
@@ -19,7 +25,7 @@ import { MailModule } from '../mail/mail.module';
       inject: [ConfigService],
       useFactory: (config: ConfigService) => {
         const secret = config.get<string>('jwt.accessSecret');
-        const expiresIn = config.get<string>('jwt.expiresIn');
+        const expiresIn = config.get<`${number}`>('jwt.expiresIn');
         if (!secret) {
           throw new BadRequestException('JWT secret is not configured');
         }
@@ -32,8 +38,14 @@ import { MailModule } from '../mail/mail.module';
       },
     }),
   ],
-  controllers: [AdminController],
-  providers: [AdminService, JwtStrategy],
+  controllers: [AdminController, RolesController],
+  providers: [
+    AdminService,
+    JwtStrategy,
+    RolesService,
+    PrismaService,
+    SuperadminSeedService,
+  ],
   exports: [AdminService],
 })
 export class AdminModule {}
