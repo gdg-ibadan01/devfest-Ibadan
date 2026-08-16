@@ -1,3 +1,5 @@
 {
-    "nuxt.isNuxtApp": false
+    "nuxt.isNuxtApp": false,
+    "markdown.extension.completion.enabled": false,
+    "markdown.extension.tableFormatter.enabled": false
 }
