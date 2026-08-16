@@ -1,22 +1,19 @@
-import { Input } from '@/components/ui/input';
+import { ArrowUpRight } from 'lucide-react';
 import Image from 'next/image';
+import { Button } from '../_module/components/ui/button';
 import { CustomInput } from '../_module/components/ui/input';
 import { CustomSelect } from '../_module/components/ui/select';
-import { Button } from '../_module/components/ui/button';
-import { ArrowUpRight } from 'lucide-react';
 
 export default function Rsvp() {
   return (
     <main
-      className="md:pt-[100px] pt-[80px] bg-halftone-blue mains min-h-screen"
-      //  style={{
-      //       backgroundImage: isTablet
-      //         ? "url('/ticket_bg.png')"
-      //         : "url('/ticket_mobile_bg.png')",
-      //       backgroundRepeat: 'no-repeat',
-      //       backgroundPosition: 'center',
-      //       backgroundSize: 'cover',
-      //     }}
+      className="md:pt-[100px] pt-[80px] mains min-h-screen"
+      style={{
+        backgroundImage: "url('/pastel-blue-art.png')",
+        backgroundRepeat: 'no-repeat',
+        backgroundPosition: 'center',
+        backgroundSize: 'cover',
+      }}
     >
       <div className="w-full md:max-w-[500px] mx-auto bg-white rounded-[12px] overflow-hidden">
         <div className="w-full h-fit relative">
