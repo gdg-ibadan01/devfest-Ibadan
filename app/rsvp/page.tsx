@@ -2,7 +2,7 @@
 
 import { ArrowUpRight, Loader2, CheckCircle2 } from 'lucide-react';
 import Image from 'next/image';
-import { useState, type FormEvent } from 'react';
+import { useState, useCallback, type FormEvent } from 'react';
 import { Button } from '../_module/components/ui/button';
 import { CustomInput } from '../_module/components/ui/input';
 import { CustomSelect } from '../_module/components/ui/select';
@@ -37,6 +37,25 @@ export default function Rsvp() {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const STORAGE_KEY = 'devfest_ibadan_2026_rsvp';
+
+  const getSubmittedEmails = useCallback((): string[] => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  }, []);
+
+  const markEmailAsSubmitted = useCallback((email: string) => {
+    const emails = getSubmittedEmails();
+    if (!emails.includes(email.toLowerCase())) {
+      emails.push(email.toLowerCase());
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(emails));
+    }
+  }, [getSubmittedEmails]);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -50,6 +69,21 @@ export default function Rsvp() {
     e.preventDefault();
     setIsSubmitting(true);
     setError(null);
+
+    // Validate required dropdowns
+    if (!formData.gender || !formData.numberOfSeats || !formData.howDidYouHear) {
+      setError('Please fill in all required fields.');
+      setIsSubmitting(false);
+      return;
+    }
+
+    // Check for duplicate submission
+    const submittedEmails = getSubmittedEmails();
+    if (submittedEmails.includes(formData.email.toLowerCase())) {
+      setError('This email has already been used to register. Please use a different email address.');
+      setIsSubmitting(false);
+      return;
+    }
 
     // Build the URL-encoded body mapping to Google Form entry IDs
     const body = new URLSearchParams();
@@ -72,6 +106,7 @@ export default function Rsvp() {
 
       // With `no-cors`, the response is opaque — we can't read it.
       // If the request didn't throw, we treat it as a successful submission.
+      markEmailAsSubmitted(formData.email);
       setIsSubmitted(true);
     } catch {
       setError('Something went wrong. Please try again or check your internet connection.');
@@ -203,7 +238,7 @@ export default function Rsvp() {
               />
 
               {error && (
-                <p className="text-sm text-red-500 text-center">{error}</p>
+                <p className="text-sm text-center" style={{ color: '#EF4444' }}>{error}</p>
               )}
 
               <Button
