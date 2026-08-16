@@ -49,7 +49,7 @@ const DevfestHero = () => {
         <div className="w-full md:max-w-[1500px] mx-auto relative z-10">
           <header className="container headers flex gap-4 md:gap-7 flex-col items-center justify-between">
             <h1 className="font-bold text-[2rem] leading-[2.5rem] md:text-8xl">
-              Devfest Ibadan &apos;25
+              Devfest Ibadan &apos;26
             </h1>
             <p className="text-[#4D4D4D] text-lg md:text-2xl text-center md:w-[1000px]">
               IB City whatsup!!! The largest tech event gathering in Ibadan and
@@ -61,15 +61,15 @@ const DevfestHero = () => {
             </p>
             <div>
               <p className="text-center font-bold">
-                Date: November 28th & 29th 2025 at 8:00AM
+                Date: November 2026 at 8:00AM
               </p>
             </div>
             <div className="flex flex-col md:flex-row gap-3 md:gap-5 text-sm'">
               <Link
-                href="https://gdg.community.dev/e/mrbzpf/"
+                href="/rsvp"
                 className="bg-black py-4 px-52 text-white hover:bg-core-blue hover:text-white rounded-[100px] flex"
               >
-                Get Ticket <ArrowUpRight />
+                RSVP <ArrowUpRight />
               </Link>
 
               <Link
