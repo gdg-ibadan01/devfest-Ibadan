@@ -36,7 +36,7 @@ function PermissionCheckbox({
     <button
       type="button"
       onClick={onChange}
-      className="flex items-center gap-2 text-left border border-[#D1D1D1] rounded-lg px-[10px] py-[8px]"
+      className="flex items-center gap-2 text-left border border-dashed border-[#D1D1D1] rounded-lg px-[10px] py-[8px]"
     >
       <span
         className={cn(

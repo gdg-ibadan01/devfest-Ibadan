@@ -127,8 +127,8 @@ export default function AttendeesTable({
 
   return (
     <>
-      <div className="flex items-center gap-3 mb-6 flex-wrap">
-        <div className="flex items-center flex-1 max-w-[480px] border border-gray-200 rounded-md overflow-hidden bg-white focus-within:ring-2 focus-within:ring-black/10">
+      <div className="flex flex-wrap items-center gap-3 gap-y-2 mb-6">
+        <div className="flex items-center w-full sm:flex-1 sm:max-w-[480px] border border-gray-200 rounded-md overflow-hidden bg-white focus-within:ring-2 focus-within:ring-black/10">
           <Search size={15} className="ml-4 text-gray-400 flex-shrink-0" />
           <input
             type="text"
@@ -153,16 +153,16 @@ export default function AttendeesTable({
           Status <ChevronDown size={14} />
         </button>
 
-        <div className="ml-auto flex items-center gap-3">
+        <div className="sm:ml-auto flex items-center gap-3 w-full sm:w-auto">
           <button
             onClick={onAddNew}
-            className="flex items-center gap-2 px-5 py-[11px] bg-gray-900 text-white text-[13px] font-medium rounded-lg hover:bg-black transition-colors"
+            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-[11px] bg-gray-900 text-white text-[13px] font-medium rounded-lg hover:bg-black transition-colors"
           >
             Add New Attendee
             <Plus size={16} strokeWidth={2.5} />
           </button>
 
-          <button className="w-[42px] h-[42px] flex items-center justify-center rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors text-gray-600">
+          <button className="w-[42px] h-[42px] flex-shrink-0 flex items-center justify-center rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors text-gray-600">
             <Download size={15} />
           </button>
         </div>

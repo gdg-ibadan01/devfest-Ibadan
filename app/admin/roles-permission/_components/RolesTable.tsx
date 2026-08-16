@@ -81,8 +81,8 @@ export default function RolesTable({
   return (
     <>
       {/* Search + Actions bar */}
-      <div className="flex items-center gap-3 mb-6">
-        <div className="flex items-center flex-1 max-w-[480px] border border-gray-200 rounded-md overflow-hidden bg-white focus-within:ring-2 focus-within:ring-black/10">
+      <div className="flex flex-wrap items-center gap-3 gap-y-2 mb-6">
+        <div className="flex items-center w-full sm:flex-1 sm:max-w-[480px] border border-gray-200 rounded-md overflow-hidden bg-white focus-within:ring-2 focus-within:ring-black/10">
           <Search size={15} className="ml-4 text-gray-400 flex-shrink-0" />
           <input
             type="text"
@@ -97,11 +97,11 @@ export default function RolesTable({
           Search
         </button>
 
-        <div className="ml-auto flex items-center gap-3">
+        <div className="sm:ml-auto flex flex-wrap items-center gap-3 w-full sm:w-auto">
           {hasData && (
             <button
               onClick={onInvite}
-              className="flex items-center gap-2 px-5 py-[11px] bg-gray-900 text-white text-[13px] font-medium rounded-lg hover:bg-black transition-colors"
+              className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-[11px] border border-gray-300 text-gray-700 text-[13px] font-medium rounded-lg hover:bg-gray-50 transition-colors"
             >
               Invite People
               <Plus size={16} strokeWidth={2.5} />
@@ -109,7 +109,7 @@ export default function RolesTable({
           )}
           <button
             onClick={onAddRole}
-            className="flex items-center gap-2 px-5 py-[11px] bg-gray-900 text-white text-[13px] font-medium rounded-lg hover:bg-black transition-colors"
+            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-[11px] bg-gray-900 text-white text-[13px] font-medium rounded-lg hover:bg-black transition-colors"
           >
             Add New Role
             <Plus size={16} strokeWidth={2.5} />
@@ -119,6 +119,7 @@ export default function RolesTable({
 
       {/* Table */}
       <div className="border border-gray-200 rounded-xl overflow-hidden">
+        <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-200 bg-gray-50">
@@ -233,6 +234,7 @@ export default function RolesTable({
             )}
           </tbody>
         </table>
+        </div>
       </div>
     </>
   );

@@ -10,10 +10,8 @@ import RoleSuccessModal from './_components/RoleSuccessModal';
 import InvitePeopleModal from './_components/InvitePeopleModal';
 import type { RoleRecord, RoleFormData, InviteFormData } from './_types/role.types';
 
-// Track where deactivate was triggered from so we can return correctly
 type ModalState = 'none' | 'add' | 'invite' | 'detail' | 'edit' | 'deactivate' | 'success';
 
-// MOCK roles list to pass to InvitePeopleModal dropdown
 const MOCK_ROLES_LIST: RoleRecord[] = [
   { id: '1', name: 'Super Admin', description: '', permissions: [], status: 'Active', dateCreated: '' },
   { id: '2', name: 'Admin', description: '', permissions: [], status: 'Active', dateCreated: '' },
@@ -23,7 +21,6 @@ const MOCK_ROLES_LIST: RoleRecord[] = [
 export default function RolesPermissionPage() {
   const [modal, setModal] = useState<ModalState>('none');
   const [selectedRole, setSelectedRole] = useState<RoleRecord | null>(null);
-  // Track whether deactivate was opened from the detail view or directly from table actions
   const [deactivateSource, setDeactivateSource] = useState<'detail' | 'table'>('table');
 
   const openDetail = (role: RoleRecord) => {
@@ -59,7 +56,6 @@ export default function RolesPermissionPage() {
   };
 
   const handleDeactivateClose = () => {
-    // Only return to detail if deactivate was triggered from within the detail modal
     if (deactivateSource === 'detail') {
       setModal('detail');
     } else {
@@ -75,7 +71,7 @@ export default function RolesPermissionPage() {
 
   return (
     <AdminWrapper title="Roles & Permission">
-      <div className="px-[32px] py-[24px]">
+      <div className="lg:px-[32px] px-[20px] py-[24px]">
         <RolesTable
           onAddRole={() => setModal('add')}
           onInvite={() => setModal('invite')}
@@ -127,7 +123,7 @@ export default function RolesPermissionPage() {
         onDeactivate={openDeactivateFromDetail}
       />
 
-      {/* Deactivate Confirm — always returns to detail on cancel */}
+      {/* Deactivate Confirm */}
       <DeactivateRoleModal
         open={modal === 'deactivate'}
         onClose={handleDeactivateClose}

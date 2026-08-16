@@ -75,8 +75,8 @@ export default function DiscountTable({
   return (
     <>
       {/* Search + Actions bar */}
-      <div className="flex items-center gap-3 mb-6">
-        <div className="flex items-center flex-1 max-w-[480px] border border-gray-200 rounded-md overflow-hidden bg-white focus-within:ring-2 focus-within:ring-black/10">
+      <div className="flex flex-wrap items-center gap-3 gap-y-2 mb-6">
+        <div className="flex items-center w-full sm:flex-1 sm:max-w-[480px] border border-gray-200 rounded-md overflow-hidden bg-white focus-within:ring-2 focus-within:ring-black/10">
           <Search size={15} className="ml-4 text-gray-400 flex-shrink-0" />
           <input
             type="text"
@@ -91,10 +91,10 @@ export default function DiscountTable({
           Search
         </button>
 
-        <div className="ml-auto">
+        <div className="sm:ml-auto w-full sm:w-auto">
           <button
             onClick={onCreateClick}
-            className="flex items-center gap-2 px-5 py-[11px] bg-gray-900 text-white text-[13px] font-medium rounded-lg hover:bg-black transition-colors"
+            className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-[11px] bg-gray-900 text-white text-[13px] font-medium rounded-lg hover:bg-black transition-colors"
           >
             Create Discount
             <Plus size={16} strokeWidth={2.5} />
@@ -104,6 +104,7 @@ export default function DiscountTable({
 
       {/* Table */}
       <div className="border border-gray-200 rounded-xl overflow-hidden">
+        <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-200 bg-gray-50">
@@ -217,6 +218,7 @@ export default function DiscountTable({
             )}
           </tbody>
         </table>
+        </div>
       </div>
     </>
   );

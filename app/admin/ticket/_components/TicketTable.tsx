@@ -57,7 +57,8 @@ const COLUMNS = [
 export default function TicketTable() {
   const [search, setSearch] = useState('');
   const [previewOpen, setPreviewOpen] = useState(false);
-  const [previewData, setPreviewData] = useState<TicketFormData>(MOCK_PREVIEW_DATA);
+  const [previewData, setPreviewData] =
+    useState<TicketFormData>(MOCK_PREVIEW_DATA);
 
   const handlePreview = (ticket: TicketRecord) => {
     setPreviewData(MOCK_PREVIEW_DATA);
@@ -71,8 +72,8 @@ export default function TicketTable() {
   return (
     <>
       {/* Search + filters bar */}
-      <div className="flex items-center gap-3 mb-6">
-        <div className="flex items-center flex-1 max-w-[480px] border border-gray-200 rounded-md overflow-hidden bg-white focus-within:ring-2 focus-within:ring-black/10">
+      <div className="flex flex-wrap items-center gap-3 gap-y-2 mb-6">
+        <div className="flex items-center w-full sm:flex-1 sm:max-w-[480px] border border-gray-200 rounded-md overflow-hidden bg-white focus-within:ring-2 focus-within:ring-black/10">
           <Search size={15} className="ml-4 text-gray-400 flex-shrink-0" />
           <input
             type="text"
@@ -87,22 +88,23 @@ export default function TicketTable() {
           Search
         </button>
 
-        <div className="ml-auto">
-          <Link href="/admin/ticket/create">
-            <button className="px-5 py-[11px] border border-gray-200 text-[13px] font-medium text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2">
+        <div className="sm:ml-auto flex items-center gap-3 w-full sm:w-auto">
+          <Link href="/admin/ticket/create" className="flex-1 sm:flex-none">
+            <button className="w-full sm:w-auto px-5 py-[11px] border border-gray-200 text-[13px] font-medium text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center gap-2">
               <Plus size={20} /> Create Ticket
             </button>
           </Link>
-        </div>
 
-        <button className="flex items-center gap-2 px-4 py-[11px] border border-gray-200 rounded-lg text-[13px] text-gray-600 hover:bg-gray-50 transition-colors">
-          Date
-          <Calendar size={14} className="text-gray-400" />
-        </button>
+          <button className="flex items-center gap-2 px-4 py-[11px] border border-gray-200 rounded-lg text-[13px] text-gray-600 hover:bg-gray-50 transition-colors flex-shrink-0">
+            Date
+            <Calendar size={14} className="text-gray-400" />
+          </button>
+        </div>
       </div>
 
       {/* Table */}
       <div className="border border-gray-200 rounded-xl overflow-hidden">
+        <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-200 bg-white">
@@ -131,6 +133,10 @@ export default function TicketTable() {
                 <tr
                   key={ticket.id}
                   className="border-b border-gray-100 last:border-0 hover:bg-gray-50/50 transition-colors"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handlePreview(ticket);
+                  }}
                 >
                   <td className="px-5 py-4 text-[13px] text-gray-800 font-medium">
                     {ticket.name}
@@ -174,6 +180,7 @@ export default function TicketTable() {
             )}
           </tbody>
         </table>
+        </div>
       </div>
 
       <TicketPreviewModal

@@ -7,6 +7,7 @@ import { ReactLenis } from '@/utils/lenis';
 import { Toaster } from 'sonner';
 import { usePathname } from 'next/navigation';
 import AdminSidenav from './_module/components/common/AdminSidenav';
+import { SidenavProvider } from './_module/context/SidenavContext';
 import { Fragment, Suspense } from 'react';
 import AdminHeader from './_module/components/common/AdminHeader';
 import ReactQueryProvider from '@/providers/react-query';
@@ -51,10 +52,12 @@ const AdminLayout = ({
           >
             <Suspense fallback={<PageLoader />}>
               {/* <AdminHeader /> */}
-              <div className={wrapperClass.layout}>
-                <AdminSidenav />
-                <main className={wrapperClass.main}>{children}</main>
-              </div>
+              <SidenavProvider>
+                <div className={wrapperClass.layout}>
+                  <AdminSidenav />
+                  <main className={wrapperClass.main}>{children}</main>
+                </div>
+              </SidenavProvider>
               <Toaster richColors position={'top-right'} duration={6000} />
             </Suspense>
           </ErrorBoundary>

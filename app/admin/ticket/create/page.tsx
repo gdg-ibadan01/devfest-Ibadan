@@ -43,7 +43,7 @@ export default function CreateTicketPage() {
 
   return (
     <AdminWrapper title="Ticket">
-      <div className="px-[32px] py-[24px] max-w-[780px] mx-auto">
+      <div className="lg:px-[32px] px-[20px] py-[24px] max-w-[780px] mx-auto">
         {/* Stepper */}
         <div className="mb-6">
           <CreateTicketStepper currentStep={step} />

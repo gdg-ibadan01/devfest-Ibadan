@@ -30,8 +30,8 @@ export default function AuditLogTable() {
   return (
     <>
       {/* Search bar */}
-      <div className="flex items-center gap-3 mb-6">
-        <div className="flex items-center flex-1 max-w-[480px] border border-gray-200 rounded-lg overflow-hidden bg-white focus-within:ring-2 focus-within:ring-black/10">
+      <div className="flex flex-wrap items-center gap-3 gap-y-2 mb-6">
+        <div className="flex items-center w-full sm:flex-1 sm:max-w-[480px] border border-gray-200 rounded-lg overflow-hidden bg-white focus-within:ring-2 focus-within:ring-black/10">
           <Search size={15} className="ml-4 text-gray-400 flex-shrink-0" />
           <input
             type="text"
@@ -52,6 +52,7 @@ export default function AuditLogTable() {
 
       {/* Table card */}
       <div className="border border-gray-200 rounded-xl overflow-hidden">
+        <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-200 bg-white">
@@ -97,6 +98,7 @@ export default function AuditLogTable() {
             )}
           </tbody>
         </table>
+        </div>
       </div>
     </>
   );

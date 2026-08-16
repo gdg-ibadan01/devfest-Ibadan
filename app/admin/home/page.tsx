@@ -64,7 +64,7 @@ function MetricCard({
 export default function AdminHome() {
   return (
     <AdminWrapper title="Home">
-      <div className="px-5 py-[24px] md:px-8 lg:px-10 xl:px-[32px]">
+      <div className="px-[20px] py-[24px] md:px-8 lg:px-10 xl:px-[32px]">
         <div className="mx-auto max-w-[1450px] flex flex-col gap-[24px]">
           <section className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
             {metricCards.map((card) => (

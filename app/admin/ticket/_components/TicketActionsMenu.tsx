@@ -1,6 +1,6 @@
 'use client';
 
-import { MoreVertical, Eye, Pencil, Trash2, } from 'lucide-react';
+import { MoreVertical, Eye, Pencil, Trash2 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -36,14 +36,20 @@ export default function TicketActionsMenu({
           Preview
         </DropdownMenuItem>
         <DropdownMenuItem
-          onClick={onEdit}
+          onClick={(e) => {
+            e.stopPropagation();
+            onEdit();
+          }}
           className="flex items-center gap-2 text-[13px] cursor-pointer"
         >
           <Pencil size={14} />
           Edit
         </DropdownMenuItem>
         <DropdownMenuItem
-          onClick={onDelete}
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete();
+          }}
           className="flex items-center gap-2 text-[13px] text-red-500 focus:text-red-500 cursor-pointer"
         >
           <Trash2 size={14} />

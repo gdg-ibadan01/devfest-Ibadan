@@ -39,7 +39,7 @@ export default function DiscountReferralPage() {
 
   return (
     <AdminWrapper title="Discount">
-      <div className="px-[32px] py-[24px]">
+      <div className="lg:px-[32px] px-[20px] py-[24px]">
         <DiscountTable
           onCreateClick={() => setCreateOpen(true)}
           onEditClick={handleEdit}

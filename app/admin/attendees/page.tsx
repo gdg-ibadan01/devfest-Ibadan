@@ -61,7 +61,7 @@ export default function AttendeesPage() {
 
   return (
     <AdminWrapper title="Attendees">
-      <div className="px-[32px] py-[24px]">
+      <div className="lg:px-[32px] px-[20px] py-[24px]">
         <AttendeesTable
           onAddNew={() => setShowAddModal(true)}
           onCheckIn={handleCheckIn}
