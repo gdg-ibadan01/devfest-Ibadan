@@ -1,5 +1,4 @@
 import { IPaystackResponse } from '../../payment/interfaces/payment.interface';
-import { Role } from '@prisma/client';
 
 export interface IAttendee {
   id: string;
@@ -9,7 +8,7 @@ export interface IAttendee {
   company?: string | null;
   jobTitle?: string | null;
   amount?: number;
-  role: Role;
+  role: 'ATTENDEE' | 'ADMIN';
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;

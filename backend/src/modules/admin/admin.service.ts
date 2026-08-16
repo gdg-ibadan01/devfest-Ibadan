@@ -4,13 +4,13 @@ import {
   UnauthorizedException,
   NotFoundException,
   ForbiddenException,
-  BadRequestException,
+  Inject,
+  Logger,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { ConfigService } from '@nestjs/config';
-import { PrismaService } from '../database/prisma.service';
+import { ConfigService, ConfigType } from '@nestjs/config';
+import { PrismaService } from 'src/prisma/prisma.service';
 import { hashSync, genSaltSync, compareSync } from 'bcrypt';
-import * as crypto from 'crypto';
 import { CreateAdminDto } from './dto/create-admin.dto';
 import { LoginAdminDto } from './dto/login-admin.dto';
 import { InviteAdminDto } from './dto/invite-admin.dto';
@@ -18,14 +18,11 @@ import { AdminQueryDto } from './dto/admin-query.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import {
   IAdmin,
-  ILoginResponse,
   IJwtPayload,
   IAdminResponse,
   IDashboardStats,
 } from './interfaces/admin.interface';
 // import { EventStatus } from '@prisma/client';
-import { Role } from '@prisma/client';
-import { PaymentStatus } from '@prisma/client';
 import { MailService } from '../mail/mail.service';
 import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
@@ -33,167 +30,137 @@ import { AdminCreateAttendeeDto } from './dto/create-attendee.dto';
 import { IAttendee, ICreateResponse } from './interfaces/attendee.interface';
 import { PaymentsService } from '../payment/payment.service';
 import { IPaystackResponse } from '../payment/interfaces/payment.interface';
+import JWTConfig from 'src/config/jwt.config';
+import { type PERMISSION_ID } from 'src/common/constants/permissions';
+
+type AuthTokens = {
+  accessToken: string;
+  refreshToken: string;
+};
 
 @Injectable()
 export class AdminService {
+  private readonly logger = new Logger(AdminService.name);
+
   constructor(
     private readonly configService: ConfigService,
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
     private mailService: MailService,
     private readonly paymentsService: PaymentsService,
+    @Inject(JWTConfig.KEY)
+    private jwtConfig: ConfigType<typeof JWTConfig>,
   ) {}
 
-  async signup(signupDto: CreateAdminDto): Promise<ILoginResponse> {
-    const { fullName, email, password } = signupDto;
+  // async signup(signupDto: CreateAdminDto): Promise<ILoginResponse> {
+  //   const { fullName, email, password } = signupDto;
 
-    // Check if admin already exists
-    const existingAdmin = await this.prisma.admin.findUnique({
-      where: { email },
-    });
+  //   // Check if admin already exists
+  //   const existingAdmin = await this.prisma.admin.findUnique({
+  //     where: { email },
+  //   });
 
-    if (existingAdmin) {
-      throw new ConflictException('Admin with this email already exists');
-    }
+  //   if (existingAdmin) {
+  //     throw new ConflictException('Admin with this email already exists');
+  //   }
 
-    // Hash the password
-    const salt = genSaltSync(10);
-    const hashedPassword = hashSync(password, salt);
+  //   // Hash the password
+  //   const salt = genSaltSync(10);
+  //   const hashedPassword = hashSync(password, salt);
 
-    // Create admin
-    const admin = await this.prisma.admin.create({
-      data: {
-        fullName,
-        email,
-        password: hashedPassword,
-        role: Role.SUPER_ADMIN,
-      },
-    });
+  //   // Create admin
+  //   const admin = await this.prisma.admin.create({
+  //     data: {
+  //       fullName,
+  //       email,
+  //       password: hashedPassword,
+  //       roleId: '',
+  //     },
+  //   });
 
-    // Generate tokens
-    const tokens = await this.generateTokens({
-      sub: admin.id,
-      email: admin.email,
-      role: Role.SUPER_ADMIN,
-    });
+  //   // Generate tokens
+  //   const tokens = await this.generateAuthTokens({
+  //     sub: admin.id,
+  //     email: admin.email,
+  //     role: {
+  //     id:
+  //     },
+  //   });
 
-    return {
-      admin: this.excludePassword(admin),
-      ...tokens,
-    };
-  }
+  //   return {
+  //     admin: this.excludePassword(admin),
+  //     ...tokens,
+  //   };
+  // }
 
-  async login(loginDto: LoginAdminDto): Promise<ILoginResponse> {
-    const { email, password } = loginDto;
-
-    // Find admin by email
+  async login(payload: LoginAdminDto) {
     const admin = await this.prisma.admin.findUnique({
-      where: { email },
+      where: { email: payload.email.toLowerCase() },
+      include: { role: true },
     });
 
     if (!admin) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    // Check if admin is active
     if (!admin.isActive) {
       throw new UnauthorizedException('Account is deactivated');
     }
 
-    // Verify password
-    const isPasswordValid = compareSync(password, admin.password);
+    const isPasswordValid = compareSync(payload.password, admin.password);
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    // Generate tokens
-    const tokens = await this.generateTokens({
+    const tokens = this.generateAuthTokens({
       sub: admin.id,
       email: admin.email,
-      role: Role.ADMIN,
+      role: {
+        name: admin.role.name,
+        permissions: admin.role.permissions as PERMISSION_ID[],
+      },
     });
 
     return {
-      admin: this.excludePassword(admin),
+      admin: {
+        id: admin.id,
+        fullName: admin.fullName,
+        email: admin.email.toLowerCase(),
+        role: admin.role.name,
+      },
       ...tokens,
     };
   }
 
-  async inviteAdmin(
-    inviteDto: InviteAdminDto,
-    invitedBy: string,
-  ): Promise<{ message: string }> {
-    const { fullName, email, role } = inviteDto;
-    if (!invitedBy) {
-      throw new UnauthorizedException('Missing inviter id from auth context');
-    }
-
-    // Verify inviter exists & is SUPER_ADMIN
-    const inviter = await this.prisma.admin.findUnique({
-      where: { id: invitedBy },
-    });
-    if (!inviter) {
-      throw new UnauthorizedException('Inviter not found');
-    }
-    if (inviter.role !== Role.SUPER_ADMIN) {
-      throw new ForbiddenException('Only SUPER_ADMIN can invite other admins');
-    }
-
-    // Prevent duplicates
-    const existingAdmin = await this.prisma.admin.findUnique({
-      where: { email },
-    });
-    if (existingAdmin) {
-      throw new ConflictException('Admin with this email already exists');
-    }
-
-    // Create admin with temp password
-    const tempPassword = crypto.randomBytes(12).toString('hex');
-    const salt = genSaltSync(10);
-    const hashedPassword = hashSync(tempPassword, salt);
-
-    const admin = await this.prisma.admin.create({
-      data: {
-        fullName,
-        email,
-        password: hashedPassword,
-        role,
-        isActive: true,
-        invitedById: inviter.id,
-      },
-    });
-
-    await this.mailService.sendInviteEmail(
-      admin.email,
-      admin.fullName,
-      tempPassword,
-    );
-
-    return { message: 'Admin invited successfully' };
-  }
+  async inviteAdmin(inviteDto: InviteAdminDto, invitedBy: string) {}
 
   async refreshToken(
     refreshToken: string,
   ): Promise<{ accessToken: string; refreshToken: string }> {
     try {
       const payload = this.jwtService.verify(refreshToken, {
-        secret: process.env.JWT_REFRESH_SECRET,
+        secret: this.jwtConfig.refreshSecret,
       });
 
       const admin = await this.prisma.admin.findUnique({
         where: { id: payload.sub },
+        include: { role: true },
       });
 
       if (!admin || !admin.isActive) {
         throw new UnauthorizedException('Invalid refresh token');
       }
 
-      return this.generateTokens({
+      return this.generateAuthTokens({
         sub: admin.id,
         email: admin.email,
-        role: Role.ADMIN,
+        role: {
+          name: admin.role.name,
+          permissions: admin.role.permissions as PERMISSION_ID[],
+        },
       });
     } catch (error) {
+      this.logger.error(error);
       throw new UnauthorizedException('Invalid refresh token');
     }
   }
@@ -234,56 +201,7 @@ export class AdminService {
     return { message: 'Password changed successfully' };
   }
 
-  async create(
-    adminCreateAttendeeDto: AdminCreateAttendeeDto,
-  ): Promise<ICreateResponse> {
-    const { email, fullName, amount, phoneNumber, company, jobTitle } =
-      adminCreateAttendeeDto;
-
-    // Check if attendee already exists
-    const existingAttendee = await this.prisma.attendee.findUnique({
-      where: { email },
-    });
-    if (existingAttendee) {
-      throw new ConflictException('Attendee with this email already exists');
-    }
-
-    // Create attendee
-    const attendee = await this.prisma.attendee.create({
-      data: { email, fullName, phoneNumber, company, jobTitle },
-    });
-
-    // Initialize payment
-    const paystackResponse = await this.paymentsService.initiatePayment({
-      attendeeId: attendee.id,
-      email,
-      amount,
-    });
-
-    // Send payment link email
-    const paymentUrl = paystackResponse.data.authorization_url;
-    await this.mailService.sendPaymentLinkEmail(
-      attendee.email,
-      attendee.fullName,
-      paymentUrl,
-      amount,
-    );
-
-    // Shape attendee response
-    const attendeeResponse: IAttendee = {
-      ...attendee,
-      phoneNumber: attendee.phoneNumber ?? undefined,
-      company: attendee.company ?? undefined,
-      jobTitle: attendee.jobTitle ?? undefined,
-      amount,
-    };
-
-    return {
-      attendee: attendeeResponse,
-      payment: paystackResponse,
-      paymentUrl,
-    };
-  }
+  async create(adminCreateAttendeeDto: AdminCreateAttendeeDto) {}
 
   async deactivateAdmin(
     adminId: string,
@@ -297,7 +215,7 @@ export class AdminService {
       where: { id: deactivatedBy },
     });
 
-    if (!deactivator || deactivator.role !== 'SUPER_ADMIN') {
+    if (!deactivator || deactivator.roleId !== 'SUPER_ADMIN') {
       throw new ForbiddenException('Only SUPER_ADMIN can deactivate admins');
     }
 
@@ -313,28 +231,23 @@ export class AdminService {
     return { message: 'Admin deactivated successfully' };
   }
 
-  private async generateTokens(
-    payload: IJwtPayload,
-  ): Promise<{ accessToken: string; refreshToken: string }> {
-    const accessToken = await this.jwtService.sign(payload);
+  private generateAuthTokens(payload: IJwtPayload): AuthTokens {
+    const accessToken = this.jwtService.sign(payload, {
+      expiresIn: this.jwtConfig.expiresIn,
+      secret: this.jwtConfig.accessSecret,
+      algorithm: 'HS256',
+    });
 
-    const refreshSecret =
-      await this.configService.get<string>('jwt.refreshSecret');
-    const refreshExpiresIn =
-      this.configService.get<string>('jwt.refreshExpiresIn') ?? '7d';
-    if (!refreshSecret) {
-      throw new Error('Refresh secret is not configured');
-    }
-
-    const refreshToken = await this.jwtService.sign(payload, {
-      secret: refreshSecret,
-      expiresIn: refreshExpiresIn,
+    const refreshToken = this.jwtService.sign<IJwtPayload>(payload, {
+      secret: this.jwtConfig.refreshSecret,
+      expiresIn: this.jwtConfig.refreshExpiresIn,
+      algorithm: 'HS256',
     });
 
     return { accessToken, refreshToken };
   }
 
-  private excludePassword(admin: any): IAdminResponse {
+  private excludePassword(admin: any) {
     const { password, ...adminWithoutPassword } = admin;
     return adminWithoutPassword;
   }
@@ -419,13 +332,13 @@ export class AdminService {
     return this.excludePassword(admin);
   }
 
-  async findByEmail(email: string): Promise<IAdmin | null> {
+  async findByEmail(email: string) {
     return await this.prisma.admin.findUnique({
       where: { email },
     });
   }
 
-  async updateStatus(id: string, isActive: boolean): Promise<IAdmin> {
+  async updateStatus(id: string, isActive: boolean) {
     await this.findOne(id);
     return await this.prisma.admin.update({
       where: { id },

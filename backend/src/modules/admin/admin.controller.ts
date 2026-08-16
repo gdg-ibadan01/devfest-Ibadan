@@ -19,6 +19,7 @@ import {
   ApiOperation,
   ApiResponse,
   ApiBearerAuth,
+  ApiOkResponse,
 } from '@nestjs/swagger';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { Role } from '../../common/enums/role.enum';
@@ -34,33 +35,38 @@ import { AdminCreateAttendeeDto } from './dto/create-attendee.dto';
 import { ICreateResponse } from './interfaces/attendee.interface';
 import { RolesGuard } from './guards/roles.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
-import { ILoginResponse, IAdminResponse } from './interfaces/admin.interface';
+import { IAdminResponse } from './interfaces/admin.interface';
+import { LoginResponseDto } from './dto/login-response.dto';
 
 @ApiTags('Admin')
 @Controller('admin')
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
-  @Post('signup')
-  @ApiOperation({ summary: 'Register a super admin account' })
-  @ApiResponse({
-    status: 201,
-    description: 'Super admin created successfully.',
-  })
-  @ApiResponse({
-    status: 409,
-    description: 'Email already exists.',
-  })
-  async signup(@Body() signupDto: CreateAdminDto): Promise<ILoginResponse> {
-    return this.adminService.signup(signupDto);
-  }
+  // @Post('signup')
+  // @ApiOperation({ summary: 'Register a super admin account' })
+  // @ApiResponse({
+  //   status: 201,
+  //   description: 'Super admin created successfully.',
+  // })
+  // @ApiResponse({
+  //   status: 409,
+  //   description: 'Email already exists.',
+  // })
+  // async signup(@Body() signupDto: CreateAdminDto): Promise<ILoginResponse> {
+  //   return this.adminService.signup(signupDto);
+  // }
 
   @Post('login')
   @ApiOperation({ summary: 'Login as an admin' })
-  @ApiResponse({ status: 200, description: 'Login successful.' })
   @ApiResponse({ status: 401, description: 'Invalid credentials.' })
-  async login(@Body() loginDto: LoginAdminDto): Promise<ILoginResponse> {
-    return this.adminService.login(loginDto);
+  @ApiOkResponse({
+    description: 'Login successful',
+    type: LoginResponseDto,
+  })
+  @HttpCode(HttpStatus.OK)
+  async login(@Body() payload: LoginAdminDto) {
+    return this.adminService.login(payload);
   }
 
   @Post('attendee/create')
@@ -79,9 +85,7 @@ export class AdminController {
     description: 'Attendee with this email already exists',
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async createAttendee(
-    @Body() adminCreateAttendeeDto: AdminCreateAttendeeDto,
-  ): Promise<ICreateResponse> {
+  async createAttendee(@Body() adminCreateAttendeeDto: AdminCreateAttendeeDto) {
     return this.adminService.create(adminCreateAttendeeDto);
   }
 
@@ -95,10 +99,7 @@ export class AdminController {
     status: 403,
     description: 'Only SUPER_ADMIN can invite other admins.',
   })
-  async inviteAdmin(
-    @Body() inviteDto: InviteAdminDto,
-    @Req() req: Request,
-  ): Promise<{ message: string }> {
+  async inviteAdmin(@Body() inviteDto: InviteAdminDto, @Req() req: Request) {
     const inviterId = req.user?.id ?? req.user?.sub;
     return this.adminService.inviteAdmin(inviteDto, inviterId);
   }
