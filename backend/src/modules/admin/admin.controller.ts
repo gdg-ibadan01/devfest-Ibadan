@@ -206,22 +206,6 @@ export class AdminController {
     return this.adminService.changePassword(adminId, changePasswordDto);
   }
 
-  @Post('attendee/create')
-  @HttpCode(HttpStatus.CREATED)
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.SUPER_ADMIN)
-  @ApiOperation({ summary: 'Add a new attendee (Super Admin only)' })
-  @ApiResponse({ status: 201, description: 'Attendee successfully created.' })
-  @ApiResponse({
-    status: 409,
-    description: 'Attendee with this email already exists.',
-  })
-  @ApiResponse({ status: 401, description: 'Unauthorized.' })
-  async createAttendee(@Body() adminCreateAttendeeDto: AdminCreateAttendeeDto) {
-    return this.adminService.create(adminCreateAttendeeDto);
-  }
-
   @Post('invite')
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -262,24 +246,6 @@ export class AdminController {
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
   async updateStatus(@Body() dto: UpdateAdminStatusDto) {
     return this.adminService.updateStatus(dto.adminId, dto.isActive);
-  }
-
-  @Patch('deactivate/:id')
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.SUPER_ADMIN)
-  @ApiOperation({ summary: 'Deactivate an admin account (Super Admin only)' })
-  @ApiResponse({ status: 200, description: 'Admin deactivated successfully.' })
-  @ApiResponse({
-    status: 403,
-    description: 'Only SUPER_ADMIN can deactivate other admins.',
-  })
-  async deactivateAdmin(
-    @Param('id') adminId: string,
-    @Req() req: Request,
-  ): Promise<{ message: string }> {
-    const deactivator = req.user?.id ?? req.user?.sub;
-    return this.adminService.deactivateAdmin(adminId, deactivator);
   }
 
   @Delete(':id')

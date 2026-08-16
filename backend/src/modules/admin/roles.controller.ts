@@ -5,13 +5,18 @@ import {
   InternalServerErrorException,
   Post,
   Get,
+  Patch,
+  Param,
+  Req,
   UseGuards,
 } from '@nestjs/common';
+import { Request } from 'express';
 import {
   CreateRoleDto,
   CreateRoleResponseDto,
   ListPermissionsResponse,
 } from './dto/role.dto';
+import { UpdateRoleDto } from './dto/update-role.dto';
 import { RolesService } from './roles.service';
 import {
   ApiBearerAuth,

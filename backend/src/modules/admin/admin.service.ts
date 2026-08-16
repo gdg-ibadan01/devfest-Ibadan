@@ -153,7 +153,7 @@ export class AdminService {
       .update(rawToken)
       .digest('hex');
 
-    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
 
     // Invalidate any existing reset tokens before creating a new one
     await this.prisma.passwordResetToken.deleteMany({
@@ -323,36 +323,63 @@ export class AdminService {
     };
   }
 
-  async inviteAdmin(inviteDto: InviteAdminDto, invitedBy: string) {}
+  async inviteAdmin(inviteDto: InviteAdminDto, invitedBy: string) {
+    const { email, fullName, roleId } = inviteDto;
 
-  async create(adminCreateAttendeeDto: AdminCreateAttendeeDto) {}
-
-  async deactivateAdmin(
-    adminId: string,
-    deactivatedBy: string,
-  ): Promise<{ message: string }> {
-    if (adminId === deactivatedBy) {
-      throw new ForbiddenException('You cannot deactivate your own account');
-    }
-
-    const target = await this.prisma.admin.findUnique({
-      where: { id: adminId },
+    const existingAdmin = await this.prisma.admin.findUnique({
+      where: { email: email.toLowerCase() },
     });
 
-    if (!target) {
-      throw new NotFoundException('Admin not found');
+    if (existingAdmin) {
+      throw new ConflictException('An admin with this email already exists');
     }
 
-    if (!target.isActive) {
-      throw new BadRequestException('Admin account is already deactivated');
+    const role = await this.prisma.role.findUnique({ where: { id: roleId } });
+    if (!role) {
+      throw new NotFoundException('Role not found');
     }
 
-    await this.prisma.admin.update({
-      where: { id: adminId },
-      data: { isActive: false },
+    const tempPassword = nodeCrypto.randomBytes(8).toString('hex');
+    const salt = genSaltSync(10);
+    const hashedPassword = hashSync(tempPassword, salt);
+
+    const newAdmin = await this.prisma.$transaction(async (tx) => {
+      const admin = await tx.admin.create({
+        data: {
+          email: email.toLowerCase(),
+          fullName,
+          password: hashedPassword,
+          roleId,
+          invitedById: invitedBy,
+        },
+      });
+
+      await tx.auditLog.create({
+        data: {
+          adminId: invitedBy,
+          action: 'INVITE_ADMIN',
+          metadata: {
+            invitedEmail: email,
+            invitedRoleId: roleId,
+          },
+        },
+      });
+
+      return admin;
     });
 
-    return { message: 'Admin deactivated successfully' };
+    console.log('Invitation details:', {
+      email,
+      fullName,
+      tempPassword,
+    });
+
+    await this.mailService.sendInviteEmail(email, fullName, tempPassword);
+
+    return {
+      message: 'Admin invited successfully',
+      adminId: newAdmin.id,
+    };
   }
 
   async findAll(query: AdminQueryDto) {
