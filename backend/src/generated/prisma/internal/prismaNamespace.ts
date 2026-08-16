@@ -429,6 +429,7 @@ type FieldRefInputType<Model, FieldType> = Model extends never
 export const ModelName = {
   Role: 'Role',
   Admin: 'Admin',
+  Ticket: 'Ticket',
 } as const;
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName];
@@ -450,7 +451,7 @@ export type TypeMap<
     omit: GlobalOmitOptions;
   };
   meta: {
-    modelProps: 'role' | 'admin';
+    modelProps: 'role' | 'admin' | 'ticket';
     txIsolationLevel: TransactionIsolationLevel;
   };
   model: {
@@ -606,6 +607,82 @@ export type TypeMap<
         };
       };
     };
+    Ticket: {
+      payload: Prisma.$TicketPayload<ExtArgs>;
+      fields: Prisma.TicketFieldRefs;
+      operations: {
+        findUnique: {
+          args: Prisma.TicketFindUniqueArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TicketPayload> | null;
+        };
+        findUniqueOrThrow: {
+          args: Prisma.TicketFindUniqueOrThrowArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TicketPayload>;
+        };
+        findFirst: {
+          args: Prisma.TicketFindFirstArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TicketPayload> | null;
+        };
+        findFirstOrThrow: {
+          args: Prisma.TicketFindFirstOrThrowArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TicketPayload>;
+        };
+        findMany: {
+          args: Prisma.TicketFindManyArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TicketPayload>[];
+        };
+        create: {
+          args: Prisma.TicketCreateArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TicketPayload>;
+        };
+        createMany: {
+          args: Prisma.TicketCreateManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        createManyAndReturn: {
+          args: Prisma.TicketCreateManyAndReturnArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TicketPayload>[];
+        };
+        delete: {
+          args: Prisma.TicketDeleteArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TicketPayload>;
+        };
+        update: {
+          args: Prisma.TicketUpdateArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TicketPayload>;
+        };
+        deleteMany: {
+          args: Prisma.TicketDeleteManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        updateMany: {
+          args: Prisma.TicketUpdateManyArgs<ExtArgs>;
+          result: BatchPayload;
+        };
+        updateManyAndReturn: {
+          args: Prisma.TicketUpdateManyAndReturnArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TicketPayload>[];
+        };
+        upsert: {
+          args: Prisma.TicketUpsertArgs<ExtArgs>;
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TicketPayload>;
+        };
+        aggregate: {
+          args: Prisma.TicketAggregateArgs<ExtArgs>;
+          result: runtime.Types.Utils.Optional<Prisma.AggregateTicket>;
+        };
+        groupBy: {
+          args: Prisma.TicketGroupByArgs<ExtArgs>;
+          result: runtime.Types.Utils.Optional<Prisma.TicketGroupByOutputType>[];
+        };
+        count: {
+          args: Prisma.TicketCountArgs<ExtArgs>;
+          result:
+            | runtime.Types.Utils.Optional<Prisma.TicketCountAggregateOutputType>
+            | number;
+        };
+      };
+    };
   };
 } & {
   other: {
@@ -673,6 +750,26 @@ export const AdminScalarFieldEnum = {
 export type AdminScalarFieldEnum =
   (typeof AdminScalarFieldEnum)[keyof typeof AdminScalarFieldEnum];
 
+export const TicketScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  description: 'description',
+  slug: 'slug',
+  eventDates: 'eventDates',
+  price: 'price',
+  discount: 'discount',
+  validityDates: 'validityDates',
+  maximumSaleUnits: 'maximumSaleUnits',
+  saleStartsAt: 'saleStartsAt',
+  saleEndsAt: 'saleEndsAt',
+  creatorId: 'creatorId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+} as const;
+
+export type TicketScalarFieldEnum =
+  (typeof TicketScalarFieldEnum)[keyof typeof TicketScalarFieldEnum];
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc',
@@ -739,6 +836,22 @@ export type ListDateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<
 >;
 
 /**
+ * Reference to a field of type 'Decimal'
+ */
+export type DecimalFieldRefInput<$PrismaModel> = FieldRefInputType<
+  $PrismaModel,
+  'Decimal'
+>;
+
+/**
+ * Reference to a field of type 'Decimal[]'
+ */
+export type ListDecimalFieldRefInput<$PrismaModel> = FieldRefInputType<
+  $PrismaModel,
+  'Decimal[]'
+>;
+
+/**
  * Reference to a field of type 'Int'
  */
 export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<
@@ -752,6 +865,22 @@ export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<
 export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<
   $PrismaModel,
   'Int[]'
+>;
+
+/**
+ * Reference to a field of type 'Float'
+ */
+export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<
+  $PrismaModel,
+  'Float'
+>;
+
+/**
+ * Reference to a field of type 'Float[]'
+ */
+export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<
+  $PrismaModel,
+  'Float[]'
 >;
 
 /**
@@ -913,6 +1042,7 @@ export type PrismaClientOptions =
 export type GlobalOmitConfig = {
   role?: Prisma.RoleOmit;
   admin?: Prisma.AdminOmit;
+  ticket?: Prisma.TicketOmit;
 };
 
 /* Types for Logging */
