@@ -11,7 +11,7 @@ export default function Rsvp() {
       style={{
         backgroundImage: "url('/pastel-blue-art.png')",
         backgroundRepeat: 'no-repeat',
-        backgroundPosition: 'center',
+        backgroundPosition: 'bottom',
         backgroundSize: 'cover',
       }}
     >
