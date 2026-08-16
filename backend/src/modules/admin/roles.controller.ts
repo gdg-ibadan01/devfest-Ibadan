@@ -2,18 +2,16 @@ import {
   Body,
   ConflictException,
   Controller,
+  Get,
   InternalServerErrorException,
   Post,
-  Get,
-  Patch,
-  Param,
-  Req,
   UseGuards,
 } from '@nestjs/common';
 import { Request } from 'express';
 import {
   CreateRoleDto,
   CreateRoleResponseDto,
+  ListRolesResponseDto,
   ListPermissionsResponse,
 } from './dto/role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
@@ -55,13 +53,23 @@ export class RolesController {
     }
   }
 
+  @Get()
+  @ApiBearerAuth()
+  @RequirePermission('roles.list')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @ApiOperation({ summary: 'List roles' })
+  @ApiResponse({ type: ListRolesResponseDto })
+  async list() {
+    return await this.roleService.list();
+  }
+
   @Get('permissions')
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   @ApiResponse({
     type: ListPermissionsResponse,
   })
-  list() {
+  listPermssions() {
     return this.roleService.listPermissions();
   }
 }
