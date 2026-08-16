@@ -3,11 +3,10 @@ import {
   NotFoundException,
   ConflictException,
 } from '@nestjs/common';
-import { PrismaService } from '../database/prisma.service';
+import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateAttendeeDto } from './dto/create-attendee.dto';
 import { IAttendee, ICreateAttendee } from './interfaces/attendee.interface';
 import { MailService } from '../mail/mail.service';
-import { PaymentStatus } from '@prisma/client';
 import { PaymentsService } from '../payment/payment.service';
 @Injectable()
 export class AttendeeService {
@@ -17,132 +16,13 @@ export class AttendeeService {
     private readonly paymentsService: PaymentsService,
   ) {}
 
-  async create(createAttendeeDto: CreateAttendeeDto): Promise<ICreateAttendee> {
-    const { email, fullName, amount } = createAttendeeDto;
+  async create(createAttendeeDto: CreateAttendeeDto) {}
 
-    if (!amount) {
-      throw new ConflictException('Payment amount is required');
-    }
+  async findAll(page: number = 1, limit: number = 10) {}
 
-    // Check if attendee already exists
-    const existingAttendee = await this.prisma.attendee.findUnique({
-      where: { email },
-      include: { payments: { orderBy: { createdAt: 'desc' } } },
-    });
+  async findOne(id: string) {}
 
-    if (existingAttendee) {
-      const latestPayment = existingAttendee.payments[0];
-
-      if (!latestPayment) {
-        // Attendee exists but no payment yet → create payment
-        const paystackResponse = await this.paymentsService.initiatePayment({
-          attendeeId: existingAttendee.id,
-          email,
-          amount,
-        });
-
-        const paymentUrl = paystackResponse.data.authorization_url;
-
-        await this.mailService.sendPaymentLinkEmail(
-          existingAttendee.email,
-          existingAttendee.fullName,
-          paymentUrl,
-          amount,
-        );
-
-        return {
-          message:
-            'Payment URL has been sent to your email, kindly proceed to complete your registration.',
-          attendee: existingAttendee,
-          payment: paystackResponse,
-          paymentUrl,
-        };
-      }
-
-      if (latestPayment.status === PaymentStatus.SUCCESS) {
-        throw new ConflictException(
-          'You already have a confirmed ticket with this email',
-        );
-      }
-    }
-
-    // Create a new attendee
-    const attendee = await this.prisma.attendee.create({
-      data: {
-        email,
-        fullName,
-        phoneNumber: createAttendeeDto.phoneNumber,
-        company: createAttendeeDto.company,
-        jobTitle: createAttendeeDto.jobTitle,
-      },
-    });
-
-    return {
-      attendee,
-    };
-  }
-
-  async findAll(page: number = 1, limit: number = 10) {
-    const skip = (page - 1) * limit;
-
-    const [attendees, total] = await Promise.all([
-      this.prisma.attendee.findMany({
-        skip,
-        take: limit,
-        orderBy: { createdAt: 'desc' },
-        include: {
-          payments: {
-            select: {
-              id: true,
-              status: true,
-              amount: true,
-            },
-          },
-          tickets: {
-            select: { id: true },
-          },
-        },
-      }),
-      this.prisma.attendee.count(),
-    ]);
-
-    return {
-      data: attendees,
-      meta: {
-        total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit),
-      },
-    };
-  }
-
-  async findOne(id: string): Promise<IAttendee> {
-    const attendee = await this.prisma.attendee.findUnique({
-      where: { id },
-    });
-
-    if (!attendee) {
-      throw new NotFoundException('Attendee not found');
-    }
-
-    return attendee;
-  }
-
-  async findByEmail(email: string): Promise<IAttendee | null> {
-    return await this.prisma.attendee.findUnique({
-      where: { email },
-      // include: {
-      //   registrations: {
-      //     include: {
-      //       event: true,
-      //       ticket: true,
-      //       payment: true,
-      //     },
-      //   },
-      // },
-    });
-  }
+  async findByEmail(email: string) {}
 
   // async registerForEvent(
   //   attendeeId: string,

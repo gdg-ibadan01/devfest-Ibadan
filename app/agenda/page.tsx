@@ -6,6 +6,22 @@ import AgendaTabs from './AgendaTabs';
 import AgendaTable from './AgendaTable';
 import { Calendar } from '../_module/components/icons';
 
+
+function Day1VirtualEvent() {
+  return (
+    <div className="w-full max-w-4xl mx-auto my-8">
+      <div className="bg-[#F8D8D8] border-[2px] border-[#1E1E1E] p-8 text-center">
+        <h2 className="text-2xl md:text-3xl font-normal text-[#1E1E1E] mb-3">
+          DevFest Day 1 (Virtual)
+        </h2>
+        <p className="text-lg md:text-xl font-normal text-[#1E1E1E]">
+          Virtual Panel session with Google Developer Experts
+        </p>
+      </div>
+    </div>
+  );
+}
+
 export default function Agenda() {
   const [activeDay, setActiveDay] = useState('day1');
 
@@ -17,7 +33,7 @@ export default function Agenda() {
           <section className={Styles.dateContainer}>
             <Calendar className="md:w-[98px] md:h-[98px] w-[53px] h-[53px]" />
             <p className={Styles.date}>
-              December 3rd & 4th, 2025, from 9:00 AM to 5:00 PM
+              November 28th & 29th, 2025, from 9:00 AM to 5:00 PM
             </p>
           </section>
           <p className={Styles.headerText}>
@@ -30,9 +46,11 @@ export default function Agenda() {
 
         <AgendaTabs activeDay={activeDay} setActiveDay={setActiveDay} />
 
-        <AgendaTable
-          data={activeDay === 'day1' ? agendaData.day1 : agendaData.day2}
-        />
+        {activeDay === 'day1' ?
+          <Day1VirtualEvent /> :
+          <AgendaTable
+            data={agendaData}
+          />}
       </main>
     </div>
   );

@@ -1,10 +1,10 @@
-import { Role } from '@prisma/client';
+import { type PERMISSION_ID } from 'src/common/constants/permissions';
 
 export interface IAdmin {
   id: string;
   fullName: string;
   email: string;
-  role: Role;
+  role: string;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -14,22 +14,19 @@ export interface IAdminResponse {
   id: string;
   fullName: string;
   email: string;
-  role: Role;
+  role: string;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
 
-export interface ILoginResponse {
-  admin: IAdminResponse;
-  accessToken: string;
-  refreshToken: string;
-}
-
 export interface IJwtPayload {
   sub: string;
   email: string;
-  role: Role;
+  role: {
+    name: string;
+    permissions: PERMISSION_ID[];
+  };
   iat?: number;
   exp?: number;
 }

@@ -9,12 +9,12 @@ import OurMerch from './component/OurMerch';
 
 
 export const metadata = {
-  title: 'DevFest Ibadan 2025',
-  description: 'Join us at DevFest Ibadan 2025 - The largest developer conference in Southwest Nigeria. Connect with tech experts, learn about the latest technologies, and be part of an inclusive tech community.',
+  title: 'DevFest Ibadan 2026',
+  description: 'Join us at DevFest Ibadan 2026 - The largest developer conference in Southwest Nigeria. Connect with tech experts, learn about the latest technologies, and be part of an inclusive tech community.',
   keywords: ['DevFest', 'GDG Ibadan', 'Tech Conference', 'Developers', 'Technology', 'Google', 'Tech community', 'open source'],
   openGraph: {
-    title: 'DevFest Ibadan 2025',
-    description: 'Join us at DevFest Ibadan 2025 - The largest developer conference in Southwest Nigeria. Connect with tech experts, learn about the latest technologies, and be part of an inclusive tech community.',
+    title: 'DevFest Ibadan 2026',
+    description: 'Join us at DevFest Ibadan 2026 - The largest developer conference in Southwest Nigeria. Connect with tech experts, learn about the latest technologies, and be part of an inclusive tech community.',
     images: [
       'https://res.cloudinary.com/dh8trnu8w/image/upload/q_auto/v1755685267/email-template-banner.png',
       'https://res.cloudinary.com/dh8trnu8w/image/upload/v1756199854/devfestlogo.jpg'
@@ -40,8 +40,8 @@ export const metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'DevFest Ibadan 2025',
-    description: 'Join us at DevFest Ibadan 2025 - The largest developer conference in Southwest Nigeria. Connect with tech experts, learn about the latest technologies, and be part of an inclusive tech community.',
+    title: 'DevFest Ibadan 2026',
+    description: 'Join us at DevFest Ibadan 2026 - The largest developer conference in Southwest Nigeria. Connect with tech experts, learn about the latest technologies, and be part of an inclusive tech community.',
     images: [
       'https://res.cloudinary.com/dh8trnu8w/image/upload/q_auto/v1755685267/email-template-banner.png',
       'https://res.cloudinary.com/dh8trnu8w/image/upload/v1756199854/devfestlogo.jpg'

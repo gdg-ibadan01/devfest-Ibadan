@@ -1,5 +1,3 @@
-import { TicketStatus } from '@prisma/client';
-
 export interface ITicket {
   id: string;
   ticketNumber: string;
@@ -7,7 +5,7 @@ export interface ITicket {
   // registrationId: string;
   isCheckedIn: boolean;
   qrCode: string;
-  status: TicketStatus;
+  status: 'CANCELLED' | 'ACTIVE';
   issuedAt: Date;
   validFrom: Date;
   validUntil: Date;

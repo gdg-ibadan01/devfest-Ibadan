@@ -4,7 +4,7 @@ export const menuItems = [
   { label: 'Organizers', slur: 'organizers' },
   { label: 'Merch', slur: 'https://selar.co/m/gdg-ibadan1' },
   // { label: 'Team', slur: 'team' },
-  { label: 'Ticket', slur: 'https://gdg.community.dev/e/mrbzpf/' },
+  { label: 'RSVP', slur: '/rsvp' },
 ];
 
 export const footerItems = {
