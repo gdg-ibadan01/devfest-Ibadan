@@ -21,6 +21,7 @@ import { JwtAuthGuard } from '../admin/guards/jwt-auth.guard';
 import {
   CreateTicketDto,
   CreateTicketResponseDto,
+  TicketListResponseDto,
   TicketQueryDto,
 } from './dto/ticket.dto';
 import { RolesGuard } from '../admin/guards/roles.guard';
@@ -63,12 +64,15 @@ export class TicketsController {
 
   @Get()
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
-  @ApiOperation({ summary: 'Get all tickets' })
-  @ApiResponse({ status: 200, description: 'Tickets retrieved successfully' })
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'List tickets' })
+  @ApiResponse({
+    status: 200,
+    description: 'Tickets retrieved successfully',
+    type: TicketListResponseDto,
+  })
   findAll(@Query() query: TicketQueryDto) {
-    return this.ticketsService.findAll(query);
+    return this.ticketsService.list(query);
   }
 
   // @Get('stats')
