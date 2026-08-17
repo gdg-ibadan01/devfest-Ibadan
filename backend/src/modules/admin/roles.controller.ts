@@ -6,6 +6,7 @@ import {
   InternalServerErrorException,
   Post,
   UseGuards,
+  HttpStatus,
 } from '@nestjs/common';
 import {
   CreateRoleDto,
@@ -16,6 +17,7 @@ import {
 import { RolesService } from './roles.service';
 import {
   ApiBearerAuth,
+  ApiOkResponse,
   ApiOperation,
   ApiResponse,
   ApiTags,
@@ -35,6 +37,7 @@ export class RolesController {
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @ApiOperation({ summary: 'Create a role' })
   @ApiResponse({
+    status: HttpStatus.CREATED,
     type: CreateRoleResponseDto,
   })
   async create(@Body() payload: CreateRoleDto) {
@@ -64,7 +67,8 @@ export class RolesController {
   @Get('permissions')
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
-  @ApiResponse({
+  @ApiOperation({ summary: 'List permissions' })
+  @ApiOkResponse({
     type: ListPermissionsResponse,
   })
   listPermssions() {
