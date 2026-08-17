@@ -19,7 +19,7 @@ model Role {
   isActive    Boolean  @default(true)
   admins      Admin[]
   createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
 
   @@map("roles")
 }
@@ -37,6 +37,27 @@ model Admin {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   admins      Admin[]  @relation("AdminInvitations")
+  tickets     Ticket[]
 
   @@map("admins")
+}
+
+model Ticket {
+  id               String     @id @default(uuid(7))
+  name             String
+  description      String
+  slug             String     @unique
+  eventDates       DateTime[]
+  price            Decimal
+  discount         Decimal @default(0)
+  validityDates    DateTime[]
+  maximumSaleUnits Int
+  saleStartsAt     DateTime
+  saleEndsAt       DateTime
+  creatorId        String
+  creator          Admin      @relation(fields: [creatorId], references: [id])
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+
+  @@map("tickets")
 }

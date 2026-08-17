@@ -56,6 +56,7 @@ export const AnyNull = runtime.AnyNull;
 export const ModelName = {
   Role: 'Role',
   Admin: 'Admin',
+  Ticket: 'Ticket',
 } as const;
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName];
@@ -101,6 +102,26 @@ export const AdminScalarFieldEnum = {
 
 export type AdminScalarFieldEnum =
   (typeof AdminScalarFieldEnum)[keyof typeof AdminScalarFieldEnum];
+
+export const TicketScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  description: 'description',
+  slug: 'slug',
+  eventDates: 'eventDates',
+  price: 'price',
+  discount: 'discount',
+  validityDates: 'validityDates',
+  maximumSaleUnits: 'maximumSaleUnits',
+  saleStartsAt: 'saleStartsAt',
+  saleEndsAt: 'saleEndsAt',
+  creatorId: 'creatorId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+} as const;
+
+export type TicketScalarFieldEnum =
+  (typeof TicketScalarFieldEnum)[keyof typeof TicketScalarFieldEnum];
 
 export const SortOrder = {
   asc: 'asc',

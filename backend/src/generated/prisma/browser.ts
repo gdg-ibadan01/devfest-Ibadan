@@ -26,3 +26,8 @@ export type Role = Prisma.RoleModel;
  *
  */
 export type Admin = Prisma.AdminModel;
+/**
+ * Model Ticket
+ *
+ */
+export type Ticket = Prisma.TicketModel;

@@ -1,0 +1,226 @@
+import {
+  IsOptional,
+  IsString,
+  IsEnum,
+  IsNotEmpty,
+  IsArray,
+  Matches,
+  IsNumber,
+  Min,
+  IsInt,
+  ArrayMinSize,
+  ArrayMaxSize,
+  IsDateString,
+} from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { TicketStatus } from '../../../common/enums/ticket-status.enum';
+import { Transform } from 'class-transformer';
+import { ServiceError } from 'src/common/errors/service-error';
+
+export class TicketQueryDto {
+  @ApiPropertyOptional({
+    description: 'The unique ID of the event to filter tickets for',
+    example: 'evt_1234567890abcdef',
+  })
+  @IsOptional()
+  @IsString()
+  eventId?: string;
+
+  @ApiPropertyOptional({
+    description: 'Filter tickets by their current status',
+    enum: TicketStatus,
+    example: TicketStatus.ACTIVE,
+  })
+  @IsOptional()
+  @IsEnum(TicketStatus)
+  status?: TicketStatus;
+
+  @ApiPropertyOptional({
+    description:
+      'A keyword to search across ticket fields such as attendee name or email',
+    example: 'John Doe',
+  })
+  @IsOptional()
+  @IsString()
+  search?: string;
+
+  @ApiPropertyOptional({
+    description: 'Page number for pagination',
+    example: 1,
+    default: 1,
+  })
+  @IsOptional()
+  page?: number = 1;
+
+  @ApiPropertyOptional({
+    description: 'Number of results to return per page',
+    example: 10,
+    default: 10,
+  })
+  @IsOptional()
+  limit?: number = 10;
+}
+
+export class CreateTicketDto {
+  @IsString()
+  @IsNotEmpty()
+  @Transform(({ value }) => value?.trim())
+  @ApiProperty()
+  name!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @Transform(({ value }) => value?.trim())
+  @ApiProperty()
+  description!: string;
+
+  @ApiProperty({
+    example: ['2026-08-17', '2026-08-18'],
+    description: 'Event dates in YYYY-MM-DD format',
+    type: [String],
+    minLength: 1,
+    maxLength: 2,
+  })
+  @IsArray()
+  @IsString({ each: true })
+  @ArrayMinSize(1)
+  @ArrayMaxSize(2)
+  @Matches(/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/, {
+    each: true,
+    message: 'eventDates must be in YYYY-MM-DD format',
+  })
+  eventDates!: string[];
+
+  @ApiProperty({
+    description: 'Price of ticket in Naira',
+  })
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(1)
+  price!: number;
+
+  @ApiPropertyOptional({
+    description: 'Ticket discount in Naira',
+    default: 0,
+  })
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0)
+  @IsOptional()
+  discount: number = 0;
+
+  @ApiProperty({
+    example: ['2026-08-17', '2026-08-18'],
+    description:
+      'Validity dates in YYYY-MM-DD format. Each date must be present in `eventDates`',
+    type: [String],
+    minLength: 1,
+    maxLength: 2,
+  })
+  @IsArray()
+  @IsString({ each: true })
+  @ArrayMinSize(1)
+  @ArrayMaxSize(2)
+  @Matches(/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/, {
+    each: true,
+    message: 'validityDates must be in YYYY-MM-DD format',
+  })
+  validityDates: string[];
+
+  @ApiProperty({
+    description: 'Maximum units of this ticket available for sale',
+  })
+  @IsInt()
+  @Min(1)
+  maximumSaleUnits: number;
+
+  @ApiProperty({
+    type: Date,
+    description: 'Sales will start at the beginning of this day',
+  })
+  @IsDateString({})
+  saleStartsAt: string;
+
+  @ApiProperty({
+    type: Date,
+    description: 'Sales will end at the end of this day',
+  })
+  @IsDateString()
+  saleEndsAt: string;
+
+  private priceGreaterThanDiscount(): boolean {
+    return this.price > this.discount;
+  }
+
+  private validityDatesMatchEventDates(): boolean {
+    return this.validityDates.every((vd) => this.eventDates.includes(vd));
+  }
+
+  private saleEndsAfterStart(): boolean {
+    return this.saleEndsAt > this.saleStartsAt;
+  }
+
+  /** @throws ValidationErr */
+  ensureValidInputs() {
+    if (!this.priceGreaterThanDiscount()) {
+      throw new ServiceError(
+        'discount cannot be greater than price',
+        'ValidationErr',
+      );
+    }
+
+    if (!this.validityDatesMatchEventDates()) {
+      throw new ServiceError(
+        'eventDates and validityDates mismatch',
+        'ValidationErr',
+      );
+    }
+
+    if (!this.saleEndsAfterStart()) {
+      throw new ServiceError(
+        'salesEndsAt must be after salesStartsAt',
+        'ValidationErr',
+      );
+    }
+  }
+}
+
+export class CreateTicketResponseDto {
+  @ApiProperty()
+  id: string;
+
+  @ApiProperty()
+  name: string;
+
+  @ApiProperty()
+  description: string;
+
+  @ApiProperty()
+  slug: string;
+
+  @ApiProperty({
+    format: 'date-time',
+  })
+  eventDates: Date[];
+
+  @ApiProperty()
+  price: number;
+
+  @ApiProperty()
+  discount: number;
+
+  @ApiProperty({
+    format: 'date-time',
+  })
+  validityDates: Date[];
+
+  @ApiProperty()
+  maximumSaleUnits: number;
+
+  @ApiProperty()
+  saleStartsAt: Date;
+
+  @ApiProperty()
+  saleEndsAt: Date;
+
+  @ApiProperty()
+  createdAt: Date;
+}
