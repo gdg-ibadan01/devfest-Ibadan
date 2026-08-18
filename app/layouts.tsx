@@ -6,10 +6,18 @@ import { google_sans } from './shared/font';
 import { ReactLenis } from '@/utils/lenis';
 import { Toaster } from 'sonner';
 import { usePathname } from 'next/navigation';
+import AdminSidenav from './_module/components/common/AdminSidenav';
+import { SidenavProvider } from './_module/context/SidenavContext';
 import { Fragment, Suspense } from 'react';
 import AdminHeader from './_module/components/common/AdminHeader';
 import ReactQueryProvider from '@/providers/react-query';
 import { ErrorBoundary } from '@/providers/error-boundary';
+
+export const wrapperClass = {
+  layout:
+    'min-h-screen bg-[#f7f7f7] text-[#1e1e1e] lg:grid lg:grid-cols-[260px_minmax(0,1fr)]',
+  main: 'min-w-0 bg-[#fafafa]',
+};
 
 // Loading component for Suspense fallback
 export const PageLoader = () => (
@@ -35,22 +43,27 @@ const AdminLayout = ({
 }>) => {
   return (
     <html lang="en">
-      <ReactLenis root>
-        <body className={`${google_sans.className}`}>
-          <ReactQueryProvider>
-            <ErrorBoundary
-              fallbackMessage="Something went wrong with the admin panel. Please refresh and try again."
-              showErrorDetails={process.env.NODE_ENV === 'development'}
-            >
-              <Suspense fallback={<PageLoader />}>
-                <AdminHeader />
-                {children}
-                <Toaster richColors position={'top-right'} duration={6000} />
-              </Suspense>
-            </ErrorBoundary>
-          </ReactQueryProvider>
-        </body>
-      </ReactLenis>
+      {/* <ReactLenis root> */}
+      <body className={`${google_sans.className}`}>
+        <ReactQueryProvider>
+          <ErrorBoundary
+            fallbackMessage="Something went wrong with the admin panel. Please refresh and try again."
+            showErrorDetails={process.env.NODE_ENV === 'development'}
+          >
+            <Suspense fallback={<PageLoader />}>
+              {/* <AdminHeader /> */}
+              <SidenavProvider>
+                <div className={wrapperClass.layout}>
+                  <AdminSidenav />
+                  <main className={wrapperClass.main}>{children}</main>
+                </div>
+              </SidenavProvider>
+              <Toaster richColors position={'top-right'} duration={6000} />
+            </Suspense>
+          </ErrorBoundary>
+        </ReactQueryProvider>
+      </body>
+      {/* </ReactLenis> */}
     </html>
   );
 };

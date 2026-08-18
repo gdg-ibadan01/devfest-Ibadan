@@ -146,20 +146,20 @@ export function useCreateAttendeeByAdmin(
   return useMutation({
     mutationFn: (data: CreateAttendeeRequest) =>
       apiClient.createAttendeeByAdmin(data),
-    onSuccess: (data, variables, context) => {
+    onSuccess: (data, variables, _onMutateResult, context) => {
       if (showSuccessToast) {
         toast.success(successMessage);
       }
       queryClient.invalidateQueries({ queryKey: ['payments', 'attendees'] });
-      options?.onSuccess?.(data, variables, context);
+      options?.onSuccess?.(data, variables, _onMutateResult, context);
     },
-    onError: (error, variables, context) => {
+    onError: (error, variables, _onMutateResult, context) => {
       if (showErrorToast) {
         const message =
           errorMessage || error.message || 'Failed to create attendee';
         toast.error(message);
       }
-      options?.onError?.(error, variables, context);
+      options?.onError?.(error, variables, _onMutateResult, context);
     },
     ...mutationOptions,
   });
