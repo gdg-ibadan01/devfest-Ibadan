@@ -224,21 +224,21 @@ export class AdminController {
   //   return this.adminService.deactivateAdmin(adminId, user.sub);
   // }
 
-  @Get()
-  @ApiBearerAuth()
-  @RequirePermission('admins.list')
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @ApiOperation({
-    summary: 'Get all admins',
-  })
-  @ApiOkResponse({
-    description: 'Admins retrieved successfully.',
-    type: FindAllAdminsResponseDto,
-  })
-  @ApiResponse({ status: 401, description: 'Unauthorized.' })
-  async findAll(@Query() query: AdminQueryDto) {
-    return this.adminService.findAll(query);
-  }
+  // @Get()
+  // @ApiBearerAuth()
+  // @RequirePermission('admins.list')
+  // @UseGuards(JwtAuthGuard, PermissionsGuard)
+  // @ApiOperation({
+  //   summary: 'Get all admins',
+  // })
+  // @ApiOkResponse({
+  //   description: 'Admins retrieved successfully.',
+  //   type: FindAllAdminsResponseDto,
+  // })
+  // @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  // async findAll(@Query() query: AdminQueryDto) {
+  //   return this.adminService.findAll(query);
+  // }
 
   // @Patch('status')
   // @ApiBearerAuth()
