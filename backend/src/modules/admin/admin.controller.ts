@@ -203,26 +203,26 @@ export class AdminController {
     return this.adminService.inviteAdmin(inviteDto, user.sub);
   }
 
-  // @Patch('deactivate/:id')
-  // @ApiBearerAuth()
-  // @UseGuards(JwtAuthGuard, PermissionsGuard)
-  // @RequirePermission('admins.deactivate')
-  // @ApiOperation({ summary: 'Deactivate an admin account (Super Admin only)' })
-  // @ApiOkResponse({
-  //   description: 'Admin deactivated successfully',
-  //   type: AdminActionResponseDto,
-  // })
-  // @ApiResponse({
-  //   status: 403,
-  //   description: 'Only SUPER_ADMIN can deactivate other admins.',
-  // })
-  // @HttpCode(HttpStatus.OK)
-  // async deactivateAdmin(
-  //   @Param('id') adminId: string,
-  //   @CurrentUser() user: IJwtPayload,
-  // ) {
-  //   return this.adminService.deactivateAdmin(adminId, user.sub);
-  // }
+  @Patch('deactivate/:id')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermission('admins.deactivate')
+  @ApiOperation({ summary: 'Deactivate an admin account (Super Admin only)' })
+  @ApiOkResponse({
+    description: 'Admin deactivated successfully',
+    type: AdminActionResponseDto,
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Only SUPER_ADMIN can deactivate other admins.',
+  })
+  @HttpCode(HttpStatus.OK)
+  async deactivateAdmin(
+    @Param('id') adminId: string,
+    @CurrentUser() user: IJwtPayload,
+  ) {
+    return this.adminService.deactivateAdmin(adminId, user.sub);
+  }
 
   @Get()
   @ApiBearerAuth()
@@ -239,20 +239,4 @@ export class AdminController {
   async findAll(@Query() query: AdminQueryDto) {
     return this.adminService.findAll(query);
   }
-
-  // @Patch('status')
-  // @ApiBearerAuth()
-  // @UseGuards(JwtAuthGuard, RolesGuard)
-  // @Roles(Role.SUPER_ADMIN)
-  // @ApiOperation({
-  //   summary: 'Update an admin account status (Super Admin only)',
-  // })
-  // @ApiResponse({
-  //   status: 200,
-  //   description: 'Admin status updated successfully.',
-  // })
-  // @ApiResponse({ status: 401, description: 'Unauthorized.' })
-  // async updateStatus(@Body() dto: UpdateAdminStatusDto) {
-  //   return this.adminService.updateStatus(dto.adminId, dto.isActive);
-  // }
 }

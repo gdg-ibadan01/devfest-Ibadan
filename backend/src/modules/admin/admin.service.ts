@@ -365,43 +365,43 @@ export class AdminService {
     };
   }
 
-  // async deactivateAdmin(
-  //   adminId: string,
-  //   deactivatedBy: string,
-  // ): Promise<{ message: string }> {
-  //   if (adminId === deactivatedBy) {
-  //     throw new ForbiddenException('You cannot deactivate your own account');
-  //   }
+  async deactivateAdmin(
+    adminId: string,
+    deactivatedBy: string,
+  ): Promise<{ message: string }> {
+    if (adminId === deactivatedBy) {
+      throw new ForbiddenException('You cannot deactivate your own account');
+    }
 
-  //   const target = await this.prisma.admin.findUnique({
-  //     where: { id: adminId },
-  //   });
+    const target = await this.prisma.admin.findUnique({
+      where: { id: adminId },
+    });
 
-  //   if (!target) {
-  //     throw new NotFoundException('Admin not found');
-  //   }
+    if (!target) {
+      throw new NotFoundException('Admin not found');
+    }
 
-  //   if (!target.isActive) {
-  //     throw new BadRequestException('Admin account is already deactivated');
-  //   }
+    if (!target.isActive) {
+      throw new BadRequestException('Admin account is already deactivated');
+    }
 
-  //   await this.prisma.$transaction(async (tx) => {
-  //     await tx.admin.update({
-  //       where: { id: adminId },
-  //       data: { isActive: false },
-  //     });
+    await this.prisma.$transaction(async (tx) => {
+      await tx.admin.update({
+        where: { id: adminId },
+        data: { isActive: false },
+      });
 
-  //     await tx.auditLog.create({
-  //       data: {
-  //         adminId: deactivatedBy,
-  //         action: 'DEACTIVATE_ADMIN',
-  //         metadata: { targetAdminId: adminId },
-  //       },
-  //     });
-  //   });
+      await tx.auditLog.create({
+        data: {
+          adminId: deactivatedBy,
+          action: 'DEACTIVATE_ADMIN',
+          metadata: { targetAdminId: adminId },
+        },
+      });
+    });
 
-  //   return { message: 'Admin deactivated successfully' };
-  // }
+    return { message: 'Admin deactivated successfully' };
+  }
 
   async findAll(query: AdminQueryDto) {
     const { search, role, isActive, page = 1, limit = 10 } = query;
@@ -492,15 +492,6 @@ export class AdminService {
       include: { role: true },
     });
   }
-
-  // async updateStatus(id: string, isActive: boolean) {
-  //   await this.findOne(id);
-  //   return await this.prisma.admin.update({
-  //     where: { id },
-  //     data: { isActive },
-  //     include: { role: true },
-  //   });
-  // }
 
   private generateAuthTokens(payload: IJwtPayload): AuthTokens {
     const accessToken = this.jwtService.sign(payload, {
