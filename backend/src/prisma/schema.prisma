@@ -1,10 +1,5 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
-  provider     = "prisma-client"
-  output       = "../generated/prisma"
-  moduleFormat = "cjs"
+  provider = "prisma-client-js"
 }
 
 datasource db {
@@ -12,34 +7,63 @@ datasource db {
 }
 
 model Role {
-  id          String   @id @default(uuid(7))
-  name        String   @unique
+  id          String     @id @default(uuid(7))
+  name        String     @unique
   description String
   permissions String[]
-  isActive    Boolean  @default(true)
+  isActive    Boolean    @default(true)
   admins      Admin[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @default(now()) @updatedAt
+  auditLogs   AuditLog[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @default(now()) @updatedAt
 
   @@map("roles")
 }
 
 model Admin {
-  id          String   @id @default(uuid(7))
-  fullName    String
-  email       String   @unique
-  password    String
-  roleId      String
-  role        Role     @relation(fields: [roleId], references: [id])
-  isActive    Boolean  @default(true)
-  invitedById String?
-  invitedBy   Admin?   @relation("AdminInvitations", fields: [invitedById], references: [id])
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  admins      Admin[]  @relation("AdminInvitations")
-  tickets     Ticket[]
+  id                  String               @id @default(uuid(7))
+  fullName            String
+  email               String               @unique
+  password            String
+  roleId              String
+  role                Role                 @relation(fields: [roleId], references: [id])
+  isActive            Boolean              @default(true)
+  invitedById         String?
+  invitedBy           Admin?               @relation("AdminInvitations", fields: [invitedById], references: [id])
+  passwordResetTokens PasswordResetToken[]
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  admins              Admin[]              @relation("AdminInvitations")
+  auditLogs           AuditLog[]
+  tickets             Ticket[]
 
   @@map("admins")
+}
+
+model PasswordResetToken {
+  id        String    @id @default(uuid(7))
+  adminId   String
+  token     String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  admin     Admin     @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@map("password_reset_tokens")
+}
+
+model AuditLog {
+  id        String   @id @default(uuid(7))
+  adminId   String
+  roleId    String?
+  action    String
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  admin Admin @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  role  Role? @relation(fields: [roleId], references: [id], onDelete: SetNull)
+
+  @@map("audit_logs")
 }
 
 model Ticket {
@@ -49,7 +73,7 @@ model Ticket {
   slug             String     @unique
   eventDates       DateTime[]
   price            Decimal
-  discount         Decimal @default(0)
+  discount         Decimal    @default(0)
   validityDates    DateTime[]
   maximumSaleUnits Int
   saleStartsAt     DateTime

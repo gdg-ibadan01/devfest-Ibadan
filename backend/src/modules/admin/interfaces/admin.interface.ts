@@ -10,11 +10,20 @@ export interface IAdmin {
   updatedAt: Date;
 }
 
+/** Typed role object: makes it explicit that a role is driven by permissions. */
+export interface IAdminRole {
+  name: string;
+  permissions: PERMISSION_ID[];
+}
+
+/** Full admin response — role is an object, not a plain string,
+ *  so consumers immediately see that authorisation is permission-based. */
 export interface IAdminResponse {
   id: string;
   fullName: string;
   email: string;
-  role: string;
+  /** The admin's assigned role, including the permissions it grants. */
+  role: IAdminRole;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -41,4 +50,13 @@ export interface IDashboardStats {
   completedEvents: number;
   recentRegistrations: any[];
   eventStats: any[];
+}
+
+export interface IUpdateProfileResponse {
+  id: string;
+  fullName: string;
+  email: string;
+  role: string;
+  isActive: boolean;
+  updatedAt: Date;
 }
