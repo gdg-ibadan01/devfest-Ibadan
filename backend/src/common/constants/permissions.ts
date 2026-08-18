@@ -9,6 +9,7 @@ export const PERMISSIONS = [
   { id: 'admins.invite', label: 'Invite admin' },
   { id: 'admins.update', label: 'Update admin' },
   { id: 'admins.profile', label: 'View admin profile' },
+  { id: 'admins.deactivate', label: 'Deactivate admin' },
   { id: 'roles.create', label: 'Create role' },
   { id: 'roles.edit', label: 'Edit role' },
   { id: 'roles.assign', label: 'Assign role' },

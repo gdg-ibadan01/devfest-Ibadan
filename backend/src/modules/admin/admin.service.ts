@@ -365,95 +365,126 @@ export class AdminService {
     };
   }
 
-  async findAll(query: AdminQueryDto) {
-    const { search, role, isActive, page = 1, limit = 10 } = query;
-    const skip = (page - 1) * limit;
+  // async deactivateAdmin(
+  //   adminId: string,
+  //   deactivatedBy: string,
+  // ): Promise<{ message: string }> {
+  //   if (adminId === deactivatedBy) {
+  //     throw new ForbiddenException('You cannot deactivate your own account');
+  //   }
 
-    const where: any = {};
+  //   const target = await this.prisma.admin.findUnique({
+  //     where: { id: adminId },
+  //   });
 
-    if (search) {
-      where.OR = [
-        { fullName: { contains: search, mode: 'insensitive' } },
-        { email: { contains: search, mode: 'insensitive' } },
-      ];
-    }
+  //   if (!target) {
+  //     throw new NotFoundException('Admin not found');
+  //   }
 
-    // Filter by role name via the relation.
-    // Roles are permission-based: each role carries a set of PERMISSION_IDs
-    // that determine what actions an admin can perform.
-    if (role) {
-      where.role = { name: { equals: role, mode: 'insensitive' } };
-    }
+  //   if (!target.isActive) {
+  //     throw new BadRequestException('Admin account is already deactivated');
+  //   }
 
-    if (typeof isActive === 'boolean') {
-      where.isActive = isActive;
-    }
+  //   await this.prisma.$transaction(async (tx) => {
+  //     await tx.admin.update({
+  //       where: { id: adminId },
+  //       data: { isActive: false },
+  //     });
 
-    const [admins, total] = await Promise.all([
-      this.prisma.admin.findMany({
-        where,
-        skip,
-        take: limit,
-        orderBy: { createdAt: 'desc' },
-        select: {
-          id: true,
-          fullName: true,
-          email: true,
-          role: {
-            select: {
-              name: true,
-              // Return permissions so the caller knows exactly what
-              // the role authorises this admin to do.
-              permissions: true,
-            },
-          },
-          isActive: true,
-          invitedById: true,
-          createdAt: true,
-          updatedAt: true,
-        },
-      }),
-      this.prisma.admin.count({ where }),
-    ]);
+  //     await tx.auditLog.create({
+  //       data: {
+  //         adminId: deactivatedBy,
+  //         action: 'DEACTIVATE_ADMIN',
+  //         metadata: { targetAdminId: adminId },
+  //       },
+  //     });
+  //   });
 
-    return {
-      data: admins.map((admin) => ({
-        ...admin,
-        role: {
-          name: admin.role?.name ?? '',
-          permissions: (admin.role?.permissions ?? []) as PERMISSION_ID[],
-        },
-      })),
-      meta: {
-        total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit),
-      },
-    };
-  }
+  //   return { message: 'Admin deactivated successfully' };
+  // }
 
-  async findOne(id: string): Promise<IAdminResponse> {
-    const admin = await this.prisma.admin.findUnique({
-      where: { id },
-      include: { role: true },
-    });
+  // async findAll(query: AdminQueryDto) {
+  //   const { search, role, isActive, page = 1, limit = 10 } = query;
+  //   const skip = (page - 1) * limit;
 
-    if (!admin) {
-      throw new NotFoundException('Admin not found');
-    }
+  //   const where: any = {};
 
-    // Return role as a structured object so it is immediately clear
-    // that the role is permission-based and controls access.
-    const { password, roleId, role, ...rest } = admin;
-    return {
-      ...rest,
-      role: {
-        name: role?.name ?? '',
-        permissions: (role?.permissions ?? []) as PERMISSION_ID[],
-      },
-    };
-  }
+  //   if (search) {
+  //     where.OR = [
+  //       { fullName: { contains: search, mode: 'insensitive' } },
+  //       { email: { contains: search, mode: 'insensitive' } },
+  //     ];
+  //   }
+
+  //   if (role) {
+  //     where.role = { name: { equals: role, mode: 'insensitive' } };
+  //   }
+
+  //   if (typeof isActive === 'boolean') {
+  //     where.isActive = isActive;
+  //   }
+
+  //   const [admins, total] = await Promise.all([
+  //     this.prisma.admin.findMany({
+  //       where,
+  //       skip,
+  //       take: limit,
+  //       orderBy: { createdAt: 'desc' },
+  //       select: {
+  //         id: true,
+  //         fullName: true,
+  //         email: true,
+  //         role: {
+  //           select: {
+  //             name: true,
+  //             permissions: true,
+  //           },
+  //         },
+  //         isActive: true,
+  //         invitedById: true,
+  //         createdAt: true,
+  //         updatedAt: true,
+  //       },
+  //     }),
+  //     this.prisma.admin.count({ where }),
+  //   ]);
+
+  //   return {
+  //     data: admins.map((admin) => ({
+  //       ...admin,
+  //       role: {
+  //         name: admin.role?.name ?? '',
+  //         permissions: (admin.role?.permissions ?? []) as PERMISSION_ID[],
+  //       },
+  //     })),
+  //     meta: {
+  //       total,
+  //       page,
+  //       limit,
+  //       totalPages: Math.ceil(total / limit),
+  //     },
+  //   };
+  // }
+
+  // async findOne(id: string): Promise<IAdminResponse> {
+  //   const admin = await this.prisma.admin.findUnique({
+  //     where: { id },
+  //     include: { role: true },
+  //   });
+
+  //   if (!admin) {
+  //     throw new NotFoundException('Admin not found');
+  //   }
+
+  //   const { password, roleId, role, ...rest } = admin;
+  //   return {
+  //     ...rest,
+  //     role: {
+  //       name: role?.name ?? '',
+  //       permissions: (role?.permissions ?? []) as PERMISSION_ID[],
+  //     },
+  //   };
+  // }
 
   async findByEmail(email: string) {
     return await this.prisma.admin.findUnique({
@@ -462,19 +493,14 @@ export class AdminService {
     });
   }
 
-  async updateStatus(id: string, isActive: boolean) {
-    await this.findOne(id);
-    return await this.prisma.admin.update({
-      where: { id },
-      data: { isActive },
-      include: { role: true },
-    });
-  }
-
-  async remove(id: string): Promise<void> {
-    await this.findOne(id);
-    await this.prisma.admin.delete({ where: { id } });
-  }
+  // async updateStatus(id: string, isActive: boolean) {
+  //   await this.findOne(id);
+  //   return await this.prisma.admin.update({
+  //     where: { id },
+  //     data: { isActive },
+  //     include: { role: true },
+  //   });
+  // }
 
   private generateAuthTokens(payload: IJwtPayload): AuthTokens {
     const accessToken = this.jwtService.sign(payload, {

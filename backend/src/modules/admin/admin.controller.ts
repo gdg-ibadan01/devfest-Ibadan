@@ -52,25 +52,12 @@ import {
 } from './dto/role.dto';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { IJwtPayload } from './interfaces/admin.interface';
+import { AdminActionResponseDto } from './dto/admin-response.dto';
 
 @ApiTags('Admin')
 @Controller('admin')
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
-
-  // @Post('signup')
-  // @ApiOperation({ summary: 'Register a super admin account' })
-  // @ApiResponse({
-  //   status: 201,
-  //   description: 'Super admin created successfully.',
-  // })
-  // @ApiResponse({
-  //   status: 409,
-  //   description: 'Email already exists.',
-  // })
-  // async signup(@Body() signupDto: CreateAdminDto) {
-  //   return this.adminService.signup(signupDto);
-  // }
 
   @Post('login')
   @ApiOperation({ summary: 'Login as an admin' })
@@ -137,20 +124,20 @@ export class AdminController {
     return this.adminService.resetPassword(resetPasswordDto);
   }
 
-  @Get('findOne')
-  @ApiBearerAuth()
-  @RequirePermission('admins.profile')
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @ApiOperation({ summary: 'Get the authenticated admin profile' })
-  @ApiOkResponse({
-    description: 'Profile retrieved successfully.',
-    type: FindOneAdminResponseDto,
-  })
-  @ApiResponse({ status: 401, description: 'Unauthorized.' })
-  @HttpCode(HttpStatus.OK)
-  async getProfile(@CurrentUser() user: IJwtPayload): Promise<IAdminResponse> {
-    return this.adminService.findOne(user.sub);
-  }
+  // @Get('findOne')
+  // @ApiBearerAuth()
+  // @RequirePermission('admins.profile')
+  // @UseGuards(JwtAuthGuard, PermissionsGuard)
+  // @ApiOperation({ summary: 'Get the authenticated admin profile' })
+  // @ApiOkResponse({
+  //   description: 'Profile retrieved successfully.',
+  //   type: FindOneAdminResponseDto,
+  // })
+  // @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  // @HttpCode(HttpStatus.OK)
+  // async getProfile(@CurrentUser() user: IJwtPayload): Promise<IAdminResponse> {
+  //   return this.adminService.findOne(user.sub);
+  // }
 
   @Patch('profile')
   @ApiBearerAuth()
@@ -216,48 +203,56 @@ export class AdminController {
     return this.adminService.inviteAdmin(inviteDto, user.sub);
   }
 
-  @Get()
-  @ApiBearerAuth()
-  @RequirePermission('admins.list')
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @ApiOperation({
-    summary: 'Get all admins',
-  })
-  @ApiOkResponse({
-    description: 'Admins retrieved successfully.',
-    type: FindAllAdminsResponseDto,
-  })
-  @ApiResponse({ status: 401, description: 'Unauthorized.' })
-  async findAll(@Query() query: AdminQueryDto) {
-    return this.adminService.findAll(query);
-  }
+  // @Patch('deactivate/:id')
+  // @ApiBearerAuth()
+  // @UseGuards(JwtAuthGuard, PermissionsGuard)
+  // @RequirePermission('admins.deactivate')
+  // @ApiOperation({ summary: 'Deactivate an admin account (Super Admin only)' })
+  // @ApiOkResponse({
+  //   description: 'Admin deactivated successfully',
+  //   type: AdminActionResponseDto,
+  // })
+  // @ApiResponse({
+  //   status: 403,
+  //   description: 'Only SUPER_ADMIN can deactivate other admins.',
+  // })
+  // @HttpCode(HttpStatus.OK)
+  // async deactivateAdmin(
+  //   @Param('id') adminId: string,
+  //   @CurrentUser() user: IJwtPayload,
+  // ) {
+  //   return this.adminService.deactivateAdmin(adminId, user.sub);
+  // }
 
-  @Patch('status')
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.SUPER_ADMIN)
-  @ApiOperation({
-    summary: 'Update an admin account status (Super Admin only)',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Admin status updated successfully.',
-  })
-  @ApiResponse({ status: 401, description: 'Unauthorized.' })
-  async updateStatus(@Body() dto: UpdateAdminStatusDto) {
-    return this.adminService.updateStatus(dto.adminId, dto.isActive);
-  }
+  // @Get()
+  // @ApiBearerAuth()
+  // @RequirePermission('admins.list')
+  // @UseGuards(JwtAuthGuard, PermissionsGuard)
+  // @ApiOperation({
+  //   summary: 'Get all admins',
+  // })
+  // @ApiOkResponse({
+  //   description: 'Admins retrieved successfully.',
+  //   type: FindAllAdminsResponseDto,
+  // })
+  // @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  // async findAll(@Query() query: AdminQueryDto) {
+  //   return this.adminService.findAll(query);
+  // }
 
-  @Delete(':id')
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.SUPER_ADMIN)
-  @ApiOperation({ summary: 'Delete an admin account (Super Admin only)' })
-  @ApiResponse({ status: 200, description: 'Admin deleted successfully.' })
-  @ApiResponse({ status: 404, description: 'Admin not found.' })
-  @ApiResponse({ status: 403, description: 'Forbidden.' })
-  async remove(@Param('id') adminId: string): Promise<{ message: string }> {
-    await this.adminService.remove(adminId);
-    return { message: 'Admin deleted successfully' };
-  }
+  // @Patch('status')
+  // @ApiBearerAuth()
+  // @UseGuards(JwtAuthGuard, RolesGuard)
+  // @Roles(Role.SUPER_ADMIN)
+  // @ApiOperation({
+  //   summary: 'Update an admin account status (Super Admin only)',
+  // })
+  // @ApiResponse({
+  //   status: 200,
+  //   description: 'Admin status updated successfully.',
+  // })
+  // @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  // async updateStatus(@Body() dto: UpdateAdminStatusDto) {
+  //   return this.adminService.updateStatus(dto.adminId, dto.isActive);
+  // }
 }

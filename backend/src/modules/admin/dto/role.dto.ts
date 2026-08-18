@@ -110,13 +110,6 @@ export class ListPermissionsResponse {
   permissions: PermissionDto[];
 }
 
-// ─── Admin Response DTOs ──────────────────────────────────────────────────────
-
-/**
- * Represents the role object returned on admin responses.
- * Exposes both the role name AND its permission list so consumers
- * can clearly see that roles are permission-based.
- */
 export class AdminRoleDto {
   @ApiProperty({
     description: 'Human-readable role name',
@@ -135,7 +128,6 @@ export class AdminRoleDto {
   permissions!: PERMISSION_ID[];
 }
 
-/** Single admin item returned inside the findAll list. */
 export class FindAllAdminsItemDto {
   @ApiProperty({ description: 'Admin unique identifier' })
   id!: string;
@@ -168,7 +160,6 @@ export class FindAllAdminsItemDto {
   updatedAt!: Date;
 }
 
-/** Pagination metadata returned alongside the admin list. */
 export class FindAllAdminsMetaDto {
   @ApiProperty({ description: 'Total number of matching admins' })
   total!: number;
@@ -183,7 +174,6 @@ export class FindAllAdminsMetaDto {
   totalPages!: number;
 }
 
-/** Full paginated response shape for GET /admin. */
 export class FindAllAdminsResponseDto {
   @ApiProperty({ type: [FindAllAdminsItemDto] })
   data!: FindAllAdminsItemDto[];
@@ -192,7 +182,6 @@ export class FindAllAdminsResponseDto {
   meta!: FindAllAdminsMetaDto;
 }
 
-/** Response shape for GET /admin/:id and GET /admin/profile. */
 export class FindOneAdminResponseDto {
   @ApiProperty()
   id!: string;
