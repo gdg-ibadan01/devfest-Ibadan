@@ -33,6 +33,7 @@
     "@nestjs/swagger": "^11.2.0",
     "@prisma/adapter-pg": "^7.9.1",
     "@prisma/client": "^7.9.1",
+    "@scalar/nestjs-api-reference": "^1.2.14",
     "axios": "^1.11.0",
     "bcrypt": "^6.0.0",
     "class-transformer": "^0.5.1",

@@ -2,21 +2,20 @@ generator client {
   provider = "prisma-client-js"
 }
 
-
 datasource db {
   provider = "postgresql"
 }
 
 model Role {
-  id          String   @id @default(uuid(7))
-  name        String   @unique
+  id          String     @id @default(uuid(7))
+  name        String     @unique
   description String
   permissions String[]
-  isActive    Boolean  @default(true)
+  isActive    Boolean    @default(true)
   admins      Admin[]
   auditLogs   AuditLog[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt @default(now())
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @default(now()) @updatedAt
 
   @@map("roles")
 }
@@ -29,13 +28,14 @@ model Admin {
   roleId              String
   role                Role                 @relation(fields: [roleId], references: [id])
   isActive            Boolean              @default(true)
-  invitedById String?
-  invitedBy   Admin?   @relation("AdminInvitations", fields: [invitedById], references: [id])
+  invitedById         String?
+  invitedBy           Admin?               @relation("AdminInvitations", fields: [invitedById], references: [id])
   passwordResetTokens PasswordResetToken[]
   createdAt           DateTime             @default(now())
   updatedAt           DateTime             @updatedAt
   admins              Admin[]              @relation("AdminInvitations")
   auditLogs           AuditLog[]
+  tickets             Ticket[]
 
   @@map("admins")
 }
@@ -43,11 +43,11 @@ model Admin {
 model PasswordResetToken {
   id        String    @id @default(uuid(7))
   adminId   String
-  token     String    @unique 
+  token     String    @unique
   expiresAt DateTime
   usedAt    DateTime?
   createdAt DateTime  @default(now())
-  admin Admin @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  admin     Admin     @relation(fields: [adminId], references: [id], onDelete: Cascade)
 
   @@map("password_reset_tokens")
 }
@@ -64,4 +64,24 @@ model AuditLog {
   role  Role? @relation(fields: [roleId], references: [id], onDelete: SetNull)
 
   @@map("audit_logs")
+}
+
+model Ticket {
+  id               String     @id @default(uuid(7))
+  name             String
+  description      String
+  slug             String     @unique
+  eventDates       DateTime[]
+  price            Decimal
+  discount         Decimal    @default(0)
+  validityDates    DateTime[]
+  maximumSaleUnits Int
+  saleStartsAt     DateTime
+  saleEndsAt       DateTime
+  creatorId        String
+  creator          Admin      @relation(fields: [creatorId], references: [id])
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+
+  @@map("tickets")
 }

@@ -56,8 +56,22 @@ export default function Rsvp() {
     }
   }, [getSubmittedEmails]);
 
+  /**
+   * Matches Nigerian phone numbers:
+   * +234 followed by 10 digits, 234 followed by 10 digits, or 0 followed by 10 digits.
+   */
+  const NIGERIAN_PHONE_REGEX = /^(\+234|234|0)[789]\d{9}$/;
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+
+    if (name === 'phoneNumber') {
+      // Allow only digits and a leading '+'
+      const sanitized = value.replace(/[^\d+]/g, '').replace(/(?!^)\+/g, '');
+      setFormData((prev) => ({ ...prev, [name]: sanitized }));
+      return;
+    }
+
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -73,6 +87,13 @@ export default function Rsvp() {
     // Validate required dropdowns
     if (!formData.gender || !formData.numberOfSeats || !formData.howDidYouHear) {
       setError('Please fill in all required fields.');
+      setIsSubmitting(false);
+      return;
+    }
+
+    // Validate Nigerian phone number format
+    if (!NIGERIAN_PHONE_REGEX.test(formData.phoneNumber)) {
+      setError('Please enter a valid Nigerian phone number (e.g. +2348012345678 or 08012345678).');
       setIsSubmitting(false);
       return;
     }
@@ -194,10 +215,12 @@ export default function Rsvp() {
               />
               <CustomInput
                 label="Phone Number"
-                placeholder="+234_ _ _ _ _ _"
+                placeholder="+2348012345678"
                 name="phoneNumber"
+                type="tel"
                 value={formData.phoneNumber}
                 onChange={handleInputChange}
+                maxLength={14}
                 required
               />
               <CustomSelect
