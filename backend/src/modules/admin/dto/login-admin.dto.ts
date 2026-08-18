@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
 import {
   IsEmail,
   IsNotEmpty,
@@ -9,12 +10,15 @@ import {
 
 export class LoginAdminDto {
   @ApiProperty({ description: 'Email address', example: 'admin@gdg.com' })
+  @IsNotEmpty()
+  @Transform(({ value }) => value?.trim())
   @IsEmail()
   email: string;
 
   @ApiProperty({ description: 'User password', example: 'StrongPassword123!' })
   @IsString({ message: 'Password must be a string' })
-  @IsNotEmpty({ message: 'Password is required' })
+  @IsNotEmpty()
+  @Transform(({ value }) => value?.trim())
   @MinLength(8, { message: 'Password must be at least 8 characters long' })
   @Matches(/^[A-Za-z0-9!@#\$%\^\&*\)\(+=._\[\]\/-]{8,}$/, {
     message:

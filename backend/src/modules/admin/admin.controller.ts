@@ -12,6 +12,8 @@ import {
   Delete,
   HttpCode,
   HttpStatus,
+  BadRequestException,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { Request } from 'express';
 import {
@@ -37,11 +39,19 @@ import { UpdateAdminStatusDto } from './dto/update-status.dto';
 import { AdminCreateAttendeeDto } from './dto/create-attendee.dto';
 import { RolesGuard } from './guards/roles.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { PermissionsGuard } from './guards/permissions.guard';
+import { RequirePermission } from 'src/common/decorators/permissions.decorator';
 import {
   IAdminResponse,
   IUpdateProfileResponse,
 } from './interfaces/admin.interface';
 import { LoginResponseDto } from './dto/login-response.dto';
+import {
+  FindAllAdminsResponseDto,
+  FindOneAdminResponseDto,
+} from './dto/role.dto';
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { IJwtPayload } from './interfaces/admin.interface';
 
 @ApiTags('Admin')
 @Controller('admin')
@@ -89,23 +99,19 @@ export class AdminController {
   }
 
   @Post('forgot-password')
-  @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Request a password reset email',
-    description:
-      'Sends a time-limited password reset link to the provided email address if it belongs to a registered admin. Always returns a generic success message to prevent email enumeration.',
   })
   @ApiResponse({
-    status: 200,
-    description:
-      'Reset email dispatched (or silently ignored if email not found).',
-    schema: {
-      example: {
-        message:
-          'If that email address is registered, you will receive a password reset link shortly.',
-      },
-    },
+    status: 400,
+    description: 'Invalid credentials.',
   })
+  @ApiOkResponse({
+    description:
+      'Password reset link has been sent to the provided email address.',
+    type: ForgotPasswordDto,
+  })
+  @HttpCode(HttpStatus.OK)
   async forgotPassword(
     @Body() forgotPasswordDto: ForgotPasswordDto,
   ): Promise<{ message: string }> {
@@ -113,120 +119,114 @@ export class AdminController {
   }
 
   @Post('reset-password')
-  @HttpCode(HttpStatus.OK)
   @ApiOperation({
-    summary: 'Reset admin password using a token from the reset email',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Password reset successfully.',
-    schema: {
-      example: {
-        message: 'Password has been reset successfully. You can now log in.',
-      },
-    },
+    summary: 'Reset admin password',
   })
   @ApiResponse({
     status: 400,
-    description: 'Token is invalid, expired, or already used.',
+    description: 'Invalid token.',
   })
+  @ApiOkResponse({
+    description: 'Password reset successfully.',
+    type: ResetPasswordDto,
+  })
+  @HttpCode(HttpStatus.OK)
   async resetPassword(
     @Body() resetPasswordDto: ResetPasswordDto,
   ): Promise<{ message: string }> {
     return this.adminService.resetPassword(resetPasswordDto);
   }
 
-  @Get('profile')
+  @Get('findOne')
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @RequirePermission('admins.profile')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
   @ApiOperation({ summary: 'Get the authenticated admin profile' })
-  @ApiResponse({ status: 200, description: 'Profile retrieved successfully.' })
+  @ApiOkResponse({
+    description: 'Profile retrieved successfully.',
+    type: FindOneAdminResponseDto,
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
-  async getProfile(@Req() req: Request): Promise<IAdminResponse> {
-    const adminId = req.user?.id ?? req.user?.sub;
-    if (!adminId) {
-      throw new UnauthorizedException(
-        'Invalid token payload: no user ID found.',
-      );
-    }
-    return this.adminService.findOne(adminId);
+  @HttpCode(HttpStatus.OK)
+  async getProfile(@CurrentUser() user: IJwtPayload): Promise<IAdminResponse> {
+    return this.adminService.findOne(user.sub);
   }
 
   @Patch('profile')
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermission('admins.update')
   @ApiOperation({
     summary: 'Update authenticated admin profile',
-    description:
-      'Updates fullName and/or email. At least one field is required.',
   })
-  @ApiResponse({ status: 200, description: 'Profile updated successfully.' })
-  @ApiResponse({ status: 400, description: 'No fields provided.' })
-  @ApiResponse({ status: 409, description: 'Email already in use.' })
+  @ApiOkResponse({
+    description: 'Profile updated successfully.',
+    type: UpdateProfileDto,
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  @HttpCode(HttpStatus.OK)
   async updateProfile(
     @Body() updateProfileDto: UpdateProfileDto,
-    @Req() req: Request,
+    @CurrentUser() user: IJwtPayload,
   ): Promise<IUpdateProfileResponse> {
-    const adminId = req.user?.id ?? req.user?.sub;
-    if (!adminId) {
-      throw new UnauthorizedException(
-        'Invalid token payload: no user ID found.',
-      );
-    }
-    return this.adminService.updateProfile(adminId, updateProfileDto);
+    return this.adminService.updateProfile(user.sub, updateProfileDto);
   }
 
   @Patch('change-password')
-  @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @UseGuards(JwtAuthGuard)
   @ApiOperation({
     summary: 'Change password for the authenticated admin',
-    description:
-      'Requires the current password for verification before setting the new one.',
   })
-  @ApiResponse({ status: 200, description: 'Password changed successfully.' })
+  @ApiOkResponse({
+    description: 'Password changed successfully.',
+    type: ChangePasswordDto,
+  })
   @ApiResponse({ status: 401, description: 'Current password is incorrect.' })
   @ApiResponse({
     status: 400,
     description: 'New password must differ from the current one.',
   })
+  @HttpCode(HttpStatus.OK)
   async changePassword(
     @Body() changePasswordDto: ChangePasswordDto,
-    @Req() req: Request,
+    @CurrentUser() user: IJwtPayload,
   ): Promise<{ message: string }> {
-    const adminId = req.user?.sub ?? req.user?.id;
-    if (!adminId) {
-      throw new UnauthorizedException('User ID not found in token');
-    }
-    return this.adminService.changePassword(adminId, changePasswordDto);
+    return this.adminService.changePassword(user.sub, changePasswordDto);
   }
 
   @Post('invite')
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.SUPER_ADMIN)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermission('admins.invite')
   @ApiOperation({ summary: 'Invite another admin (Super Admin only)' })
-  @ApiResponse({ status: 201, description: 'Admin invited successfully.' })
+  @ApiOkResponse({
+    description: 'Admin invited successfully',
+    type: InviteAdminDto,
+  })
   @ApiResponse({
     status: 403,
     description: 'Only SUPER_ADMIN can invite other admins.',
   })
-  async inviteAdmin(@Body() inviteDto: InviteAdminDto, @Req() req: Request) {
-    const inviterId = req.user?.id ?? req.user?.sub;
-    return this.adminService.inviteAdmin(inviteDto, inviterId);
+  @HttpCode(HttpStatus.OK)
+  async inviteAdmin(
+    @Body() inviteDto: InviteAdminDto,
+    @CurrentUser() user: IJwtPayload,
+  ) {
+    return this.adminService.inviteAdmin(inviteDto, user.sub);
   }
 
   @Get()
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.SUPER_ADMIN)
-  @ApiOperation({ summary: 'Get all admins (Super Admin only)' })
-  @ApiResponse({ status: 200, description: 'Admins retrieved successfully.' })
+  @RequirePermission('admins.list')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @ApiOperation({
+    summary: 'Get all admins',
+  })
+  @ApiOkResponse({
+    description: 'Admins retrieved successfully.',
+    type: FindAllAdminsResponseDto,
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
   async findAll(@Query() query: AdminQueryDto) {
     return this.adminService.findAll(query);

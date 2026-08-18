@@ -10,4 +10,9 @@ export default registerAs('app', () => ({
     process.env.FRONTEND_URL ||
     process.env.FRONTEND_SUCCESS_URL ||
     'http://localhost:3000',
+  passwordResetUrl:
+    process.env.PASSWORD_RESET_URL ||
+    'http://localhost:3000/admin/reset-password',
+  inviteAdminUrl:
+    process.env.INVITE_ADMIN_URL || 'http://localhost:3000/admin/invite',
 }));

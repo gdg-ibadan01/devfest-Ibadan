@@ -22,7 +22,7 @@ model Role {
 }
 
 model Admin {
-  id                  String               @id @default(cuid())
+  id                  String               @id @default(uuid(7))
   fullName            String
   email               String               @unique
   password            String
@@ -41,7 +41,7 @@ model Admin {
 }
 
 model PasswordResetToken {
-  id        String    @id @default(cuid())
+  id        String    @id @default(uuid(7))
   adminId   String
   token     String    @unique 
   expiresAt DateTime
@@ -53,7 +53,7 @@ model PasswordResetToken {
 }
 
 model AuditLog {
-  id        String   @id @default(cuid())
+  id        String   @id @default(uuid(7))
   adminId   String
   roleId    String?
   action    String

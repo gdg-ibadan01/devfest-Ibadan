@@ -8,6 +8,7 @@ import {
   IsNotEmpty,
 } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
 
 export class UpdateProfileDto {
   @ApiPropertyOptional({
@@ -15,9 +16,8 @@ export class UpdateProfileDto {
     example: 'Jane Doe',
   })
   @ValidateIf((o) => !o.email || o.fullName !== undefined)
-  @IsNotEmpty({
-    message: 'At least one field (fullName or email) must be provided',
-  })
+  @IsNotEmpty()
+  @Transform(({ value }) => value?.trim())
   @IsString({ message: 'Full name must be a string' })
   @MinLength(2, { message: 'Full name must be at least 2 characters' })
   @MaxLength(100, { message: 'Full name must not exceed 100 characters' })
@@ -28,6 +28,8 @@ export class UpdateProfileDto {
     example: 'newemail@gdgibadan.com',
   })
   @IsOptional()
+  @IsNotEmpty()
+  @Transform(({ value }) => value?.trim())
   @IsEmail({}, { message: 'Please provide a valid email address' })
   email?: string;
 }

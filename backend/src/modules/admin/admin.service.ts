@@ -39,7 +39,6 @@ type AuthTokens = {
 @Injectable()
 export class AdminService {
   private readonly logger = new Logger(AdminService.name);
-
   constructor(
     private readonly configService: ConfigService,
     private readonly prisma: PrismaService,
@@ -61,15 +60,7 @@ export class AdminService {
     }
 
     if (!admin.isActive) {
-      throw new UnauthorizedException(
-        'Your account has been deactivated. Please contact a super admin.',
-      );
-    }
-
-    if (!admin.role) {
-      throw new UnauthorizedException(
-        'Your account has no assigned role. Please contact a super admin.',
-      );
+      throw new UnauthorizedException('Account is deactivated');
     }
 
     const isPasswordValid = compareSync(payload.password, admin.password);
@@ -133,18 +124,14 @@ export class AdminService {
   ): Promise<{ message: string }> {
     const { email } = forgotPasswordDto;
 
-    // Always return the same generic message to prevent email enumeration
-    const genericResponse = {
-      message:
-        'If that email address is registered, you will receive a password reset link shortly.',
-    };
-
     const admin = await this.prisma.admin.findUnique({
       where: { email: email.toLowerCase() },
     });
 
     if (!admin || !admin.isActive) {
-      return genericResponse;
+      throw new NotFoundException(
+        'No admin account is associated with this email address.',
+      );
     }
 
     const rawToken = nodeCrypto.randomBytes(32).toString('hex');
@@ -155,7 +142,6 @@ export class AdminService {
 
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
 
-    // Invalidate any existing reset tokens before creating a new one
     await this.prisma.passwordResetToken.deleteMany({
       where: { adminId: admin.id },
     });
@@ -168,8 +154,10 @@ export class AdminService {
       },
     });
 
-    const frontendUrl = this.configService.get<string>('app.frontendUrl');
-    const resetLink = `${frontendUrl}/admin/reset-password?token=${rawToken}`;
+    const passwordResetUrl = this.configService.get<string>(
+      'app.passwordResetUrl',
+    );
+    const resetLink = `${passwordResetUrl}?token=${rawToken}`;
 
     await this.mailService.sendPasswordResetEmail(
       admin.email,
@@ -177,7 +165,7 @@ export class AdminService {
       resetLink,
     );
 
-    return genericResponse;
+    return { message: 'Password reset link has been sent to your email.' };
   }
 
   async resetPassword(
@@ -368,16 +356,11 @@ export class AdminService {
       return admin;
     });
 
-    console.log('Invitation details:', {
-      email,
-      fullName,
-      tempPassword,
-    });
-
-    await this.mailService.sendInviteEmail(email, fullName, tempPassword);
+    await this.mailService.sendInviteEmail(email, fullName);
 
     return {
-      message: 'Admin invited successfully',
+      message:
+        'Admin invitation sent. Please use the password reset process to create your password.',
       adminId: newAdmin.id,
     };
   }
@@ -395,9 +378,11 @@ export class AdminService {
       ];
     }
 
-    // Filter by role name via the relation
+    // Filter by role name via the relation.
+    // Roles are permission-based: each role carries a set of PERMISSION_IDs
+    // that determine what actions an admin can perform.
     if (role) {
-      where.role = { name: role };
+      where.role = { name: { equals: role, mode: 'insensitive' } };
     }
 
     if (typeof isActive === 'boolean') {
@@ -414,7 +399,14 @@ export class AdminService {
           id: true,
           fullName: true,
           email: true,
-          role: { select: { name: true, permissions: true } },
+          role: {
+            select: {
+              name: true,
+              // Return permissions so the caller knows exactly what
+              // the role authorises this admin to do.
+              permissions: true,
+            },
+          },
           isActive: true,
           invitedById: true,
           createdAt: true,
@@ -425,7 +417,13 @@ export class AdminService {
     ]);
 
     return {
-      data: admins,
+      data: admins.map((admin) => ({
+        ...admin,
+        role: {
+          name: admin.role?.name ?? '',
+          permissions: (admin.role?.permissions ?? []) as PERMISSION_ID[],
+        },
+      })),
       meta: {
         total,
         page,
@@ -445,11 +443,16 @@ export class AdminService {
       throw new NotFoundException('Admin not found');
     }
 
-    const { password, ...adminWithoutPassword } = admin;
+    // Return role as a structured object so it is immediately clear
+    // that the role is permission-based and controls access.
+    const { password, roleId, role, ...rest } = admin;
     return {
-      ...adminWithoutPassword,
-      role: admin.role?.name ?? '',
-    } as IAdminResponse;
+      ...rest,
+      role: {
+        name: role?.name ?? '',
+        permissions: (role?.permissions ?? []) as PERMISSION_ID[],
+      },
+    };
   }
 
   async findByEmail(email: string) {

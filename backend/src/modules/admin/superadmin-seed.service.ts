@@ -3,6 +3,7 @@ import { ConfigType } from '@nestjs/config';
 import { PrismaService } from 'src/prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import superadminConfig from 'src/config/superadmin.config';
+import { PERMISSIONS } from 'src/common/constants/permissions';
 
 @Injectable()
 export class SuperadminSeedService implements OnModuleInit {
@@ -29,28 +30,11 @@ export class SuperadminSeedService implements OnModuleInit {
       return;
     }
 
-    // Check if a SUPER_ADMIN role exists
-    let superAdminRole = await this.prisma.role.findUnique({
-      where: { name: 'SUPER_ADMIN' },
-    });
-
-    // If not, create it
-    if (!superAdminRole) {
-      superAdminRole = await this.prisma.role.create({
-        data: {
-          name: 'SUPER_ADMIN',
-          description: 'Super Administrator with full system access',
-          permissions: [],
-          isActive: true,
-        },
-      });
-      this.logger.log('Created SUPER_ADMIN role.');
-    }
-
-    // Check if a super admin already exists
     const existing = await this.prisma.admin.findFirst({
       where: {
-        role: { name: 'SUPER_ADMIN' },
+        role: {
+          name: 'SUPERADMIN',
+        },
       },
     });
 
@@ -61,15 +45,27 @@ export class SuperadminSeedService implements OnModuleInit {
       return;
     }
 
+    await this.prisma.role
+      .create({
+        data: {
+          description: 'Superadmin role',
+          name: 'SUPERADMIN',
+          permissions: PERMISSIONS.map((p) => p.id),
+        },
+      })
+      .catch((err) => this.logger.error(err));
+
+    const role = await this.prisma.role.findFirstOrThrow({
+      where: { name: 'SUPERADMIN' },
+    });
+
     const hashed = await bcrypt.hash(password, 10);
     await this.prisma.admin.create({
       data: {
         email,
         password: hashed,
         fullName: 'Super Admin',
-        role: {
-          connect: { id: superAdminRole.id },
-        },
+        roleId: role.id,
       },
     });
 
