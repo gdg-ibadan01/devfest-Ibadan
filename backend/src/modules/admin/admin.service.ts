@@ -403,68 +403,68 @@ export class AdminService {
   //   return { message: 'Admin deactivated successfully' };
   // }
 
-  // async findAll(query: AdminQueryDto) {
-  //   const { search, role, isActive, page = 1, limit = 10 } = query;
-  //   const skip = (page - 1) * limit;
+  async findAll(query: AdminQueryDto) {
+    const { search, role, isActive, page = 1, limit = 10 } = query;
+    const skip = (page - 1) * limit;
 
-  //   const where: any = {};
+    const where: any = {};
 
-  //   if (search) {
-  //     where.OR = [
-  //       { fullName: { contains: search, mode: 'insensitive' } },
-  //       { email: { contains: search, mode: 'insensitive' } },
-  //     ];
-  //   }
+    if (search) {
+      where.OR = [
+        { fullName: { contains: search, mode: 'insensitive' } },
+        { email: { contains: search, mode: 'insensitive' } },
+      ];
+    }
 
-  //   if (role) {
-  //     where.role = { name: { equals: role, mode: 'insensitive' } };
-  //   }
+    if (role) {
+      where.role = { name: { equals: role, mode: 'insensitive' } };
+    }
 
-  //   if (typeof isActive === 'boolean') {
-  //     where.isActive = isActive;
-  //   }
+    if (typeof isActive === 'boolean') {
+      where.isActive = isActive;
+    }
 
-  //   const [admins, total] = await Promise.all([
-  //     this.prisma.admin.findMany({
-  //       where,
-  //       skip,
-  //       take: limit,
-  //       orderBy: { createdAt: 'desc' },
-  //       select: {
-  //         id: true,
-  //         fullName: true,
-  //         email: true,
-  //         role: {
-  //           select: {
-  //             name: true,
-  //             permissions: true,
-  //           },
-  //         },
-  //         isActive: true,
-  //         invitedById: true,
-  //         createdAt: true,
-  //         updatedAt: true,
-  //       },
-  //     }),
-  //     this.prisma.admin.count({ where }),
-  //   ]);
+    const [admins, total] = await Promise.all([
+      this.prisma.admin.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          fullName: true,
+          email: true,
+          role: {
+            select: {
+              name: true,
+              permissions: true,
+            },
+          },
+          isActive: true,
+          invitedById: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      }),
+      this.prisma.admin.count({ where }),
+    ]);
 
-  //   return {
-  //     data: admins.map((admin) => ({
-  //       ...admin,
-  //       role: {
-  //         name: admin.role?.name ?? '',
-  //         permissions: (admin.role?.permissions ?? []) as PERMISSION_ID[],
-  //       },
-  //     })),
-  //     meta: {
-  //       total,
-  //       page,
-  //       limit,
-  //       totalPages: Math.ceil(total / limit),
-  //     },
-  //   };
-  // }
+    return {
+      data: admins.map((admin) => ({
+        ...admin,
+        role: {
+          name: admin.role?.name ?? '',
+          permissions: (admin.role?.permissions ?? []) as PERMISSION_ID[],
+        },
+      })),
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
 
   // async findOne(id: string): Promise<IAdminResponse> {
   //   const admin = await this.prisma.admin.findUnique({
