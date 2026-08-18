@@ -124,20 +124,20 @@ export class AdminController {
     return this.adminService.resetPassword(resetPasswordDto);
   }
 
-  // @Get('findOne')
-  // @ApiBearerAuth()
-  // @RequirePermission('admins.profile')
-  // @UseGuards(JwtAuthGuard, PermissionsGuard)
-  // @ApiOperation({ summary: 'Get the authenticated admin profile' })
-  // @ApiOkResponse({
-  //   description: 'Profile retrieved successfully.',
-  //   type: FindOneAdminResponseDto,
-  // })
-  // @ApiResponse({ status: 401, description: 'Unauthorized.' })
-  // @HttpCode(HttpStatus.OK)
-  // async getProfile(@CurrentUser() user: IJwtPayload): Promise<IAdminResponse> {
-  //   return this.adminService.findOne(user.sub);
-  // }
+  @Get('findOne')
+  @ApiBearerAuth()
+  @RequirePermission('admins.profile')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @ApiOperation({ summary: 'Get the authenticated admin profile' })
+  @ApiOkResponse({
+    description: 'Profile retrieved successfully.',
+    type: FindOneAdminResponseDto,
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  @HttpCode(HttpStatus.OK)
+  async getProfile(@CurrentUser() user: IJwtPayload): Promise<IAdminResponse> {
+    return this.adminService.findOne(user.sub);
+  }
 
   @Patch('profile')
   @ApiBearerAuth()

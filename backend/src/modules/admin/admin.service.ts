@@ -466,25 +466,25 @@ export class AdminService {
     };
   }
 
-  // async findOne(id: string): Promise<IAdminResponse> {
-  //   const admin = await this.prisma.admin.findUnique({
-  //     where: { id },
-  //     include: { role: true },
-  //   });
+  async findOne(id: string): Promise<IAdminResponse> {
+    const admin = await this.prisma.admin.findUnique({
+      where: { id },
+      include: { role: true },
+    });
 
-  //   if (!admin) {
-  //     throw new NotFoundException('Admin not found');
-  //   }
+    if (!admin) {
+      throw new NotFoundException('Admin not found');
+    }
 
-  //   const { password, roleId, role, ...rest } = admin;
-  //   return {
-  //     ...rest,
-  //     role: {
-  //       name: role?.name ?? '',
-  //       permissions: (role?.permissions ?? []) as PERMISSION_ID[],
-  //     },
-  //   };
-  // }
+    const { password, roleId, role, ...rest } = admin;
+    return {
+      ...rest,
+      role: {
+        name: role?.name ?? '',
+        permissions: (role?.permissions ?? []) as PERMISSION_ID[],
+      },
+    };
+  }
 
   async findByEmail(email: string) {
     return await this.prisma.admin.findUnique({
