@@ -1,7 +1,6 @@
 import {
   IsOptional,
   IsString,
-  IsEnum,
   IsNotEmpty,
   IsArray,
   Matches,
@@ -11,54 +10,110 @@ import {
   ArrayMinSize,
   ArrayMaxSize,
   IsDateString,
+  IsIn,
+  Max,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { TicketStatus } from '../../../common/enums/ticket-status.enum';
 import { Transform } from 'class-transformer';
 import { ServiceError } from 'src/common/errors/service-error';
 
 export class TicketQueryDto {
   @ApiPropertyOptional({
-    description: 'The unique ID of the event to filter tickets for',
-    example: 'evt_1234567890abcdef',
-  })
-  @IsOptional()
-  @IsString()
-  eventId?: string;
-
-  @ApiPropertyOptional({
-    description: 'Filter tickets by their current status',
-    enum: TicketStatus,
-    example: TicketStatus.ACTIVE,
-  })
-  @IsOptional()
-  @IsEnum(TicketStatus)
-  status?: TicketStatus;
-
-  @ApiPropertyOptional({
     description:
-      'A keyword to search across ticket fields such as attendee name or email',
-    example: 'John Doe',
+      'Cursor for pagination. Pass the ID of the last item from the previous page.',
   })
   @IsOptional()
   @IsString()
-  search?: string;
+  cursor?: string;
 
   @ApiPropertyOptional({
-    description: 'Page number for pagination',
-    example: 1,
-    default: 1,
+    description: 'Pagination direction',
+    enum: ['next', 'previous'],
+    default: 'next',
   })
   @IsOptional()
-  page?: number = 1;
+  @IsIn(['next', 'previous'])
+  direction?: 'next' | 'previous' = 'next';
 
   @ApiPropertyOptional({
     description: 'Number of results to return per page',
-    example: 10,
-    default: 10,
+    example: 20,
+    default: 20,
+    minimum: 1,
+    maximum: 50,
+  })
+  @Transform(({ value }) => Number.parseInt(value || 20, 10))
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(50)
+  limit?: number = 20;
+
+  @ApiPropertyOptional({
+    description: 'Ticket name (case-insensitive)',
+    example: 'Early Bird',
   })
   @IsOptional()
-  limit?: number = 10;
+  @IsString()
+  name?: string;
+}
+
+export class TicketListItemDto {
+  @ApiProperty()
+  id: string;
+
+  @ApiProperty()
+  name: string;
+
+  @ApiProperty({ type: [String], format: 'date-time' })
+  eventDates: Date[];
+
+  @ApiProperty({ description: 'Price in Naira' })
+  price: number;
+
+  @ApiProperty({ description: 'Discount in Naira' })
+  discount: number;
+
+  @ApiProperty({ type: Date, format: 'date-time' })
+  saleStartsAt: Date;
+
+  @ApiProperty({ type: Date, format: 'date-time' })
+  saleEndsAt: Date;
+
+  @ApiProperty()
+  maximumSaleUnits: number;
+}
+
+export class TicketPaginationMetaDto {
+  @ApiProperty({
+    type: String,
+    nullable: true,
+    description: 'Cursor to fetch the next page',
+  })
+  nextCursor: string | null;
+
+  @ApiProperty({
+    type: String,
+    nullable: true,
+    description: 'Cursor to fetch the previous page',
+  })
+  prevCursor: string | null;
+
+  @ApiProperty({ description: 'Number of results per page' })
+  limit: number;
+
+  @ApiProperty({
+    description: 'Whether more items exist in the forward direction',
+  })
+  hasMore: boolean;
+}
+
+export class TicketListResponseDto {
+  @ApiProperty({ type: [TicketListItemDto] })
+  data: TicketListItemDto[];
+
+  @ApiProperty({ type: TicketPaginationMetaDto })
+  meta: TicketPaginationMetaDto;
 }
 
 export class CreateTicketDto {

@@ -122,8 +122,71 @@ export class TicketsService {
     return slug;
   }
 
-  findAll(query: TicketQueryDto) {
-    return null;
+  async list(query: TicketQueryDto) {
+    const { cursor, direction = 'next', limit = 20, name: search } = query;
+
+    const where: Record<string, any> = {};
+
+    if (search) {
+      where.name = { contains: search, mode: 'insensitive' };
+    }
+
+    const isForward = direction === 'next';
+    const orderBy = isForward
+      ? ({ createdAt: 'desc' } as const)
+      : ({ createdAt: 'asc' } as const);
+
+    const results = await this.prisma.ticket.findMany({
+      where,
+      take: limit + 1,
+      ...(cursor && { cursor: { id: cursor }, skip: 1 }),
+      orderBy,
+      select: {
+        id: true,
+        name: true,
+        eventDates: true,
+        price: true,
+        discount: true,
+        saleStartsAt: true,
+        saleEndsAt: true,
+        maximumSaleUnits: true,
+      },
+    });
+
+    const hasMore = results.length > limit;
+    if (hasMore) results.pop();
+
+    if (!isForward) {
+      results.reverse();
+    }
+
+    const mapped = results.map((t) => ({
+      ...t,
+      price: t.price.toNumber(),
+      discount: t.discount.toNumber(),
+    }));
+
+    if (isForward) {
+      return {
+        data: mapped,
+        meta: {
+          nextCursor: hasMore ? (mapped[mapped.length - 1]?.id ?? null) : null,
+          prevCursor: cursor ?? null,
+          limit,
+          hasMore,
+        },
+      };
+    }
+
+    return {
+      data: mapped,
+      meta: {
+        nextCursor: cursor ?? null,
+        prevCursor: hasMore ? (mapped[0]?.id ?? null) : null,
+        limit,
+        hasMore: false,
+      },
+    };
   }
 
   findOne(id: string) {
