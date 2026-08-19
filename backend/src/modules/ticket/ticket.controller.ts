@@ -21,6 +21,8 @@ import { JwtAuthGuard } from '../admin/guards/jwt-auth.guard';
 import {
   CreateTicketDto,
   CreateTicketResponseDto,
+  OnSaleTicketQueryDto,
+  OnSaleTicketResponseDto,
   TicketListResponseDto,
   TicketQueryDto,
 } from './dto/ticket.dto';
@@ -127,6 +129,17 @@ export class TicketsController {
   // async getEventTickets(@Param('eventId') eventId: string) {
   //   return this.ticketsService.getEventTickets(eventId);
   // }
+
+  @Get('onsale')
+  @ApiOperation({ summary: 'Get tickets currently on sale' })
+  @ApiResponse({
+    status: 200,
+    description: 'Tickets retrieved successfully',
+    type: OnSaleTicketResponseDto,
+  })
+  async findOnSale(@Query() query: OnSaleTicketQueryDto) {
+    return this.ticketsService.findOnSale(query.name);
+  }
 
   @Get(':id')
   @ApiBearerAuth()
