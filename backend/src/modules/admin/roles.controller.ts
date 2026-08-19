@@ -4,6 +4,7 @@ import {
   Controller,
   Get,
   InternalServerErrorException,
+  Param,
   Post,
   UseGuards,
   HttpStatus,
@@ -12,10 +13,10 @@ import { Request } from 'express';
 import {
   CreateRoleDto,
   CreateRoleResponseDto,
+  GetRoleResponseDto,
   ListRolesResponseDto,
   ListPermissionsResponse,
 } from './dto/role.dto';
-import { UpdateRoleDto } from './dto/update-role.dto';
 import { RolesService } from './roles.service';
 import {
   ApiBearerAuth,
@@ -75,5 +76,15 @@ export class RolesController {
   })
   listPermssions() {
     return this.roleService.listPermissions();
+  }
+
+  @Get(':roleId')
+  @ApiBearerAuth()
+  @RequirePermission('roles.list')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @ApiOperation({ summary: 'Get a role by ID' })
+  @ApiOkResponse({ type: GetRoleResponseDto })
+  async getById(@Param('roleId') roleId: string) {
+    return await this.roleService.getById(roleId);
   }
 }

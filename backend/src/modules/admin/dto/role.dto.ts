@@ -81,6 +81,29 @@ export class CreateRoleResponseDto {
   createdAt!: Date;
 }
 
+export class GetRoleResponseDto {
+  @ApiResponseProperty()
+  id!: string;
+
+  @ApiResponseProperty()
+  name!: string;
+
+  @ApiResponseProperty()
+  description!: string;
+
+  @ApiResponseProperty()
+  isActive!: boolean;
+
+  @ApiResponseProperty({ type: [PermissionDto] })
+  permissions!: PermissionDto[];
+
+  @ApiResponseProperty()
+  activeAdminCount!: number;
+
+  @ApiResponseProperty()
+  createdAt!: Date;
+}
+
 class ListRolesItemResponseDto {
   @ApiResponseProperty()
   id!: string;

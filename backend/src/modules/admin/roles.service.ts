@@ -2,6 +2,7 @@ import {
   Injectable,
   InternalServerErrorException,
   Logger,
+  NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateRoleDto } from './dto/role.dto';
@@ -22,6 +23,7 @@ export class RolesService {
 
   static ERRORS = {
     DuplicateRoleErr: `DuplicateRoleErr`,
+    RoleNotFoundErr: `RoleNotFoundErr`,
   } as const;
 
   /** @throws DuplicateRoleErr */
@@ -39,9 +41,9 @@ export class RolesService {
         id: role.id,
         name: role.name,
         description: role.description,
-        permissions: role.permissions.map((pId) =>
-          permissionsMap.get(pId as PERMISSION_ID),
-        ),
+        permissions: role.permissions
+          .map((pId) => permissionsMap.get(pId as PERMISSION_ID))
+          .sort((pa, pb) => pa!.id.localeCompare(pb!.id)),
         isActive: role.isActive,
         createdAt: role.createdAt,
       };
@@ -80,10 +82,38 @@ export class RolesService {
     return {
       roles: roles.map((r) => ({
         ...r,
-        permissions: r.permissions.map((pId) =>
-          permissionsMap.get(pId as PERMISSION_ID),
-        ),
+        permissions: r.permissions
+          .map((pId) => permissionsMap.get(pId as PERMISSION_ID))
+          .sort((pa, pb) => pa!.id.localeCompare(pb!.id)),
       })),
+    };
+  }
+
+  async getById(id: string) {
+    const role = await this.prisma.role.findUnique({
+      where: { id },
+      include: {
+        admins: {
+          where: { isActive: true },
+          select: { id: true },
+        },
+      },
+    });
+
+    if (!role) {
+      throw new NotFoundException('Role not found');
+    }
+
+    return {
+      id: role.id,
+      name: role.name,
+      description: role.description,
+      permissions: role.permissions
+        .map((pId) => permissionsMap.get(pId as PERMISSION_ID))
+        .sort((pa, pb) => pa!.id.localeCompare(pb!.id)),
+      isActive: role.isActive,
+      activeAdminCount: role.admins.length,
+      createdAt: role.createdAt,
     };
   }
 
