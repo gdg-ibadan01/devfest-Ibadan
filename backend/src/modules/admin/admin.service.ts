@@ -29,12 +29,20 @@ import { MailService } from '../mail/mail.service';
 import { AdminCreateAttendeeDto } from './dto/create-attendee.dto';
 import { PaymentsService } from '../payment/payment.service';
 import JWTConfig from 'src/config/jwt.config';
-import { type PERMISSION_ID } from 'src/common/constants/permissions';
+import {
+  type PERMISSION_ID,
+  PERMISSIONS,
+} from 'src/common/constants/permissions';
 
 type AuthTokens = {
   accessToken: string;
   refreshToken: string;
 };
+
+const permissionsMap = new Map<PERMISSION_ID, (typeof PERMISSIONS)[number]>();
+PERMISSIONS.forEach((p) => {
+  permissionsMap.set(p.id, p);
+});
 
 @Injectable()
 export class AdminService {
@@ -453,8 +461,13 @@ export class AdminService {
       data: admins.map((admin) => ({
         ...admin,
         role: {
-          name: admin.role?.name ?? '',
-          permissions: (admin.role?.permissions ?? []) as PERMISSION_ID[],
+          name: admin.role.name,
+          permissions: admin.role.permissions
+            .map((pId) => permissionsMap.get(pId as PERMISSION_ID)?.label)
+            .filter(
+              (permission): permission is NonNullable<typeof permission> =>
+                Boolean(permission),
+            ),
         },
       })),
       meta: {
@@ -480,8 +493,12 @@ export class AdminService {
     return {
       ...rest,
       role: {
-        name: role?.name ?? '',
-        permissions: (role?.permissions ?? []) as PERMISSION_ID[],
+        name: role.name,
+        permissions: role.permissions
+          .map((pId) => permissionsMap.get(pId as PERMISSION_ID)?.label)
+          .filter((permission): permission is NonNullable<typeof permission> =>
+            Boolean(permission),
+          ),
       },
     };
   }

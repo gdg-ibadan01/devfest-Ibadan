@@ -4,9 +4,14 @@ import {
   Controller,
   Get,
   InternalServerErrorException,
+  NotFoundException,
+  Param,
+  Patch,
   Post,
+  Req,
   UseGuards,
   HttpStatus,
+  HttpCode,
 } from '@nestjs/common';
 import { Request } from 'express';
 import {
@@ -27,6 +32,8 @@ import {
 import { PermissionsGuard } from './guards/permissions.guard';
 import { RequirePermission } from 'src/common/decorators/permissions.decorator';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { IJwtPayload } from './interfaces/admin.interface';
 
 @Controller('roles')
 @ApiTags('Role')
@@ -76,4 +83,37 @@ export class RolesController {
   listPermssions() {
     return this.roleService.listPermissions();
   }
+
+  // @Patch(':id')
+  // @ApiBearerAuth()
+  // @RequirePermission('roles.edit')
+  // @UseGuards(JwtAuthGuard, PermissionsGuard)
+  // @ApiOperation({ summary: 'Update a role' })
+  // @ApiOkResponse({
+  //   description: 'Role updated successfully.',
+  //   type: UpdateRoleDto,
+  // })
+  // @ApiResponse({
+  //   status: 401,
+  //   description: 'Unauthorized.',
+  // })
+  // @HttpCode(HttpStatus.OK)
+  // async update(
+  //   @Param('id') id: string,
+  //   @Body() payload: UpdateRoleDto,
+  //   @CurrentUser() user: IJwtPayload
+  // ) {
+  //   try {
+  //     return await this.roleService.update(id, payload, user.sub);
+  //   } catch (error) {
+  //     console.error('Update role error:', error);
+  //     switch ((error as Error).name) {
+  //       case RolesService.ERRORS.DuplicateRoleErr:
+  //         throw new ConflictException(error);
+
+  //       default:
+  //         throw new InternalServerErrorException('Unable to update role');
+  //     }
+  //   }
+  // }
 }

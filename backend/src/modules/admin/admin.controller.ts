@@ -124,10 +124,10 @@ export class AdminController {
     return this.adminService.resetPassword(resetPasswordDto);
   }
 
-  @Get('findOne')
+  @Get('me')
   @ApiBearerAuth()
   @RequirePermission('admins.profile')
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Get the authenticated admin profile' })
   @ApiOkResponse({
     description: 'Profile retrieved successfully.',
@@ -239,20 +239,4 @@ export class AdminController {
   async findAll(@Query() query: AdminQueryDto) {
     return this.adminService.findAll(query);
   }
-
-  // @Patch('status')
-  // @ApiBearerAuth()
-  // @UseGuards(JwtAuthGuard, RolesGuard)
-  // @Roles(Role.SUPER_ADMIN)
-  // @ApiOperation({
-  //   summary: 'Update an admin account status (Super Admin only)',
-  // })
-  // @ApiResponse({
-  //   status: 200,
-  //   description: 'Admin status updated successfully.',
-  // })
-  // @ApiResponse({ status: 401, description: 'Unauthorized.' })
-  // async updateStatus(@Body() dto: UpdateAdminStatusDto) {
-  //   return this.adminService.updateStatus(dto.adminId, dto.isActive);
-  // }
 }

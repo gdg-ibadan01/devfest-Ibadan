@@ -2,9 +2,11 @@ import {
   Injectable,
   InternalServerErrorException,
   Logger,
+  NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateRoleDto } from './dto/role.dto';
+import { UpdateRoleDto } from './dto/update-role.dto';
 import { PrismaErrors } from 'src/common/enums/prisma-errors.enum';
 import { ServiceError } from 'src/common/errors/service-error';
 import { PERMISSION_ID, PERMISSIONS } from 'src/common/constants/permissions';
@@ -94,4 +96,35 @@ export class RolesService {
       ),
     };
   }
+
+  // async update(id: string, payload: UpdateRoleDto, actorId: string) {
+  //   const role = await this.prisma.role.findUnique({ where: { id } });
+  //   if (!role) {
+  //     throw new NotFoundException('Role not found');
+  //   }
+
+  //   const updatedRole = await this.prisma.$transaction(async (tx) => {
+  //     const updated = await tx.role.update({
+  //       where: { id },
+  //       data: {
+  //         ...(payload.name && { name: payload.name.toUpperCase() }),
+  //         ...(payload.description && { description: payload.description }),
+  //         ...(payload.permissions && { permissions: payload.permissions }),
+  //         ...(payload.isActive !== undefined && { isActive: payload.isActive }),
+  //       },
+  //     });
+  //     await tx.auditLog.create({
+  //       data: {
+  //         adminId: actorId,
+  //         roleId: id,
+  //         action: 'UPDATE_ROLE',
+  //         metadata: { payload: { ...payload } },
+  //       },
+  //     });
+
+  //     return updated;
+  //   });
+
+  //   return updatedRole;
+  // }
 }
