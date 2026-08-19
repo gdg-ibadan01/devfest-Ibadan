@@ -21,6 +21,7 @@ import { JwtAuthGuard } from '../admin/guards/jwt-auth.guard';
 import {
   CreateTicketDto,
   CreateTicketResponseDto,
+  GetTicketBySlugResponseDto,
   TicketListResponseDto,
   TicketQueryDto,
 } from './dto/ticket.dto';
@@ -127,6 +128,21 @@ export class TicketsController {
   // async getEventTickets(@Param('eventId') eventId: string) {
   //   return this.ticketsService.getEventTickets(eventId);
   // }
+
+  @Get('slug/:slug')
+  @ApiOperation({ summary: 'Get ticket by slug' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Ticket retrieved successfully',
+    type: GetTicketBySlugResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Ticket not found',
+  })
+  findBySlug(@Param('slug') slug: string) {
+    return this.ticketsService.findBySlug(slug);
+  }
 
   @Get(':id')
   @ApiBearerAuth()

@@ -238,6 +238,29 @@ export class CreateTicketDto {
   }
 }
 
+export class GetTicketBySlugResponseDto {
+  @ApiProperty()
+  name: string;
+
+  @ApiProperty()
+  description: string;
+
+  @ApiProperty({ description: 'Price in Naira' })
+  price: number;
+
+  @ApiProperty({ description: 'Discount in Naira' })
+  discount: number;
+
+  @ApiProperty({ type: [Date], format: 'date-time' })
+  eventDates: Date[];
+
+  @ApiProperty({ type: [Date], format: 'date-time' })
+  validityDates: Date[];
+
+  @ApiProperty()
+  slug: string;
+}
+
 export class CreateTicketResponseDto {
   @ApiProperty()
   id: string;

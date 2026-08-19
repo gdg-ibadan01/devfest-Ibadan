@@ -1,6 +1,10 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { CreateTicketResponseDto, TicketQueryDto } from './dto/ticket.dto';
+import {
+  CreateTicketResponseDto,
+  GetTicketBySlugResponseDto,
+  TicketQueryDto,
+} from './dto/ticket.dto';
 import { CreateTicketDto } from './dto/ticket.dto';
 import { IJwtPayload } from '../admin/interfaces/admin.interface';
 import { PrismaErrors } from 'src/common/enums/prisma-errors.enum';
@@ -196,6 +200,35 @@ export class TicketsService {
 
   findByTicketNumber(ticketNumber: string) {
     return null;
+  }
+
+  async findBySlug(slug: string): Promise<GetTicketBySlugResponseDto> {
+    const ticket = await this.prisma.ticket.findUnique({
+      where: { slug },
+      select: {
+        name: true,
+        description: true,
+        price: true,
+        discount: true,
+        eventDates: true,
+        validityDates: true,
+        slug: true,
+      },
+    });
+
+    if (!ticket) {
+      throw new NotFoundException('Ticket not found');
+    }
+
+    return {
+      name: ticket.name,
+      description: ticket.description,
+      price: ticket.price.toNumber(),
+      discount: ticket.discount.toNumber(),
+      eventDates: ticket.eventDates,
+      validityDates: ticket.validityDates,
+      slug: ticket.slug,
+    };
   }
 
   verifyTicket(ticketNumber: string) {
