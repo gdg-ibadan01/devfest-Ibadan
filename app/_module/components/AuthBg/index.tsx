@@ -1,19 +1,8 @@
 'use client';
 
-import React, { ReactNode, useEffect } from 'react';
+import React, { ReactNode } from 'react';
 
 const AuthBg = ({ children }: { children: ReactNode }) => {
-  // Lock body scroll while any auth page is mounted
-  useEffect(() => {
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    document.documentElement.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = prev;
-      document.documentElement.style.overflow = '';
-    };
-  }, []);
-
   return (
     <div
       style={{
