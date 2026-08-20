@@ -6,7 +6,6 @@ import AgendaTabs from './AgendaTabs';
 import AgendaTable from './AgendaTable';
 import { Calendar } from '../_module/components/icons';
 
-
 function Day1VirtualEvent() {
   return (
     <div className="w-full max-w-4xl mx-auto my-8">
@@ -46,11 +45,11 @@ export default function Agenda() {
 
         <AgendaTabs activeDay={activeDay} setActiveDay={setActiveDay} />
 
-        {activeDay === 'day1' ?
-          <Day1VirtualEvent /> :
-          <AgendaTable
-            data={agendaData}
-          />}
+        {activeDay === 'day1' ? (
+          <Day1VirtualEvent />
+        ) : (
+          <AgendaTable data={agendaData} />
+        )}
       </main>
     </div>
   );
