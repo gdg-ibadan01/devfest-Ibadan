@@ -11,7 +11,6 @@ import { IJwtPayload } from '../admin/interfaces/admin.interface';
 import { PrismaErrors } from 'src/common/enums/prisma-errors.enum';
 import { randomUUID } from 'node:crypto';
 import { ServiceError } from 'src/common/errors/service-error';
-// import { RegistrationStatus } from '@prisma/client';
 
 const allowedSlugChars = {};
 for (const c of 'abcdefghijklmnopqrstuvwxyz0123456789-') {
@@ -191,6 +190,40 @@ export class TicketsService {
         limit,
         hasMore: false,
       },
+    };
+  }
+
+  async findOnSale(name?: string) {
+    const now = new Date();
+    const where: Record<string, any> = {
+      saleStartsAt: { lte: now },
+      saleEndsAt: { gte: now },
+    };
+
+    if (name) {
+      where.name = { contains: name, mode: 'insensitive' };
+    }
+
+    const tickets = await this.prisma.ticket.findMany({
+      where,
+      orderBy: { price: 'asc' },
+      select: {
+        name: true,
+        description: true,
+        slug: true,
+        validityDates: true,
+        eventDates: true,
+        price: true,
+        discount: true,
+      },
+    });
+
+    return {
+      data: tickets.map((t) => ({
+        ...t,
+        price: t.price.toNumber(),
+        discount: t.discount.toNumber(),
+      })),
     };
   }
 

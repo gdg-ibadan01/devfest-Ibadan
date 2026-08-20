@@ -116,6 +116,44 @@ export class TicketListResponseDto {
   meta: TicketPaginationMetaDto;
 }
 
+export class OnSaleTicketQueryDto {
+  @ApiPropertyOptional({
+    description: 'Filter tickets by name (case-insensitive)',
+    example: 'Early Bird',
+  })
+  @IsOptional()
+  @IsString()
+  name?: string;
+}
+
+export class OnSaleTicketItemDto {
+  @ApiProperty()
+  name: string;
+
+  @ApiProperty()
+  description: string;
+
+  @ApiProperty()
+  slug: string;
+
+  @ApiProperty({ type: [String], format: 'date-time' })
+  validityDates: Date[];
+
+  @ApiProperty({ type: [String], format: 'date-time' })
+  eventDates: Date[];
+
+  @ApiProperty({ description: 'Price in Naira' })
+  price: number;
+
+  @ApiProperty({ description: 'Discount in Naira' })
+  discount: number;
+}
+
+export class OnSaleTicketResponseDto {
+  @ApiProperty({ type: [OnSaleTicketItemDto] })
+  data: OnSaleTicketItemDto[];
+}
+
 export class CreateTicketDto {
   @IsString()
   @IsNotEmpty()
