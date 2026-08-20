@@ -23,6 +23,8 @@ import {
   CreateTicketResponseDto,
   OnSaleTicketQueryDto,
   OnSaleTicketResponseDto,
+  GetTicketBySlugResponseDto,
+  GetTicketResponseDto,
   TicketListResponseDto,
   TicketQueryDto,
 } from './dto/ticket.dto';
@@ -141,14 +143,32 @@ export class TicketsController {
     return this.ticketsService.findOnSale(query.name);
   }
 
-  @Get(':id')
+  @Get('slug/:slug')
+  @ApiOperation({ summary: 'Get ticket by slug' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Ticket retrieved successfully',
+    type: GetTicketBySlugResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Ticket not found',
+  })
+  findBySlug(@Param('slug') slug: string) {
+    return this.ticketsService.findBySlug(slug);
+  }
+
+  @Get(':ticketId')
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Get ticket by ID' })
-  @ApiResponse({ status: 200, description: 'Ticket retrieved successfully' })
-  findOne(@Param('id') id: string) {
-    return this.ticketsService.findOne(id);
+  @ApiResponse({
+    status: 200,
+    description: 'Ticket retrieved successfully',
+    type: GetTicketResponseDto,
+  })
+  findOneById(@Param('ticketId') ticketId: string) {
+    return this.ticketsService.findOneById(ticketId);
   }
 
   @Get('number/:ticketNumber')

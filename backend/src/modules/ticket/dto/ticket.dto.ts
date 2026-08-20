@@ -276,6 +276,75 @@ export class CreateTicketDto {
   }
 }
 
+export class GetTicketBySlugResponseDto {
+  @ApiProperty()
+  name: string;
+
+  @ApiProperty()
+  description: string;
+
+  @ApiProperty({ description: 'Price in Naira' })
+  price: number;
+
+  @ApiProperty({ description: 'Discount in Naira' })
+  discount: number;
+
+  @ApiProperty({ type: [Date], format: 'date-time' })
+  eventDates: Date[];
+
+  @ApiProperty({ type: [Date], format: 'date-time' })
+  validityDates: Date[];
+
+  @ApiProperty()
+  slug: string;
+}
+
+export class TicketCreatorDto {
+  @ApiProperty()
+  name: string;
+
+  @ApiProperty()
+  role: string;
+}
+
+export class GetTicketResponseDto {
+  @ApiProperty()
+  id: string;
+
+  @ApiProperty()
+  name: string;
+
+  @ApiProperty()
+  description: string;
+
+  @ApiProperty({ type: [String], format: 'date-time' })
+  eventDates: Date[];
+
+  @ApiProperty({ description: 'Price in Naira' })
+  price: number;
+
+  @ApiProperty({ description: 'Discount in Naira' })
+  discount: number;
+
+  @ApiProperty({ type: [String], format: 'date-time' })
+  validityDates: Date[];
+
+  @ApiProperty()
+  maximumSaleUnits: number;
+
+  @ApiProperty({ type: Date, format: 'date-time' })
+  saleStartsAt: Date;
+
+  @ApiProperty({ type: Date, format: 'date-time' })
+  saleEndsAt: Date;
+
+  @ApiProperty({ type: Date, format: 'date-time' })
+  createdAt: Date;
+
+  @ApiProperty({ type: TicketCreatorDto })
+  creator: TicketCreatorDto;
+}
+
 export class CreateTicketResponseDto {
   @ApiProperty()
   id: string;
