@@ -31,7 +31,7 @@ export interface IRole {
 
 export class CreateRoleDto {
   @IsString()
-  @Transform(({ value }) => value === 'true' || value === true)
+  @Transform(({ value }) => value?.trim())
   @ApiProperty({
     description: 'Name of the role',
     example: 'VOLUNTEER',

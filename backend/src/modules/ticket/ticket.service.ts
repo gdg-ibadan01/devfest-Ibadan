@@ -3,6 +3,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import {
   CreateTicketResponseDto,
   GetTicketBySlugResponseDto,
+  GetTicketResponseDto,
   TicketQueryDto,
 } from './dto/ticket.dto';
 import { CreateTicketDto } from './dto/ticket.dto';
@@ -193,8 +194,37 @@ export class TicketsService {
     };
   }
 
-  findOne(id: string) {
-    return null;
+  async findOneById(id: string): Promise<GetTicketResponseDto> {
+    const ticket = await this.prisma.ticket.findUnique({
+      where: { id },
+      include: {
+        creator: {
+          include: { role: true },
+        },
+      },
+    });
+
+    if (!ticket) {
+      throw new NotFoundException('Ticket not found');
+    }
+
+    return {
+      id: ticket.id,
+      name: ticket.name,
+      description: ticket.description,
+      eventDates: ticket.eventDates,
+      price: ticket.price.toNumber(),
+      discount: ticket.discount.toNumber(),
+      validityDates: ticket.validityDates,
+      maximumSaleUnits: ticket.maximumSaleUnits,
+      saleStartsAt: ticket.saleStartsAt,
+      saleEndsAt: ticket.saleEndsAt,
+      createdAt: ticket.createdAt,
+      creator: {
+        name: ticket.creator.fullName,
+        role: ticket.creator.role.name,
+      },
+    };
   }
   // }
 
