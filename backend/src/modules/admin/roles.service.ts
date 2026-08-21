@@ -94,44 +94,44 @@ export class RolesService {
     };
   }
 
-  // async update(id: string, payload: Partial<CreateRoleDto>, actorId: string) {
-  //   const role = await this.prisma.role.findUnique({ where: { id } });
-  //   if (!role) {
-  //     throw new ServiceError('Role not found', 'NotFoundErr');
-  //   }
+  async update(id: string, payload: Partial<CreateRoleDto>, actorId: string) {
+    const role = await this.prisma.role.findUnique({ where: { id } });
+    if (!role) {
+      throw new ServiceError('Role not found', 'NotFoundErr');
+    }
 
-  //   const updatedRole = await this.prisma.$transaction(async (tx) => {
-  //     const updated = await tx.role.update({
-  //       where: { id },
-  //       data: {
-  //         ...(payload.name !== undefined && {
-  //           name: payload.name.trim().toUpperCase(),
-  //         }),
-  //         ...(payload.description !== undefined && {
-  //           description: payload.description,
-  //         }),
-  //         ...(payload.permissions !== undefined && {
-  //           permissions: payload.permissions,
-  //         }),
-  //         ...(payload.isActive !== undefined && {
-  //           isActive: payload.isActive,
-  //         }),
-  //       },
-  //     });
-  //     await tx.auditLog.create({
-  //       data: {
-  //         adminId: actorId,
-  //         roleId: id,
-  //         action: 'UPDATE_ROLE',
-  //         metadata: { payload },
-  //       },
-  //     });
+    const updatedRole = await this.prisma.$transaction(async (tx) => {
+      const updated = await tx.role.update({
+        where: { id },
+        data: {
+          ...(payload.name !== undefined && {
+            name: payload.name.trim().toUpperCase(),
+          }),
+          ...(payload.description !== undefined && {
+            description: payload.description,
+          }),
+          ...(payload.permissions !== undefined && {
+            permissions: payload.permissions,
+          }),
+          ...(payload.isActive !== undefined && {
+            isActive: payload.isActive,
+          }),
+        },
+      });
+      await tx.auditLog.create({
+        data: {
+          adminId: actorId,
+          roleId: id,
+          action: 'UPDATE_ROLE',
+          metadata: { payload },
+        },
+      });
 
-  //     return updated;
-  //   });
+      return updated;
+    });
 
-  //   return updatedRole;
-  // }
+    return updatedRole;
+  }
 
   // async deactivate(id: string, actorId: string) {
   //   const role = await this.prisma.role.findUnique({ where: { id } });

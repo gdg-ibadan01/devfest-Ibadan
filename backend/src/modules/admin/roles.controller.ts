@@ -86,43 +86,39 @@ export class RolesController {
     return this.roleService.listPermissions();
   }
 
-  // @Patch(':id')
-  // @ApiBearerAuth()
-  // @RequirePermission('roles.edit')
-  // @UseGuards(JwtAuthGuard, PermissionsGuard)
-  // @ApiOkResponse({
-  //   type: RoleResponseDto,
-  // })
-  // @ApiResponse({
-  //   status: 401,
-  //   description: 'Unauthorized.',
-  // })
-  // @ApiOperation({ summary: 'Update a role' })
-  // @HttpCode(HttpStatus.OK)
-  // async update(
-  //   @Param('id') id: string,
-  //   @Body() payload: UpdateRoleDto,
-  //   @CurrentUser() user: IJwtPayload,
-  // ) {
-  //   try {
-  //     return await this.roleService.update(id, payload, user.sub);
-  //   } catch (err) {
-  //     console.error('UPDATE ROLE ERROR:', err);
-  //     console.error('ERROR NAME:', (err as Error).name);
-  //     console.error('ERROR CODE:', (err as any).code);
+  @Patch(':id')
+  @ApiBearerAuth()
+  @RequirePermission('roles.edit')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @ApiOkResponse({
+    type: RoleResponseDto,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized.',
+  })
+  @ApiOperation({ summary: 'Update a role' })
+  @HttpCode(HttpStatus.OK)
+  async update(
+    @Param('id') id: string,
+    @Body() payload: UpdateRoleDto,
+    @CurrentUser() user: IJwtPayload,
+  ) {
+    try {
+      return await this.roleService.update(id, payload, user.sub);
+    } catch (err) {
+      switch ((err as Error).name) {
+        case RolesService.ERRORS.DuplicateRoleErr:
+          throw new ConflictException((err as Error).message);
 
-  //     switch ((err as Error).name) {
-  //       case RolesService.ERRORS.DuplicateRoleErr:
-  //         throw new ConflictException((err as Error).message);
+        case RolesService.ERRORS.RoleNotFoundErr:
+          throw new NotFoundException((err as Error).message);
 
-  //       case RolesService.ERRORS.RoleNotFoundErr:
-  //         throw new NotFoundException((err as Error).message);
-
-  //       default:
-  //         throw new InternalServerErrorException('Unable to update role');
-  //     }
-  //   }
-  // }
+        default:
+          throw new InternalServerErrorException('Unable to update role');
+      }
+    }
+  }
 
   // @Patch(':id/deactivate')
   // @ApiBearerAuth()
