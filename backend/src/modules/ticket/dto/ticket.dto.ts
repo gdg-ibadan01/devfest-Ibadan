@@ -68,11 +68,19 @@ export class TicketListItemDto {
   @ApiProperty({ type: [String], format: 'date-time' })
   eventDates: Date[];
 
-  @ApiProperty({ description: 'Price in Naira' })
-  price: number;
+  @ApiProperty({
+    type: String,
+    description: 'Price in Naira (formatted to 2 decimal places)',
+    example: '10000.00',
+  })
+  price: string;
 
-  @ApiProperty({ description: 'Discount in Naira' })
-  discount: number;
+  @ApiProperty({
+    type: String,
+    description: 'Discount in Naira (formatted to 2 decimal places)',
+    example: '500.00',
+  })
+  discount: string;
 
   @ApiProperty({ type: Date, format: 'date-time' })
   saleStartsAt: Date;
@@ -114,6 +122,52 @@ export class TicketListResponseDto {
 
   @ApiProperty({ type: TicketPaginationMetaDto })
   meta: TicketPaginationMetaDto;
+}
+
+export class OnSaleTicketQueryDto {
+  @ApiPropertyOptional({
+    description: 'Filter tickets by name (case-insensitive)',
+    example: 'Early Bird',
+  })
+  @IsOptional()
+  @IsString()
+  name?: string;
+}
+
+export class OnSaleTicketItemDto {
+  @ApiProperty()
+  name: string;
+
+  @ApiProperty()
+  description: string;
+
+  @ApiProperty()
+  slug: string;
+
+  @ApiProperty({ type: [String], format: 'date-time' })
+  validityDates: Date[];
+
+  @ApiProperty({ type: [String], format: 'date-time' })
+  eventDates: Date[];
+
+  @ApiProperty({
+    type: String,
+    description: 'Price in Naira (formatted to 2 decimal places)',
+    example: '10000.00',
+  })
+  price: string;
+
+  @ApiProperty({
+    type: String,
+    description: 'Discount in Naira (formatted to 2 decimal places)',
+    example: '500.00',
+  })
+  discount: string;
+}
+
+export class OnSaleTicketResponseDto {
+  @ApiProperty({ type: [OnSaleTicketItemDto] })
+  data: OnSaleTicketItemDto[];
 }
 
 export class CreateTicketDto {
@@ -238,6 +292,91 @@ export class CreateTicketDto {
   }
 }
 
+export class GetTicketBySlugResponseDto {
+  @ApiProperty()
+  name: string;
+
+  @ApiProperty()
+  description: string;
+
+  @ApiProperty({
+    type: String,
+    description: 'Price in Naira (formatted to 2 decimal places)',
+    example: '10000.00',
+  })
+  price: string;
+
+  @ApiProperty({
+    type: String,
+    description: 'Discount in Naira (formatted to 2 decimal places)',
+    example: '500.00',
+  })
+  discount: string;
+
+  @ApiProperty({ type: [Date], format: 'date-time' })
+  eventDates: Date[];
+
+  @ApiProperty({ type: [Date], format: 'date-time' })
+  validityDates: Date[];
+
+  @ApiProperty()
+  slug: string;
+}
+
+export class TicketCreatorDto {
+  @ApiProperty()
+  name: string;
+
+  @ApiProperty()
+  role: string;
+}
+
+export class GetTicketResponseDto {
+  @ApiProperty()
+  id: string;
+
+  @ApiProperty()
+  name: string;
+
+  @ApiProperty()
+  description: string;
+
+  @ApiProperty({ type: [String], format: 'date-time' })
+  eventDates: Date[];
+
+  @ApiProperty({
+    type: String,
+    description: 'Price in Naira (formatted to 2 decimal places)',
+    example: '10000.00',
+  })
+  price: string;
+
+  @ApiProperty({
+    type: String,
+    description: 'Discount in Naira (formatted to 2 decimal places)',
+    example: '500.00',
+  })
+  discount: string;
+
+  @ApiProperty({ type: [String], format: 'date-time' })
+  validityDates: Date[];
+
+  @ApiProperty()
+  maximumSaleUnits: number;
+
+  @ApiProperty({ type: Date, format: 'date-time' })
+  saleStartsAt: Date;
+
+  @ApiProperty({ type: Date, format: 'date-time' })
+  saleEndsAt: Date;
+
+  @ApiProperty({ type: Date, format: 'date-time' })
+  createdAt: Date;
+
+  @ApiProperty({ type: TicketCreatorDto })
+  creator: TicketCreatorDto;
+}
+
 export class CreateTicketResponseDto {
   @ApiProperty()
   id: string;
@@ -256,11 +395,19 @@ export class CreateTicketResponseDto {
   })
   eventDates: Date[];
 
-  @ApiProperty()
-  price: number;
+  @ApiProperty({
+    type: String,
+    description: 'Price in Naira (formatted to 2 decimal places)',
+    example: '10000.00',
+  })
+  price: string;
 
-  @ApiProperty()
-  discount: number;
+  @ApiProperty({
+    type: String,
+    description: 'Discount in Naira (formatted to 2 decimal places)',
+    example: '500.00',
+  })
+  discount: string;
 
   @ApiProperty({
     format: 'date-time',

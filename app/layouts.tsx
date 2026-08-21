@@ -75,10 +75,15 @@ const HomeLayout = ({
 }>) => {
   const pathname = usePathname();
   // Define routes where you want to hide the header
-  const hideHeaderRoutes = ['/ticket'];
+  const hideHeaderRoutes: string[] = [];
   const shouldHideHeader = hideHeaderRoutes.includes(pathname);
   // Define the route where you want to hide the footer
-  const hideFooterRoutes = ['/ticket', '/rsvp'];
+  const hideFooterRoutes = [
+    '/rsvp',
+    '/ticket/buy',
+    '/ticket/gift',
+    '/ticket/preview',
+  ];
   const shouldHideFooter = hideFooterRoutes.includes(pathname);
   return (
     <html lang="en">
