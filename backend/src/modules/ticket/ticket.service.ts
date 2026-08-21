@@ -1,12 +1,16 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { CreateTicketResponseDto, TicketQueryDto } from './dto/ticket.dto';
+import {
+  CreateTicketResponseDto,
+  GetTicketBySlugResponseDto,
+  GetTicketResponseDto,
+  TicketQueryDto,
+} from './dto/ticket.dto';
 import { CreateTicketDto } from './dto/ticket.dto';
 import { IJwtPayload } from '../admin/interfaces/admin.interface';
 import { PrismaErrors } from 'src/common/enums/prisma-errors.enum';
 import { randomUUID } from 'node:crypto';
 import { ServiceError } from 'src/common/errors/service-error';
-// import { RegistrationStatus } from '@prisma/client';
 
 const allowedSlugChars = {};
 for (const c of 'abcdefghijklmnopqrstuvwxyz0123456789-') {
@@ -71,8 +75,8 @@ export class TicketsService {
         name: ticket.name,
         description: ticket.description,
         slug: ticket.slug,
-        price: ticket.price.toNumber(),
-        discount: ticket.discount.toNumber(),
+        price: ticket.price.toFixed(2),
+        discount: ticket.discount.toFixed(2),
         maximumSaleUnits: ticket.maximumSaleUnits,
         eventDates: ticket.eventDates,
         validityDates: ticket.validityDates,
@@ -122,17 +126,172 @@ export class TicketsService {
     return slug;
   }
 
-  findAll(query: TicketQueryDto) {
-    return null;
+  async list(query: TicketQueryDto) {
+    const { cursor, direction = 'next', limit = 20, name: search } = query;
+
+    const where: Record<string, any> = {};
+
+    if (search) {
+      where.name = { contains: search, mode: 'insensitive' };
+    }
+
+    const isForward = direction === 'next';
+    const orderBy = isForward
+      ? ({ createdAt: 'desc' } as const)
+      : ({ createdAt: 'asc' } as const);
+
+    const results = await this.prisma.ticket.findMany({
+      where,
+      take: limit + 1,
+      ...(cursor && { cursor: { id: cursor }, skip: 1 }),
+      orderBy,
+      select: {
+        id: true,
+        name: true,
+        eventDates: true,
+        price: true,
+        discount: true,
+        saleStartsAt: true,
+        saleEndsAt: true,
+        maximumSaleUnits: true,
+      },
+    });
+
+    const hasMore = results.length > limit;
+    if (hasMore) results.pop();
+
+    if (!isForward) {
+      results.reverse();
+    }
+
+    const mapped = results.map((t) => ({
+      ...t,
+      price: t.price.toFixed(2),
+      discount: t.discount.toFixed(2),
+    }));
+
+    if (isForward) {
+      return {
+        data: mapped,
+        meta: {
+          nextCursor: hasMore ? (mapped[mapped.length - 1]?.id ?? null) : null,
+          prevCursor: cursor ?? null,
+          limit,
+          hasMore,
+        },
+      };
+    }
+
+    return {
+      data: mapped,
+      meta: {
+        nextCursor: cursor ?? null,
+        prevCursor: hasMore ? (mapped[0]?.id ?? null) : null,
+        limit,
+        hasMore: false,
+      },
+    };
   }
 
-  findOne(id: string) {
-    return null;
+  async findOnSale(name?: string) {
+    const now = new Date();
+    const where: Record<string, any> = {
+      saleStartsAt: { lte: now },
+      saleEndsAt: { gte: now },
+    };
+
+    if (name) {
+      where.name = { contains: name, mode: 'insensitive' };
+    }
+
+    const tickets = await this.prisma.ticket.findMany({
+      where,
+      orderBy: { price: 'asc' },
+      select: {
+        name: true,
+        description: true,
+        slug: true,
+        validityDates: true,
+        eventDates: true,
+        price: true,
+        discount: true,
+      },
+    });
+
+    return {
+      data: tickets.map((t) => ({
+        ...t,
+        price: t.price.toFixed(2),
+        discount: t.discount.toFixed(2),
+      })),
+    };
+  }
+
+  async findOneById(id: string): Promise<GetTicketResponseDto> {
+    const ticket = await this.prisma.ticket.findUnique({
+      where: { id },
+      include: {
+        creator: {
+          include: { role: true },
+        },
+      },
+    });
+
+    if (!ticket) {
+      throw new NotFoundException('Ticket not found');
+    }
+
+    return {
+      id: ticket.id,
+      name: ticket.name,
+      description: ticket.description,
+      eventDates: ticket.eventDates,
+      price: ticket.price.toFixed(2),
+      discount: ticket.discount.toFixed(2),
+      validityDates: ticket.validityDates,
+      maximumSaleUnits: ticket.maximumSaleUnits,
+      saleStartsAt: ticket.saleStartsAt,
+      saleEndsAt: ticket.saleEndsAt,
+      createdAt: ticket.createdAt,
+      creator: {
+        name: ticket.creator.fullName,
+        role: ticket.creator.role.name,
+      },
+    };
   }
   // }
 
   findByTicketNumber(ticketNumber: string) {
     return null;
+  }
+
+  async findBySlug(slug: string): Promise<GetTicketBySlugResponseDto> {
+    const ticket = await this.prisma.ticket.findUnique({
+      where: { slug },
+      select: {
+        name: true,
+        description: true,
+        price: true,
+        discount: true,
+        eventDates: true,
+        validityDates: true,
+        slug: true,
+      },
+    });
+
+    if (!ticket) {
+      throw new NotFoundException('Ticket not found');
+    }
+
+    return {
+      name: ticket.name,
+      description: ticket.description,
+      price: ticket.price.toFixed(2),
+      discount: ticket.discount.toFixed(2),
+      eventDates: ticket.eventDates,
+      validityDates: ticket.validityDates,
+      slug: ticket.slug,
+    };
   }
 
   verifyTicket(ticketNumber: string) {

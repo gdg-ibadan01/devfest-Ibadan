@@ -35,9 +35,9 @@ model Admin {
   updatedAt           DateTime             @updatedAt
   admins              Admin[]              @relation("AdminInvitations")
   auditLogs           AuditLog[]
-  tickets             Ticket[]
 
   @@map("admins")
+  tickets Ticket[]
 }
 
 model PasswordResetToken {
