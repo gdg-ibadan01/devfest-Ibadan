@@ -20,13 +20,12 @@ export class AdminQueryDto {
   search?: string;
 
   @ApiPropertyOptional({
-    description: 'Filter admins by role name (e.g. ADMIN, SUPER_ADMIN)',
-    enum: Role,
-    example: Role.ADMIN,
+    description: 'Filter admins by role name',
+    example: 'ADMIN',
   })
   @IsOptional()
-  @IsEnum(Role)
-  role?: Role;
+  @IsString()
+  role?: string;
 
   @ApiPropertyOptional({
     description: 'Filter admins by active status',
@@ -34,11 +33,7 @@ export class AdminQueryDto {
   })
   @IsOptional()
   @IsBoolean()
-  @Transform(({ value }) => {
-    if (value === 'true' || value === true) return true;
-    if (value === 'false' || value === false) return false;
-    return value;
-  })
+  @Transform(({ value }) => value === 'true')
   isActive?: boolean;
 
   @ApiPropertyOptional({

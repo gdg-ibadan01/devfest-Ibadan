@@ -29,12 +29,20 @@ import { MailService } from '../mail/mail.service';
 import { AdminCreateAttendeeDto } from './dto/create-attendee.dto';
 import { PaymentsService } from '../payment/payment.service';
 import JWTConfig from 'src/config/jwt.config';
-import { type PERMISSION_ID } from 'src/common/constants/permissions';
+import {
+  type PERMISSION_ID,
+  PERMISSIONS,
+} from 'src/common/constants/permissions';
 
 type AuthTokens = {
   accessToken: string;
   refreshToken: string;
 };
+
+const permissionsMap = new Map<PERMISSION_ID, (typeof PERMISSIONS)[number]>();
+PERMISSIONS.forEach((p) => {
+  permissionsMap.set(p.id, p);
+});
 
 @Injectable()
 export class AdminService {
@@ -436,12 +444,17 @@ export class AdminService {
           email: true,
           role: {
             select: {
+              id: true,
               name: true,
-              permissions: true,
             },
           },
           isActive: true,
-          invitedById: true,
+          invitedBy: {
+            select: {
+              id: true,
+              fullName: true,
+            },
+          },
           createdAt: true,
           updatedAt: true,
         },
@@ -452,15 +465,13 @@ export class AdminService {
     return {
       data: admins.map((admin) => ({
         ...admin,
-        role: {
-          name: admin.role?.name ?? '',
-          permissions: (admin.role?.permissions ?? []) as PERMISSION_ID[],
-        },
+        invitedBy: admin.invitedBy
+          ? { id: admin.invitedBy.id, name: admin.invitedBy.fullName }
+          : null,
       })),
       meta: {
         total,
         page,
-        limit,
         totalPages: Math.ceil(total / limit),
       },
     };
@@ -469,20 +480,37 @@ export class AdminService {
   async findOne(id: string): Promise<IAdminResponse> {
     const admin = await this.prisma.admin.findUnique({
       where: { id },
-      include: { role: true },
+      select: {
+        id: true,
+        fullName: true,
+        email: true,
+        role: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        isActive: true,
+        invitedBy: {
+          select: {
+            id: true,
+            fullName: true,
+          },
+        },
+        createdAt: true,
+        updatedAt: true,
+      },
     });
 
     if (!admin) {
       throw new NotFoundException('Admin not found');
     }
 
-    const { password, roleId, role, ...rest } = admin;
     return {
-      ...rest,
-      role: {
-        name: role?.name ?? '',
-        permissions: (role?.permissions ?? []) as PERMISSION_ID[],
-      },
+      ...admin,
+      invitedBy: admin.invitedBy
+        ? { id: admin.invitedBy.id, name: admin.invitedBy.fullName }
+        : null,
     };
   }
 

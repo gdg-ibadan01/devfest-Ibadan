@@ -31,7 +31,8 @@ export interface IRole {
 
 export class CreateRoleDto {
   @IsString()
-  @Transform(({ value }) => value === 'true' || value === true)
+  @IsNotEmpty()
+  @Transform(({ value }) => value?.trim())
   @ApiProperty({
     description: 'Name of the role',
     example: 'VOLUNTEER',
@@ -206,4 +207,48 @@ export class FindOneAdminResponseDto {
 
   @ApiProperty()
   updatedAt!: Date;
+}
+
+export class RoleResponseDto {
+  @ApiProperty({
+    description: 'Unique identifier of the role',
+  })
+  id: string;
+
+  @ApiProperty({
+    description: 'Name of the role',
+    example: 'ADMIN',
+  })
+  name: string;
+
+  @ApiProperty({
+    description: 'Description of the role',
+    example: 'Administrator with access to manage admins and tickets',
+  })
+  description: string;
+
+  @ApiProperty({
+    description: 'Permissions assigned to the role',
+    isArray: true,
+    example: ['Create tickets', 'Edit tickets', 'Invite admin'],
+  })
+  permissions: string[];
+
+  @ApiProperty({
+    description: 'Whether the role is currently active',
+    example: true,
+  })
+  isActive: boolean;
+
+  @ApiProperty({
+    description: 'Date the role was created',
+    example: '2026-08-20T10:30:00.000Z',
+  })
+  createdAt: Date;
+
+  @ApiProperty({
+    description: 'Date the role was last updated',
+    example: '2026-08-20T14:20:00.000Z',
+  })
+  updatedAt: Date;
 }

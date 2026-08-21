@@ -124,7 +124,7 @@ export class AdminController {
     return this.adminService.resetPassword(resetPasswordDto);
   }
 
-  @Get('findOne')
+  @Get('me')
   @ApiBearerAuth()
   @RequirePermission('admins.profile')
   @UseGuards(JwtAuthGuard, PermissionsGuard)
