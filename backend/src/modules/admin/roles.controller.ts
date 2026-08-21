@@ -120,39 +120,33 @@ export class RolesController {
     }
   }
 
-  // @Patch(':id/deactivate')
-  // @ApiBearerAuth()
-  // @RequirePermission('roles.deactivate')
-  // @UseGuards(JwtAuthGuard, PermissionsGuard)
-  // @ApiOkResponse({
-  //   type: RoleResponseDto,
-  // })
-  // @ApiResponse({
-  //   status: 401,
-  //   description: 'Unauthorized.',
-  // })
-  // @ApiOperation({ summary: 'Deactivate a role' })
-  // @HttpCode(HttpStatus.OK)
-  // async deactivate(
-  //   @Param('id') id: string,
-  //   @CurrentUser() user: IJwtPayload,
-  // ) {
+  @Patch(':id/deactivate')
+  @ApiBearerAuth()
+  @RequirePermission('roles.deactivate')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @ApiOkResponse({
+    type: RoleResponseDto,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized.',
+  })
+  @ApiOperation({ summary: 'Deactivate a role' })
+  @HttpCode(HttpStatus.OK)
+  async deactivate(@Param('id') id: string, @CurrentUser() user: IJwtPayload) {
+    try {
+      return await this.roleService.deactivate(id, user.sub);
+    } catch (err) {
+      switch ((err as Error).name) {
+        case RolesService.ERRORS.RoleNotFoundErr:
+          throw new NotFoundException((err as Error).message);
 
-  //   try {
-  //     return await this.roleService.deactivate(id, user.sub);
-  //   } catch (err) {
-  //     switch ((err as Error).name) {
-  //       case RolesService.ERRORS.RoleNotFoundErr:
-  //         throw new NotFoundException((err as Error).message);
+        case RolesService.ERRORS.AlreadyDeactivatedErr:
+          throw new BadRequestException((err as Error).message);
 
-  //       case RolesService.ERRORS.AlreadyDeactivatedErr:
-  //         throw new BadRequestException((err as Error).message);
-
-  //       default:
-  //         throw new InternalServerErrorException(
-  //           'Unable to deactivate role',
-  //         );
-  //     }
-  //   }
-  // }
+        default:
+          throw new InternalServerErrorException('Unable to deactivate role');
+      }
+    }
+  }
 }

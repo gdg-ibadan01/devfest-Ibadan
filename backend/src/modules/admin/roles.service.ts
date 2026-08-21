@@ -133,31 +133,34 @@ export class RolesService {
     return updatedRole;
   }
 
-  // async deactivate(id: string, actorId: string) {
-  //   const role = await this.prisma.role.findUnique({ where: { id } });
-  //   if (!role) {
-  //     throw new ServiceError('Role not found', 'NotFoundErr');
-  //   }
+  async deactivate(id: string, actorId: string) {
+    const role = await this.prisma.role.findUnique({ where: { id } });
+    if (!role) {
+      throw new ServiceError('Role not found', 'NotFoundErr');
+    }
 
-  //   if (!role.isActive) {
-  //     throw new ServiceError('Role is already deactivated', 'AlreadyDeactivatedErr');
-  //   }
+    if (!role.isActive) {
+      throw new ServiceError(
+        'Role is already deactivated',
+        'AlreadyDeactivatedErr',
+      );
+    }
 
-  //   await this.prisma.$transaction(async (tx) => {
-  //     await tx.role.update({
-  //       where: { id },
-  //       data: { isActive: false },
-  //     });
+    await this.prisma.$transaction(async (tx) => {
+      await tx.role.update({
+        where: { id },
+        data: { isActive: false },
+      });
 
-  //     await tx.auditLog.create({
-  //       data: {
-  //         adminId: actorId,
-  //         roleId: id,
-  //         action: 'DEACTIVATE_ROLE',
-  //       },
-  //     });
-  //   });
+      await tx.auditLog.create({
+        data: {
+          adminId: actorId,
+          roleId: id,
+          action: 'DEACTIVATE_ROLE',
+        },
+      });
+    });
 
-  //   return { message: 'Role deactivated successfully' };
-  // }
+    return { message: 'Role deactivated successfully' };
+  }
 }
