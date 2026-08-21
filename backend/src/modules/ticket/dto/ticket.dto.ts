@@ -68,11 +68,19 @@ export class TicketListItemDto {
   @ApiProperty({ type: [String], format: 'date-time' })
   eventDates: Date[];
 
-  @ApiProperty({ description: 'Price in Naira' })
-  price: number;
+  @ApiProperty({
+    type: String,
+    description: 'Price in Naira (formatted to 2 decimal places)',
+    example: '10000.00',
+  })
+  price: string;
 
-  @ApiProperty({ description: 'Discount in Naira' })
-  discount: number;
+  @ApiProperty({
+    type: String,
+    description: 'Discount in Naira (formatted to 2 decimal places)',
+    example: '500.00',
+  })
+  discount: string;
 
   @ApiProperty({ type: Date, format: 'date-time' })
   saleStartsAt: Date;
@@ -142,11 +150,19 @@ export class OnSaleTicketItemDto {
   @ApiProperty({ type: [String], format: 'date-time' })
   eventDates: Date[];
 
-  @ApiProperty({ description: 'Price in Naira' })
-  price: number;
+  @ApiProperty({
+    type: String,
+    description: 'Price in Naira (formatted to 2 decimal places)',
+    example: '10000.00',
+  })
+  price: string;
 
-  @ApiProperty({ description: 'Discount in Naira' })
-  discount: number;
+  @ApiProperty({
+    type: String,
+    description: 'Discount in Naira (formatted to 2 decimal places)',
+    example: '500.00',
+  })
+  discount: string;
 }
 
 export class OnSaleTicketResponseDto {
@@ -283,11 +299,19 @@ export class GetTicketBySlugResponseDto {
   @ApiProperty()
   description: string;
 
-  @ApiProperty({ description: 'Price in Naira' })
-  price: number;
+  @ApiProperty({
+    type: String,
+    description: 'Price in Naira (formatted to 2 decimal places)',
+    example: '10000.00',
+  })
+  price: string;
 
-  @ApiProperty({ description: 'Discount in Naira' })
-  discount: number;
+  @ApiProperty({
+    type: String,
+    description: 'Discount in Naira (formatted to 2 decimal places)',
+    example: '500.00',
+  })
+  discount: string;
 
   @ApiProperty({ type: [Date], format: 'date-time' })
   eventDates: Date[];
@@ -320,11 +344,19 @@ export class GetTicketResponseDto {
   @ApiProperty({ type: [String], format: 'date-time' })
   eventDates: Date[];
 
-  @ApiProperty({ description: 'Price in Naira' })
-  price: number;
+  @ApiProperty({
+    type: String,
+    description: 'Price in Naira (formatted to 2 decimal places)',
+    example: '10000.00',
+  })
+  price: string;
 
-  @ApiProperty({ description: 'Discount in Naira' })
-  discount: number;
+  @ApiProperty({
+    type: String,
+    description: 'Discount in Naira (formatted to 2 decimal places)',
+    example: '500.00',
+  })
+  discount: string;
 
   @ApiProperty({ type: [String], format: 'date-time' })
   validityDates: Date[];
@@ -363,11 +395,19 @@ export class CreateTicketResponseDto {
   })
   eventDates: Date[];
 
-  @ApiProperty()
-  price: number;
+  @ApiProperty({
+    type: String,
+    description: 'Price in Naira (formatted to 2 decimal places)',
+    example: '10000.00',
+  })
+  price: string;
 
-  @ApiProperty()
-  discount: number;
+  @ApiProperty({
+    type: String,
+    description: 'Discount in Naira (formatted to 2 decimal places)',
+    example: '500.00',
+  })
+  discount: string;
 
   @ApiProperty({
     format: 'date-time',
