@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
   Param,
   Query,
   UseGuards,
@@ -60,6 +61,33 @@ export class TicketsController {
       switch ((err as Error).name) {
         case TicketsService.ERRORS.ValidationErr:
           throw new BadRequestException((err as Error).message);
+        default:
+          throw new InternalServerErrorException((err as Error).message);
+      }
+    }
+  }
+
+  @Patch(':ticketId')
+  @ApiBearerAuth()
+  @RequirePermission('tickets.create')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @ApiOperation({ summary: 'Update a ticket' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: CreateTicketResponseDto,
+  })
+  async update(
+    @Param('ticketId') ticketId: string,
+    @Body() payload: CreateTicketDto,
+  ) {
+    try {
+      return await this.ticketsService.update(ticketId, payload);
+    } catch (err) {
+      switch ((err as Error).name) {
+        case TicketsService.ERRORS.ValidationErr:
+          throw new BadRequestException((err as Error).message);
+        case 'NotFoundException':
+          throw err;
         default:
           throw new InternalServerErrorException((err as Error).message);
       }
