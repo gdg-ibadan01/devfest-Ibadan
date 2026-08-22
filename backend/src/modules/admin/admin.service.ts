@@ -71,10 +71,7 @@ export class AdminService {
     const tokens = this.generateAuthTokens({
       sub: admin.id,
       email: admin.email,
-      role: {
-        name: admin.role.name,
-        permissions: admin.role.permissions as PERMISSION_ID[],
-      },
+      roleId: admin.roleId,
     });
 
     return {
@@ -108,10 +105,7 @@ export class AdminService {
       return this.generateAuthTokens({
         sub: admin.id,
         email: admin.email,
-        role: {
-          name: admin.role.name,
-          permissions: admin.role.permissions as PERMISSION_ID[],
-        },
+        roleId: admin.roleId,
       });
     } catch (error) {
       this.logger.error(error);
