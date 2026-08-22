@@ -20,8 +20,10 @@ import gmailConfig from './config/mail.config';
 import paystackConfig from './config/paystack.config';
 import cloudinaryConfig from './config/cloudinary.config';
 import superadminConfig from './config/superadmin.config';
+import monnifyConfig from './config/monnify.config';
 import { TicketsModule } from './modules/ticket/ticket.module';
 import { UploadModule } from './modules/upload/upload.module';
+import { OrdersModule } from './modules/order/order.module';
 
 @Module({
   imports: [
@@ -35,6 +37,7 @@ import { UploadModule } from './modules/upload/upload.module';
         cloudinaryConfig,
         paystackConfig,
         superadminConfig,
+        monnifyConfig,
       ],
     }),
     // Logging
@@ -46,6 +49,7 @@ import { UploadModule } from './modules/upload/upload.module';
     PaymentsModule,
     TicketsModule,
     UploadModule,
+    OrdersModule,
   ],
   controllers: [AppController],
   providers: [
