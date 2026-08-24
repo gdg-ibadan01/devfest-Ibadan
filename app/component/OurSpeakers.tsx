@@ -47,7 +47,7 @@ const OurSpeakers = () => {
 
           <motion.div
             variants={itemVariants}
-            className="flex flex-row gap-2 md:gap-5"
+            className="flex flex-col md:flex-row gap-2 md:gap-5"
           >
             <Link
               href="/speakers"
@@ -57,7 +57,7 @@ const OurSpeakers = () => {
             </Link>
             <Link
               href="#"
-              className="bg-white py-4 md:py-[33px] px-52 md:px-[106px] border-[1px] border-black hover:border-core-blue text-black hover:bg-core-blue hover:text-white rounded-[100px] transition-colors duration-300"
+              className="bg-white py-4 md:py-[33px] px-52 md:px-[106px] border-[1px] border-black hover:border-core-blue text-black hover:bg-core-blue hover:text-white rounded-[100px] transition-colors duration-300 flex items-center justify-center"
             >
               Apply to Speak
             </Link>
