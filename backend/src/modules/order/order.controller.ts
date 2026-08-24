@@ -9,14 +9,14 @@ import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { OrdersService } from './order.service';
 import { CreateOrderDto, CreateOrderResponseDto } from './create-order.dto';
 
-@ApiTags('orders')
+@ApiTags('Order')
 @Controller('orders')
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 
   @Post()
   @ApiOperation({
-    summary: 'Create a ticket order and initialize payment',
+    summary: 'Create a ticket order',
   })
   @ApiResponse({
     status: HttpStatus.CREATED,

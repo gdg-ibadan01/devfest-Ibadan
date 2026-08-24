@@ -11,7 +11,7 @@ import {
 } from '../payment/interfaces/payment-provider.interface';
 import { CreateOrderDto, CreateOrderResponseDto } from './create-order.dto';
 
-const ORDER_TTL_MINUTES = 1;
+const ORDER_TTL_MINUTES = 10;
 const TX_MAX_ATTEMPTS = 3;
 
 type TxClient = Prisma.TransactionClient;

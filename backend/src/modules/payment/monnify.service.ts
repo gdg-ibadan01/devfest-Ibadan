@@ -129,8 +129,9 @@ export class MonnifyService implements PaymentProvider {
     );
 
     try {
-      const res = await axios.get<MonnifyEnvelope<MonnifyLoginResponseBody>>(
+      const res = await axios.post<MonnifyEnvelope<MonnifyLoginResponseBody>>(
         `${this.baseUrl}/api/v1/auth/login`,
+        null,
         {
           timeout: REQUEST_TIMEOUT_MS,
           headers: { Authorization: `Basic ${credentials}` },
