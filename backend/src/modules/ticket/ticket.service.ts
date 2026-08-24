@@ -21,7 +21,8 @@ for (const c of 'abcdefghijklmnopqrstuvwxyz0123456789-') {
 export class TicketsService {
   static ERRORS = {
     ValidationErr: 'ValidationErr',
-    CreateTickerErr: 'CreateTickerErr',
+    CreateTicketErr: 'CreateTicketErr',
+    UpdateTicketErr: 'UpdateTicketErr',
   };
 
   private logger = new Logger(TicketsService.name);
@@ -32,6 +33,68 @@ export class TicketsService {
     const slug = this.generateSlug(payload.name, payload.validityDates);
     const ticket = await this.createTicket(jwtUser.sub, payload, slug);
     return ticket;
+  }
+
+  async update(ticketId: string, payload: CreateTicketDto) {
+    payload.ensureValidInputs();
+
+    const ticket = await this.prisma.ticket.findUnique({
+      where: { id: ticketId },
+    });
+
+    if (!ticket) {
+      throw new NotFoundException('Ticket not found');
+    }
+
+    const saleStartsAt = new Date(payload.saleStartsAt);
+    saleStartsAt.setUTCHours(0, 0, 0, 0);
+    const saleEndsAt = new Date(payload.saleEndsAt);
+    saleEndsAt.setUTCHours(23, 59, 59, 999);
+
+    try {
+      const updatedTicket = await this.prisma.ticket.update({
+        where: { id: ticketId },
+        data: {
+          name: payload.name,
+          description: payload.description,
+          price: payload.price,
+          discount: payload.discount,
+          maximumSaleUnits: payload.maximumSaleUnits,
+          eventDates: payload.eventDates
+            .map((dateStr) => new Date(dateStr))
+            .sort((da, db) => da.getTime() - db.getTime())
+            .map(
+              (dateStr) => new Date(dateStr).toISOString() as unknown as Date,
+            ),
+          validityDates: payload.validityDates
+            .map((dateStr) => new Date(dateStr))
+            .sort((da, db) => da.getTime() - db.getTime())
+            .map(
+              (dateStr) => new Date(dateStr).toISOString() as unknown as Date,
+            ),
+          saleStartsAt: saleStartsAt,
+          saleEndsAt: saleEndsAt,
+        },
+      });
+
+      return {
+        id: updatedTicket.id,
+        name: updatedTicket.name,
+        description: updatedTicket.description,
+        slug: updatedTicket.slug,
+        price: updatedTicket.price.toFixed(2),
+        discount: updatedTicket.discount.toFixed(2),
+        maximumSaleUnits: updatedTicket.maximumSaleUnits,
+        eventDates: updatedTicket.eventDates,
+        validityDates: updatedTicket.validityDates,
+        saleStartsAt: updatedTicket.saleStartsAt,
+        saleEndsAt: updatedTicket.saleEndsAt,
+        createdAt: updatedTicket.createdAt,
+      };
+    } catch (err) {
+      this.logger.error(err);
+      throw new ServiceError('Unable to update ticket', `UpdateTickerErr`);
+    }
   }
 
   private async createTicket(
