@@ -7,11 +7,17 @@ import {
   Post,
   UseGuards,
   HttpStatus,
+  Param,
+  Patch,
+  BadRequestException,
+  HttpCode,
+  UnauthorizedException,
+  NotFoundException,
 } from '@nestjs/common';
-import { Request } from 'express';
 import {
   CreateRoleDto,
   CreateRoleResponseDto,
+  GetRoleResponseDto,
   ListRolesResponseDto,
   ListPermissionsResponse,
 } from './dto/role.dto';
@@ -27,6 +33,9 @@ import {
 import { PermissionsGuard } from './guards/permissions.guard';
 import { RequirePermission } from 'src/common/decorators/permissions.decorator';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { IJwtPayload } from './interfaces/admin.interface';
+import { RoleResponseDto } from './dto/role.dto';
 
 @Controller('roles')
 @ApiTags('Role')
@@ -75,5 +84,79 @@ export class RolesController {
   })
   listPermssions() {
     return this.roleService.listPermissions();
+  }
+
+  @Patch(':id')
+  @ApiBearerAuth()
+  @RequirePermission('roles.edit')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @ApiOkResponse({
+    type: RoleResponseDto,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized.',
+  })
+  @ApiOperation({ summary: 'Update a role' })
+  @HttpCode(HttpStatus.OK)
+  async update(
+    @Param('id') id: string,
+    @Body() payload: UpdateRoleDto,
+    @CurrentUser() user: IJwtPayload,
+  ) {
+    try {
+      return await this.roleService.update(id, payload, user.sub);
+    } catch (err) {
+      switch ((err as Error).name) {
+        case RolesService.ERRORS.DuplicateRoleErr:
+          throw new ConflictException((err as Error).message);
+
+        case RolesService.ERRORS.RoleNotFoundErr:
+          throw new NotFoundException((err as Error).message);
+
+        default:
+          throw new InternalServerErrorException('Unable to update role');
+      }
+    }
+  }
+
+  @Patch(':id/deactivate')
+  @ApiBearerAuth()
+  @RequirePermission('roles.deactivate')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @ApiOkResponse({
+    type: RoleResponseDto,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized.',
+  })
+  @ApiOperation({ summary: 'Deactivate a role' })
+  @HttpCode(HttpStatus.OK)
+  async deactivate(@Param('id') id: string, @CurrentUser() user: IJwtPayload) {
+    try {
+      return await this.roleService.deactivate(id, user.sub);
+    } catch (err) {
+      switch ((err as Error).name) {
+        case RolesService.ERRORS.RoleNotFoundErr:
+          throw new NotFoundException((err as Error).message);
+
+        case RolesService.ERRORS.AlreadyDeactivatedErr:
+          throw new BadRequestException((err as Error).message);
+
+        default:
+          throw new InternalServerErrorException('Unable to deactivate role');
+      }
+    }
+  }
+
+  @Get(':roleId')
+  @ApiBearerAuth()
+  @RequirePermission('roles.list')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @ApiOperation({ summary: 'Get a role by ID' })
+  @ApiOkResponse({ type: GetRoleResponseDto })
+  async getById(@Param('roleId') roleId: string) {
+    return await this.roleService.getById(roleId);
   }
 }

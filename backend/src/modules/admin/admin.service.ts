@@ -29,12 +29,20 @@ import { MailService } from '../mail/mail.service';
 import { AdminCreateAttendeeDto } from './dto/create-attendee.dto';
 import { PaymentsService } from '../payment/payment.service';
 import JWTConfig from 'src/config/jwt.config';
-import { type PERMISSION_ID } from 'src/common/constants/permissions';
+import {
+  type PERMISSION_ID,
+  PERMISSIONS,
+} from 'src/common/constants/permissions';
 
 type AuthTokens = {
   accessToken: string;
   refreshToken: string;
 };
+
+const permissionsMap = new Map<PERMISSION_ID, (typeof PERMISSIONS)[number]>();
+PERMISSIONS.forEach((p) => {
+  permissionsMap.set(p.id, p);
+});
 
 @Injectable()
 export class AdminService {
@@ -71,10 +79,7 @@ export class AdminService {
     const tokens = this.generateAuthTokens({
       sub: admin.id,
       email: admin.email,
-      role: {
-        name: admin.role.name,
-        permissions: admin.role.permissions as PERMISSION_ID[],
-      },
+      roleId: admin.roleId,
     });
 
     return {
@@ -108,10 +113,7 @@ export class AdminService {
       return this.generateAuthTokens({
         sub: admin.id,
         email: admin.email,
-        role: {
-          name: admin.role.name,
-          permissions: admin.role.permissions as PERMISSION_ID[],
-        },
+        roleId: admin.roleId,
       });
     } catch (error) {
       this.logger.error(error);
@@ -365,126 +367,146 @@ export class AdminService {
     };
   }
 
-  // async deactivateAdmin(
-  //   adminId: string,
-  //   deactivatedBy: string,
-  // ): Promise<{ message: string }> {
-  //   if (adminId === deactivatedBy) {
-  //     throw new ForbiddenException('You cannot deactivate your own account');
-  //   }
+  async deactivateAdmin(
+    adminId: string,
+    deactivatedBy: string,
+  ): Promise<{ message: string }> {
+    if (adminId === deactivatedBy) {
+      throw new ForbiddenException('You cannot deactivate your own account');
+    }
 
-  //   const target = await this.prisma.admin.findUnique({
-  //     where: { id: adminId },
-  //   });
+    const target = await this.prisma.admin.findUnique({
+      where: { id: adminId },
+    });
 
-  //   if (!target) {
-  //     throw new NotFoundException('Admin not found');
-  //   }
+    if (!target) {
+      throw new NotFoundException('Admin not found');
+    }
 
-  //   if (!target.isActive) {
-  //     throw new BadRequestException('Admin account is already deactivated');
-  //   }
+    if (!target.isActive) {
+      throw new BadRequestException('Admin account is already deactivated');
+    }
 
-  //   await this.prisma.$transaction(async (tx) => {
-  //     await tx.admin.update({
-  //       where: { id: adminId },
-  //       data: { isActive: false },
-  //     });
+    await this.prisma.$transaction(async (tx) => {
+      await tx.admin.update({
+        where: { id: adminId },
+        data: { isActive: false },
+      });
 
-  //     await tx.auditLog.create({
-  //       data: {
-  //         adminId: deactivatedBy,
-  //         action: 'DEACTIVATE_ADMIN',
-  //         metadata: { targetAdminId: adminId },
-  //       },
-  //     });
-  //   });
+      await tx.auditLog.create({
+        data: {
+          adminId: deactivatedBy,
+          action: 'DEACTIVATE_ADMIN',
+          metadata: { targetAdminId: adminId },
+        },
+      });
+    });
 
-  //   return { message: 'Admin deactivated successfully' };
-  // }
+    return { message: 'Admin deactivated successfully' };
+  }
 
-  // async findAll(query: AdminQueryDto) {
-  //   const { search, role, isActive, page = 1, limit = 10 } = query;
-  //   const skip = (page - 1) * limit;
+  async findAll(query: AdminQueryDto) {
+    const { search, role, isActive, page = 1, limit = 10 } = query;
+    const skip = (page - 1) * limit;
 
-  //   const where: any = {};
+    const where: any = {};
 
-  //   if (search) {
-  //     where.OR = [
-  //       { fullName: { contains: search, mode: 'insensitive' } },
-  //       { email: { contains: search, mode: 'insensitive' } },
-  //     ];
-  //   }
+    if (search) {
+      where.OR = [
+        { fullName: { contains: search, mode: 'insensitive' } },
+        { email: { contains: search, mode: 'insensitive' } },
+      ];
+    }
 
-  //   if (role) {
-  //     where.role = { name: { equals: role, mode: 'insensitive' } };
-  //   }
+    if (role) {
+      where.role = { name: { equals: role, mode: 'insensitive' } };
+    }
 
-  //   if (typeof isActive === 'boolean') {
-  //     where.isActive = isActive;
-  //   }
+    if (typeof isActive === 'boolean') {
+      where.isActive = isActive;
+    }
 
-  //   const [admins, total] = await Promise.all([
-  //     this.prisma.admin.findMany({
-  //       where,
-  //       skip,
-  //       take: limit,
-  //       orderBy: { createdAt: 'desc' },
-  //       select: {
-  //         id: true,
-  //         fullName: true,
-  //         email: true,
-  //         role: {
-  //           select: {
-  //             name: true,
-  //             permissions: true,
-  //           },
-  //         },
-  //         isActive: true,
-  //         invitedById: true,
-  //         createdAt: true,
-  //         updatedAt: true,
-  //       },
-  //     }),
-  //     this.prisma.admin.count({ where }),
-  //   ]);
+    const [admins, total] = await Promise.all([
+      this.prisma.admin.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          fullName: true,
+          email: true,
+          role: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+          isActive: true,
+          invitedBy: {
+            select: {
+              id: true,
+              fullName: true,
+            },
+          },
+          createdAt: true,
+          updatedAt: true,
+        },
+      }),
+      this.prisma.admin.count({ where }),
+    ]);
 
-  //   return {
-  //     data: admins.map((admin) => ({
-  //       ...admin,
-  //       role: {
-  //         name: admin.role?.name ?? '',
-  //         permissions: (admin.role?.permissions ?? []) as PERMISSION_ID[],
-  //       },
-  //     })),
-  //     meta: {
-  //       total,
-  //       page,
-  //       limit,
-  //       totalPages: Math.ceil(total / limit),
-  //     },
-  //   };
-  // }
+    return {
+      data: admins.map((admin) => ({
+        ...admin,
+        invitedBy: admin.invitedBy
+          ? { id: admin.invitedBy.id, name: admin.invitedBy.fullName }
+          : null,
+      })),
+      meta: {
+        total,
+        page,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
 
-  // async findOne(id: string): Promise<IAdminResponse> {
-  //   const admin = await this.prisma.admin.findUnique({
-  //     where: { id },
-  //     include: { role: true },
-  //   });
+  async findOne(id: string): Promise<IAdminResponse> {
+    const admin = await this.prisma.admin.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        fullName: true,
+        email: true,
+        role: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        isActive: true,
+        invitedBy: {
+          select: {
+            id: true,
+            fullName: true,
+          },
+        },
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
 
-  //   if (!admin) {
-  //     throw new NotFoundException('Admin not found');
-  //   }
+    if (!admin) {
+      throw new NotFoundException('Admin not found');
+    }
 
-  //   const { password, roleId, role, ...rest } = admin;
-  //   return {
-  //     ...rest,
-  //     role: {
-  //       name: role?.name ?? '',
-  //       permissions: (role?.permissions ?? []) as PERMISSION_ID[],
-  //     },
-  //   };
-  // }
+    return {
+      ...admin,
+      invitedBy: admin.invitedBy
+        ? { id: admin.invitedBy.id, name: admin.invitedBy.fullName }
+        : null,
+    };
+  }
 
   async findByEmail(email: string) {
     return await this.prisma.admin.findUnique({
@@ -492,15 +514,6 @@ export class AdminService {
       include: { role: true },
     });
   }
-
-  // async updateStatus(id: string, isActive: boolean) {
-  //   await this.findOne(id);
-  //   return await this.prisma.admin.update({
-  //     where: { id },
-  //     data: { isActive },
-  //     include: { role: true },
-  //   });
-  // }
 
   private generateAuthTokens(payload: IJwtPayload): AuthTokens {
     const accessToken = this.jwtService.sign(payload, {

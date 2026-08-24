@@ -14,6 +14,7 @@ export const PERMISSIONS = [
   { id: 'roles.edit', label: 'Edit role' },
   { id: 'roles.assign', label: 'Assign role' },
   { id: 'roles.list', label: 'View roles list' },
+  { id: 'roles.deactivate', label: 'Deactivate role' },
   { id: 'permissions.assign', label: 'Assign permissions' },
   { id: 'payment_reports.export', label: 'Export payment report' },
 ] as const;
