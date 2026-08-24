@@ -34,10 +34,7 @@ export interface IAdminResponse {
 export interface IJwtPayload {
   sub: string;
   email: string;
-  role: {
-    name: string;
-    permissions: PERMISSION_ID[];
-  };
+  roleId: string;
   iat?: number;
   exp?: number;
 }

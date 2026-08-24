@@ -117,9 +117,14 @@ export default function RootLayout({
   const adminRoute = '/admin';
   const pathname = usePathname();
 
+  // Auth pages (/admin sign-in and /admin-auth/*) use HomeLayout — no sidenav
+  const isAdminSignIn = pathname === '/admin';
+  const isAdminAuth = pathname.startsWith('/admin-auth');
+  const isAdminDashboard = pathname.startsWith(adminRoute) && !isAdminSignIn;
+
   return (
     <Fragment>
-      {pathname.startsWith(adminRoute) ? (
+      {isAdminDashboard ? (
         <AdminLayout>{children}</AdminLayout>
       ) : (
         <HomeLayout>{children}</HomeLayout>
