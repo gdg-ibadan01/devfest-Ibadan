@@ -23,6 +23,7 @@ export class RolesService {
 
   static ERRORS = {
     DuplicateRoleErr: `DuplicateRoleErr`,
+    AlreadyDeactivatedErr: 'AlreadyDeactivatedErr',
     RoleNotFoundErr: `RoleNotFoundErr`,
   } as const;
 

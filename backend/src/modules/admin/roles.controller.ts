@@ -4,7 +4,6 @@ import {
   Controller,
   Get,
   InternalServerErrorException,
-  Param,
   Post,
   UseGuards,
   HttpStatus,
@@ -15,7 +14,6 @@ import {
   UnauthorizedException,
   NotFoundException,
 } from '@nestjs/common';
-import { Request } from 'express';
 import {
   CreateRoleDto,
   CreateRoleResponseDto,
@@ -23,6 +21,7 @@ import {
   ListRolesResponseDto,
   ListPermissionsResponse,
 } from './dto/role.dto';
+import { UpdateRoleDto } from './dto/update-role.dto';
 import { RolesService } from './roles.service';
 import {
   ApiBearerAuth,
@@ -85,6 +84,70 @@ export class RolesController {
   })
   listPermssions() {
     return this.roleService.listPermissions();
+  }
+
+  @Patch(':id')
+  @ApiBearerAuth()
+  @RequirePermission('roles.edit')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @ApiOkResponse({
+    type: RoleResponseDto,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized.',
+  })
+  @ApiOperation({ summary: 'Update a role' })
+  @HttpCode(HttpStatus.OK)
+  async update(
+    @Param('id') id: string,
+    @Body() payload: UpdateRoleDto,
+    @CurrentUser() user: IJwtPayload,
+  ) {
+    try {
+      return await this.roleService.update(id, payload, user.sub);
+    } catch (err) {
+      switch ((err as Error).name) {
+        case RolesService.ERRORS.DuplicateRoleErr:
+          throw new ConflictException((err as Error).message);
+
+        case RolesService.ERRORS.RoleNotFoundErr:
+          throw new NotFoundException((err as Error).message);
+
+        default:
+          throw new InternalServerErrorException('Unable to update role');
+      }
+    }
+  }
+
+  @Patch(':id/deactivate')
+  @ApiBearerAuth()
+  @RequirePermission('roles.deactivate')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @ApiOkResponse({
+    type: RoleResponseDto,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized.',
+  })
+  @ApiOperation({ summary: 'Deactivate a role' })
+  @HttpCode(HttpStatus.OK)
+  async deactivate(@Param('id') id: string, @CurrentUser() user: IJwtPayload) {
+    try {
+      return await this.roleService.deactivate(id, user.sub);
+    } catch (err) {
+      switch ((err as Error).name) {
+        case RolesService.ERRORS.RoleNotFoundErr:
+          throw new NotFoundException((err as Error).message);
+
+        case RolesService.ERRORS.AlreadyDeactivatedErr:
+          throw new BadRequestException((err as Error).message);
+
+        default:
+          throw new InternalServerErrorException('Unable to deactivate role');
+      }
+    }
   }
 
   @Get(':roleId')
