@@ -139,8 +139,7 @@ export class OrdersService {
         expiresAt: { gt: now },
       },
     });
-    const available = ticket.maximumSaleUnits - paidCount;
-    if (available < awaitingCount + 1) {
+    if (paidCount + awaitingCount >= ticket.maximumSaleUnits) {
       throw new ServiceError(
         'All remaining tickets are currently reserved. Please retry in 10 minutes',
         OrdersService.ERRORS.RetryLaterErr,
@@ -223,16 +222,7 @@ export class OrdersService {
       this.logger.error(
         `Payment initialization failed for order ${order.id}: ${(err as Error).message}`,
       );
-      await this.prisma.order
-        .update({
-          where: { id: order.id },
-          data: { status: OrderStatus.CANCELLED },
-        })
-        .catch((updateErr) =>
-          this.logger.error(
-            `Failed to cancel order ${order.id}: ${(updateErr as Error).message}`,
-          ),
-        );
+      await this.cancel(order.id);
 
       throw new ServiceError(
         'Unable to initialize payment. Please try again shortly.',
@@ -260,5 +250,21 @@ export class OrdersService {
 
   private generateReference(name: string): string {
     return `${name.replace(/\s+/g, '')}-${randomUUID().replace(/-/g, '').slice(0, 6).toUpperCase()}`;
+  }
+
+  private async cancel(orderId: string) {
+    try {
+      await this.prisma.order.update({
+        where: { id: orderId },
+        data: { status: OrderStatus.CANCELLED },
+      });
+      this.logger.error(`Cancelled order ${orderId}`);
+    } catch (error) {
+      this.logger.error(
+        `Failed to cancel order ${orderId}: ${(error as Error).message}...Retrying cancellation`,
+      );
+      this.logger.error(`Retrying cancellation for order ${orderId}`);
+      await this.cancel(orderId);
+    }
   }
 }
