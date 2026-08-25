@@ -66,7 +66,11 @@ export class OrdersService {
           (err as { code?: string }).code ===
             PrismaErrors.UNIQUE_CONSTRAINT_VIOLATION;
         if (isRetryable && attempt < TX_MAX_ATTEMPTS) continue;
-        throw err;
+        this.logger.error(err);
+        throw new ServiceError(
+          'Unable to create order. Retry in about 10 minutes',
+          OrdersService.ERRORS.RetryLaterErr,
+        );
       }
     }
 
