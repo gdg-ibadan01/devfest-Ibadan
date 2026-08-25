@@ -35,9 +35,9 @@ model Admin {
   updatedAt           DateTime             @updatedAt
   admins              Admin[]              @relation("AdminInvitations")
   auditLogs           AuditLog[]
+  tickets             Ticket[]
 
   @@map("admins")
-  tickets Ticket[]
 }
 
 model PasswordResetToken {
@@ -83,5 +83,42 @@ model Ticket {
   createdAt        DateTime   @default(now())
   updatedAt        DateTime   @updatedAt
 
+  orders Order[]
+
   @@map("tickets")
+}
+
+enum OrderStatus {
+  AWAITING_PAYMENT
+  PAID
+  CANCELLED
+  EXPIRED
+  AWAITING_REFUND
+  REFUNDED
+}
+
+model Order {
+  id                     String      @id @default(uuid(7))
+  reference              String      @unique
+  ticketId               String
+  ticket                 Ticket      @relation(fields: [ticketId], references: [id])
+  attendeeFullName       String
+  attendeeEmail          String
+  attendeePhoneNumber    String?
+  gifterName             String?
+  gifterEmail            String?
+  discount               Decimal
+  amount                 Decimal
+  currency               String      @default("NGN")
+  status                 OrderStatus @default(AWAITING_PAYMENT)
+  paymentProvider        String      @default("MONNIFY")
+  providerTransactionRef String?
+  checkoutUrl            String?
+  expiresAt              DateTime
+  paidAt                 DateTime?
+  createdAt              DateTime    @default(now())
+  updatedAt              DateTime    @updatedAt
+
+  @@index([ticketId, status])
+  @@map("orders")
 }

@@ -107,59 +107,6 @@ export class TicketsController {
     return this.ticketsService.list(query);
   }
 
-  // @Get('stats')
-  // @ApiBearerAuth()
-  // @UseGuards(JwtAuthGuard, RolesGuard)
-  // @Roles(Role.ADMIN, Role.SUPER_ADMIN)
-  // @ApiOperation({ summary: 'Get ticket statistics' })
-  // @ApiResponse({
-  //   status: 200,
-  //   description: 'Statistics retrieved successfully',
-  // })
-  // async getStats(@Query('eventId') eventId?: string) {
-  //   return this.ticketsService.getTicketStats(eventId);
-  // }
-
-  @Get('verify/:ticketNumber')
-  @ApiOperation({ summary: 'Verify ticket' })
-  @ApiResponse({ status: 200, description: 'Ticket verification result' })
-  verifyTicket(@Param('ticketNumber') ticketNumber: string) {
-    return this.ticketsService.verifyTicket(ticketNumber);
-  }
-
-  @Post('checkin/:ticketNumber')
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
-  @ApiOperation({ summary: 'Check in attendee' })
-  @ApiResponse({ status: 200, description: 'Check in successful' })
-  checkIn(@Param('ticketNumber') ticketNumber: string) {
-    return this.ticketsService.checkIn(ticketNumber);
-  }
-
-  @Post('cancel/:ticketNumber')
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
-  @ApiOperation({ summary: 'Cancel ticket' })
-  @ApiResponse({ status: 200, description: 'Ticket cancelled successfully' })
-  cancelTicket(@Param('ticketNumber') ticketNumber: string) {
-    return this.ticketsService.cancelTicket(ticketNumber);
-  }
-
-  // @Get('event/:eventId')
-  // @ApiBearerAuth()
-  // @UseGuards(JwtAuthGuard, RolesGuard)
-  // @Roles(Role.ADMIN, Role.SUPER_ADMIN)
-  // @ApiOperation({ summary: 'Get tickets for event' })
-  // @ApiResponse({
-  //   status: 200,
-  //   description: 'Event tickets retrieved successfully',
-  // })
-  // async getEventTickets(@Param('eventId') eventId: string) {
-  //   return this.ticketsService.getEventTickets(eventId);
-  // }
-
   @Get('onsale')
   @ApiOperation({ summary: 'Get tickets currently on sale' })
   @ApiResponse({
@@ -172,7 +119,7 @@ export class TicketsController {
   }
 
   @Get('slug/:slug')
-  @ApiOperation({ summary: 'Get ticket by slug' })
+  @ApiOperation({ summary: 'Get a ticket by slug' })
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Ticket retrieved successfully',
@@ -189,7 +136,7 @@ export class TicketsController {
   @Get(':ticketId')
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
-  @ApiOperation({ summary: 'Get ticket by ID' })
+  @ApiOperation({ summary: 'Get a ticket by ID' })
   @ApiResponse({
     status: 200,
     description: 'Ticket retrieved successfully',
@@ -197,12 +144,5 @@ export class TicketsController {
   })
   findOneById(@Param('ticketId') ticketId: string) {
     return this.ticketsService.findOneById(ticketId);
-  }
-
-  @Get('number/:ticketNumber')
-  @ApiOperation({ summary: 'Get ticket by ticket number' })
-  @ApiResponse({ status: 200, description: 'Ticket retrieved successfully' })
-  findByTicketNumber(@Param('ticketNumber') ticketNumber: string) {
-    return this.ticketsService.findByTicketNumber(ticketNumber);
   }
 }
