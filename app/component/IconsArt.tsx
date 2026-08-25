@@ -41,15 +41,14 @@ const IconsArt = ({ className, showFull = true }: IconArt) => {
     visible: { y: 0, opacity: 1, transition: { duration: 0.3 } },
   };
   return (
-    <>
-      <div className={className} ref={heroRef}>
-        {showFull ? (
-          <div className="flex justify-between gap-[280px] md:gap-0">
-            <BigPlus fill="fill-core-red" stroke="stroke-black" />
-            <Hashtag fill="fill-core-green" stroke="stroke-black" />
-          </div>
-        ) : null}
-        {/* <div className="flex justify-between items-end -mt-80 md:-mt-44">
+    <div className={className} ref={heroRef}>
+      {showFull ? (
+        <div className="flex justify-between gap-[280px] md:gap-0">
+          <BigPlus fill="fill-core-red" stroke="stroke-black" />
+          <Hashtag fill="fill-core-green" stroke="stroke-black" />
+        </div>
+      ) : null}
+      {/* <div className="flex justify-between items-end -mt-80 md:-mt-44">
           <CurlyBraces className="fill-pastel-green stroke-black" />
           <Colon fill="fill-core-blue" stroke="stroke-black" />
           <Groundnut fill="fill-pastel-red" stroke="stroke-black" />
@@ -57,45 +56,44 @@ const IconsArt = ({ className, showFull = true }: IconArt) => {
           <SplittedTag fill="fill-halftone-red" stroke="stroke-black" />
         </div> */}
 
+      <motion.div
+        className="doodles flex justify-between items-end"
+        initial="hidden"
+        animate={controls}
+        variants={containerVariants}
+      >
         <motion.div
-          className="doodles flex justify-between items-end"
-          initial="hidden"
-          animate={controls}
-          variants={containerVariants}
+          className="doodleContainer w-full lg:w-[240px]"
+          variants={dropInVariants}
         >
-          <motion.div
-            className="doodleContainer w-full lg:w-[240px]"
-            variants={dropInVariants}
-          >
-            <CurlyBraces className="fill-pastel-green stroke-black" />
-          </motion.div>
-          <motion.div
-            className="doodleContainer w-full lg:w-[300px] "
-            variants={dropInVariants}
-          >
-            <Colon fill="fill-core-blue" stroke="stroke-black" />
-          </motion.div>
-          <motion.div
-            className="doodleContainer w-full lg:w-[525px]"
-            variants={dropInVariants}
-          >
-            <Groundnut fill="fill-pastel-red" stroke="stroke-black" />
-          </motion.div>
-          <motion.div
-            className="doodleContainer w-full lg:w-[245px]"
-            variants={dropInVariants}
-          >
-            <SemiColon fill="fill-core-yellow" stroke="stroke-black" />
-          </motion.div>
-          <motion.div
-            className="doodleContainer w-full lg:w-[344px]"
-            variants={dropInVariants}
-          >
-            <SplittedTag fill="fill-halftone-red" stroke="stroke-black" />
-          </motion.div>
+          <CurlyBraces className="fill-pastel-green stroke-black" />
         </motion.div>
-      </div>
-    </>
+        <motion.div
+          className="doodleContainer w-full lg:w-[300px] "
+          variants={dropInVariants}
+        >
+          <Colon fill="fill-core-blue" stroke="stroke-black" />
+        </motion.div>
+        <motion.div
+          className="doodleContainer w-full lg:w-[525px]"
+          variants={dropInVariants}
+        >
+          <Groundnut fill="fill-pastel-red" stroke="stroke-black" />
+        </motion.div>
+        <motion.div
+          className="doodleContainer w-full lg:w-[245px]"
+          variants={dropInVariants}
+        >
+          <SemiColon fill="fill-core-yellow" stroke="stroke-black" />
+        </motion.div>
+        <motion.div
+          className="doodleContainer w-full lg:w-[344px]"
+          variants={dropInVariants}
+        >
+          <SplittedTag fill="fill-halftone-red" stroke="stroke-black" />
+        </motion.div>
+      </motion.div>
+    </div>
   );
 };
 
