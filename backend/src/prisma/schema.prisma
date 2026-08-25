@@ -122,3 +122,16 @@ model Order {
   @@index([ticketId, status])
   @@map("orders")
 }
+
+model WebhookEvent {
+  id                   String   @id @default(uuid(7))
+  provider             String
+  eventType            String   @map("event_type")
+  paymentReference     String?  @map("payment_reference")
+  transactionReference String?  @map("transaction_reference")
+  payload              Json
+  processed            Boolean  @default(false)
+  createdAt            DateTime @default(now()) @map("created_at")
+
+  @@map("webhook_events")
+}

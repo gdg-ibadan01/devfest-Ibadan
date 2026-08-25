@@ -1,6 +1,7 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
 import axios, { AxiosError } from 'axios';
+import * as crypto from 'node:crypto';
 import { ServiceError } from 'src/common/errors/service-error';
 import {
   InitializePaymentParams,
@@ -90,6 +91,15 @@ export class MonnifyService implements PaymentProvider {
     }
   }
 
+  verifyWebhookSignature(rawBody: string, signature: string): boolean {
+    const secret = this.getRequiredConfig('secretKey');
+    const computed = crypto
+      .createHmac('sha512', secret)
+      .update(rawBody)
+      .digest('hex');
+    return computed === signature;
+  }
+
   private async request<T>(
     method: 'GET' | 'POST',
     url: string,
@@ -177,7 +187,8 @@ export class MonnifyService implements PaymentProvider {
   }
 
   private getConfig(key: keyof ConfigType<typeof monnifyConfig>): string {
-    return this.mnfyCfg[key] ?? '';
+    const value = this.mnfyCfg[key];
+    return value != null ? String(value) : '';
   }
 
   private getRequiredConfig(
