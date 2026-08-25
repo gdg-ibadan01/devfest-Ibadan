@@ -59,7 +59,7 @@ export class TicketsService {
           description: payload.description,
           price: payload.price,
           discount: payload.discount,
-          maximumSaleUnits: payload.maximumSaleUnits,
+          capacity: payload.capacity,
           eventDates: payload.eventDates
             .map((dateStr) => new Date(dateStr))
             .sort((da, db) => da.getTime() - db.getTime())
@@ -84,7 +84,7 @@ export class TicketsService {
         slug: updatedTicket.slug,
         price: updatedTicket.price.toFixed(2),
         discount: updatedTicket.discount.toFixed(2),
-        maximumSaleUnits: updatedTicket.maximumSaleUnits,
+        capacity: updatedTicket.capacity,
         eventDates: updatedTicket.eventDates,
         validityDates: updatedTicket.validityDates,
         saleStartsAt: updatedTicket.saleStartsAt,
@@ -115,7 +115,7 @@ export class TicketsService {
           creatorId,
           price: payload.price,
           discount: payload.discount,
-          maximumSaleUnits: payload.maximumSaleUnits,
+          capacity: payload.capacity,
           eventDates: payload.eventDates
             .map((dateStr) => new Date(dateStr))
             .sort((da, db) => da.getTime() - db.getTime())
@@ -140,7 +140,7 @@ export class TicketsService {
         slug: ticket.slug,
         price: ticket.price.toFixed(2),
         discount: ticket.discount.toFixed(2),
-        maximumSaleUnits: ticket.maximumSaleUnits,
+        capacity: ticket.capacity,
         eventDates: ticket.eventDates,
         validityDates: ticket.validityDates,
         saleStartsAt: ticket.saleStartsAt,
@@ -211,12 +211,13 @@ export class TicketsService {
       select: {
         id: true,
         name: true,
+        slug: true,
         eventDates: true,
         price: true,
         discount: true,
         saleStartsAt: true,
         saleEndsAt: true,
-        maximumSaleUnits: true,
+        capacity: true,
       },
     });
 
@@ -308,11 +309,12 @@ export class TicketsService {
       id: ticket.id,
       name: ticket.name,
       description: ticket.description,
+      slug: ticket.slug,
       eventDates: ticket.eventDates,
       price: ticket.price.toFixed(2),
       discount: ticket.discount.toFixed(2),
       validityDates: ticket.validityDates,
-      maximumSaleUnits: ticket.maximumSaleUnits,
+      capacity: ticket.capacity,
       saleStartsAt: ticket.saleStartsAt,
       saleEndsAt: ticket.saleEndsAt,
       createdAt: ticket.createdAt,

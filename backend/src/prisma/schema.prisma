@@ -75,7 +75,7 @@ model Ticket {
   price            Decimal
   discount         Decimal    @default(0)
   validityDates    DateTime[]
-  maximumSaleUnits Int
+  capacity         Int
   saleStartsAt     DateTime
   saleEndsAt       DateTime
   creatorId        String

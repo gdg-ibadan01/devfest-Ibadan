@@ -89,7 +89,10 @@ export class TicketListItemDto {
   saleEndsAt: Date;
 
   @ApiProperty()
-  maximumSaleUnits: number;
+  capacity: number;
+
+  @ApiProperty()
+  slug: string;
 }
 
 export class TicketPaginationMetaDto {
@@ -239,7 +242,7 @@ export class CreateTicketDto {
   })
   @IsInt()
   @Min(1)
-  maximumSaleUnits: number;
+  capacity: number;
 
   @ApiProperty({
     type: Date,
@@ -339,6 +342,9 @@ export class GetTicketResponseDto {
   name: string;
 
   @ApiProperty()
+  slug: string;
+
+  @ApiProperty()
   description: string;
 
   @ApiProperty({ type: [String], format: 'date-time' })
@@ -362,7 +368,7 @@ export class GetTicketResponseDto {
   validityDates: Date[];
 
   @ApiProperty()
-  maximumSaleUnits: number;
+  capacity: number;
 
   @ApiProperty({ type: Date, format: 'date-time' })
   saleStartsAt: Date;
@@ -415,7 +421,7 @@ export class CreateTicketResponseDto {
   validityDates: Date[];
 
   @ApiProperty()
-  maximumSaleUnits: number;
+  capacity: number;
 
   @ApiProperty()
   saleStartsAt: Date;

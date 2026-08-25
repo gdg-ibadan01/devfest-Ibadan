@@ -100,7 +100,7 @@ export class OrdersService {
         slug: true,
         price: true,
         discount: true,
-        maximumSaleUnits: true,
+        capacity: true,
         saleStartsAt: true,
         saleEndsAt: true,
       },
@@ -129,7 +129,7 @@ export class OrdersService {
     const paidCount = await tx.order.count({
       where: { ticketId: ticket.id, status: OrderStatus.PAID },
     });
-    if (paidCount >= ticket.maximumSaleUnits) {
+    if (paidCount >= ticket.capacity) {
       throw new ServiceError(
         'Ticket is sold out',
         OrdersService.ERRORS.SoldOutErr,
@@ -143,7 +143,7 @@ export class OrdersService {
         expiresAt: { gt: now },
       },
     });
-    if (paidCount + awaitingCount >= ticket.maximumSaleUnits) {
+    if (paidCount + awaitingCount >= ticket.capacity) {
       throw new ServiceError(
         'All remaining tickets are currently reserved. Please retry in 10 minutes',
         OrdersService.ERRORS.RetryLaterErr,
