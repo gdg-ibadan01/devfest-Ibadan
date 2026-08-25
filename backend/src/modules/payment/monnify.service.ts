@@ -7,11 +7,14 @@ import {
   InitializePaymentParams,
   InitializedPayment,
   PaymentProvider,
+  RefundPaymentParams,
+  RefundPaymentResult,
 } from './interfaces/payment-provider.interface';
 import {
   MonnifyEnvelope,
   MonnifyInitResponseBody,
   MonnifyLoginResponseBody,
+  MonnifyRefundResponseBody,
 } from './interfaces/monnify.interface';
 import monnifyConfig from 'src/config/monnify.config';
 
@@ -98,6 +101,44 @@ export class MonnifyService implements PaymentProvider {
       .update(rawBody)
       .digest('hex');
     return computed === signature;
+  }
+
+  async refundPayment(
+    params: RefundPaymentParams,
+  ): Promise<RefundPaymentResult> {
+    const payload = {
+      transactionReference: params.transactionReference,
+      refundReference: params.refundReference,
+      refundAmount: params.amount,
+      refundReason: params.reason,
+      customerNote: 'Refund for ticket',
+    };
+
+    try {
+      const res = await this.request<MonnifyRefundResponseBody>(
+        'POST',
+        '/api/v1/refunds/initiate-refund',
+        payload,
+      );
+
+      if (!res.requestSuccessful) {
+        this.logger.error(
+          `Monnify refund rejected for ${params.refundReference}: ${res.responseMessage}`,
+        );
+        return { success: false, message: res.responseMessage };
+      }
+
+      return { success: true, message: res.responseBody?.comment };
+    } catch (err) {
+      if (err instanceof ServiceError) throw err;
+      this.logger.error(
+        `Monnify refund failed for ${params.refundReference}: ${(err as Error).message}`,
+      );
+      throw new ServiceError(
+        'Payment gateway is unreachable',
+        MonnifyService.ERRORS.RequestErr,
+      );
+    }
   }
 
   private async request<T>(

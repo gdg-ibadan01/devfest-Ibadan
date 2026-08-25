@@ -1,5 +1,11 @@
 import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { OrderStatus, Prisma, type Order } from '@prisma/client';
+import {
+  OrderStatus,
+  Prisma,
+  RefundStatus,
+  Ticket,
+  type Order,
+} from '@prisma/client';
 import { randomUUID } from 'node:crypto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ServiceError } from 'src/common/errors/service-error';
@@ -9,10 +15,13 @@ import {
   PAYMENT_PROVIDER,
   PaymentProvider,
 } from '../payment/interfaces/payment-provider.interface';
+import { MonnifyWebhookEventData } from '../payment/interfaces/monnify.interface';
 import { CreateOrderDto, CreateOrderResponseDto } from './create-order.dto';
 
 const ORDER_TTL_MINUTES = 10;
 const TX_MAX_ATTEMPTS = 3;
+const REFUND_PROCESSING_FEE = 10;
+const MONNIFY_MINIMUM_REFUND = 100;
 
 type TxClient = Prisma.TransactionClient;
 
@@ -270,5 +279,276 @@ export class OrdersService {
       this.logger.error(`Retrying cancellation for order ${orderId}`);
       await this.cancel(orderId);
     }
+  }
+
+  async confirmMonnifyPayment(
+    eventData: MonnifyWebhookEventData,
+  ): Promise<void> {
+    let txResult:
+      | {
+          refundData: { refundId: string; orderId: string };
+        }
+      | undefined = { refundData: { orderId: '', refundId: '' } };
+
+    for (let attempt = 1; attempt <= TX_MAX_ATTEMPTS; attempt++) {
+      try {
+        txResult = await this.prisma.$transaction(
+          async (tx) => {
+            const txEvent = await tx.webhookEvent.findFirst({
+              where: {
+                provider: 'MONNIFY',
+                paymentReference: eventData.paymentReference,
+              },
+            });
+
+            if (txEvent?.processed) {
+              this.logger.log(
+                `Duplicate webhook (tx): ${eventData.paymentReference}`,
+              );
+              return;
+            }
+
+            const order = await tx.$queryRaw<Order | null>`
+              SELECT *
+              FROM orders
+              WHERE id = ${eventData.metaData.orderId}
+              FOR UPDATE;
+            `;
+
+            if (!order) {
+              this.logger.error(
+                `Order not found: ${eventData.metaData.orderId}`,
+              );
+              return;
+            }
+
+            if (order.status !== OrderStatus.AWAITING_PAYMENT) {
+              this.logger.log(
+                `Order ${order.id} status is ${order.status}, skipping. Treating only ${OrderStatus.AWAITING_PAYMENT} orders`,
+              );
+              return;
+            }
+
+            const transactionRefMismatch =
+              order.providerTransactionRef &&
+              order.providerTransactionRef !== eventData.transactionReference;
+
+            const amountMismatch = eventData.amountPaid < Number(order.amount);
+
+            if (transactionRefMismatch || amountMismatch) {
+              this.logger.warn(
+                `Sanity check failed for order ${order.id}: ` +
+                  `txRef mismatch=${transactionRefMismatch}, amount mismatch=${amountMismatch}`,
+              );
+              txResult!.refundData = await this.initiateMonnifyRefund(
+                tx,
+                order,
+                eventData,
+              );
+              return;
+            }
+
+            // Lock this row for any other concurrent incoming events for this
+            // ticket to avoid other concurrent writes affecting this tx
+            const ticket = await tx.$queryRaw<Ticket>`
+              SELECT *
+              FROM orders
+              WHERE id = ${order.ticketId}
+              FOR UPDATE;
+            `;
+
+            if (!ticket) {
+              this.logger.error(
+                `Ticket ${order.ticketId} not found for order ${order.id}`,
+              );
+              return;
+            }
+
+            const paidCount = await tx.order.count({
+              where: { ticketId: ticket.id, status: OrderStatus.PAID },
+            });
+
+            if (paidCount >= ticket.capacity) {
+              this.logger.warn(
+                `Ticket ${ticket.id} sold out, refunding order ${order.id}`,
+              );
+              txResult!.refundData = await this.initiateMonnifyRefund(
+                tx,
+                order,
+                eventData,
+              );
+              return;
+            }
+
+            const now = new Date();
+            const isExpired = order.expiresAt < now;
+            const awaitingCount = await tx.order.count({
+              where: {
+                ticketId: ticket.id,
+                status: OrderStatus.AWAITING_PAYMENT,
+                expiresAt: { gt: now },
+              },
+            });
+            const hasCapacity = paidCount + awaitingCount < ticket.capacity;
+            const shouldIssueTicket = !isExpired || hasCapacity;
+
+            if (shouldIssueTicket) {
+              await tx.order.update({
+                where: { id: order.id },
+                data: { status: OrderStatus.PAID, paidAt: now },
+              });
+              // TODO: create attendee record
+              console.log(
+                `[TODO] Create attendee record for order ${order.id}`,
+              );
+              // TODO: send confirmation email
+              console.log(
+                `[TODO] Send confirmation email for order ${order.id}`,
+              );
+              return;
+            }
+
+            txResult!.refundData = await this.initiateMonnifyRefund(
+              tx,
+              order,
+              eventData,
+            );
+
+            return txResult;
+          },
+          { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+        );
+        break;
+      } catch (err) {
+        const isRetryable =
+          (err as { code?: string }).code === 'P2034' ||
+          (err as { code?: string }).code ===
+            PrismaErrors.UNIQUE_CONSTRAINT_VIOLATION;
+
+        if (isRetryable && attempt < TX_MAX_ATTEMPTS) continue;
+
+        this.logger.error(
+          `confirmMonnifyPayment failed: ${(err as Error).message}`,
+        );
+        throw err;
+      }
+    }
+
+    if (txResult!.refundData.orderId) {
+      await this.processRefund(
+        txResult!.refundData.refundId,
+        txResult!.refundData.orderId,
+      );
+    }
+  }
+
+  private async initiateMonnifyRefund(
+    tx: TxClient,
+    order: Order,
+    eventData: MonnifyWebhookEventData,
+  ): Promise<{ refundId: string; orderId: string }> {
+    await tx.order.update({
+      where: { id: order.id },
+      data: { status: OrderStatus.AWAITING_REFUND },
+    });
+
+    const refund = await tx.refund.create({
+      data: {
+        orderId: order.id,
+        email: order.gifterEmail ?? order.attendeeEmail, // or should this be the gifter's if it exists?
+        provider: order.paymentProvider,
+        transactionReference: eventData.transactionReference,
+        paymentReference: eventData.paymentReference,
+        refundReference: this.generateRefundReference(),
+        status: RefundStatus.PENDING,
+      },
+    });
+
+    return { refundId: refund.id, orderId: order.id };
+  }
+
+  private async processRefund(
+    refundId: string,
+    orderId: string,
+  ): Promise<void> {
+    const refund = await this.prisma.refund.findUnique({
+      where: { id: refundId },
+    });
+
+    if (!refund || refund.status !== RefundStatus.PENDING) return;
+
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+    });
+
+    if (!order) return;
+
+    const refundAmount = Number(order.amount) - REFUND_PROCESSING_FEE;
+
+    if (refundAmount < MONNIFY_MINIMUM_REFUND) {
+      await this.prisma.refund.update({
+        where: { id: refundId },
+        data: {
+          status: RefundStatus.FAILED,
+          reason: `Refund amount ${refundAmount} below Monnify minimum ${MONNIFY_MINIMUM_REFUND}`,
+        },
+      });
+      this.logger.warn(
+        `Refund ${refundId} skipped: amount ${refundAmount} below minimum`,
+      );
+      return;
+    }
+
+    for (let attempt = 1; attempt <= TX_MAX_ATTEMPTS; attempt++) {
+      try {
+        await this.prisma.refund.update({
+          where: { id: refundId },
+          data: { status: RefundStatus.REQUESTED },
+        });
+
+        const result = await this.paymentProvider.refundPayment({
+          transactionReference: order.providerTransactionRef!,
+          refundReference: refund.refundReference,
+          amount: refundAmount,
+          reason: 'Order could not be fulfilled',
+        });
+
+        if (result.success) {
+          await this.prisma.refund.update({
+            where: { id: refundId },
+            data: { status: RefundStatus.SUCCESS, refundedAt: new Date() },
+          });
+          this.logger.log(`Refund ${refundId} completed for order ${orderId}`);
+          return;
+        }
+
+        await this.prisma.refund.update({
+          where: { id: refundId },
+          data: {
+            status: RefundStatus.SUCCESS,
+            reason: result.message ?? 'Refund rejected by gateway',
+          },
+        });
+        this.logger.warn(`Refund ${refundId} failed: ${result.message}`);
+        return;
+      } catch (err) {
+        if (attempt < TX_MAX_ATTEMPTS) continue;
+
+        await this.prisma.refund.update({
+          where: { id: refundId },
+          data: {
+            status: RefundStatus.SUCCESS,
+            reason: (err as Error).message,
+          },
+        });
+        this.logger.error(
+          `Refund ${refundId} error: ${(err as Error).message}`,
+        );
+      }
+    }
+  }
+
+  private generateRefundReference(): string {
+    return `REF-${randomUUID().replace(/-/g, '').slice(0, 10).toUpperCase()}`;
   }
 }

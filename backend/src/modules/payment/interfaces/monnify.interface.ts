@@ -23,7 +23,7 @@ export interface MonnifyWebhookEventData {
   paymentReference: string;
   paidOn: string;
   paymentDescription: string;
-  metaData: Record<string, unknown>;
+  metaData: { orderId: string };
   amountPaid: number;
   totalPayable: number;
   settlementAmount: string;
@@ -38,4 +38,17 @@ export interface MonnifyWebhookEventData {
 export interface MonnifyWebhookEvent {
   eventType: string;
   eventData: MonnifyWebhookEventData;
+}
+
+export interface MonnifyRefundResponseBody {
+  refundReference: string;
+  transactionReference: string;
+  refundReason: string;
+  customerNote: string;
+  refundAmount: number;
+  refundStatus: string;
+  refundType: string;
+  createdOn: string;
+  completedOn: string;
+  comment: string;
 }

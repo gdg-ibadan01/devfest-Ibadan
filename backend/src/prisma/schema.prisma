@@ -92,9 +92,15 @@ enum OrderStatus {
   AWAITING_PAYMENT
   PAID
   CANCELLED
-  EXPIRED
   AWAITING_REFUND
   REFUNDED
+}
+
+enum RefundStatus {
+  PENDING
+  REQUESTED
+  SUCCESS
+  FAILED
 }
 
 model Order {
@@ -119,8 +125,29 @@ model Order {
   createdAt              DateTime    @default(now())
   updatedAt              DateTime    @updatedAt
 
+  refund Refund?
+
   @@index([ticketId, status])
   @@map("orders")
+}
+
+model Refund {
+  id                   String       @id @default(uuid(7)) @map("id")
+  orderId              String       @map("order_id") @unique
+  email                String       @map("email")
+  provider             String       @map("provider")
+  transactionReference String       @map("transaction_reference")
+  paymentReference     String       @map("payment_reference")
+  refundReference      String       @map("refund_reference")
+  status               RefundStatus @default(PENDING) @map("status")
+  reason               String?      @map("reason")
+  refundedAt           DateTime?    @map("refunded_at")
+  createdAt            DateTime     @default(now()) @map("created_at")
+  updatedAt            DateTime     @updatedAt @map("updated_at")
+
+  order Order? @relation(fields: [orderId], references: [id])
+
+  @@map("refunds")
 }
 
 model WebhookEvent {
