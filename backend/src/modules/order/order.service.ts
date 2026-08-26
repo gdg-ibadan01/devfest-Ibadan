@@ -302,7 +302,6 @@ export class OrdersService {
     }
   }
 
-  // REFACTOR This function should be able to handle all payment providers
   async handlePaymentSuccess(event: PaymentSuccessPayload): Promise<void> {
     let txResult: { refundId: string } = {
       refundId: '',
