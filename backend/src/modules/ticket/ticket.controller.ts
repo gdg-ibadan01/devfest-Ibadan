@@ -29,9 +29,6 @@ import {
   TicketListResponseDto,
   TicketQueryDto,
 } from './dto/ticket.dto';
-import { RolesGuard } from '../admin/guards/roles.guard';
-import { Roles } from '../../common/decorators/roles.decorator';
-import { Role } from '../../common/enums/role.enum';
 import { RequirePermission } from 'src/common/decorators/permissions.decorator';
 import { PermissionsGuard } from '../admin/guards/permissions.guard';
 import { CurrentUser } from 'src/common/decorators/current-user.decorator';

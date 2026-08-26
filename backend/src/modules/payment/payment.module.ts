@@ -15,6 +15,6 @@ import { PAYMENT_PROVIDER } from './interfaces/payment-provider.interface';
     MonnifyService,
     { provide: PAYMENT_PROVIDER, useExisting: MonnifyService },
   ],
-  exports: [PaymentsService, PAYMENT_PROVIDER],
+  exports: [PaymentsService, PAYMENT_PROVIDER, MonnifyService],
 })
 export class PaymentsModule {}

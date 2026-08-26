@@ -24,6 +24,7 @@ import monnifyConfig from './config/monnify.config';
 import { TicketsModule } from './modules/ticket/ticket.module';
 import { UploadModule } from './modules/upload/upload.module';
 import { OrdersModule } from './modules/order/order.module';
+import { WebhookModule } from './modules/webhook/webhook.module';
 
 @Module({
   imports: [
@@ -50,6 +51,7 @@ import { OrdersModule } from './modules/order/order.module';
     TicketsModule,
     UploadModule,
     OrdersModule,
+    WebhookModule,
   ],
   controllers: [AppController],
   providers: [
