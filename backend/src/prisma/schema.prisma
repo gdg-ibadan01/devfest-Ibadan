@@ -160,5 +160,6 @@ model WebhookEvent {
   processed            Boolean  @default(false)
   createdAt            DateTime @default(now()) @map("created_at")
 
+  @@unique([provider, eventType, transactionReference])
   @@map("webhook_events")
 }

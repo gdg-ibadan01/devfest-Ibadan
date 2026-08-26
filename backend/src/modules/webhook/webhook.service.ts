@@ -1,9 +1,27 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+} from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
 import { MonnifyService } from '../payment/monnify.service';
 import { MonnifyWebhookEvent } from '../payment/interfaces/monnify.interface';
 import monnifyConfig from 'src/config/monnify.config';
 import { OrdersService } from '../order/order.service';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { Prisma } from '@prisma/client';
+import { PrismaErrors } from 'src/common/enums/prisma-errors.enum';
+
+type TxClient = Prisma.TransactionClient;
+
+interface CreateWebhookRecord {
+  eventType: string;
+  payload: string;
+  provider: string;
+  paymentReference: string;
+  transactionReference: string;
+}
 
 @Injectable()
 export class WebhookService {
@@ -12,6 +30,7 @@ export class WebhookService {
   constructor(
     private readonly monnifyService: MonnifyService,
     private readonly ordersService: OrdersService,
+    private readonly prisma: PrismaService,
     @Inject(monnifyConfig.KEY)
     private readonly mnfyCfg: ConfigType<typeof monnifyConfig>,
   ) {}
@@ -39,9 +58,44 @@ export class WebhookService {
       return;
     }
 
+    const existingEvent = await this.prisma.$transaction(async (tx) => {
+      return await this.recordEvent(tx, {
+        eventType,
+        payload: JSON.stringify(eventData),
+        paymentReference: eventData.paymentReference,
+        transactionReference: eventData.transactionReference,
+        provider: 'MONNIFY',
+      });
+    });
+
+    if (!existingEvent) {
+      this.logger.error(
+        'Failed to save webhook event to the database. Ignoring event',
+      );
+      throw new InternalServerErrorException('Cound not record event. Retry');
+    }
+
+    if (existingEvent.processed) {
+      this.logger.log(
+        `Duplicate webhook ignored: ${eventData.paymentReference}`,
+      );
+      return;
+    }
+
     switch (eventType) {
       case 'SUCCESSFUL_TRANSACTION':
-        await this.ordersService.handlePaymentSuccess(eventData);
+        await this.ordersService.handlePaymentSuccess({
+          webhookEventId: existingEvent.id,
+          amountPaid: eventData.amountPaid,
+          currency: eventData.currency,
+          metaData: eventData.metaData,
+          paidOn: eventData.paidOn,
+          paymentDescription: eventData.paymentDescription,
+          paymentReference: eventData.paymentReference,
+          paymentStatus: eventData.paymentStatus,
+          provider: 'MONNIFY',
+          transactionReference: eventData.transactionReference,
+        });
         break;
       // TODO: handle FAILED_TRANSACTION — set order status to CANCELLED
       // TODO: handle FAILED_REFUND
@@ -49,6 +103,35 @@ export class WebhookService {
       default:
         this.logger.log(`Unhandled Monnify event type: ${eventType}`);
         break;
+    }
+  }
+
+  private async recordEvent(tx: TxClient, ev: CreateWebhookRecord) {
+    try {
+      return await tx.webhookEvent.create({
+        data: {
+          eventType: ev.eventType,
+          payload: ev.payload,
+          provider: ev.provider,
+          processed: false,
+          paymentReference: ev.paymentReference,
+          transactionReference: ev.transactionReference,
+        },
+      });
+    } catch (err) {
+      if (
+        err instanceof Prisma.PrismaClientKnownRequestError &&
+        err.code === PrismaErrors.UNIQUE_CONSTRAINT_VIOLATION
+      ) {
+        return await this.prisma.webhookEvent.findFirst({
+          where: {
+            provider: 'MONNIFY',
+            eventType: ev.eventType,
+            paymentReference: ev.paymentReference,
+          },
+        });
+      }
+      throw err;
     }
   }
 }
