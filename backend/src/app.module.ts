@@ -3,10 +3,10 @@ import { ConfigModule } from '@nestjs/config';
 import { WinstonModule } from 'nest-winston';
 import { AppController } from './app.controller';
 import { winstonConfig } from './config/logger/wiston.config';
-import { APP_FILTER, APP_PIPE } from '@nestjs/core';
+import { APP_FILTER, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 import { HttpExceptionFilter } from './common/filters/exception.filter';
 import { ValidationPipe422 } from './common/pipe/validation.pipe';
-// import { TransformerInterceptor } from './common/interceptor/transformer.interceptor';
+import { RequestLoggerInterceptor } from './common/interceptor/request-logger.interceptor';
 import { AppService } from './app.service';
 import { AttendeeModule } from './modules/attendee/attendee.module';
 import { EventsModule } from './modules/events/events.module';
@@ -63,10 +63,10 @@ import { WebhookModule } from './modules/webhook/webhook.module';
       provide: APP_PIPE,
       useClass: ValidationPipe422,
     },
-    // {
-    //   provide: APP_INTERCEPTOR,
-    //   useClass: TransformerInterceptor,
-    // },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: RequestLoggerInterceptor,
+    },
     AppService,
   ],
 })
