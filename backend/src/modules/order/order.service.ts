@@ -15,9 +15,7 @@ import {
   PAYMENT_PROVIDER,
   PaymentProvider,
 } from '../payment/interfaces/payment-provider.interface';
-import { MonnifyWebhookEventData } from '../payment/interfaces/monnify.interface';
 import { CreateOrderDto, CreateOrderResponseDto } from './create-order.dto';
-import { MonnifyService } from '../payment/monnify.service';
 
 const ORDER_TTL_MINUTES = 10;
 const TX_MAX_ATTEMPTS = 3;
@@ -33,6 +31,25 @@ interface CreatedOrderRecord {
 interface CreateRefundRecord {
   transactionReference: string;
   paymentReference: string;
+}
+
+interface PaymentSuccessPayload {
+  webhookEventId: string;
+  transactionReference: string;
+  paymentReference: string;
+  paidOn: string;
+  paymentDescription: string;
+  metaData: { orderId: string };
+  amountPaid: number;
+  currency: string;
+  paymentStatus: string;
+  provider: 'MONNIFY';
+}
+
+interface ProcessRefundPayload {
+  refundId: string;
+  orderId: string;
+  provider: PaymentSuccessPayload['provider'];
 }
 
 @Injectable()
@@ -186,7 +203,7 @@ export class OrdersService {
 
     const order = await tx.order.create({
       data: {
-        reference: this.generateReference(ticket.name), // FIX what if there is a reference collision?
+        reference: this.generateReference(ticket.name), // FIX what if there is a collision?
         ticketId: ticket.id,
         attendeeFullName: args.attendeeFullName,
         attendeeEmail: args.attendeeEmail,
@@ -286,43 +303,32 @@ export class OrdersService {
   }
 
   // REFACTOR This function should be able to handle all payment providers
-  async handlePaymentSuccess(
-    eventData: MonnifyWebhookEventData,
-  ): Promise<void> {
-    let txResult: { refundId: string; orderId: string } = {
-      orderId: '',
+  async handlePaymentSuccess(event: PaymentSuccessPayload): Promise<void> {
+    let txResult: { refundId: string } = {
       refundId: '',
     };
 
+    // Why? Retries because we're using IsolationLevel.Serializable
     for (let attempt = 1; attempt <= TX_MAX_ATTEMPTS; attempt++) {
       try {
         txResult = await this.prisma.$transaction(
           async (tx) => {
-            const txEvent = await tx.webhookEvent.findFirst({
-              where: {
-                provider: 'MONNIFY',
-                paymentReference: eventData.paymentReference,
-              },
-            });
-
-            if (txEvent?.processed) {
-              this.logger.log(
-                `Duplicate webhook (tx): ${eventData.paymentReference}`,
-              );
-              return txResult;
-            }
+            // Why? Lock webhook row to prevent concurrent writes on it
+            await tx.$queryRaw`
+            SELECT *
+            FROM webhook_events
+            WHERE id = ${event.webhookEventId}
+            FOR UPDATE;`;
 
             const order = await tx.$queryRaw<Order | null>`
-              SELECT *
-              FROM orders
-              WHERE id = ${eventData.metaData.orderId}
-              FOR UPDATE;
-            `;
+            SELECT *
+            FROM orders
+            WHERE id = ${event.metaData.orderId}
+            FOR UPDATE;`;
 
             if (!order) {
-              this.logger.error(
-                `Order not found: ${eventData.metaData.orderId}`,
-              );
+              this.logger.error(`Order not found: ${event.metaData.orderId}`);
+              await this.setEventAsProcessed(tx, event.webhookEventId);
               return txResult;
             }
 
@@ -330,28 +336,31 @@ export class OrdersService {
               this.logger.log(
                 `Order ${order.id} status is ${order.status}, skipping. Treating only ${OrderStatus.AWAITING_PAYMENT} orders`,
               );
+              await this.setEventAsProcessed(tx, event.webhookEventId);
               return txResult;
             }
 
             const transactionRefMismatch =
               order.providerTransactionRef &&
-              order.providerTransactionRef !== eventData.transactionReference;
+              order.providerTransactionRef !== event.transactionReference;
 
-            const amountMismatch = eventData.amountPaid < Number(order.amount);
+            // Since we're expecting only one currency now, this is fine
+            const amountMismatch = event.amountPaid < Number(order.amount);
 
             if (transactionRefMismatch || amountMismatch) {
               this.logger.warn(
                 `Sanity check failed for order ${order.id}: ` +
                   `txRef mismatch=${transactionRefMismatch}, amount mismatch=${amountMismatch}`,
               );
-              const refund = await this.recordRefund(tx, order, eventData);
+              const refund = await this.recordRefund(tx, order, event);
               txResult.refundId = refund.refundId;
-              txResult.orderId = refund.orderId;
+              await this.setEventAsProcessed(tx, event.webhookEventId);
               return txResult;
             }
 
-            // Why? Lock this row for any other concurrent incoming events for this
-            // ticket to avoid other concurrent writes affecting this tx
+            // Why are we doing this? To lock this row for any other concurrent
+            // incoming events for this ticket to avoid other concurrent writes
+            // affecting this tx
             const ticket = await tx.$queryRaw<Ticket>`
               SELECT *
               FROM orders
@@ -363,6 +372,7 @@ export class OrdersService {
               this.logger.error(
                 `Ticket ${order.ticketId} not found for order ${order.id}`,
               );
+              await this.setEventAsProcessed(tx, event.webhookEventId);
               return txResult;
             }
 
@@ -374,9 +384,9 @@ export class OrdersService {
               this.logger.warn(
                 `Ticket ${ticket.id} sold out, refunding order ${order.id}`,
               );
-              const refund = await this.recordRefund(tx, order, eventData);
+              const refund = await this.recordRefund(tx, order, event);
               txResult.refundId = refund.refundId;
-              txResult.orderId = refund.orderId;
+              await this.setEventAsProcessed(tx, event.webhookEventId);
               return txResult;
             }
 
@@ -405,12 +415,13 @@ export class OrdersService {
               console.log(
                 `[TODO] Send confirmation email for order ${order.id}`,
               );
+              await this.setEventAsProcessed(tx, event.webhookEventId);
               return txResult;
             }
 
-            const refund = await this.recordRefund(tx, order, eventData);
+            const refund = await this.recordRefund(tx, order, event);
             txResult.refundId = refund.refundId;
-            txResult.orderId = refund.orderId;
+            await this.setEventAsProcessed(tx, event.webhookEventId);
             return txResult;
           },
           { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
@@ -432,7 +443,11 @@ export class OrdersService {
     }
 
     if (txResult.refundId) {
-      await this.processRefund(txResult.refundId, txResult.orderId);
+      await this.processRefund({
+        orderId: event.metaData.orderId,
+        provider: event.provider,
+        refundId: txResult.refundId,
+      });
     }
   }
 
@@ -461,10 +476,8 @@ export class OrdersService {
     return { refundId: refund.id, orderId: order.id };
   }
 
-  private async processRefund(
-    refundId: string,
-    orderId: string,
-  ): Promise<void> {
+  private async processRefund(payload: ProcessRefundPayload): Promise<void> {
+    const { refundId, orderId } = payload;
     const refund = await this.prisma.refund.findUnique({
       where: { id: refundId },
     });
@@ -484,6 +497,7 @@ export class OrdersService {
           data: { status: RefundStatus.REQUESTED },
         });
 
+        // TODO Use a switch statement to determine which provider to use
         await this.paymentProvider.refundPayment({
           transactionReference: order.providerTransactionRef!,
           refundReference: refund.refundReference,
@@ -491,12 +505,9 @@ export class OrdersService {
           reason: 'Order could not be fulfilled',
         });
 
-        // Handle provider response via webhook
+        // TODO Handle provider response via webhook
       } catch (err) {
-        if (
-          (err as Error).name ===
-          MonnifyService.ERRORS.InsufficientRefundAmountErr
-        ) {
+        if ((err as Error).name === 'InsufficientRefundAmountErr') {
           await this.prisma.refund.update({
             where: { id: refundId },
             data: {
@@ -513,6 +524,7 @@ export class OrdersService {
         }
 
         if (attempt < TX_MAX_ATTEMPTS) continue;
+
         this.logger.error(
           `Refund ${refundId} error: ${(err as Error).message}`,
         );
@@ -520,7 +532,13 @@ export class OrdersService {
     }
   }
 
+  private async setEventAsProcessed(tx: TxClient, eventId: string) {
+    await tx.webhookEvent.update({
+      where: { id: eventId },
+      data: { processed: true },
+    });
+  }
   private generateRefundReference(): string {
-    return `REF-${randomUUID().replace(/-/g, '').slice(0, 10).toUpperCase()}`;
+    return `REFUND-${randomUUID().replace(/-/g, '').slice(0, 10).toUpperCase()}`;
   }
 }
