@@ -57,8 +57,8 @@ export class TicketsService {
         data: {
           name: payload.name,
           description: payload.description,
-          price: payload.price,
-          discount: payload.discount,
+          price: Number(payload.price.toFixed(2)),
+          discount: Number(payload.discount.toFixed(2)),
           capacity: payload.capacity,
           eventDates: payload.eventDates
             .map((dateStr) => new Date(dateStr))
@@ -113,8 +113,8 @@ export class TicketsService {
           description: payload.description,
           slug,
           creatorId,
-          price: payload.price,
-          discount: payload.discount,
+          price: Number(payload.price.toFixed(2)),
+          discount: Number(payload.discount.toFixed(2)),
           capacity: payload.capacity,
           eventDates: payload.eventDates
             .map((dateStr) => new Date(dateStr))
