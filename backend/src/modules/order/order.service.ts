@@ -284,11 +284,10 @@ export class OrdersService {
   async confirmMonnifyPayment(
     eventData: MonnifyWebhookEventData,
   ): Promise<void> {
-    let txResult:
-      | {
-          refundData: { refundId: string; orderId: string };
-        }
-      | undefined = { refundData: { orderId: '', refundId: '' } };
+    let txResult: { refundId: string; orderId: string } = {
+      orderId: '',
+      refundId: '',
+    };
 
     for (let attempt = 1; attempt <= TX_MAX_ATTEMPTS; attempt++) {
       try {
@@ -305,7 +304,7 @@ export class OrdersService {
               this.logger.log(
                 `Duplicate webhook (tx): ${eventData.paymentReference}`,
               );
-              return;
+              return txResult;
             }
 
             const order = await tx.$queryRaw<Order | null>`
@@ -319,14 +318,14 @@ export class OrdersService {
               this.logger.error(
                 `Order not found: ${eventData.metaData.orderId}`,
               );
-              return;
+              return txResult;
             }
 
             if (order.status !== OrderStatus.AWAITING_PAYMENT) {
               this.logger.log(
                 `Order ${order.id} status is ${order.status}, skipping. Treating only ${OrderStatus.AWAITING_PAYMENT} orders`,
               );
-              return;
+              return txResult;
             }
 
             const transactionRefMismatch =
@@ -340,15 +339,13 @@ export class OrdersService {
                 `Sanity check failed for order ${order.id}: ` +
                   `txRef mismatch=${transactionRefMismatch}, amount mismatch=${amountMismatch}`,
               );
-              txResult!.refundData = await this.initiateMonnifyRefund(
-                tx,
-                order,
-                eventData,
-              );
-              return;
+              const refund = await this.recordRefund(tx, order, eventData);
+              txResult.refundId = refund.refundId;
+              txResult.orderId = refund.orderId;
+              return txResult;
             }
 
-            // Lock this row for any other concurrent incoming events for this
+            // Why? Lock this row for any other concurrent incoming events for this
             // ticket to avoid other concurrent writes affecting this tx
             const ticket = await tx.$queryRaw<Ticket>`
               SELECT *
@@ -361,7 +358,7 @@ export class OrdersService {
               this.logger.error(
                 `Ticket ${order.ticketId} not found for order ${order.id}`,
               );
-              return;
+              return txResult;
             }
 
             const paidCount = await tx.order.count({
@@ -372,12 +369,10 @@ export class OrdersService {
               this.logger.warn(
                 `Ticket ${ticket.id} sold out, refunding order ${order.id}`,
               );
-              txResult!.refundData = await this.initiateMonnifyRefund(
-                tx,
-                order,
-                eventData,
-              );
-              return;
+              const refund = await this.recordRefund(tx, order, eventData);
+              txResult.refundId = refund.refundId;
+              txResult.orderId = refund.orderId;
+              return txResult;
             }
 
             const now = new Date();
@@ -405,15 +400,12 @@ export class OrdersService {
               console.log(
                 `[TODO] Send confirmation email for order ${order.id}`,
               );
-              return;
+              return txResult;
             }
 
-            txResult!.refundData = await this.initiateMonnifyRefund(
-              tx,
-              order,
-              eventData,
-            );
-
+            const refund = await this.recordRefund(tx, order, eventData);
+            txResult.refundId = refund.refundId;
+            txResult.orderId = refund.orderId;
             return txResult;
           },
           { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
@@ -434,11 +426,8 @@ export class OrdersService {
       }
     }
 
-    if (txResult!.refundData.orderId) {
-      await this.processRefund(
-        txResult!.refundData.refundId,
-        txResult!.refundData.orderId,
-      );
+    if (txResult.refundId) {
+      await this.processRefund(txResult.refundId, txResult.orderId);
     }
   }
 
