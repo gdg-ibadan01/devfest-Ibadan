@@ -41,9 +41,11 @@ export class WebhookService {
 
     switch (eventType) {
       case 'SUCCESSFUL_TRANSACTION':
-        await this.ordersService.confirmMonnifyPayment(eventData);
+        await this.ordersService.handlePaymentSuccess(eventData);
         break;
       // TODO: handle FAILED_TRANSACTION — set order status to CANCELLED
+      // TODO: handle FAILED_REFUND
+      // TODO: handle SUCCESSFUL_REFUND
       default:
         this.logger.log(`Unhandled Monnify event type: ${eventType}`);
         break;

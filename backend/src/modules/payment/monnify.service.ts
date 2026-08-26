@@ -28,8 +28,11 @@ export class MonnifyService implements PaymentProvider {
   static ERRORS = {
     AuthErr: 'MonnifyAuthErr',
     RequestErr: 'MonnifyRequestErr',
+    InsufficientRefundAmountErr: 'InsufficientRefundAmountErr',
     ConfigErr: 'MonnifyConfigErr',
   } satisfies Record<string, `${string}Err`>;
+  static REFUND_PROCESSING_FEE = 10;
+  static MONNIFY_MINIMUM_REFUND = 100;
 
   private readonly logger = new Logger(MonnifyService.name);
   private accessToken: string | null = null;
@@ -106,6 +109,16 @@ export class MonnifyService implements PaymentProvider {
   async refundPayment(
     params: RefundPaymentParams,
   ): Promise<RefundPaymentResult> {
+    const tooLowToRefund =
+      params.amount - MonnifyService.MONNIFY_MINIMUM_REFUND <
+      MonnifyService.MONNIFY_MINIMUM_REFUND;
+    if (tooLowToRefund) {
+      throw new ServiceError(
+        `Refund amount ${params.amount} below Monnify minimum ${MonnifyService.MONNIFY_MINIMUM_REFUND}`,
+        MonnifyService.ERRORS.InsufficientRefundAmountErr,
+      );
+    }
+
     const payload = {
       transactionReference: params.transactionReference,
       refundReference: params.refundReference,

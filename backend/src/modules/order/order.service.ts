@@ -17,11 +17,10 @@ import {
 } from '../payment/interfaces/payment-provider.interface';
 import { MonnifyWebhookEventData } from '../payment/interfaces/monnify.interface';
 import { CreateOrderDto, CreateOrderResponseDto } from './create-order.dto';
+import { MonnifyService } from '../payment/monnify.service';
 
 const ORDER_TTL_MINUTES = 10;
 const TX_MAX_ATTEMPTS = 3;
-const REFUND_PROCESSING_FEE = 10;
-const MONNIFY_MINIMUM_REFUND = 100;
 
 type TxClient = Prisma.TransactionClient;
 
@@ -29,6 +28,11 @@ interface CreatedOrderRecord {
   order: Order;
   ticketName: string;
   ticketSlug: string;
+}
+
+interface CreateRefundRecord {
+  transactionReference: string;
+  paymentReference: string;
 }
 
 @Injectable()
@@ -281,7 +285,8 @@ export class OrdersService {
     }
   }
 
-  async confirmMonnifyPayment(
+  // REFACTOR This function should be able to handle all payment providers
+  async handlePaymentSuccess(
     eventData: MonnifyWebhookEventData,
   ): Promise<void> {
     let txResult: { refundId: string; orderId: string } = {
@@ -431,10 +436,10 @@ export class OrdersService {
     }
   }
 
-  private async initiateMonnifyRefund(
+  private async recordRefund(
     tx: TxClient,
     order: Order,
-    eventData: MonnifyWebhookEventData,
+    payload: CreateRefundRecord,
   ): Promise<{ refundId: string; orderId: string }> {
     await tx.order.update({
       where: { id: order.id },
@@ -444,10 +449,10 @@ export class OrdersService {
     const refund = await tx.refund.create({
       data: {
         orderId: order.id,
-        email: order.gifterEmail ?? order.attendeeEmail, // or should this be the gifter's if it exists?
+        email: order.gifterEmail ?? order.attendeeEmail,
         provider: order.paymentProvider,
-        transactionReference: eventData.transactionReference,
-        paymentReference: eventData.paymentReference,
+        transactionReference: payload.transactionReference,
+        paymentReference: payload.paymentReference,
         refundReference: this.generateRefundReference(),
         status: RefundStatus.PENDING,
       },
@@ -472,22 +477,6 @@ export class OrdersService {
 
     if (!order) return;
 
-    const refundAmount = Number(order.amount) - REFUND_PROCESSING_FEE;
-
-    if (refundAmount < MONNIFY_MINIMUM_REFUND) {
-      await this.prisma.refund.update({
-        where: { id: refundId },
-        data: {
-          status: RefundStatus.FAILED,
-          reason: `Refund amount ${refundAmount} below Monnify minimum ${MONNIFY_MINIMUM_REFUND}`,
-        },
-      });
-      this.logger.warn(
-        `Refund ${refundId} skipped: amount ${refundAmount} below minimum`,
-      );
-      return;
-    }
-
     for (let attempt = 1; attempt <= TX_MAX_ATTEMPTS; attempt++) {
       try {
         await this.prisma.refund.update({
@@ -495,41 +484,35 @@ export class OrdersService {
           data: { status: RefundStatus.REQUESTED },
         });
 
-        const result = await this.paymentProvider.refundPayment({
+        await this.paymentProvider.refundPayment({
           transactionReference: order.providerTransactionRef!,
           refundReference: refund.refundReference,
-          amount: refundAmount,
+          amount: Number(order.amount),
           reason: 'Order could not be fulfilled',
         });
 
-        if (result.success) {
+        // Handle provider response via webhook
+      } catch (err) {
+        if (
+          (err as Error).name ===
+          MonnifyService.ERRORS.InsufficientRefundAmountErr
+        ) {
           await this.prisma.refund.update({
             where: { id: refundId },
-            data: { status: RefundStatus.SUCCESS, refundedAt: new Date() },
+            data: {
+              status: RefundStatus.FAILED,
+              reason: (err as Error).message,
+            },
           });
-          this.logger.log(`Refund ${refundId} completed for order ${orderId}`);
-          return;
+
+          this.logger.error(
+            `Refund ${refundId} error: ${(err as Error).message}`,
+          );
+
+          break;
         }
 
-        await this.prisma.refund.update({
-          where: { id: refundId },
-          data: {
-            status: RefundStatus.SUCCESS,
-            reason: result.message ?? 'Refund rejected by gateway',
-          },
-        });
-        this.logger.warn(`Refund ${refundId} failed: ${result.message}`);
-        return;
-      } catch (err) {
         if (attempt < TX_MAX_ATTEMPTS) continue;
-
-        await this.prisma.refund.update({
-          where: { id: refundId },
-          data: {
-            status: RefundStatus.SUCCESS,
-            reason: (err as Error).message,
-          },
-        });
         this.logger.error(
           `Refund ${refundId} error: ${(err as Error).message}`,
         );
