@@ -62,6 +62,8 @@ export class OrdersController {
             (err as Error).message,
             HttpStatus.BAD_GATEWAY,
           );
+        case OrdersService.ERRORS.TicketNotFoundErr:
+          throw new HttpException((err as Error).message, HttpStatus.NOT_FOUND);
         default:
           throw new HttpException(
             (err as Error).message,

@@ -33,5 +33,5 @@ export interface PaymentProvider {
   initializePayment(
     params: InitializePaymentParams,
   ): Promise<InitializedPayment>;
-  refundPayment(params: RefundPaymentParams): Promise<RefundPaymentResult>;
+  requestRefund(params: RefundPaymentParams): Promise<RefundPaymentResult>;
 }
