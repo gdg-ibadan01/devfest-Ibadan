@@ -62,7 +62,7 @@ export class OrdersService {
     DuplicateErr: 'DuplicateErr',
     PaymentErr: 'PaymentErr',
     TicketNotFoundErr: 'TicketNotFoundErr',
-  } as Record<string, `${string}Err`>;
+  } as const;
 
   private readonly logger = new Logger(OrdersService.name);
 
@@ -123,19 +123,11 @@ export class OrdersService {
       gifterEmail: string | null;
     },
   ): Promise<CreatedOrderRecord> {
-    const ticket = await tx.ticket.findUnique({
-      where: { slug: args.slug },
-      select: {
-        id: true,
-        name: true,
-        slug: true,
-        price: true,
-        discount: true,
-        capacity: true,
-        saleStartsAt: true,
-        saleEndsAt: true,
-      },
-    });
+    const [ticket] = await tx.$queryRaw<Ticket[]>`
+    SELECT *
+    FROM tickets
+    WHERE slug = ${args.slug}
+    FOR UPDATE;`;
 
     if (!ticket) {
       throw new ServiceError(
