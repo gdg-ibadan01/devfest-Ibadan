@@ -199,7 +199,7 @@ export class OrdersService {
 
     const order = await tx.order.create({
       data: {
-        reference: this.generateReference(ticket.name), // FIX what if there is a collision?
+        reference: this.generateReference(ticket.name),
         ticketId: ticket.id,
         attendeeFullName: args.attendeeFullName,
         attendeeEmail: args.attendeeEmail,
