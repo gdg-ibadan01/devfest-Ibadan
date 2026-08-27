@@ -144,6 +144,27 @@ export class OrdersService {
       );
     }
 
+    const activeOrder = await tx.order.findFirst({
+      where: {
+        ticketId: ticket.id,
+        attendeeEmail: args.attendeeEmail,
+        OR: [
+          { status: OrderStatus.PAID },
+          {
+            status: OrderStatus.AWAITING_PAYMENT,
+            expiresAt: { gt: now },
+          },
+        ],
+      },
+      select: { id: true },
+    });
+    if (activeOrder) {
+      throw new ServiceError(
+        'You already have an order for this ticket',
+        OrdersService.ERRORS.DuplicateErr,
+      );
+    }
+
     const amount = ticket.price.minus(ticket.discount);
     if (amount.lte(0)) {
       throw new ServiceError(
@@ -173,27 +194,6 @@ export class OrdersService {
       throw new ServiceError(
         'All remaining tickets are currently reserved. Please retry in 10 minutes',
         OrdersService.ERRORS.RetryLaterErr,
-      );
-    }
-
-    const activeOrder = await tx.order.findFirst({
-      where: {
-        ticketId: ticket.id,
-        attendeeEmail: args.attendeeEmail,
-        OR: [
-          { status: OrderStatus.PAID },
-          {
-            status: OrderStatus.AWAITING_PAYMENT,
-            expiresAt: { gt: now },
-          },
-        ],
-      },
-      select: { id: true },
-    });
-    if (activeOrder) {
-      throw new ServiceError(
-        'You already have an order for this ticket',
-        OrdersService.ERRORS.DuplicateErr,
       );
     }
 
