@@ -106,7 +106,7 @@ export class MonnifyService implements PaymentProvider {
     return computed === signature;
   }
 
-  async refundPayment(
+  async requestRefund(
     params: RefundPaymentParams,
   ): Promise<RefundPaymentResult> {
     const tooLowToRefund =

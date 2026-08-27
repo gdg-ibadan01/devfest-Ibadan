@@ -1,4 +1,4 @@
-import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import {
   OrderStatus,
   Prisma,
@@ -61,7 +61,8 @@ export class OrdersService {
     RetryLaterErr: 'RetryLaterErr',
     DuplicateErr: 'DuplicateErr',
     PaymentErr: 'PaymentErr',
-  } as Record<string, `${string}Err`>;
+    TicketNotFoundErr: 'TicketNotFoundErr',
+  } as const;
 
   private readonly logger = new Logger(OrdersService.name);
 
@@ -98,8 +99,8 @@ export class OrdersService {
         if (isRetryable && attempt < TX_MAX_ATTEMPTS) continue;
         this.logger.error(err);
         throw new ServiceError(
-          'Unable to create order. Retry in about 10 minutes',
-          OrdersService.ERRORS.RetryLaterErr,
+          (err as Error).message,
+          (err as Error).name as `${string}Err`,
         );
       }
     }
@@ -122,22 +123,17 @@ export class OrdersService {
       gifterEmail: string | null;
     },
   ): Promise<CreatedOrderRecord> {
-    const ticket = await tx.ticket.findUnique({
-      where: { slug: args.slug },
-      select: {
-        id: true,
-        name: true,
-        slug: true,
-        price: true,
-        discount: true,
-        capacity: true,
-        saleStartsAt: true,
-        saleEndsAt: true,
-      },
-    });
+    const [ticket] = await tx.$queryRaw<Ticket[]>`
+    SELECT *
+    FROM tickets
+    WHERE slug = ${args.slug}
+    FOR UPDATE;`;
 
     if (!ticket) {
-      throw new NotFoundException('Ticket not found');
+      throw new ServiceError(
+        'Ticket not found',
+        OrdersService.ERRORS.TicketNotFoundErr,
+      );
     }
 
     const now = new Date();
@@ -145,6 +141,27 @@ export class OrdersService {
       throw new ServiceError(
         'This ticket is not on sale',
         OrdersService.ERRORS.NotOnSaleErr,
+      );
+    }
+
+    const activeOrder = await tx.order.findFirst({
+      where: {
+        ticketId: ticket.id,
+        attendeeEmail: args.attendeeEmail,
+        OR: [
+          { status: OrderStatus.PAID },
+          {
+            status: OrderStatus.AWAITING_PAYMENT,
+            expiresAt: { gt: now },
+          },
+        ],
+      },
+      select: { id: true },
+    });
+    if (activeOrder) {
+      throw new ServiceError(
+        'You already have an order for this ticket',
+        OrdersService.ERRORS.DuplicateErr,
       );
     }
 
@@ -180,30 +197,9 @@ export class OrdersService {
       );
     }
 
-    const activeOrder = await tx.order.findFirst({
-      where: {
-        ticketId: ticket.id,
-        attendeeEmail: args.attendeeEmail,
-        OR: [
-          { status: OrderStatus.PAID },
-          {
-            status: OrderStatus.AWAITING_PAYMENT,
-            expiresAt: { gt: now },
-          },
-        ],
-      },
-      select: { id: true },
-    });
-    if (activeOrder) {
-      throw new ServiceError(
-        'You already have an order for this ticket',
-        OrdersService.ERRORS.DuplicateErr,
-      );
-    }
-
     const order = await tx.order.create({
       data: {
-        reference: this.generateReference(ticket.name), // FIX what if there is a collision?
+        reference: this.generateReference(ticket.name),
         ticketId: ticket.id,
         attendeeFullName: args.attendeeFullName,
         attendeeEmail: args.attendeeEmail,
@@ -302,25 +298,17 @@ export class OrdersService {
     }
   }
 
-  // REFACTOR This function should be able to handle all payment providers
   async handlePaymentSuccess(event: PaymentSuccessPayload): Promise<void> {
     let txResult: { refundId: string } = {
       refundId: '',
     };
 
-    // Why? Retries because we're using IsolationLevel.Serializable
+    // Retrying because we're using IsolationLevel.Serializable
     for (let attempt = 1; attempt <= TX_MAX_ATTEMPTS; attempt++) {
       try {
         txResult = await this.prisma.$transaction(
           async (tx) => {
-            // Why? Lock webhook row to prevent concurrent writes on it
-            await tx.$queryRaw`
-            SELECT *
-            FROM webhook_events
-            WHERE id = ${event.webhookEventId}
-            FOR UPDATE;`;
-
-            const order = await tx.$queryRaw<Order | null>`
+            const [order] = await tx.$queryRaw<Order[]>`
             SELECT *
             FROM orders
             WHERE id = ${event.metaData.orderId}
@@ -334,7 +322,8 @@ export class OrdersService {
 
             if (order.status !== OrderStatus.AWAITING_PAYMENT) {
               this.logger.log(
-                `Order ${order.id} status is ${order.status}, skipping. Treating only ${OrderStatus.AWAITING_PAYMENT} orders`,
+                `Order ${order.id} status is ${order.status}, skipping...
+Treating only ${OrderStatus.AWAITING_PAYMENT} orders`,
               );
               await this.setEventAsProcessed(tx, event.webhookEventId);
               return txResult;
@@ -361,20 +350,12 @@ export class OrdersService {
             // Why are we doing this? To lock this row for any other concurrent
             // incoming events for this ticket to avoid other concurrent writes
             // affecting this tx
-            const ticket = await tx.$queryRaw<Ticket>`
+            const [ticket] = await tx.$queryRaw<Ticket[]>`
               SELECT *
               FROM orders
               WHERE id = ${order.ticketId}
               FOR UPDATE;
             `;
-
-            if (!ticket) {
-              this.logger.error(
-                `Ticket ${order.ticketId} not found for order ${order.id}`,
-              );
-              await this.setEventAsProcessed(tx, event.webhookEventId);
-              return txResult;
-            }
 
             const paidCount = await tx.order.count({
               where: { ticketId: ticket.id, status: OrderStatus.PAID },
@@ -382,7 +363,8 @@ export class OrdersService {
 
             if (paidCount >= ticket.capacity) {
               this.logger.warn(
-                `Ticket ${ticket.id} sold out, refunding order ${order.id}`,
+                `Ticket ${ticket.id} sold out
+Initiating refund for order ${order.id}`,
               );
               const refund = await this.recordRefund(tx, order, event);
               txResult.refundId = refund.refundId;
@@ -391,7 +373,7 @@ export class OrdersService {
             }
 
             const now = new Date();
-            const isExpired = order.expiresAt < now;
+            const orderIsExpired = order.expiresAt < now;
             const awaitingCount = await tx.order.count({
               where: {
                 ticketId: ticket.id,
@@ -400,7 +382,7 @@ export class OrdersService {
               },
             });
             const hasCapacity = paidCount + awaitingCount < ticket.capacity;
-            const shouldIssueTicket = !isExpired || hasCapacity;
+            const shouldIssueTicket = !orderIsExpired || hasCapacity;
 
             if (shouldIssueTicket) {
               await tx.order.update({
@@ -436,8 +418,9 @@ export class OrdersService {
         if (isRetryable && attempt < TX_MAX_ATTEMPTS) continue;
 
         this.logger.error(
-          `confirmMonnifyPayment failed: ${(err as Error).message}`,
+          `handlePaymentSuccess failed: ${(err as Error).message}`,
         );
+
         throw err;
       }
     }
@@ -498,7 +481,7 @@ export class OrdersService {
         });
 
         // TODO Use a switch statement to determine which provider to use
-        await this.paymentProvider.refundPayment({
+        await this.paymentProvider.requestRefund({
           transactionReference: order.providerTransactionRef!,
           refundReference: refund.refundReference,
           amount: Number(order.amount),

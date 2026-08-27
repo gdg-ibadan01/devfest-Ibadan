@@ -105,7 +105,7 @@ enum RefundStatus {
 
 model Order {
   id                     String      @id @default(uuid(7))
-  reference              String      @unique
+  reference              String
   ticketId               String      @map("ticket_id")
   ticket                 Ticket      @relation(fields: [ticketId], references: [id])
   attendeeFullName       String      @map("attendee_full_name")
@@ -127,6 +127,7 @@ model Order {
 
   refund Refund?
 
+  @@unique([reference, providerTransactionRef])
   @@index([ticketId, status])
   @@map("orders")
 }
