@@ -504,36 +504,42 @@ export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
         CreateAttendeeDto: {
-            /**
-             * @description Attendee email address
-             * @example john.doe@example.com
-             */
             email: string;
-            /**
-             * @description Full name of the attendee
-             * @example John Doe
-             */
             fullName: string;
-            /**
-             * @description Attendee phone number
-             * @example 08012345678
-             */
             phoneNumber?: string;
-            /**
-             * @description Name of the company
-             * @example Flutterwave Nigeria LTD
-             */
             company?: string;
-            /**
-             * @description Job title of the attendee
-             * @example Software Engineer
-             */
             jobTitle?: string;
-            /**
-             * @description Amount paid by the attendee
-             * @example 5000
-             */
             amount?: number;
+        };
+        AttendeeDto: {
+            id: string;
+            fullName: string;
+            email: string;
+            phoneNumber?: string;
+            company?: string;
+            jobTitle?: string;
+            /** @description Unique attendee check-in code */
+            code: string;
+            /** @description Event days the attendee is registered for */
+            eventDays?: string;
+            /** @description Amount paid in Naira */
+            amount?: string;
+            /** @description Payment/registration status */
+            status: 'Successful' | 'Failed' | 'Pending';
+            /** @description Ticket reference ID */
+            ticketId?: string;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        AttendeePaginationMetaDto: {
+            total: number;
+            page: number;
+            limit: number;
+            totalPages: number;
+        };
+        AttendeeListResponseDto: {
+            data: components['schemas']['AttendeeDto'][];
+            meta: components['schemas']['AttendeePaginationMetaDto'];
         };
         InitiatePaymentDto: {
             /**

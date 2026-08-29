@@ -12,12 +12,6 @@ import type { RoleRecord, RoleFormData, InviteFormData } from './_types/role.typ
 
 type ModalState = 'none' | 'add' | 'invite' | 'detail' | 'edit' | 'deactivate' | 'success';
 
-const MOCK_ROLES_LIST: RoleRecord[] = [
-  { id: '1', name: 'Super Admin', description: '', permissions: [], status: 'Active', dateCreated: '' },
-  { id: '2', name: 'Admin', description: '', permissions: [], status: 'Active', dateCreated: '' },
-  { id: '3', name: 'Volunteer', description: '', permissions: [], status: 'Active', dateCreated: '' },
-];
-
 export default function RolesPermissionPage() {
   const [modal, setModal] = useState<ModalState>('none');
   const [selectedRole, setSelectedRole] = useState<RoleRecord | null>(null);
@@ -46,7 +40,7 @@ export default function RolesPermissionPage() {
     setModal('deactivate');
   };
 
-  const handleFormSubmit = (_data: RoleFormData | InviteFormData) => {
+  const handleFormSubmit = (_data?: RoleFormData | InviteFormData) => {
     setModal('success');
   };
 
@@ -93,6 +87,7 @@ export default function RolesPermissionPage() {
       <RoleFormModal
         open={modal === 'edit'}
         mode="edit"
+        roleId={selectedRole?.id}
         initialData={
           selectedRole
             ? {
@@ -109,7 +104,6 @@ export default function RolesPermissionPage() {
       {/* Invite People */}
       <InvitePeopleModal
         open={modal === 'invite'}
-        roles={MOCK_ROLES_LIST}
         onClose={closeAll}
         onSubmit={handleFormSubmit}
       />
@@ -126,6 +120,7 @@ export default function RolesPermissionPage() {
       {/* Deactivate Confirm */}
       <DeactivateRoleModal
         open={modal === 'deactivate'}
+        roleId={selectedRole?.id}
         onClose={handleDeactivateClose}
         onConfirm={handleDeactivateConfirm}
       />

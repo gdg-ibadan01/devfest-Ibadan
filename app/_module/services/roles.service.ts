@@ -69,7 +69,7 @@ export function useCreateRole() {
     mutationFn: createRole,
     onSuccess: () => {
       showToast.success('Role created successfully');
-      queryClient.invalidateQueries({ queryKey: queryKeys.roles.all() });
+      queryClient.invalidateQueries({ queryKey: ["roles"], exact: false });
     },
     onError: (error: Error) => {
       showToast.error(error.message || 'Failed to create role');
@@ -90,7 +90,7 @@ export function useUpdateRole() {
     mutationFn: updateRole,
     onSuccess: (_data, { id }) => {
       showToast.success('Role updated successfully');
-      queryClient.invalidateQueries({ queryKey: queryKeys.roles.all() });
+      queryClient.invalidateQueries({ queryKey: ["roles"], exact: false });
       queryClient.invalidateQueries({ queryKey: queryKeys.roles.detail(id) });
     },
     onError: (error: Error) => {
@@ -113,7 +113,7 @@ export function useDeactivateRole() {
     mutationFn: deactivateRole,
     onSuccess: () => {
       showToast.success('Role deactivated successfully');
-      queryClient.invalidateQueries({ queryKey: queryKeys.roles.all() });
+      queryClient.invalidateQueries({ queryKey: ["roles"], exact: false });
     },
     onError: (error: Error) => {
       showToast.error(error.message || 'Failed to deactivate role');
