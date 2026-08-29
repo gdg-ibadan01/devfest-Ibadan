@@ -16,10 +16,7 @@ import TicketPreviewModal from './TicketPreviewModal';
 import EmptyState from '@/app/_module/components/common/EmptyState';
 import { DatePickerInput } from '@/app/_module/components/ui/DatePicker';
 import { useTickets, useUpdateTicket } from '@/app/_module/services';
-import type {
-  TicketListItemDto,
-  GetTicketResponseDto,
-} from '@/app/_module/api/types';
+import type { TicketListItemDto } from '@/app/_module/api/types';
 import { cn } from '@/app/_module/lib/utils';
 
 const COLUMNS = [
@@ -67,11 +64,9 @@ export default function TicketTable() {
   );
   const [cursorStack, setCursorStack] = useState<string[]>([]);
 
-  // Preview modal
+  // Preview modal — only need the id; modal fetches its own full data
   const [previewOpen, setPreviewOpen] = useState(false);
-  const [previewTicket, setPreviewTicket] = useState<TicketListItemDto | null>(
-    null
-  );
+  const [previewTicketId, setPreviewTicketId] = useState<string | null>(null);
 
   const { mutate: updateTicket } = useUpdateTicket();
 
@@ -229,7 +224,7 @@ export default function TicketTable() {
                     key={ticket.id}
                     className="border-b border-gray-100 last:border-0 hover:bg-gray-50/50 transition-colors cursor-pointer"
                     onClick={() => {
-                      setPreviewTicket(ticket);
+                      setPreviewTicketId(ticket.id);
                       setPreviewOpen(true);
                     }}
                   >
@@ -271,7 +266,7 @@ export default function TicketTable() {
                     >
                       <TicketActionsMenu
                         onPreview={() => {
-                          setPreviewTicket(ticket);
+                          setPreviewTicketId(ticket.id);
                           setPreviewOpen(true);
                         }}
                         onEdit={() => {}}
@@ -322,14 +317,14 @@ export default function TicketTable() {
       </div>
 
       {/* ---- Preview Modal ---- */}
-      {previewOpen && previewTicket && (
+      {previewOpen && previewTicketId && (
         <TicketPreviewModal
           open={previewOpen}
           onClose={() => {
             setPreviewOpen(false);
-            setPreviewTicket(null);
+            setPreviewTicketId(null);
           }}
-          ticket={previewTicket}
+          ticketId={previewTicketId}
         />
       )}
     </>
