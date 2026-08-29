@@ -44,7 +44,9 @@ export function useCreateAttendee(
       if (showSuccessToast) {
         toast.success(successMessage);
       }
-      options?.onSuccess?.(data, variables, context, undefined as any);
+      if (options?.onSuccess) {
+        (options.onSuccess as any)(data, variables, context);
+      }
     },
     onError: (error, variables, context) => {
       if (showErrorToast) {
@@ -52,7 +54,9 @@ export function useCreateAttendee(
           errorMessage || error.message || 'Failed to create attendee';
         toast.error(message);
       }
-      options?.onError?.(error, variables, context, undefined as any);
+      if (options?.onError) {
+        (options.onError as any)(error, variables, context);
+      }
     },
     ...mutationOptions,
   });
@@ -85,7 +89,9 @@ export function useInitiatePayment(
       if (showSuccessToast) {
         toast.success(successMessage);
       }
-      options?.onSuccess?.(data, variables, context, undefined as any);
+      if (options?.onSuccess) {
+        (options.onSuccess as any)(data, variables, context);
+      }
     },
     onError: (error, variables, context) => {
       if (showErrorToast) {
@@ -93,7 +99,9 @@ export function useInitiatePayment(
           errorMessage || error.message || 'Failed to initialize payment';
         toast.error(message);
       }
-      options?.onError?.(error, variables, context, undefined as any);
+      if (options?.onError) {
+        (options.onError as any)(error, variables, context);
+      }
     },
     ...mutationOptions,
   });
