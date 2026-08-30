@@ -20,7 +20,10 @@ export default function RoleDetailModal({
   onEdit,
   onDeactivate,
 }: RoleDetailModalProps) {
-  if (!open || !role) return null;
+  
+  if (!open || !role) {
+    return null;
+  }
 
   const { data, isLoading } = useRole(role.id);
 
