@@ -2,6 +2,7 @@ export const PERMISSIONS = [
   { id: 'tickets.create', label: 'Create tickets' },
   { id: 'tickets.edit', label: 'Edit tickets' },
   { id: 'tickets.disable', label: 'Disable tickets' },
+  { id: 'attendees.create', label: 'Add new attendee' },
   { id: 'attendees.check_in', label: 'Check-in attendees' },
   { id: 'attendees.list', label: 'View attendee list' },
   { id: 'admins.create', label: 'Create admin' },

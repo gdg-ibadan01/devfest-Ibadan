@@ -1,62 +1,91 @@
-import { Controller, Get, Post, Body, Param, Query } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import {
+  Body,
+  Controller,
+  HttpCode,
+  HttpException,
+  HttpStatus,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiOkResponse,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
+import { JwtAuthGuard } from '../admin/guards/jwt-auth.guard';
+import { PermissionsGuard } from '../admin/guards/permissions.guard';
+import { RequirePermission } from '../../common/decorators/permissions.decorator';
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { IJwtPayload } from '../admin/interfaces/admin.interface';
+import { ServiceError } from '../../common/errors/service-error';
 import { AttendeeService } from './attendee.service';
 import { CreateAttendeeDto } from './dto/create-attendee.dto';
-import { RegisterEventDto } from './dto/register-event.dto';
+import { AttendeeResponseDto } from './dto/attendee-response.dto';
+import { OrdersService } from '../order/order.service';
 
-@ApiTags('attendees')
+@ApiTags('Attendees')
+@UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('attendees')
 export class AttendeeController {
   constructor(private readonly attendeeService: AttendeeService) {}
 
-  @Post()
-  @ApiOperation({ summary: 'Create a new attendee' })
-  @ApiResponse({ status: 201, description: 'Attendee created successfully' })
-  async create(@Body() createAttendeeDto: CreateAttendeeDto) {
-    return this.attendeeService.create(createAttendeeDto);
-  }
-
-  @Get()
-  @ApiOperation({ summary: 'Get all attendees' })
-  @ApiResponse({ status: 200, description: 'Attendees retrieved successfully' })
-  async findAll(
-    @Query('page') page: number = 1,
-    @Query('limit') limit: number = 10,
+  @Post('create')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermission('attendees.create')
+  @ApiOperation({ summary: 'Manually add a new attendee by admin' })
+  @ApiOkResponse({
+    description: 'Attendee successfully created',
+    type: AttendeeResponseDto,
+  })
+  @ApiResponse({ status: 404, description: 'Ticket slug not found' })
+  @ApiResponse({
+    status: 409,
+    description:
+      'Ticket sold out, reserved, or duplicate order for this attendee',
+  })
+  @ApiResponse({
+    status: 502,
+    description: 'Payment gateway could not be initialised',
+  })
+  @HttpCode(HttpStatus.CREATED)
+  async create(
+    @Body() dto: CreateAttendeeDto,
+    @CurrentUser() user: IJwtPayload,
   ) {
-    return this.attendeeService.findAll(page, limit);
+    try {
+      return await this.attendeeService.create(dto, user.sub);
+    } catch (err) {
+      if (err instanceof HttpException) throw err;
+
+      if (err instanceof ServiceError) {
+        switch (err.name) {
+          case OrdersService.ERRORS.ValidationErr:
+          case OrdersService.ERRORS.NotOnSaleErr:
+            throw new HttpException(err.message, HttpStatus.BAD_REQUEST);
+
+          case OrdersService.ERRORS.SoldOutErr:
+          case OrdersService.ERRORS.RetryLaterErr:
+          case OrdersService.ERRORS.DuplicateErr:
+            throw new HttpException(err.message, HttpStatus.CONFLICT);
+
+          case OrdersService.ERRORS.PaymentErr:
+            throw new HttpException(err.message, HttpStatus.BAD_GATEWAY);
+
+          default:
+            throw new HttpException(
+              err.message,
+              HttpStatus.INTERNAL_SERVER_ERROR,
+            );
+        }
+      }
+
+      throw new HttpException(
+        'Unable to add attendee',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
-
-  @Get(':id/retrieve')
-  @ApiOperation({ summary: 'Get attendee by ID' })
-  @ApiResponse({ status: 200, description: 'Attendee retrieved successfully' })
-  async findOne(@Param('id') id: string) {
-    return this.attendeeService.findOne(id);
-  }
-
-  @Get('email/:email')
-  @ApiOperation({ summary: 'Get attendee by email' })
-  @ApiResponse({ status: 200, description: 'Attendee retrieved successfully' })
-  async findByEmail(@Param('email') email: string) {
-    return this.attendeeService.findByEmail(email);
-  }
-
-  // @Post(':id/register')
-  // @ApiOperation({ summary: 'Register attendee for event' })
-  // @ApiResponse({ status: 201, description: 'Registration successful' })
-  // async registerForEvent(
-  //   @Param('id') attendeeId: string,
-  //   @Body() registerEventDto: RegisterEventDto,
-  // ) {
-  //   return this.attendeeService.registerForEvent(attendeeId, registerEventDto);
-  // }
-
-  // @Get(':id/registrations')
-  // @ApiOperation({ summary: 'Get attendee registrations' })
-  // @ApiResponse({
-  //   status: 200,
-  //   description: 'Registrations retrieved successfully',
-  // })
-  // async getRegistrations(@Param('id') attendeeId: string) {
-  //   return this.attendeeService.getRegistrations(attendeeId);
-  // }
 }

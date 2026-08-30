@@ -1,110 +1,91 @@
-import {
-  Injectable,
-  NotFoundException,
-  ConflictException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { CreateAttendeeDto } from './dto/create-attendee.dto';
-import { IAttendee, ICreateAttendee } from './interfaces/attendee.interface';
+import { ServiceError } from '../../common/errors/service-error';
+import { OrdersService } from '../order/order.service';
 import { MailService } from '../mail/mail.service';
-import { PaymentsService } from '../payment/payment.service';
+import { CreateAttendeeDto } from './dto/create-attendee.dto';
+import { AttendeeResponseDto } from './dto/attendee-response.dto';
+import { CreateOrderResponseDto } from '../order/create-order.dto';
+
 @Injectable()
 export class AttendeeService {
   constructor(
     private readonly prisma: PrismaService,
-    private mailService: MailService,
-    private readonly paymentsService: PaymentsService,
+    private readonly orderService: OrdersService,
+    private readonly mailService: MailService,
   ) {}
 
-  async create(createAttendeeDto: CreateAttendeeDto) {}
+  async create(
+    dto: CreateAttendeeDto,
+    createdById: string,
+  ): Promise<AttendeeResponseDto> {
+    const order = await this.orderService.create({
+      slug: dto.ticketSlug,
+      attendee: {
+        fullName: dto.fullName,
+        email: dto.email,
+        phoneNumber: dto.phone,
+      },
+      gifter:
+        dto.gifterName && dto.gifterEmail
+          ? { fullName: dto.gifterName, email: dto.gifterEmail }
+          : undefined,
+    });
 
-  async findAll(page: number = 1, limit: number = 10) {}
+    await this.prisma.auditLog.create({
+      data: {
+        adminId: createdById,
+        action: 'CREATE_ATTENDEE',
+        metadata: {
+          orderId: order.id,
+          reference: order.reference,
+          attendeeFullName: dto.fullName,
+          attendeeEmail: dto.email,
+          attendeePhoneNumber: dto.phone ?? null,
+          gifterName: dto.gifterName ?? null,
+          gifterEmail: dto.gifterEmail ?? null,
+          ticketSlug: dto.ticketSlug,
+          ticketName: order.ticket.name,
+          amount: order.amount,
+        },
+      },
+    });
+    this.mailService
+      .sendPaymentLinkEmail(
+        dto.email,
+        dto.fullName,
+        order.checkoutUrl ?? '',
+        Number(order.amount),
+      )
+      .catch((err: Error) => {
+        console.error(
+          `[AttendeeService] Failed to send payment link email to ${dto.email}: ${err.message}`,
+        );
+      });
 
-  async findOne(id: string) {}
+    return this.toResponse(order);
+  }
 
-  async findByEmail(email: string) {}
+  private toResponse(order: CreateOrderResponseDto): AttendeeResponseDto {
+    return {
+      id: order.id,
+      reference: order.reference,
+      ticket: {
+        name: order.ticket.name,
+        slug: order.ticket.slug,
+      },
+      amount: order.amount,
+      discount: order.discount,
+      currency: order.currency,
+      status: order.status,
+      checkoutUrl: order.checkoutUrl,
+      expiresAt: order.expiresAt,
+    };
+  }
 
-  // async registerForEvent(
-  //   attendeeId: string,
-  //   registerEventDto: RegisterEventDto,
-  // ) {
-  //   const { eventId, specialRequests, dietaryRestrictions } = registerEventDto;
+  async findAll(_page: number = 1, _limit: number = 10) {}
 
-  //   const event = await this.prisma.event.findUnique({
-  //     where: { id: eventId },
-  //   });
+  async findOne(_id: string) {}
 
-  //   if (!event) {
-  //     throw new NotFoundException('Event not found');
-  //   }
-
-  //   if (event.status !== 'PUBLISHED') {
-  //     throw new ConflictException('Event is not available for registration');
-  //   }
-
-  //   // Current UTC time
-  //   const nowUTC = new Date();
-
-  //   // Registration starts at event.registrationStart
-  //   const startUTC = new Date(event.registrationStart);
-
-  //   // Registration ends exactly when event starts
-  //   const eventStartUTC = new Date(event.startDate);
-
-  //   // // Too early
-  //   // if (nowUTC.getTime() < startUTC.getTime()) {
-  //   //   throw new ConflictException('Registration has not yet started');
-  //   // }
-
-  //   // Too late
-  //   if (nowUTC.getTime() >= eventStartUTC.getTime()) {
-  //     throw new ConflictException(
-  //       'Registration has closed because the event has started',
-  //     );
-  //   }
-
-  //   // Check if event is full
-  //   if (event.currentAttendees >= event.maxAttendees) {
-  //     throw new ConflictException('Event is fully booked');
-  //   }
-
-  //   // Check if already registered
-  //   const existingRegistration = await this.prisma.registration.findUnique({
-  //     where: {
-  //       eventId_attendeeId: { eventId, attendeeId },
-  //     },
-  //   });
-
-  //   if (existingRegistration) {
-  //     throw new ConflictException('Already registered for this event');
-  //   }
-
-  //   // Register
-  //   const registration = await this.prisma.registration.create({
-  //     data: {
-  //       eventId,
-  //       attendeeId,
-  //       specialRequests,
-  //       dietaryRestrictions,
-  //     },
-  //     include: { event: true, attendee: true },
-  //   });
-
-  //   // Increment count
-  //   await this.prisma.event.update({
-  //     where: { id: eventId },
-  //     data: { currentAttendees: { increment: 1 } },
-  //   });
-
-  //   return registration;
-  // }
-
-  // async getRegistrations(attendeeId: string) {
-  //   const attendee = await this.prisma.attendee.findUnique({
-  //     where: { id: attendeeId },
-  //     include: { registrations: true },
-  //   });
-
-  //   return attendee?.registrations ?? [];
-  // }
+  async findByEmail(_email: string) {}
 }

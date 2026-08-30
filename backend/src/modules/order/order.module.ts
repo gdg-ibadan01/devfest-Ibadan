@@ -8,5 +8,6 @@ import { PaymentsModule } from '../payment/payment.module';
   imports: [PaymentsModule],
   controllers: [OrdersController],
   providers: [OrdersService, PrismaService],
+  exports: [OrdersService],
 })
 export class OrdersModule {}

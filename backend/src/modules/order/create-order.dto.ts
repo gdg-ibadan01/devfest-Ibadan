@@ -68,6 +68,12 @@ export class CreateOrderDto {
   @ValidateNested()
   @Type(() => OrderGifterDto)
   gifter?: OrderGifterDto;
+
+  /** Internal — set by AttendeeService when an admin manually creates an order. Not exposed in public API. */
+  createdById?: string | null;
+
+  /** Internal — set by AttendeeService to bypass the sale-window date check for admin-created orders. */
+  skipSaleWindowCheck?: boolean;
 }
 
 export class OrderedTicketDto {
