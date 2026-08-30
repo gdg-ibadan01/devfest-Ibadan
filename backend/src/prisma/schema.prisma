@@ -127,7 +127,6 @@ model Order {
   updatedAt              DateTime    @updatedAt @map("updated_at")
 
   refund    Refund?
-  attendees Attendee[]
 
   @@unique([reference, providerTransactionRef])
   @@index([ticketId, status])
@@ -165,20 +164,4 @@ model WebhookEvent {
 
   @@unique([provider, eventType, transactionReference])
   @@map("webhook_events")
-}
-
-model Attendee {
-  id        String     @id @default(uuid(7))
-  fullName  String     @map("full_name")
-  email     String
-  ticketId  String     @map("ticket_id")
-  orderId   String     @map("order_id")
-  checkIns  DateTime[] @map("check_ins")
-  createdAt DateTime   @default(now()) @map("created_at")
-  updatedAt DateTime   @updatedAt @map("updated_at")
-
-  ticket Ticket @relation(fields: [ticketId], references: [id])
-  order  Order  @relation(fields: [orderId], references: [id])
-
-  @@map("attendees")
 }
