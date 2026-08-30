@@ -21,11 +21,11 @@ export default function RoleDetailModal({
   onDeactivate,
 }: RoleDetailModalProps) {
   
+  const { data, isLoading } = useRole(role?.id || '');
+
   if (!open || !role) {
     return null;
   }
-
-  const { data, isLoading } = useRole(role.id);
 
   const roleData =
     data ??
