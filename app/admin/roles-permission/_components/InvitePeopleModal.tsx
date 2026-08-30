@@ -86,7 +86,7 @@ export default function InvitePeopleModal({ open, onClose, onSubmit }: InvitePeo
                 <ChevronDown size={16} className="text-gray-400 flex-shrink-0" />
               </button>
               {roleOpen && (
-                <div className="absolute top-full left-0 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 overflow-hidden max-h-60 overflow-auto">
+                <div className="absolute top-full left-0 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-h-auto overflow-auto">
                   {rolesLoading ? (
                     <div className="p-4">Loading roles…</div>
                   ) : (
@@ -120,8 +120,8 @@ export default function InvitePeopleModal({ open, onClose, onSubmit }: InvitePeo
         {/* Footer */}
         <div className="flex items-center justify-end gap-3 px-8 py-5 border-t border-gray-100 flex-shrink-0">
           <button type="button" onClick={handleClose} className="px-6 py-[10px] rounded-lg border border-gray-200 text-[13px] font-medium text-gray-700 hover:bg-gray-50 transition-colors">Cancel</button>
-          <button type="button" onClick={handleSubmit} disabled={invite.isLoading} className="flex items-center gap-2 px-6 py-[10px] rounded-lg bg-gray-900 text-white text-[13px] font-medium hover:bg-black transition-colors disabled:opacity-50">
-            {invite.isLoading ? 'Sending…' : 'Submit'}
+          <button type="button" onClick={handleSubmit} disabled={invite.isPending} className="flex items-center gap-2 px-6 py-[10px] rounded-lg bg-gray-900 text-white text-[13px] font-medium hover:bg-black transition-colors disabled:opacity-50">
+            {invite.isPending ? 'Sending…' : 'Submit'}
             <ArrowRight size={15} />
           </button>
         </div>

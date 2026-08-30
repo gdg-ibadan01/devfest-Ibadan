@@ -66,7 +66,7 @@ interface RoleFormModalProps {
   roleId?: string;
   initialData?: FormState;
   onClose: () => void;
-  onSubmit: () => void; // notify parent on successful create/update
+  onSubmit: (action?: 'create' | 'edit') => void; // notify parent on successful create/update
 }
 
 export default function RoleFormModal({
@@ -83,7 +83,7 @@ export default function RoleFormModal({
   const { data: permsData, isLoading: permsLoading } = usePermissions();
   const { mutate: createRole, isPending: creating } = useCreateRole();
   const { mutate: updateRole, isPending: updating } = useUpdateRole();
-  const { data: roleDetail, isLoading: roleLoading } = useRole(roleId ?? '');
+  const { data: roleDetail } = useRole(roleId ?? '');
 
   const isPending = creating || updating;
   const allPermissions: PermissionDto[] = permsData?.permissions ?? [];
@@ -135,9 +135,9 @@ export default function RoleFormModal({
     };
 
     if (mode === 'add') {
-      createRole(payload, { onSuccess: () => onSubmit() });
+      createRole(payload, { onSuccess: () => onSubmit('create') });
     } else if (roleId) {
-      updateRole({ id: roleId, dto: payload }, { onSuccess: () => onSubmit() });
+      updateRole({ id: roleId, dto: payload }, { onSuccess: () => onSubmit('edit') });
     }
   };
 

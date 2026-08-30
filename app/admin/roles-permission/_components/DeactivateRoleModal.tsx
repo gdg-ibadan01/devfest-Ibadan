@@ -11,7 +11,7 @@ interface DeactivateRoleModalProps {
 }
 
 export default function DeactivateRoleModal({ open, roleId, onClose, onConfirm }: DeactivateRoleModalProps) {
-  const { mutate, isLoading } = useDeactivateRole();
+  const { mutate, isPending } = useDeactivateRole();
 
   if (!open) return null;
 
@@ -39,8 +39,8 @@ export default function DeactivateRoleModal({ open, roleId, onClose, onConfirm }
           <p className="text-[13px] text-gray-500 leading-relaxed">Are you sure you want to deactivate this role?</p>
         </div>
         <div className="flex flex-col gap-3 w-full mt-1">
-          <button type="button" onClick={handleConfirm} disabled={isLoading} className="w-full py-3 rounded-xl bg-[#E61530] text-white text-[14px] font-medium hover:bg-red-600 transition-colors disabled:opacity-60">
-            {isLoading ? 'Deactivating…' : 'Deactivate Role'}
+          <button type="button" onClick={handleConfirm} disabled={isPending} className="w-full py-3 rounded-xl bg-[#E61530] text-white text-[14px] font-medium hover:bg-red-600 transition-colors disabled:opacity-60">
+            {isPending ? 'Deactivating…' : 'Deactivate Role'}
           </button>
           <button type="button" onClick={onClose} className="w-full py-3 rounded-xl border border-gray-200 text-gray-700 text-[14px] font-medium hover:bg-gray-50 transition-colors">
             Cancel

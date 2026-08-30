@@ -11,6 +11,11 @@ import EmptyState from '@/app/_module/components/common/EmptyState';
 
 const MAX_VISIBLE_PERMS = 2;
 
+export const formatCreatedAt = (iso: string) => {
+  const d = parseISO(iso);
+  return isValid(d) ? format(d, 'do MMM, yyyy, HH:mm') : iso;
+};
+
 function PermissionTags({ permissions }: { permissions: { id: string; label: string }[] }) {
   const visible = permissions.slice(0, MAX_VISIBLE_PERMS);
   const overflow = permissions.length - MAX_VISIBLE_PERMS;
@@ -79,10 +84,7 @@ export default function RolesTable({ onAddRole, onInvite, onRowClick, onEdit, on
     return next;
   });
 
-  const formatCreatedAt = (iso: string) => {
-    const d = parseISO(iso);
-    return isValid(d) ? format(d, "do MMM, yyyy, HH:mm") : iso;
-  };
+  
 
   return (
     <>

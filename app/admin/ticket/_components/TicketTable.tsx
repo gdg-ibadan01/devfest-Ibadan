@@ -16,7 +16,6 @@ import TicketPreviewModal from './TicketPreviewModal';
 import EmptyState from '@/app/_module/components/common/EmptyState';
 import { DatePickerInput } from '@/app/_module/components/ui/DatePicker';
 import { useTickets, useUpdateTicket } from '@/app/_module/services';
-import type { TicketListItemDto } from '@/app/_module/api/types';
 import { cn } from '@/app/_module/lib/utils';
 
 const COLUMNS = [
