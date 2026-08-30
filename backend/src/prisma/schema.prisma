@@ -67,23 +67,24 @@ model AuditLog {
 }
 
 model Ticket {
-  id               String     @id @default(uuid(7))
-  name             String
-  description      String
-  slug             String     @unique
-  eventDates       DateTime[] @map("event_dates")
-  price            Decimal
-  discount         Decimal    @default(0)
-  validityDates    DateTime[] @map("validity_dates")
-  capacity         Int
-  saleStartsAt     DateTime   @map("sale_starts_at")
-  saleEndsAt       DateTime   @map("sale_ends_at")
-  creatorId        String     @map("creator_id")
-  creator          Admin      @relation(fields: [creatorId], references: [id])
-  createdAt        DateTime   @default(now()) @map("created_at")
-  updatedAt        DateTime   @updatedAt @map("updated_at")
+  id            String     @id @default(uuid(7))
+  name          String
+  description   String
+  slug          String     @unique
+  eventDates    DateTime[] @map("event_dates")
+  price         Decimal
+  discount      Decimal    @default(0)
+  validityDates DateTime[] @map("validity_dates")
+  capacity      Int
+  saleStartsAt  DateTime   @map("sale_starts_at")
+  saleEndsAt    DateTime   @map("sale_ends_at")
+  creatorId     String     @map("creator_id")
+  creator       Admin      @relation(fields: [creatorId], references: [id])
+  createdAt     DateTime   @default(now()) @map("created_at")
+  updatedAt     DateTime   @updatedAt @map("updated_at")
 
-  orders Order[]
+  orders    Order[]
+  attendees Attendee[]
 
   @@map("tickets")
 }
@@ -125,7 +126,7 @@ model Order {
   createdAt              DateTime    @default(now()) @map("created_at")
   updatedAt              DateTime    @updatedAt @map("updated_at")
 
-  refund Refund?
+  refund    Refund?
 
   @@unique([reference, providerTransactionRef])
   @@index([ticketId, status])
@@ -134,7 +135,7 @@ model Order {
 
 model Refund {
   id                   String       @id @default(uuid(7)) @map("id")
-  orderId              String       @map("order_id") @unique
+  orderId              String       @unique @map("order_id")
   email                String       @map("email")
   provider             String       @map("provider")
   transactionReference String       @map("transaction_reference")
