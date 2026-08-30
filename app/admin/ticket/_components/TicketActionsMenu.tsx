@@ -35,7 +35,7 @@ export default function TicketActionsMenu({
           <Eye size={14} />
           Preview
         </DropdownMenuItem>
-        <DropdownMenuItem
+        {/* <DropdownMenuItem
           onClick={(e) => {
             e.stopPropagation();
             onEdit();
@@ -54,7 +54,7 @@ export default function TicketActionsMenu({
         >
           <Trash2 size={14} />
           Delete
-        </DropdownMenuItem>
+        </DropdownMenuItem> */}
       </DropdownMenuContent>
     </DropdownMenu>
   );

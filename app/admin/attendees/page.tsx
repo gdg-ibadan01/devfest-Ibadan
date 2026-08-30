@@ -5,17 +5,9 @@ import { X, CheckCircle2 } from 'lucide-react';
 import AdminWrapper from '@/app/_module/components/common/AdminWrapper';
 import AttendeesTable from './_components/AttendeesTable';
 import AddAttendeeModal from './_components/AddAttendeeModal';
-import type { AttendeeRecord } from './_types/attendee.types';
+import type { AttendeeDto } from '@/app/_module/api/types';
 
-/* ------------------------------------------------------------------ */
-/* Check-in Toast                                                       */
-/* ------------------------------------------------------------------ */
-interface CheckInToastProps {
-  visible: boolean;
-  onClose: () => void;
-}
-
-function CheckInToast({ visible, onClose }: CheckInToastProps) {
+function CheckInToast({ visible, onClose }: { visible: boolean; onClose: () => void }) {
   if (!visible) return null;
   return (
     <div className="fixed top-6 right-6 z-[100]">
@@ -27,10 +19,7 @@ function CheckInToast({ visible, onClose }: CheckInToastProps) {
           <p className="text-[13px] font-bold text-gray-900">Check In</p>
           <p className="text-[12px] text-gray-500 mt-0.5">Checked In Successfully</p>
         </div>
-        <button
-          onClick={onClose}
-          className="text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0 mt-0.5"
-        >
+        <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0 mt-0.5">
           <X size={15} />
         </button>
       </div>
@@ -38,16 +27,12 @@ function CheckInToast({ visible, onClose }: CheckInToastProps) {
   );
 }
 
-/* ------------------------------------------------------------------ */
-/* Page                                                                 */
-/* ------------------------------------------------------------------ */
 export default function AttendeesPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastTimer, setToastTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
 
-  const handleCheckIn = useCallback((_attendee: AttendeeRecord) => {
-    // Clear any existing timer
+  const handleCheckIn = useCallback((_attendee: AttendeeDto) => {
     if (toastTimer) clearTimeout(toastTimer);
     setShowToast(true);
     const t = setTimeout(() => setShowToast(false), 3000);
@@ -73,10 +58,7 @@ export default function AttendeesPage() {
         onClose={() => setShowAddModal(false)}
       />
 
-      <CheckInToast
-        visible={showToast}
-        onClose={handleToastClose}
-      />
+      <CheckInToast visible={showToast} onClose={handleToastClose} />
     </AdminWrapper>
   );
 }

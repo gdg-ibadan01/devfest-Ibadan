@@ -1,0 +1,91 @@
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { showToast } from '@/app/_module/lib/notify';
+import { apiClient } from '@/app/_module/api/client';
+import { queryKeys } from '@/app/_module/api/queryKeys';
+import type {
+  CreateTicketDto,
+  CreateTicketResponseDto,
+  TicketListResponseDto,
+  GetTicketResponseDto,
+  TicketListParams,
+} from '@/app/_module/api/types';
+
+// ---- List tickets -------------------------------------------
+
+async function getTickets(params: TicketListParams): Promise<TicketListResponseDto> {
+  const { data } = await apiClient.get<TicketListResponseDto>('/tickets', { params });
+  return data;
+}
+
+export function useTickets(params: TicketListParams = {}) {
+  return useQuery({
+    queryKey: queryKeys.tickets.all(params as Record<string, unknown>),
+    queryFn: () => getTickets(params),
+  });
+}
+
+// ---- Get ticket ---------------------------------------------
+
+async function getTicket(id: string): Promise<GetTicketResponseDto> {
+  const { data } = await apiClient.get<GetTicketResponseDto>(`/tickets/${id}`);
+  return data;
+}
+
+export function useTicket(id: string) {
+  return useQuery({
+    queryKey: queryKeys.tickets.detail(id),
+    queryFn: () => getTicket(id),
+    enabled: !!id,
+  });
+}
+
+// ---- Create ticket ------------------------------------------
+
+async function createTicket(dto: CreateTicketDto): Promise<CreateTicketResponseDto> {
+  const { data } = await apiClient.post<CreateTicketResponseDto>('/tickets', dto);
+  return data;
+}
+
+export function useCreateTicket() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: createTicket,
+    onSuccess: () => {
+      showToast.success('Ticket created successfully');
+      // Invalidate all ticket list queries regardless of params
+      queryClient.invalidateQueries({ queryKey: ['tickets'], exact: false });
+    },
+    onError: (error: Error) => {
+      showToast.error(error.message || 'Failed to create ticket');
+    },
+  });
+}
+
+// ---- Update ticket ------------------------------------------
+
+async function updateTicket({
+  id,
+  dto,
+}: {
+  id: string;
+  dto: Partial<CreateTicketDto>;
+}): Promise<void> {
+  await apiClient.patch(`/tickets/${id}`, dto);
+}
+
+export function useUpdateTicket() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: updateTicket,
+    onSuccess: (_data, { id }) => {
+      showToast.success('Ticket updated successfully');
+      queryClient.invalidateQueries({ queryKey: ['tickets'], exact: false });
+      queryClient.invalidateQueries({ queryKey: queryKeys.tickets.detail(id) });
+    },
+    onError: (error: Error) => {
+      showToast.error(error.message || 'Failed to update ticket');
+    },
+  });
+}

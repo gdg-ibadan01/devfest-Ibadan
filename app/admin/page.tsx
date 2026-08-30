@@ -4,14 +4,18 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { Eye, EyeOff } from 'lucide-react';
 import AuthBg from '../_module/components/AuthBg';
+import { useAdminLogin } from '../_module/services';
 
 export default function AdminSignInPage() {
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [showPassword, setShowPassword] = useState<boolean>(false);
 
+  const { mutate: login, isPending } = useAdminLogin();
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    login({ email, password });
   };
 
   return (
@@ -82,9 +86,10 @@ export default function AdminSignInPage() {
             {/* Submit */}
             <button
               type="submit"
-              className="w-full py-3 rounded-lg bg-[#1e1e1e] text-white text-[14px] font-semibold hover:bg-black transition-colors mt-1"
+              disabled={isPending || !email.trim() || !password}
+              className="w-full py-3 rounded-lg bg-[#1e1e1e] text-white text-[14px] font-semibold hover:bg-black transition-colors mt-1 disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              Sign In
+              {isPending ? 'Signing in…' : 'Sign In'}
             </button>
           </form>
         </div>

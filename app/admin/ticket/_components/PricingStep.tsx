@@ -1,13 +1,20 @@
 'use client';
 
+import { useState } from 'react';
 import { Clock } from 'lucide-react';
 import type { TicketPricing } from '../_types/ticket.types';
 import { CurrencyInput, ToggleRow, FormActions } from './FormControls';
+
+interface Errors {
+  price?: string;
+  discount?: string;
+}
 
 interface PricingStepProps {
   data: TicketPricing;
   onChange: (data: TicketPricing) => void;
   onCancel: () => void;
+  onBack: () => void;
   onNext: () => void;
 }
 
@@ -15,10 +22,37 @@ export default function PricingStep({
   data,
   onChange,
   onCancel,
+  onBack,
   onNext,
 }: PricingStepProps) {
-  const set = <K extends keyof TicketPricing>(key: K, value: TicketPricing[K]) =>
+  const [errors, setErrors] = useState<Errors>({});
+
+  const set = <K extends keyof TicketPricing>(key: K, value: TicketPricing[K]) => {
     onChange({ ...data, [key]: value });
+    setErrors((prev) => ({ ...prev, [key]: undefined }));
+  };
+
+  const validate = (): boolean => {
+    const e: Errors = {};
+    const price = parseFloat(data.price);
+    if (!data.price || isNaN(price) || price <= 0) {
+      e.price = 'Price must be greater than 0.';
+    }
+    if (data.discount) {
+      const discount = parseFloat(data.discount);
+      if (isNaN(discount) || discount < 0) {
+        e.discount = 'Discount must be a positive number.';
+      } else if (!isNaN(price) && discount >= price) {
+        e.discount = 'Discount must be less than the price.';
+      }
+    }
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  };
+
+  const handleNext = () => {
+    if (validate()) onNext();
+  };
 
   return (
     <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
@@ -30,8 +64,10 @@ export default function PricingStep({
         <CurrencyInput
           label="Price"
           id="price"
+          required
           value={data.price}
           onChange={(val) => set('price', val)}
+          error={errors.price}
         />
 
         <CurrencyInput
@@ -39,6 +75,8 @@ export default function PricingStep({
           id="discount"
           value={data.discount}
           onChange={(val) => set('discount', val)}
+          error={errors.discount}
+          placeholder="0.00 (optional)"
         />
 
         <ToggleRow
@@ -52,8 +90,9 @@ export default function PricingStep({
 
       <div className="p-[30px] border-t border-[#E6E6E6]">
         <FormActions
+          onBack={onBack}
           onCancel={onCancel}
-          onNext={onNext}
+          onNext={handleNext}
           nextLabel="Proceed to Settings"
         />
       </div>

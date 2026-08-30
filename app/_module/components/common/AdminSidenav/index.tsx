@@ -15,6 +15,7 @@ import Attendees from '../../icons/Attendees';
 import AuditLog from '../../icons/AuditLog';
 import Logout from '../../icons/Logout';
 import { useSidenav } from '@/app/_module/context/SidenavContext';
+import { useMe, useAdminLogout } from '@/app/_module/services';
 
 const navItems = [
   { label: 'Home', href: '/admin/home', icon: Home },
@@ -30,11 +31,31 @@ const isActivePath = (pathname: string, href: string) => {
   return pathname === href || pathname.startsWith(`${href}/`);
 };
 
+/** Extract initials from a full name — e.g. "Mary Esivue" → "ME" */
+function getInitials(fullName: string): string {
+  return fullName
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((n) => n[0]?.toUpperCase() ?? '')
+    .join('');
+}
+
 /* ------------------------------------------------------------------ */
 /* Nav content — shared between desktop sidebar and mobile drawer       */
 /* ------------------------------------------------------------------ */
 function NavContent({ onLinkClick }: { onLinkClick?: () => void }) {
   const pathname = usePathname();
+  const { data: me } = useMe();
+  const { mutate: logout, isPending: loggingOut } = useAdminLogout();
+
+  const fullName = me?.fullName ?? '';
+  const roleName = me?.role?.name ?? '';
+  const initials = fullName ? getInitials(fullName) : '??';
+
+  const handleLogout = () => {
+    logout();
+  };
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
@@ -59,10 +80,12 @@ function NavContent({ onLinkClick }: { onLinkClick?: () => void }) {
 
         <button
           type="button"
-          className="flex h-[54px] items-center gap-3 px-7 text-[14px] font-normal text-white transition-colors hover:bg-white/10 mt-1"
+          onClick={handleLogout}
+          disabled={loggingOut}
+          className="flex h-[54px] items-center gap-3 px-7 text-[14px] font-normal text-white transition-colors hover:bg-white/10 mt-1 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Logout />
-          <span>Log out</span>
+          <span>{loggingOut ? 'Signing out…' : 'Log out'}</span>
         </button>
       </div>
 
@@ -70,13 +93,17 @@ function NavContent({ onLinkClick }: { onLinkClick?: () => void }) {
       <div className="px-5 pb-8 mt-auto">
         <div className="flex items-center gap-3 rounded-[8px] bg-white px-3 py-3">
           <Avatar>
-            <AvatarFallback className="bg-[#4285F4] text-white text-xs font-bold">
-              ME
+            <AvatarFallback className="bg-[#4285F4] text-white text-md font-bold">
+              {initials}
             </AvatarFallback>
           </Avatar>
-          <div>
-            <p className="text-sm font-medium leading-5 text-core-blue">Mary Esivue</p>
-            <p className="text-[11px] leading-5 text-[#474C52]">Super Admin</p>
+          <div className="min-w-0">
+            <p className="text-sm font-medium leading-5 text-core-blue truncate">
+              {fullName || '—'}
+            </p>
+            <p className="text-[11px] leading-5 text-[#474C52] truncate capitalize">
+              {roleName || '—'}
+            </p>
           </div>
         </div>
       </div>
