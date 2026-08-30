@@ -9,7 +9,7 @@ import { cn } from '@/app/_module/lib/utils';
 import 'react-day-picker/style.css';
 
 interface DatePickerInputProps {
-  value: string; // ISO date string 'YYYY-MM-DD'
+  value: string;
   onChange: (value: string) => void;
   placeholder?: string;
   className?: string;

@@ -12,13 +12,7 @@ interface RoleSuccessModalProps {
 export default function RoleSuccessModal({ open, action, onDashboard }: RoleSuccessModalProps) {
   if (!open) return null;
 
-  const title = action === 'create' ? 'Role Created' : action === 'edit' ? 'Role Edit Successful' : 'Success';
-  const subtitle = action === 'create'
-    ? 'The role was created successfully.'
-    : action === 'edit'
-    ? 'The role was updated successfully.'
-    : 'Operation completed successfully.';
-
+ const title = action === 'create' ? 'Role Created' : action === 'edit' ? 'Role Edit Successful' : 'Success';
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center">
       <div className="absolute inset-0 bg-black/40" aria-hidden />

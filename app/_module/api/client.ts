@@ -1,14 +1,12 @@
 import axios, { AxiosError } from 'axios';
 
-// All requests go through our own Next.js API routes — the real API
-// URL never leaves the server and never appears in the browser network tab.
 export const apiClient = axios.create({
   baseURL: '/api',
   headers: { 'Content-Type': 'application/json' },
   timeout: 30_000,
 });
 
-// ---- Response interceptor — normalise errors ----------------
+// Response interceptor
 apiClient.interceptors.response.use(
   (response) => response,
   (error: AxiosError<{ message?: string }>) => {

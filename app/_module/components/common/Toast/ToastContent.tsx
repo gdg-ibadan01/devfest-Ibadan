@@ -1,6 +1,6 @@
 'use client';
 
-import { CheckCircle2, AlertTriangle, Info, XCircle } from 'lucide-react';
+import { AlertTriangle, Info } from 'lucide-react';
 
 interface ToastContentProps {
   message: string;
