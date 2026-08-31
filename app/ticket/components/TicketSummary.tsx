@@ -1,7 +1,5 @@
-import React from 'react';
-import { ArrowLeft } from 'lucide-react';
-import { toast } from 'sonner';
 import { formatAmount } from '@/utils/formatAmount';
+import { ArrowLeft } from 'lucide-react';
 import { TicketPackage } from './TicketPackageRow';
 
 interface TicketSummaryProps {
@@ -23,13 +21,6 @@ export default function TicketSummary({
 }: Readonly<TicketSummaryProps>) {
   const vat = 270;
   const total = selectedPackage.price + vat;
-
-  // const handleCopyLink = () => {
-  //   if (typeof window !== 'undefined') {
-  //     navigator.clipboard.writeText(window.location.href);
-  //     toast.success('Payment link copied to clipboard!');
-  //   }
-  // };
 
   return (
     <div className="w-full md:max-w-[732px] md:bg-white md:rounded-[20px] md:shadow-lg md:border border-gray-100 overflow-hidden">
@@ -89,14 +80,6 @@ export default function TicketSummary({
 
         {/* Action Buttons */}
         <div className="flex flex-col md:flex-row md:justify-end gap-4 mt-2">
-          {/* <button
-            type="button"
-            onClick={handleCopyLink}
-            className="w-full md:w-fit border border-black hover:border-core-blue text-black hover:text-core-blue bg-white py-[15px] px-[34px] rounded-[100px] font-bold transition-all text-center flex justify-center items-center cursor-pointer focus:outline-none text-[15px] md:text-[16px] font-sans"
-          >
-            Copy Payment Link
-          </button> */}
-
           <button
             type="button"
             onClick={onPay}
