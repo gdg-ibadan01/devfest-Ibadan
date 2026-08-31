@@ -42,6 +42,8 @@ export type TicketListItemDto = Schemas['TicketListItemDto'];
 export type TicketPaginationMetaDto = Schemas['TicketPaginationMetaDto'];
 export type TicketListResponseDto = Schemas['TicketListResponseDto'];
 export type GetTicketResponseDto = Schemas['GetTicketResponseDto'];
+export type OnSaleTicketItemDto = Schemas['OnSaleTicketItemDto'];
+export type OnSaleTicketResponseDto = Schemas['OnSaleTicketResponseDto'];
 
 // ---- Attendees ---------------------------------------------
 export type CreateAttendeeDto = Schemas['CreateAttendeeDto'];
@@ -56,6 +58,8 @@ export type VerifyPaymentDto = Schemas['VerifyPaymentDto'];
 // ---- Orders ------------------------------------------------
 export type CreateOrderDto = Schemas['CreateOrderDto'];
 export type CreateOrderResponseDto = Schemas['CreateOrderResponseDto'];
+export type OrderAttendeeDto = Schemas['OrderAttendeeDto'];
+export type OrderGifterDto = Schemas['OrderGifterDto'];
 
 // ---- Query param helpers -----------------------------------
 export interface AttendeeListParams {

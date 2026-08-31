@@ -19,11 +19,18 @@ export const queryKeys = {
   tickets: {
     all: (params?: Record<string, unknown>) => ['tickets', params] as const,
     detail: (id: string) => ['tickets', id] as const,
+    onSale: (name?: string) => ['tickets', 'onsale', name] as const,
   },
 
   // Attendees
   attendees: {
     all: (params?: Record<string, unknown>) => ['attendees', params] as const,
     detail: (id: string) => ['attendees', id] as const,
+  },
+
+  // Orders
+  orders: {
+    all: (params?: Record<string, unknown>) => ['orders', params] as const,
+    detail: (id: string) => ['orders', id] as const,
   },
 } as const;
