@@ -1,63 +1,67 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { AnimatePresence, motion } from 'framer-motion';
 import useMediaQueryWatcher from '@/app/_module/config/hooks/useMediaQueryWatcher';
+import { useCreateOrder, useTicketsOnSale } from '@/app/_module/services';
+import type { CreateOrderResponseDto } from '@/app/_module/api/types';
 import {
   TicketPackage,
   BuyTicketForm,
   TicketSummary,
   PaymentSuccess,
+  EmptyTicketState,
+  TicketFormSkeleton,
 } from '../components';
-
-const TICKET_PACKAGES: TicketPackage[] = [
-  {
-    id: 'friday',
-    title: 'Friday',
-    badge: 'Workshop',
-    price: 4000,
-    formattedPrice: '₦ 4,000.00',
-  },
-  {
-    id: 'saturday',
-    title: 'Saturday',
-    badge: 'Main event',
-    price: 8000,
-    formattedPrice: '₦ 8,000.00',
-  },
-  {
-    id: 'both-workshop',
-    title: 'Friday & Saturday',
-    badge: 'Main event & Workshop',
-    price: 8000,
-    formattedPrice: '₦ 8,000.00',
-  },
-  {
-    id: 'both-main',
-    title: 'Friday & Saturday',
-    badge: 'Main event',
-    price: 8000,
-    formattedPrice: '₦ 8,000.00',
-  },
-];
 
 export default function BuyTicket() {
   const router = useRouter();
   const isTablet = useMediaQueryWatcher('(min-width: 768px)');
 
+  const {
+    data: onSaleData,
+    isLoading: isLoadingTickets,
+    isRefetching: isRefetchingTickets,
+    refetch: refetchTickets,
+  } = useTicketsOnSale();
+
+  const packages: TicketPackage[] = (onSaleData?.data || []).map((ticket) => {
+    const rawPrice = parseFloat(ticket.price) || 0;
+    const rawDiscount = parseFloat(ticket.discount || '0') || 0;
+    const finalPrice = Math.max(0, rawPrice - rawDiscount);
+    return {
+      id: ticket.slug,
+      title: ticket.name,
+      badge: ticket.description || 'Access Pass',
+      price: finalPrice,
+      formattedPrice: `₦ ${finalPrice.toLocaleString('en-NG', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })}`,
+    };
+  });
+
   const [view, setView] = useState<'form' | 'summary' | 'success'>('form');
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
-  const [selectedPackageId, setSelectedPackageId] = useState(
-    TICKET_PACKAGES[0].id
-  );
-  const [isLoading, setIsLoading] = useState(false);
+  const [selectedPackageId, setSelectedPackageId] = useState('');
+  const [orderData, setOrderData] = useState<CreateOrderResponseDto | null>(null);
+
+  const { mutate: createOrder, isPending } = useCreateOrder();
+
+  // Sync selected package ID when tickets load
+  useEffect(() => {
+    if (packages.length > 0) {
+      if (!selectedPackageId || !packages.some((p) => p.id === selectedPackageId)) {
+        setSelectedPackageId(packages[0].id);
+      }
+    }
+  }, [packages, selectedPackageId]);
 
   const selectedPackage =
-    TICKET_PACKAGES.find((p) => p.id === selectedPackageId) ||
-    TICKET_PACKAGES[0];
+    packages.find((p) => p.id === selectedPackageId) || packages[0];
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,11 +69,25 @@ export default function BuyTicket() {
   };
 
   const handlePay = () => {
-    setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      setView('success');
-    }, 2000);
+    createOrder(
+      {
+        slug: selectedPackage.id,
+        attendee: {
+          fullName: fullName.trim(),
+          email: email.trim(),
+        },
+      },
+      {
+        onSuccess: (data) => {
+          setOrderData(data);
+          if (data.checkoutUrl) {
+            window.location.href = data.checkoutUrl;
+          } else {
+            setView('success');
+          }
+        },
+      }
+    );
   };
 
   const handleBack = () => {
@@ -82,7 +100,7 @@ export default function BuyTicket() {
 
   const handleDownload = () => {
     const params = new URLSearchParams({
-      ticketId: '25A346B',
+      ticketId: orderData?.reference || '25A346B',
       package: selectedPackage.title,
       amount: selectedPackage.price.toString(),
       name: fullName,
@@ -103,63 +121,72 @@ export default function BuyTicket() {
         backgroundSize: 'cover',
       }}
     >
-      <AnimatePresence mode="wait">
-        {view === 'form' && (
-          <motion.div
-            key="form"
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -15 }}
-            transition={{ duration: 0.25, ease: 'easeOut' }}
-            className="w-full flex justify-center z-10"
-          >
-            <BuyTicketForm
-              fullName={fullName}
-              setFullName={setFullName}
-              email={email}
-              setEmail={setEmail}
-              selectedPackageId={selectedPackageId}
-              setSelectedPackageId={setSelectedPackageId}
-              packages={TICKET_PACKAGES}
-              onSubmit={handleFormSubmit}
-              onBack={handleBack}
-            />
-          </motion.div>
-        )}
+      {isLoadingTickets ? (
+        <TicketFormSkeleton title="Buy Ticket" />
+      ) : packages.length === 0 ? (
+        <EmptyTicketState
+          onRetry={() => refetchTickets()}
+          isRetrying={isRefetchingTickets}
+        />
+      ) : (
+        <AnimatePresence mode="wait">
+          {view === 'form' && (
+            <motion.div
+              key="form"
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              transition={{ duration: 0.25, ease: 'easeOut' }}
+              className="w-full flex justify-center z-10"
+            >
+              <BuyTicketForm
+                fullName={fullName}
+                setFullName={setFullName}
+                email={email}
+                setEmail={setEmail}
+                selectedPackageId={selectedPackageId}
+                setSelectedPackageId={setSelectedPackageId}
+                packages={packages}
+                onSubmit={handleFormSubmit}
+                onBack={handleBack}
+              />
+            </motion.div>
+          )}
 
-        {view === 'summary' && (
-          <motion.div
-            key="summary"
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -15 }}
-            transition={{ duration: 0.25, ease: 'easeOut' }}
-            className="w-full flex justify-center z-10"
-          >
-            <TicketSummary
-              fullName={fullName}
-              email={email}
-              selectedPackage={selectedPackage}
-              onBack={handleBack}
-              onPay={handlePay}
-              isLoading={isLoading}
-            />
-          </motion.div>
-        )}
+          {view === 'summary' && (
+            <motion.div
+              key="summary"
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              transition={{ duration: 0.25, ease: 'easeOut' }}
+              className="w-full flex justify-center z-10"
+            >
+              <TicketSummary
+                fullName={fullName}
+                email={email}
+                selectedPackage={selectedPackage}
+                onBack={handleBack}
+                onPay={handlePay}
+                isLoading={isPending}
+              />
+            </motion.div>
+          )}
 
-        {view === 'success' && (
-          <motion.div
-            key="success"
-            initial={{ opacity: 0, scale: 0.96, y: 15 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, y: -15 }}
-            transition={{ duration: 0.3, ease: 'easeOut' }}
-            className="w-full flex justify-center z-10"
-          >
-            <PaymentSuccess onDownload={handleDownload} />
-          </motion.div>
-        )}
-      </AnimatePresence>
+          {view === 'success' && (
+            <motion.div
+              key="success"
+              initial={{ opacity: 0, scale: 0.96, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              transition={{ duration: 0.3, ease: 'easeOut' }}
+              className="w-full flex justify-center z-10"
+            >
+              <PaymentSuccess onDownload={handleDownload} />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      )}
 
       {/* Decorative footer art matching the bg background layer */}
       <Image
