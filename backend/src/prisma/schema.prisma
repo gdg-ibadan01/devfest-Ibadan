@@ -84,7 +84,6 @@ model Ticket {
   updatedAt     DateTime   @updatedAt @map("updated_at")
 
   orders    Order[]
-  attendees Attendee[]
 
   @@map("tickets")
 }
