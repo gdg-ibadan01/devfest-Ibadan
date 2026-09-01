@@ -11,7 +11,7 @@ import { Request } from 'express';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { WebhookService } from './webhook.service';
 
-@ApiTags('Webhooks')
+@ApiTags('Webhook')
 @Controller('webhooks')
 export class WebhookController {
   private readonly logger = new Logger(WebhookController.name);
@@ -20,8 +20,8 @@ export class WebhookController {
 
   @Post('monnify')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Receive Monnify webhook events' })
-  async handleMonnifyWebhook(
+  @ApiOperation({ summary: 'Monnify events' })
+  async handleMonnifyEvents(
     @Req() req: Request,
     @Headers('monnify-signature') signature: string | undefined,
   ) {

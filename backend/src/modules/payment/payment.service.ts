@@ -7,6 +7,7 @@ import { ConfigService } from '@nestjs/config';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { InitiatePaymentDto } from './dto/initiate-payment.dto';
 import { VerifyPaymentDto } from './dto/verify-payment.dto';
+import { RefundQueryDto } from './dto/refund-query.dto';
 import {
   IPayment,
   IPaystackResponse,
@@ -49,8 +50,76 @@ export class PaymentsService {
     return null;
   }
 
-  async findOne(id: string) {
-    return null;
+  async listRefunds(query: RefundQueryDto) {
+    const { cursor, direction = 'next', email } = query;
+    const limit = 20;
+
+    const where: Record<string, any> = {};
+
+    if (email) {
+      where.email = email.toLowerCase();
+    }
+
+    const isForward = direction === 'next';
+    const orderBy = isForward
+      ? ({ createdAt: 'desc' } as const)
+      : ({ createdAt: 'asc' } as const);
+
+    const results = await this.prisma.refund.findMany({
+      where,
+      take: limit + 1,
+      ...(cursor && { cursor: { id: cursor }, skip: 1 }),
+      orderBy,
+      select: {
+        id: true,
+        email: true,
+        provider: true,
+        status: true,
+        refundedAt: true,
+        reason: true,
+        createdAt: true,
+        order: {
+          select: {
+            id: true,
+            status: true,
+            ticket: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const hasMore = results.length > limit;
+    if (hasMore) results.pop();
+
+    // if (!isForward) {
+    //   results.reverse();
+    // }
+
+    if (isForward) {
+      return {
+        data: results,
+        meta: {
+          nextCursor: hasMore
+            ? (results[results.length - 1]?.id ?? null)
+            : null,
+          prevCursor: cursor ?? null,
+          hasMore,
+        },
+      };
+    }
+
+    return {
+      data: results,
+      meta: {
+        nextCursor: cursor ?? null,
+        prevCursor: hasMore ? (results[0]?.id ?? null) : null,
+        hasMore: false,
+      },
+    };
   }
 
   private async generateTicket(attendeeId: string, paymentId: string) {
