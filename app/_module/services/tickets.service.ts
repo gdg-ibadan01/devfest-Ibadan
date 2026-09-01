@@ -8,6 +8,7 @@ import type {
   TicketListResponseDto,
   GetTicketResponseDto,
   TicketListParams,
+  OnSaleTicketResponseDto,
 } from '@/app/_module/api/types';
 
 // ---- List tickets -------------------------------------------
@@ -21,6 +22,22 @@ export function useTickets(params: TicketListParams = {}) {
   return useQuery({
     queryKey: queryKeys.tickets.all(params as Record<string, unknown>),
     queryFn: () => getTickets(params),
+  });
+}
+
+// ---- Get tickets on sale ------------------------------------
+
+async function getTicketsOnSale(name?: string): Promise<OnSaleTicketResponseDto> {
+  const { data } = await apiClient.get<OnSaleTicketResponseDto>('/tickets/onsale', {
+    params: name ? { name } : undefined,
+  });
+  return data;
+}
+
+export function useTicketsOnSale(name?: string) {
+  return useQuery({
+    queryKey: queryKeys.tickets.onSale(name),
+    queryFn: () => getTicketsOnSale(name),
   });
 }
 

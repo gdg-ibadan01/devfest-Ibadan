@@ -1,11 +1,5 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import {
-  OrderStatus,
-  Prisma,
-  RefundStatus,
-  Ticket,
-  type Order,
-} from '@prisma/client';
+import { OrderStatus, Prisma, RefundStatus, type Order } from '@prisma/client';
 import { randomUUID } from 'node:crypto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ServiceError } from 'src/common/errors/service-error';
@@ -15,9 +9,10 @@ import {
   PAYMENT_PROVIDER,
   PaymentProvider,
 } from '../payment/interfaces/payment-provider.interface';
+import { MonnifyRejectedPaymentWebhookEventData } from '../payment/interfaces/monnify.interface';
 import { CreateOrderDto, CreateOrderResponseDto } from './create-order.dto';
 
-const ORDER_TTL_MINUTES = 10;
+const ORDER_TTL_MINUTES = 30;
 const TX_MAX_ATTEMPTS = 3;
 
 type TxClient = Prisma.TransactionClient;
@@ -50,6 +45,39 @@ interface ProcessRefundPayload {
   refundId: string;
   orderId: string;
   provider: PaymentSuccessPayload['provider'];
+}
+
+interface OrderQueryRawResult {
+  id: string;
+  reference: string;
+  ticket_id: string;
+  attendee_full_name: string;
+  attendee_email: string;
+  attendee_phone_number: null | string;
+  gifter_name: null | string;
+  gifter_email: null | string;
+  discount: number;
+  amount: number;
+  currency: string;
+  status: string;
+  payment_provider: string;
+  provider_transaction_ref: string;
+  checkout_url: string;
+  expires_at: Date;
+  paid_at: any;
+  created_at: Date;
+  updated_at: Date;
+}
+
+interface TicketQueryRawResult {
+  id: string;
+  capacity: number;
+  price: Prisma.Decimal;
+  discount: Prisma.Decimal;
+  sale_starts_at: Date;
+  sale_ends_at: Date;
+  name: string;
+  slug: string;
 }
 
 @Injectable()
@@ -123,7 +151,7 @@ export class OrdersService {
       gifterEmail: string | null;
     },
   ): Promise<CreatedOrderRecord> {
-    const [ticket] = await tx.$queryRaw<Ticket[]>`
+    const [ticket] = await tx.$queryRaw<TicketQueryRawResult[]>`
     SELECT *
     FROM tickets
     WHERE slug = ${args.slug}
@@ -137,7 +165,7 @@ export class OrdersService {
     }
 
     const now = new Date();
-    if (now < ticket.saleStartsAt || now > ticket.saleEndsAt) {
+    if (now < ticket.sale_starts_at || now > ticket.sale_ends_at) {
       throw new ServiceError(
         'This ticket is not on sale',
         OrdersService.ERRORS.NotOnSaleErr,
@@ -308,7 +336,7 @@ export class OrdersService {
       try {
         txResult = await this.prisma.$transaction(
           async (tx) => {
-            const [order] = await tx.$queryRaw<Order[]>`
+            const [order] = await tx.$queryRaw<OrderQueryRawResult[]>`
             SELECT *
             FROM orders
             WHERE id = ${event.metaData.orderId}
@@ -330,8 +358,8 @@ Treating only ${OrderStatus.AWAITING_PAYMENT} orders`,
             }
 
             const transactionRefMismatch =
-              order.providerTransactionRef &&
-              order.providerTransactionRef !== event.transactionReference;
+              order.provider_transaction_ref &&
+              order.provider_transaction_ref !== event.transactionReference;
 
             // Since we're expecting only one currency now, this is fine
             const amountMismatch = event.amountPaid < Number(order.amount);
@@ -350,10 +378,10 @@ Treating only ${OrderStatus.AWAITING_PAYMENT} orders`,
             // Why are we doing this? To lock this row for any other concurrent
             // incoming events for this ticket to avoid other concurrent writes
             // affecting this tx
-            const [ticket] = await tx.$queryRaw<Ticket[]>`
+            const [ticket] = await tx.$queryRaw<TicketQueryRawResult[]>`
               SELECT *
-              FROM orders
-              WHERE id = ${order.ticketId}
+              FROM tickets
+              WHERE id = ${order.ticket_id}
               FOR UPDATE;
             `;
 
@@ -373,7 +401,7 @@ Initiating refund for order ${order.id}`,
             }
 
             const now = new Date();
-            const orderIsExpired = order.expiresAt < now;
+            const orderIsExpired = order.expires_at < now;
             const awaitingCount = await tx.order.count({
               where: {
                 ticketId: ticket.id,
@@ -436,7 +464,7 @@ Initiating refund for order ${order.id}`,
 
   private async recordRefund(
     tx: TxClient,
-    order: Order,
+    order: OrderQueryRawResult,
     payload: CreateRefundRecord,
   ): Promise<{ refundId: string; orderId: string }> {
     await tx.order.update({
@@ -447,8 +475,8 @@ Initiating refund for order ${order.id}`,
     const refund = await tx.refund.create({
       data: {
         orderId: order.id,
-        email: order.gifterEmail ?? order.attendeeEmail,
-        provider: order.paymentProvider,
+        email: order.gifter_email ?? order.attendee_email,
+        provider: order.payment_provider,
         transactionReference: payload.transactionReference,
         paymentReference: payload.paymentReference,
         refundReference: this.generateRefundReference(),
@@ -513,6 +541,39 @@ Initiating refund for order ${order.id}`,
         );
       }
     }
+  }
+
+  async handleFailedPayment(payload: {
+    webhookEventId: string;
+    event: MonnifyRejectedPaymentWebhookEventData;
+  }): Promise<void> {
+    const order = await this.prisma.order.findFirst({
+      where: { reference: payload.event.paymentReference },
+    });
+
+    if (!order) {
+      this.logger.warn(
+        `Order not found for payment reference: ${payload.event.paymentReference}`,
+      );
+      return;
+    }
+
+    if (order.status !== OrderStatus.AWAITING_PAYMENT) {
+      this.logger.log(
+        `Order ${order.id} status is ${order.status}, skipping cancellation`,
+      );
+      return;
+    }
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.order.update({
+        where: { id: order.id },
+        data: { status: OrderStatus.CANCELLED },
+      });
+      await this.setEventAsProcessed(tx, payload.webhookEventId);
+    });
+
+    this.logger.log(`Order ${order.id} updated to CANCELLED`);
   }
 
   private async setEventAsProcessed(tx: TxClient, eventId: string) {

@@ -1,7 +1,10 @@
 import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
 
-const API_BASE = process.env.API_BASE_URL ?? 'https://devfest-ibadan.onrender.com/api/v1';
+const RAW_BASE = process.env.API_BASE_URL ?? 'https://devfest-ibadan.onrender.com/api/v1';
+const API_BASE = RAW_BASE.endsWith('/api/v1')
+  ? RAW_BASE
+  : `${RAW_BASE.replace(/\/+$/, '')}/api/v1`;
 
 /** Build auth headers using the current access token from httpOnly cookie */
 async function buildHeaders(token?: string): Promise<Record<string, string>> {
