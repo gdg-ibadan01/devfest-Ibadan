@@ -6,7 +6,10 @@ import {
 } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
 import { MonnifyService } from '../payment/monnify.service';
-import { MonnifyWebhookEvent } from '../payment/interfaces/monnify.interface';
+import {
+  MonnifyWebhookEvent,
+  MonnifyRefundWebhookEventData,
+} from '../payment/interfaces/monnify.interface';
 import monnifyConfig from 'src/config/monnify.config';
 import { OrdersService } from '../order/order.service';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -98,8 +101,13 @@ export class WebhookService {
         });
         break;
       // TODO: handle FAILED_TRANSACTION — set order status to CANCELLED
-      // TODO: handle FAILED_REFUND
-      // TODO: handle SUCCESSFUL_REFUND
+      case 'SUCCESSFUL_REFUND':
+      case 'FAILED_REFUND':
+        await this.ordersService.handleRefundResult(
+          eventData as unknown as MonnifyRefundWebhookEventData,
+          eventType === 'SUCCESSFUL_REFUND' ? 'SUCCESS' : 'FAILED',
+        );
+        break;
       default:
         this.logger.log(`Unhandled Monnify event type: ${eventType}`);
         break;

@@ -15,6 +15,7 @@ import {
   PAYMENT_PROVIDER,
   PaymentProvider,
 } from '../payment/interfaces/payment-provider.interface';
+import { MonnifyRefundWebhookEventData } from '../payment/interfaces/monnify.interface';
 import { CreateOrderDto, CreateOrderResponseDto } from './create-order.dto';
 
 const ORDER_TTL_MINUTES = 10;
@@ -512,6 +513,56 @@ Initiating refund for order ${order.id}`,
           `Refund ${refundId} error: ${(err as Error).message}`,
         );
       }
+    }
+  }
+
+  async handleRefundResult(
+    event: MonnifyRefundWebhookEventData,
+    outcome: 'SUCCESS' | 'FAILED',
+  ): Promise<void> {
+    const refund = await this.prisma.refund.findFirst({
+      where: { refundReference: event.refundReference },
+    });
+
+    if (!refund) {
+      this.logger.warn(
+        `Refund not found for reference: ${event.refundReference}`,
+      );
+      return;
+    }
+
+    if (
+      refund.status === RefundStatus.SUCCESS ||
+      refund.status === RefundStatus.FAILED
+    ) {
+      this.logger.log(
+        `Refund ${refund.id} already in terminal state: ${refund.status}`,
+      );
+      return;
+    }
+
+    const refundedAt =
+      outcome === 'SUCCESS' && event.completedOn
+        ? new Date(event.completedOn)
+        : null;
+
+    await this.prisma.refund.update({
+      where: { id: refund.id },
+      data: {
+        status:
+          outcome === 'SUCCESS' ? RefundStatus.SUCCESS : RefundStatus.FAILED,
+        refundedAt,
+      },
+    });
+
+    this.logger.log(`Refund ${refund.id} updated to ${outcome}`);
+
+    if (outcome === 'SUCCESS') {
+      await this.prisma.order.update({
+        where: { id: refund.orderId },
+        data: { status: OrderStatus.REFUNDED },
+      });
+      this.logger.log(`Order ${refund.orderId} updated to REFUNDED`);
     }
   }
 
