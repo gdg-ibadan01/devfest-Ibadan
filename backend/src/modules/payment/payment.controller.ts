@@ -24,12 +24,16 @@ import { PaymentsService } from './payment.service';
 import * as crypto from 'crypto';
 import { InitiatePaymentDto } from './dto/initiate-payment.dto';
 import { VerifyPaymentDto } from './dto/verify-payment.dto';
+import { RefundQueryDto } from './dto/refund-query.dto';
+import { RefundListResponseDto } from './dto/refund-list-response.dto';
 import { RolesGuard } from '../admin/guards/roles.guard';
 import { JwtAuthGuard } from '../admin/guards/jwt-auth.guard';
+import { PermissionsGuard } from '../admin/guards/permissions.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { Role } from '../../common/enums/role.enum';
+import { RequirePermission } from '../../common/decorators/permissions.decorator';
 
-@ApiTags('payments')
+@ApiTags('Payment')
 @Controller('payments')
 export class PaymentsController {
   constructor(
@@ -84,13 +88,27 @@ export class PaymentsController {
     return this.paymentsService.findAll(page, limit);
   }
 
-  @Get(':id')
+  @Get('refunds')
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
-  @ApiOperation({ summary: 'Get payment by ID' })
-  @ApiResponse({ status: 200, description: 'Payment retrieved successfully' })
-  async findOne(@Param('id') id: string) {
-    return this.paymentsService.findOne(id);
+  @RequirePermission('refunds.list')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @ApiOperation({ summary: 'List refunds' })
+  @ApiResponse({
+    status: 200,
+    description: 'Refunds retrieved successfully',
+    type: RefundListResponseDto,
+  })
+  listRefunds(@Query() query: RefundQueryDto) {
+    return this.paymentsService.listRefunds(query);
   }
+
+  // @Get(':id')
+  // @ApiBearerAuth()
+  // @UseGuards(JwtAuthGuard, RolesGuard)
+  // @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  // @ApiOperation({ summary: 'Get payment by ID' })
+  // @ApiResponse({ status: 200, description: 'Payment retrieved successfully' })
+  // async findOne(@Param('id') id: string) {
+  //   return this.paymentsService.findOne(id);
+  // }
 }
