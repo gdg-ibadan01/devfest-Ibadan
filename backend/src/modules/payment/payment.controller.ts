@@ -98,17 +98,17 @@ export class PaymentsController {
     description: 'Refunds retrieved successfully',
     type: RefundListResponseDto,
   })
-  async listRefunds(@Query() query: RefundQueryDto) {
+  listRefunds(@Query() query: RefundQueryDto) {
     return this.paymentsService.listRefunds(query);
   }
 
-  @Get(':id')
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
-  @ApiOperation({ summary: 'Get payment by ID' })
-  @ApiResponse({ status: 200, description: 'Payment retrieved successfully' })
-  async findOne(@Param('id') id: string) {
-    return this.paymentsService.findOne(id);
-  }
+  // @Get(':id')
+  // @ApiBearerAuth()
+  // @UseGuards(JwtAuthGuard, RolesGuard)
+  // @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  // @ApiOperation({ summary: 'Get payment by ID' })
+  // @ApiResponse({ status: 200, description: 'Payment retrieved successfully' })
+  // async findOne(@Param('id') id: string) {
+  //   return this.paymentsService.findOne(id);
+  // }
 }
