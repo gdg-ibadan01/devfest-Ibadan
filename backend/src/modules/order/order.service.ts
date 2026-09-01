@@ -223,7 +223,7 @@ export class OrdersService {
     });
     if (paidCount + awaitingCount >= ticket.capacity) {
       throw new ServiceError(
-        'All remaining tickets are currently reserved. Please retry in 10 minutes',
+        `All remaining tickets are currently reserved. Please retry in about ${ORDER_TTL_MINUTES} minutes`,
         OrdersService.ERRORS.RetryLaterErr,
       );
     }
@@ -516,7 +516,7 @@ Initiating refund for order ${order.id}`,
           transactionReference: order.providerTransactionRef!,
           refundReference: refund.refundReference,
           amount: Number(order.amount),
-          reason: 'Order could not be fulfilled',
+          reason: 'Unmet order',
         });
       } catch (err) {
         if ((err as Error).name === 'InsufficientRefundAmountErr') {
