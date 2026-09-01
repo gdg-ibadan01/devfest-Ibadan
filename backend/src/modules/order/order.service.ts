@@ -12,7 +12,7 @@ import {
 import { MonnifyRejectedPaymentWebhookEventData } from '../payment/interfaces/monnify.interface';
 import { CreateOrderDto, CreateOrderResponseDto } from './create-order.dto';
 
-const ORDER_TTL_MINUTES = 10;
+const ORDER_TTL_MINUTES = 30;
 const TX_MAX_ATTEMPTS = 3;
 
 type TxClient = Prisma.TransactionClient;
@@ -165,7 +165,7 @@ export class OrdersService {
     }
 
     const now = new Date();
-    if (now < ticket.sale_ends_at || now > ticket.sale_starts_at) {
+    if (now < ticket.sale_starts_at || now > ticket.sale_ends_at) {
       throw new ServiceError(
         'This ticket is not on sale',
         OrdersService.ERRORS.NotOnSaleErr,

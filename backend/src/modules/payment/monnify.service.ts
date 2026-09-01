@@ -18,7 +18,7 @@ import {
 } from './interfaces/monnify.interface';
 import monnifyConfig from 'src/config/monnify.config';
 
-const REQUEST_TIMEOUT_MS = 30_000;
+const REQUEST_TIMEOUT_MS = 10_000;
 const TOKEN_SAFETY_MARGIN_SEC = 60;
 
 @Injectable()
