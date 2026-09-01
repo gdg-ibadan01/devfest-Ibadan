@@ -9,7 +9,10 @@ import {
   PAYMENT_PROVIDER,
   PaymentProvider,
 } from '../payment/interfaces/payment-provider.interface';
-import { MonnifyRejectedPaymentWebhookEventData } from '../payment/interfaces/monnify.interface';
+import {
+  MonnifyRefundWebhookEventData,
+  MonnifyRejectedPaymentWebhookEventData,
+} from '../payment/interfaces/monnify.interface';
 import { CreateOrderDto, CreateOrderResponseDto } from './create-order.dto';
 
 const ORDER_TTL_MINUTES = 30;
@@ -220,7 +223,7 @@ export class OrdersService {
     });
     if (paidCount + awaitingCount >= ticket.capacity) {
       throw new ServiceError(
-        'All remaining tickets are currently reserved. Please retry in 10 minutes',
+        `All remaining tickets are currently reserved. Please retry in about ${ORDER_TTL_MINUTES} minutes`,
         OrdersService.ERRORS.RetryLaterErr,
       );
     }
@@ -513,10 +516,8 @@ Initiating refund for order ${order.id}`,
           transactionReference: order.providerTransactionRef!,
           refundReference: refund.refundReference,
           amount: Number(order.amount),
-          reason: 'Order could not be fulfilled',
+          reason: 'Unmet order',
         });
-
-        // TODO Handle provider response via webhook
       } catch (err) {
         if ((err as Error).name === 'InsufficientRefundAmountErr') {
           await this.prisma.refund.update({
@@ -526,11 +527,9 @@ Initiating refund for order ${order.id}`,
               reason: (err as Error).message,
             },
           });
-
           this.logger.error(
             `Refund ${refundId} error: ${(err as Error).message}`,
           );
-
           break;
         }
 
@@ -541,6 +540,67 @@ Initiating refund for order ${order.id}`,
         );
       }
     }
+  }
+
+  async handleRefundResult(
+    event: MonnifyRefundWebhookEventData,
+    outcome: 'SUCCESS' | 'FAILED',
+  ): Promise<void> {
+    const refund = await this.prisma.refund.findFirst({
+      where: { refundReference: event.refundReference },
+    });
+
+    if (!refund) {
+      this.logger.warn(
+        `Refund not found for reference: ${event.refundReference}`,
+      );
+      return;
+    }
+
+    if (
+      refund.status === RefundStatus.SUCCESS ||
+      refund.status === RefundStatus.FAILED
+    ) {
+      this.logger.log(
+        `Refund ${refund.id} already in terminal state: ${refund.status}`,
+      );
+      return;
+    }
+
+    const refundedAt =
+      outcome === 'SUCCESS' && event.completedOn
+        ? new Date(event.completedOn)
+        : null;
+
+    await this.prisma.refund.update({
+      where: { id: refund.id },
+      data: {
+        status:
+          outcome === 'SUCCESS' ? RefundStatus.SUCCESS : RefundStatus.FAILED,
+        refundedAt,
+      },
+    });
+
+    this.logger.log(`Refund ${refund.id} updated to ${outcome}`);
+
+    if (outcome === 'SUCCESS') {
+      await this.prisma.order.update({
+        where: { id: refund.orderId },
+        data: { status: OrderStatus.REFUNDED },
+      });
+      this.logger.log(`Order ${refund.orderId} updated to REFUNDED`);
+    }
+  }
+
+  private async setEventAsProcessed(tx: TxClient, eventId: string) {
+    await tx.webhookEvent.update({
+      where: { id: eventId },
+      data: { processed: true },
+    });
+  }
+
+  private generateRefundReference(): string {
+    return `REFUND-${randomUUID().replace(/-/g, '').slice(0, 10).toUpperCase()}`;
   }
 
   async handleFailedPayment(payload: {
@@ -574,15 +634,5 @@ Initiating refund for order ${order.id}`,
     });
 
     this.logger.log(`Order ${order.id} updated to CANCELLED`);
-  }
-
-  private async setEventAsProcessed(tx: TxClient, eventId: string) {
-    await tx.webhookEvent.update({
-      where: { id: eventId },
-      data: { processed: true },
-    });
-  }
-  private generateRefundReference(): string {
-    return `REFUND-${randomUUID().replace(/-/g, '').slice(0, 10).toUpperCase()}`;
   }
 }

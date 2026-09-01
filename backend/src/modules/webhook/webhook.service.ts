@@ -8,6 +8,7 @@ import { ConfigType } from '@nestjs/config';
 import { MonnifyService } from '../payment/monnify.service';
 import {
   MonnifyWebhookEvent,
+  MonnifyRefundWebhookEventData,
   MonnifyRejectedPaymentWebhookEventData,
 } from '../payment/interfaces/monnify.interface';
 import monnifyConfig from 'src/config/monnify.config';
@@ -100,8 +101,13 @@ export class WebhookService {
           transactionReference: eventData.transactionReference,
         });
         break;
-      // TODO: handle FAILED_REFUND
-      // TODO: handle SUCCESSFUL_REFUND
+      case 'SUCCESSFUL_REFUND':
+      case 'FAILED_REFUND':
+        await this.ordersService.handleRefundResult(
+          eventData as unknown as MonnifyRefundWebhookEventData,
+          eventType === 'SUCCESSFUL_REFUND' ? 'SUCCESS' : 'FAILED',
+        );
+        break;
       case 'REJECTED_PAYMENT':
         await this.ordersService.handleFailedPayment({
           webhookEventId: existingEvent.id,

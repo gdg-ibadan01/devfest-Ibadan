@@ -40,6 +40,15 @@ export interface MonnifyWebhookEvent {
   eventData: MonnifyWebhookEventData;
 }
 
+export interface MonnifyRefundWebhookEventData {
+  refundReference: string;
+  transactionReference: string;
+  refundStatus: 'COMPLETED' | 'FAILED';
+  merchantReason?: string;
+  completedOn?: string;
+  refundAmount?: number;
+}
+
 export interface MonnifyRejectedPaymentWebhookEventData {
   transactionReference: string;
   paymentReference: string;
