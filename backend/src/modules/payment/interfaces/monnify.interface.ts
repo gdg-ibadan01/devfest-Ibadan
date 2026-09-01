@@ -40,6 +40,13 @@ export interface MonnifyWebhookEvent {
   eventData: MonnifyWebhookEventData;
 }
 
+export interface MonnifyRejectedPaymentWebhookEventData {
+  transactionReference: string;
+  paymentReference: string;
+  paymentRejectionInformation: { rejectionReason: string };
+  paymentDescription?: string;
+}
+
 export interface MonnifyRefundResponseBody {
   refundReference: string;
   transactionReference: string;

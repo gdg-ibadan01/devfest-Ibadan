@@ -9,6 +9,7 @@ import {
   PAYMENT_PROVIDER,
   PaymentProvider,
 } from '../payment/interfaces/payment-provider.interface';
+import { MonnifyRejectedPaymentWebhookEventData } from '../payment/interfaces/monnify.interface';
 import { CreateOrderDto, CreateOrderResponseDto } from './create-order.dto';
 
 const ORDER_TTL_MINUTES = 30;
@@ -540,6 +541,39 @@ Initiating refund for order ${order.id}`,
         );
       }
     }
+  }
+
+  async handleFailedPayment(payload: {
+    webhookEventId: string;
+    event: MonnifyRejectedPaymentWebhookEventData;
+  }): Promise<void> {
+    const order = await this.prisma.order.findFirst({
+      where: { reference: payload.event.paymentReference },
+    });
+
+    if (!order) {
+      this.logger.warn(
+        `Order not found for payment reference: ${payload.event.paymentReference}`,
+      );
+      return;
+    }
+
+    if (order.status !== OrderStatus.AWAITING_PAYMENT) {
+      this.logger.log(
+        `Order ${order.id} status is ${order.status}, skipping cancellation`,
+      );
+      return;
+    }
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.order.update({
+        where: { id: order.id },
+        data: { status: OrderStatus.CANCELLED },
+      });
+      await this.setEventAsProcessed(tx, payload.webhookEventId);
+    });
+
+    this.logger.log(`Order ${order.id} updated to CANCELLED`);
   }
 
   private async setEventAsProcessed(tx: TxClient, eventId: string) {
