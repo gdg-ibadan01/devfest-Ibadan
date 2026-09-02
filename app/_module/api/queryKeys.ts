@@ -4,7 +4,8 @@ export const queryKeys = {
 
   // Admins
   admins: {
-    all: (params?: Record<string, unknown>) => ['admins', params] as const,
+    all: (params?: Record<string, unknown>) =>
+      params ? (['admins', params] as const) : (['admins'] as const),
     detail: (id: string) => ['admins', id] as const,
   },
 

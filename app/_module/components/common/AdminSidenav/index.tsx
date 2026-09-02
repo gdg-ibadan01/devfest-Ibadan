@@ -11,6 +11,7 @@ import Home from '../../icons/Home';
 import Ticket from '../../icons/Ticket';
 import DiscountReferral from '../../icons/DiscountReferral';
 import RolesAndPermissions from '../../icons/RolesAndPermissions';
+import Admins from '../../icons/Admins';
 import Attendees from '../../icons/Attendees';
 import AuditLog from '../../icons/AuditLog';
 import Logout from '../../icons/Logout';
@@ -19,9 +20,19 @@ import { useMe, useAdminLogout } from '@/app/_module/services';
 
 const navItems = [
   { label: 'Home', href: '/admin/home', icon: Home },
+  { label: 'Admins', href: '/admin/admins', icon: Admins },
   { label: 'Ticket', href: '/admin/ticket', icon: Ticket },
-  { label: 'Discount & Referral', href: '/admin/discount-referral', icon: DiscountReferral },
-  { label: 'Roles & Permission', href: '/admin/roles-permission', icon: RolesAndPermissions },
+  {
+    label: 'Discount & Referral',
+    href: '/admin/discount-referral',
+    icon: DiscountReferral,
+  },
+  {
+    label: 'Roles & Permission',
+    href: '/admin/roles-permission',
+    icon: RolesAndPermissions,
+  },
+
   { label: 'Attendees', href: '/admin/attendees', icon: Attendees },
   { label: 'Audit Log', href: '/admin/audit-log', icon: AuditLog },
 ];
@@ -31,7 +42,7 @@ const isActivePath = (pathname: string, href: string) => {
   return pathname === href || pathname.startsWith(`${href}/`);
 };
 
-/** Extract initials from a full name — e.g. "Mary Esivue" → "ME" */
+/** Extract initials from a full name */
 function getInitials(fullName: string): string {
   return fullName
     .trim()
@@ -125,19 +136,24 @@ const AdminSidenav = () => {
       <aside className="hidden lg:flex flex-col bg-[#1f1f1f] text-white h-screen sticky top-0">
         {/* Logo */}
         <div className="flex h-[80px] items-center justify-center bg-white px-8 flex-shrink-0">
-          <Link href="/admin/home" className="flex w-[120px] items-center justify-center">
+          <Link
+            href="/admin/home"
+            className="flex w-[120px] items-center justify-center"
+          >
             <Image src={DevfestLogo} alt="DevFest Ibadan" priority />
           </Link>
         </div>
         <NavContent />
       </aside>
 
-      {/* ---- MOBILE DRAWER (below lg) ---- */}
+      {/* MOBILE DRAWER (below lg) */}
       {/* Overlay */}
       <div
         className={cn(
           'fixed inset-0 z-40 bg-black/50 transition-opacity duration-300 lg:hidden',
-          isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+          isOpen
+            ? 'opacity-100 pointer-events-auto'
+            : 'opacity-0 pointer-events-none'
         )}
         onClick={close}
         aria-hidden
@@ -153,7 +169,11 @@ const AdminSidenav = () => {
       >
         {/* Drawer header: logo + close button */}
         <div className="flex h-[80px] items-center justify-between bg-white px-5 flex-shrink-0">
-          <Link href="/admin/home" onClick={close} className="flex w-[90px] items-center">
+          <Link
+            href="/admin/home"
+            onClick={close}
+            className="flex w-[90px] items-center"
+          >
             <Image src={DevfestLogo} alt="DevFest Ibadan" priority />
           </Link>
           <button

@@ -10,7 +10,7 @@ import type {
   AdminListParams,
 } from '@/app/_module/api/types';
 
-// ---- Get current admin (me) --------------------------------
+//Get current admin (me) 
 
 async function getMe(): Promise<FindOneAdminResponseDto> {
   const { data } = await apiClient.get<FindOneAdminResponseDto>('/admin/me');
@@ -24,7 +24,7 @@ export function useMe() {
   });
 }
 
-// ---- List all admins ----------------------------------------
+//List all admins 
 
 async function getAdmins(params: AdminListParams): Promise<FindAllAdminsResponseDto> {
   const { data } = await apiClient.get<FindAllAdminsResponseDto>('/admin', { params });
@@ -38,7 +38,7 @@ export function useAdmins(params: AdminListParams = {}) {
   });
 }
 
-// ---- Invite admin -------------------------------------------
+//Invite admin 
 
 async function inviteAdmin(dto: InviteAdminDto): Promise<AdminActionResponseDto> {
   const { data } = await apiClient.post<AdminActionResponseDto>('/admin/invite', dto);
@@ -52,7 +52,7 @@ export function useInviteAdmin() {
     mutationFn: inviteAdmin,
     onSuccess: (data) => {
       showToast.success(data.message || 'Invitation sent');
-      queryClient.invalidateQueries({ queryKey: queryKeys.admins.all() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.admins.all(), exact: false });
     },
     onError: (error: Error) => {
       showToast.error(error.message || 'Failed to send invitation');
@@ -60,7 +60,7 @@ export function useInviteAdmin() {
   });
 }
 
-// ---- Deactivate admin ----------------------------------------
+//Deactivate admin 
 
 async function deactivateAdmin(id: string): Promise<AdminActionResponseDto> {
   const { data } = await apiClient.patch<AdminActionResponseDto>(`/admin/deactivate/${id}`);
@@ -74,7 +74,7 @@ export function useDeactivateAdmin() {
     mutationFn: deactivateAdmin,
     onSuccess: (data) => {
       showToast.success(data.message || 'Admin deactivated');
-      queryClient.invalidateQueries({ queryKey: queryKeys.admins.all() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.admins.all(), exact: false });
     },
     onError: (error: Error) => {
       showToast.error(error.message || 'Failed to deactivate admin');
