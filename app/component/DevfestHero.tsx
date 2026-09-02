@@ -4,6 +4,7 @@ import Link from 'next/link';
 import IconsArt from './IconsArt';
 
 import { useRef, useEffect } from 'react';
+import Image from 'next/image';
 
 const DevfestHero = () => {
   const sectionRef = useRef(null);
@@ -44,46 +45,39 @@ const DevfestHero = () => {
     };
   }, []);
   return (
-    <>
-      <main ref={sectionRef} className="pt-[150px] bg-pastel-yellow ">
-        <div className="w-full md:max-w-[1500px] mx-auto relative z-10">
-          <header className="container headers flex gap-4 md:gap-7 flex-col items-center justify-between">
-            <h1 className="font-bold text-[2rem] leading-[2.5rem] md:text-8xl">
-              Devfest Ibadan &apos;26
-            </h1>
-            <p className="text-[#4D4D4D] text-lg md:text-2xl text-center md:w-[1000px]">
-              IB City whatsup!!! The largest tech event gathering in Ibadan and
-              Oyo State! DevFest Ibadan is back, bigger and better, bringing
-              together tech enthusiasts, developers, and industry leaders from
-              across the region. Prepare for a day of insightful talks, hands-on
-              workshops, networking opportunities, and a chance to explore the
-              latest trends in technology.
-            </p>
-            <div>
-              <p className="text-center font-bold">
-                Date: November 2026 at 8:00AM
-              </p>
-            </div>
-            <div className="flex flex-col md:flex-row gap-3 md:gap-5 text-sm'">
-              <Link
-                href="/rsvp"
-                className="bg-black py-4 px-52 text-white hover:bg-core-blue hover:text-white rounded-[100px] flex"
-              >
-                RSVP <ArrowUpRight />
-              </Link>
+    <main ref={sectionRef} className="pt-[150px] bg-pastel-yellow ">
+      <div className="w-full md:max-w-[1500px] mx-auto relative z-10">
+        <header className="container headers flex gap-4 md:gap-7 flex-col items-center justify-between">
+          <h1 className="font-bold text-[2rem] leading-[2.5rem] md:text-8xl">
+            Devfest Ibadan
+          </h1>
 
-              <Link
-                href="/speakers"
-                className="bg-white py-4 px-52 border-[1px] border-black hover:border-core-blue text-black hover:bg-core-blue hover:text-white rounded-[100px]"
-              >
-                View Speakers
-              </Link>
-            </div>
-          </header>
-        </div>
-        <IconsArt className="flex flex-col -mt-64 md:-mt-[150px]" />
-      </main>
-    </>
+          <Image
+            width={1000}
+            height={1000}
+            src={'/homehero_img.png'}
+            alt="Devfest Ibadan Ticket"
+            className="w-full md:max-w-[820px] h-auto object-contain"
+          />
+          <div className="flex flex-col md:flex-row gap-3 md:gap-5 text-sm'">
+            <Link
+              href="/rsvp"
+              className="bg-black py-4 md:py-[33px] px-52 md:px-[106px] text-white hover:bg-core-blue hover:text-white rounded-[100px] flex items-center justify-center"
+            >
+              RSVP <ArrowUpRight />
+            </Link>
+
+            <Link
+              href="#"
+              className="bg-white py-4 md:py-[33px] px-52 md:px-[106px] border-[1px] border-black hover:border-core-blue text-black hover:bg-core-blue hover:text-white rounded-[100px]"
+            >
+              Apply to Speak
+            </Link>
+          </div>
+        </header>
+      </div>
+      <IconsArt className="-mt-[150px] w-full" />
+    </main>
   );
 };
 

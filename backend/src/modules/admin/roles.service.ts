@@ -2,6 +2,7 @@ import {
   Injectable,
   InternalServerErrorException,
   Logger,
+  NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateRoleDto } from './dto/role.dto';
@@ -22,9 +23,10 @@ export class RolesService {
 
   static ERRORS = {
     DuplicateRoleErr: `DuplicateRoleErr`,
+    AlreadyDeactivatedErr: 'AlreadyDeactivatedErr',
+    RoleNotFoundErr: `RoleNotFoundErr`,
   } as const;
 
-  /** @throws DuplicateRoleErr */
   async create(payload: CreateRoleDto) {
     try {
       const role = await this.prisma.role.create({
@@ -39,9 +41,9 @@ export class RolesService {
         id: role.id,
         name: role.name,
         description: role.description,
-        permissions: role.permissions.map((pId) =>
-          permissionsMap.get(pId as PERMISSION_ID),
-        ),
+        permissions: role.permissions
+          .map((pId) => permissionsMap.get(pId as PERMISSION_ID))
+          .sort((pa, pb) => pa!.id.localeCompare(pb!.id)),
         isActive: role.isActive,
         createdAt: role.createdAt,
       };
@@ -64,8 +66,6 @@ export class RolesService {
   }
 
   async list() {
-    // TODO we should probably use a cursor here but it doesn't look like we'll
-    // have lots of roles for now
     const roles = await this.prisma.role.findMany({
       orderBy: { name: 'asc' },
       select: {
@@ -80,10 +80,38 @@ export class RolesService {
     return {
       roles: roles.map((r) => ({
         ...r,
-        permissions: r.permissions.map((pId) =>
-          permissionsMap.get(pId as PERMISSION_ID),
-        ),
+        permissions: r.permissions
+          .map((pId) => permissionsMap.get(pId as PERMISSION_ID))
+          .sort((pa, pb) => pa!.id.localeCompare(pb!.id)),
       })),
+    };
+  }
+
+  async getById(id: string) {
+    const role = await this.prisma.role.findUnique({
+      where: { id },
+      include: {
+        admins: {
+          where: { isActive: true },
+          select: { id: true },
+        },
+      },
+    });
+
+    if (!role) {
+      throw new NotFoundException('Role not found');
+    }
+
+    return {
+      id: role.id,
+      name: role.name,
+      description: role.description,
+      permissions: role.permissions
+        .map((pId) => permissionsMap.get(pId as PERMISSION_ID))
+        .sort((pa, pb) => pa!.id.localeCompare(pb!.id)),
+      isActive: role.isActive,
+      activeAdminCount: role.admins.length,
+      createdAt: role.createdAt,
     };
   }
 
@@ -93,5 +121,75 @@ export class RolesService {
         pa.id.localeCompare(pb.id),
       ),
     };
+  }
+
+  async update(id: string, payload: Partial<CreateRoleDto>, actorId: string) {
+    const role = await this.prisma.role.findUnique({ where: { id } });
+    if (!role) {
+      throw new ServiceError('Role not found', 'NotFoundErr');
+    }
+
+    const updatedRole = await this.prisma.$transaction(async (tx) => {
+      const updated = await tx.role.update({
+        where: { id },
+        data: {
+          ...(payload.name !== undefined && {
+            name: payload.name.trim().toUpperCase(),
+          }),
+          ...(payload.description !== undefined && {
+            description: payload.description,
+          }),
+          ...(payload.permissions !== undefined && {
+            permissions: payload.permissions,
+          }),
+          ...(payload.isActive !== undefined && {
+            isActive: payload.isActive,
+          }),
+        },
+      });
+      await tx.auditLog.create({
+        data: {
+          adminId: actorId,
+          roleId: id,
+          action: 'UPDATE_ROLE',
+          metadata: { payload },
+        },
+      });
+
+      return updated;
+    });
+
+    return updatedRole;
+  }
+
+  async deactivate(id: string, actorId: string) {
+    const role = await this.prisma.role.findUnique({ where: { id } });
+    if (!role) {
+      throw new ServiceError('Role not found', 'NotFoundErr');
+    }
+
+    if (!role.isActive) {
+      throw new ServiceError(
+        'Role is already deactivated',
+        'AlreadyDeactivatedErr',
+      );
+    }
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.role.update({
+        where: { id },
+        data: { isActive: false },
+      });
+
+      await tx.auditLog.create({
+        data: {
+          adminId: actorId,
+          roleId: id,
+          action: 'DEACTIVATE_ROLE',
+        },
+      });
+    });
+
+    return { message: 'Role deactivated successfully' };
   }
 }

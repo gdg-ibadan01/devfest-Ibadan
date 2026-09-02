@@ -6,5 +6,13 @@ export default registerAs('app', () => ({
   url: process.env.APP_URL || 'http://localhost:3000',
   nodeEnv: process.env.NODE_ENV || 'development',
   logoUrl: process.env.LOGO_URL || 'https://example.com/default-logo.png',
-  frontendUrl: process.env.FRONTEND_SUCCESS_URL || 'http://localhost:3000',
+  frontendUrl:
+    process.env.FRONTEND_URL ||
+    process.env.FRONTEND_SUCCESS_URL ||
+    'http://localhost:3000',
+  passwordResetUrl:
+    process.env.PASSWORD_RESET_URL ||
+    'http://localhost:3000/admin/reset-password',
+  inviteAdminUrl:
+    process.env.INVITE_ADMIN_URL || 'http://localhost:3000/admin/invite',
 }));

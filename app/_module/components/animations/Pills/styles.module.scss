@@ -1,4 +1,9 @@
-.container {
+.animationWrapper {
+  display: inline-flex;
+  opacity: 0;
+}
+
+.pillContainer {
   width: auto;
   padding: 10px 25px;
   background-color: var(--primary);
@@ -9,10 +14,26 @@
   align-items: center;
   font-weight: 300;
   cursor: pointer;
-  opacity: 0;
+  border: 2px solid transparent;
+
+  // Premium transitions for hover interactions
+  transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+              box-shadow 0.25s ease,
+              border-color 0.25s ease,
+              color 0.25s ease;
 
   p {
     white-space: nowrap;
+  }
+
+  // Hover animations only applied to desktop screens and above
+  @media (min-width: 1024px) {
+    &:hover {
+      transform: translateY(-5px) scale(1.08);
+      box-shadow: 4px 4px 0px 0px #060606;
+      border-color: #060606;
+      color: #060606 !important;
+    }
   }
 }
 

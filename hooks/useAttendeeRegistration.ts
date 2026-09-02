@@ -40,19 +40,19 @@ export function useCreateAttendee(
 
   return useMutation({
     mutationFn: (data: CreateAttendeeRequest) => apiClient.createAttendee(data),
-    onSuccess: (data, variables, context) => {
+    onSuccess: (data, variables, context, queryClient) => {
       if (showSuccessToast) {
         toast.success(successMessage);
       }
-      options?.onSuccess?.(data, variables, context);
+      options?.onSuccess?.(data, variables, context, queryClient);
     },
-    onError: (error, variables, context) => {
+    onError: (error, variables, context, queryClient) => {
       if (showErrorToast) {
         const message =
           errorMessage || error.message || 'Failed to create attendee';
         toast.error(message);
       }
-      options?.onError?.(error, variables, context);
+      options?.onError?.(error, variables, context, queryClient);
     },
     ...mutationOptions,
   });
@@ -81,19 +81,19 @@ export function useInitiatePayment(
   return useMutation({
     mutationFn: (data: InitiatePaymentRequest) =>
       apiClient.initiatePayment(data),
-    onSuccess: (data, variables, context) => {
+    onSuccess: (data, variables, context, queryClient) => {
       if (showSuccessToast) {
         toast.success(successMessage);
       }
-      options?.onSuccess?.(data, variables, context);
+      options?.onSuccess?.(data, variables, context, queryClient);
     },
-    onError: (error, variables, context) => {
+    onError: (error, variables, context, queryClient) => {
       if (showErrorToast) {
         const message =
           errorMessage || error.message || 'Failed to initialize payment';
         toast.error(message);
       }
-      options?.onError?.(error, variables, context);
+      options?.onError?.(error, variables, context, queryClient);
     },
     ...mutationOptions,
   });

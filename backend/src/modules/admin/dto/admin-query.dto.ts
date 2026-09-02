@@ -1,12 +1,18 @@
-import { IsOptional, IsString, IsEnum, IsBoolean } from 'class-validator';
-import { ApiPropertyOptional } from '@nestjs/swagger';
+import {
+  IsOptional,
+  IsString,
+  IsBoolean,
+  IsInt,
+  Min,
+  IsEnum,
+} from 'class-validator';
 import { Role } from '../../../common/enums/role.enum';
-import { Transform } from 'class-transformer';
+import { ApiPropertyOptional } from '@nestjs/swagger';
+import { Transform, Type } from 'class-transformer';
 
 export class AdminQueryDto {
   @ApiPropertyOptional({
-    description:
-      'Search term to filter admins by name, email, or other relevant fields',
+    description: 'Search term to filter admins by name or email',
     example: 'john',
   })
   @IsOptional()
@@ -14,13 +20,12 @@ export class AdminQueryDto {
   search?: string;
 
   @ApiPropertyOptional({
-    description: 'Filter admins by their role',
-    enum: Role,
-    example: Role.ADMIN,
+    description: 'Filter admins by role name',
+    example: 'ADMIN',
   })
   @IsOptional()
-  @IsEnum(Role)
-  role?: Role;
+  @IsString()
+  role?: string;
 
   @ApiPropertyOptional({
     description: 'Filter admins by active status',
@@ -28,22 +33,28 @@ export class AdminQueryDto {
   })
   @IsOptional()
   @IsBoolean()
-  @Transform(({ value }) => value === 'true' || value === true)
+  @Transform(({ value }) => value === 'true')
   isActive?: boolean;
 
   @ApiPropertyOptional({
     description: 'Page number for pagination',
-    example: 2,
+    example: 1,
     default: 1,
   })
   @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
   page?: number = 1;
 
   @ApiPropertyOptional({
-    description: 'Number of records per page for pagination',
-    example: 20,
+    description: 'Number of records per page',
+    example: 10,
     default: 10,
   })
   @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
   limit?: number = 10;
 }

@@ -6,10 +6,18 @@ import { google_sans } from './shared/font';
 import { ReactLenis } from '@/utils/lenis';
 import { Toaster } from 'sonner';
 import { usePathname } from 'next/navigation';
+import AdminSidenav from './_module/components/common/AdminSidenav';
+import { SidenavProvider } from './_module/context/SidenavContext';
 import { Fragment, Suspense } from 'react';
-import AdminHeader from './_module/components/common/AdminHeader';
 import ReactQueryProvider from '@/providers/react-query';
 import { ErrorBoundary } from '@/providers/error-boundary';
+import AuthGuard from './_module/components/common/AuthGuard';
+
+export const wrapperClass = {
+  layout:
+    'min-h-screen bg-[#f7f7f7] text-[#1e1e1e] lg:grid lg:grid-cols-[260px_minmax(0,1fr)]',
+  main: 'min-w-0 bg-[#fafafa]',
+};
 
 // Loading component for Suspense fallback
 export const PageLoader = () => (
@@ -35,22 +43,29 @@ const AdminLayout = ({
 }>) => {
   return (
     <html lang="en">
-      <ReactLenis root>
-        <body className={`${google_sans.className}`}>
-          <ReactQueryProvider>
-            <ErrorBoundary
-              fallbackMessage="Something went wrong with the admin panel. Please refresh and try again."
-              showErrorDetails={process.env.NODE_ENV === 'development'}
-            >
-              <Suspense fallback={<PageLoader />}>
-                <AdminHeader />
-                {children}
-                <Toaster richColors position={'top-right'} duration={6000} />
-              </Suspense>
-            </ErrorBoundary>
-          </ReactQueryProvider>
-        </body>
-      </ReactLenis>
+      {/* <ReactLenis root> */}
+      <body className={`${google_sans.className}`}>
+        <ReactQueryProvider>
+          <ErrorBoundary
+            fallbackMessage="Something went wrong with the admin panel. Please refresh and try again."
+            showErrorDetails={process.env.NODE_ENV === 'development'}
+          >
+            <Suspense fallback={<PageLoader />}>
+              {/* <AdminHeader /> */}
+              <SidenavProvider>
+                  <div className={wrapperClass.layout}>
+                    <AdminSidenav />
+                    <main className={wrapperClass.main}>
+                      <AuthGuard>{children}</AuthGuard>
+                    </main>
+                  </div>
+                </SidenavProvider>
+              <Toaster position='top-center' duration={4000} />
+            </Suspense>
+          </ErrorBoundary>
+        </ReactQueryProvider>
+      </body>
+      {/* </ReactLenis> */}
     </html>
   );
 };
@@ -62,10 +77,15 @@ const HomeLayout = ({
 }>) => {
   const pathname = usePathname();
   // Define routes where you want to hide the header
-  const hideHeaderRoutes = ['/ticket'];
+  const hideHeaderRoutes: string[] = [];
   const shouldHideHeader = hideHeaderRoutes.includes(pathname);
   // Define the route where you want to hide the footer
-  const hideFooterRoutes = ['/ticket', '/rsvp'];
+  const hideFooterRoutes = [
+    '/rsvp',
+    '/ticket/buy',
+    '/ticket/gift',
+    '/ticket/preview',
+  ];
   const shouldHideFooter = hideFooterRoutes.includes(pathname);
   return (
     <html lang="en">
@@ -80,7 +100,7 @@ const HomeLayout = ({
                 {!shouldHideHeader && <DFIHeader />}
                 {children}
                 {!shouldHideHeader && !shouldHideFooter && <DFIFooter />}
-                <Toaster richColors position={'top-right'} duration={6000} />
+                <Toaster position='top-center' duration={4000} />
               </Suspense>
             </ErrorBoundary>
           </ReactQueryProvider>
@@ -99,9 +119,13 @@ export default function RootLayout({
   const adminRoute = '/admin';
   const pathname = usePathname();
 
+  // Auth pages (/admin sign-in *) use HomeLayout — no sidenav
+  const isAdminSignIn = pathname === '/admin';
+  const isAdminDashboard = pathname.startsWith(adminRoute) && !isAdminSignIn;
+
   return (
     <Fragment>
-      {pathname.startsWith(adminRoute) ? (
+      {isAdminDashboard ? (
         <AdminLayout>{children}</AdminLayout>
       ) : (
         <HomeLayout>{children}</HomeLayout>

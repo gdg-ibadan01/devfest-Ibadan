@@ -1,5 +1,5 @@
 export const footerClass = {
-  footer: 'w-full bg-pastel-yellow pt-56',
+  footer: 'w-full bg-halftone-red pt-56',
   wrapper: 'container mx-auto flex flex-col gap-4',
   logoContainer:
     'flex items-center w-124 h-32 hover:scale-110 transition-transform duration-300 ease-in-out',

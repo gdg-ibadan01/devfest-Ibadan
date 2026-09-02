@@ -3,10 +3,10 @@ import { ConfigModule } from '@nestjs/config';
 import { WinstonModule } from 'nest-winston';
 import { AppController } from './app.controller';
 import { winstonConfig } from './config/logger/wiston.config';
-import { APP_FILTER, APP_PIPE } from '@nestjs/core';
+import { APP_FILTER, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 import { HttpExceptionFilter } from './common/filters/exception.filter';
 import { ValidationPipe422 } from './common/pipe/validation.pipe';
-// import { TransformerInterceptor } from './common/interceptor/transformer.interceptor';
+import { RequestLoggerInterceptor } from './common/interceptor/request-logger.interceptor';
 import { AppService } from './app.service';
 import { AttendeeModule } from './modules/attendee/attendee.module';
 import { EventsModule } from './modules/events/events.module';
@@ -20,8 +20,11 @@ import gmailConfig from './config/mail.config';
 import paystackConfig from './config/paystack.config';
 import cloudinaryConfig from './config/cloudinary.config';
 import superadminConfig from './config/superadmin.config';
+import monnifyConfig from './config/monnify.config';
 import { TicketsModule } from './modules/ticket/ticket.module';
 import { UploadModule } from './modules/upload/upload.module';
+import { OrdersModule } from './modules/order/order.module';
+import { WebhookModule } from './modules/webhook/webhook.module';
 
 @Module({
   imports: [
@@ -35,6 +38,7 @@ import { UploadModule } from './modules/upload/upload.module';
         cloudinaryConfig,
         paystackConfig,
         superadminConfig,
+        monnifyConfig,
       ],
     }),
     // Logging
@@ -46,6 +50,8 @@ import { UploadModule } from './modules/upload/upload.module';
     PaymentsModule,
     TicketsModule,
     UploadModule,
+    OrdersModule,
+    WebhookModule,
   ],
   controllers: [AppController],
   providers: [
@@ -57,10 +63,10 @@ import { UploadModule } from './modules/upload/upload.module';
       provide: APP_PIPE,
       useClass: ValidationPipe422,
     },
-    // {
-    //   provide: APP_INTERCEPTOR,
-    //   useClass: TransformerInterceptor,
-    // },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: RequestLoggerInterceptor,
+    },
     AppService,
   ],
 })

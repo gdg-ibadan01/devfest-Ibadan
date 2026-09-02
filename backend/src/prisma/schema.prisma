@@ -1,10 +1,5 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
-  provider     = "prisma-client"
-  output       = "../generated/prisma"
-  moduleFormat = "cjs"
+  provider = "prisma-client-js"
 }
 
 datasource db {
@@ -12,31 +7,160 @@ datasource db {
 }
 
 model Role {
-  id          String   @id @default(uuid(7))
-  name        String   @unique
+  id          String     @id @default(uuid(7))
+  name        String     @unique
   description String
   permissions String[]
-  isActive    Boolean  @default(true)
+  isActive    Boolean    @default(true) @map("is_active")
   admins      Admin[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt @default(now())
+  auditLogs   AuditLog[]
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @default(now()) @updatedAt @map("updated_at")
 
   @@map("roles")
 }
 
 model Admin {
-  id          String   @id @default(uuid(7))
-  fullName    String
-  email       String   @unique
-  password    String
-  roleId      String
-  role        Role     @relation(fields: [roleId], references: [id])
-  isActive    Boolean  @default(true)
-  invitedById String?
-  invitedBy   Admin?   @relation("AdminInvitations", fields: [invitedById], references: [id])
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  admins      Admin[]  @relation("AdminInvitations")
+  id                  String               @id @default(uuid(7))
+  fullName            String               @map("full_name")
+  email               String               @unique
+  password            String
+  roleId              String               @map("role_id")
+  role                Role                 @relation(fields: [roleId], references: [id])
+  isActive            Boolean              @default(true) @map("is_active")
+  invitedById         String?              @map("invited_by_id")
+  invitedBy           Admin?               @relation("AdminInvitations", fields: [invitedById], references: [id])
+  passwordResetTokens PasswordResetToken[]
+  createdAt           DateTime             @default(now()) @map("created_at")
+  updatedAt           DateTime             @updatedAt @map("updated_at")
+  admins              Admin[]              @relation("AdminInvitations")
+  auditLogs           AuditLog[]
+  tickets             Ticket[]
 
   @@map("admins")
+}
+
+model PasswordResetToken {
+  id        String    @id @default(uuid(7))
+  adminId   String    @map("admin_id")
+  token     String    @unique
+  expiresAt DateTime  @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  admin     Admin     @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@map("password_reset_tokens")
+}
+
+model AuditLog {
+  id        String   @id @default(uuid(7))
+  adminId   String   @map("admin_id")
+  roleId    String?  @map("role_id")
+  action    String
+  metadata  Json?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  admin Admin @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  role  Role? @relation(fields: [roleId], references: [id], onDelete: SetNull)
+
+  @@map("audit_logs")
+}
+
+model Ticket {
+  id            String     @id @default(uuid(7))
+  name          String
+  description   String
+  slug          String     @unique
+  eventDates    DateTime[] @map("event_dates")
+  price         Decimal
+  discount      Decimal    @default(0)
+  validityDates DateTime[] @map("validity_dates")
+  capacity      Int
+  saleStartsAt  DateTime   @map("sale_starts_at")
+  saleEndsAt    DateTime   @map("sale_ends_at")
+  creatorId     String     @map("creator_id")
+  creator       Admin      @relation(fields: [creatorId], references: [id])
+  createdAt     DateTime   @default(now()) @map("created_at")
+  updatedAt     DateTime   @updatedAt @map("updated_at")
+
+  orders    Order[]
+
+  @@map("tickets")
+}
+
+enum OrderStatus {
+  AWAITING_PAYMENT
+  PAID
+  CANCELLED
+  AWAITING_REFUND
+  REFUNDED
+}
+
+enum RefundStatus {
+  PENDING
+  REQUESTED
+  SUCCESS
+  FAILED
+}
+
+model Order {
+  id                     String      @id @default(uuid(7))
+  reference              String
+  ticketId               String      @map("ticket_id")
+  ticket                 Ticket      @relation(fields: [ticketId], references: [id])
+  attendeeFullName       String      @map("attendee_full_name")
+  attendeeEmail          String      @map("attendee_email")
+  attendeePhoneNumber    String?     @map("attendee_phone_number")
+  gifterName             String?     @map("gifter_name")
+  gifterEmail            String?     @map("gifter_email")
+  discount               Decimal
+  amount                 Decimal
+  currency               String      @default("NGN")
+  status                 OrderStatus @default(AWAITING_PAYMENT)
+  paymentProvider        String      @default("MONNIFY") @map("payment_provider")
+  providerTransactionRef String?     @map("provider_transaction_ref")
+  checkoutUrl            String?     @map("checkout_url")
+  expiresAt              DateTime    @map("expires_at")
+  paidAt                 DateTime?   @map("paid_at")
+  createdAt              DateTime    @default(now()) @map("created_at")
+  updatedAt              DateTime    @updatedAt @map("updated_at")
+
+  refund    Refund?
+
+  @@unique([reference, providerTransactionRef])
+  @@index([ticketId, status])
+  @@map("orders")
+}
+
+model Refund {
+  id                   String       @id @default(uuid(7)) @map("id")
+  orderId              String       @unique @map("order_id")
+  email                String       @map("email")
+  provider             String       @map("provider")
+  transactionReference String       @map("transaction_reference")
+  paymentReference     String       @map("payment_reference")
+  refundReference      String       @map("refund_reference")
+  status               RefundStatus @default(PENDING) @map("status")
+  reason               String?      @map("reason")
+  refundedAt           DateTime?    @map("refunded_at")
+  createdAt            DateTime     @default(now()) @map("created_at")
+  updatedAt            DateTime     @updatedAt @map("updated_at")
+
+  order Order? @relation(fields: [orderId], references: [id])
+
+  @@map("refunds")
+}
+
+model WebhookEvent {
+  id                   String   @id @default(uuid(7))
+  provider             String
+  eventType            String   @map("event_type")
+  paymentReference     String?  @map("payment_reference")
+  transactionReference String?  @map("transaction_reference")
+  payload              Json
+  processed            Boolean  @default(false)
+  createdAt            DateTime @default(now()) @map("created_at")
+
+  @@unique([provider, eventType, transactionReference])
+  @@map("webhook_events")
 }

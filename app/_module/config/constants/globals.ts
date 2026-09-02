@@ -5,6 +5,7 @@ export const menuItems = [
   { label: 'Merch', slur: 'https://selar.co/m/gdg-ibadan1' },
   // { label: 'Team', slur: 'team' },
   { label: 'RSVP', slur: '/rsvp' },
+  { label: 'Ticket', slur: '/ticket' },
 ];
 
 export const footerItems = {
