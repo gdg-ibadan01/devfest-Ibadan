@@ -258,6 +258,7 @@ export class OrdersService {
       paymentReference: order.reference,
       description: `GDG Ibadan ticket: ${ticketName}`,
       metadata: { orderId: order.id },
+      redirectUrl: `${this.appConfig.checkoutRedirectUrl}`,
     };
 
     try {
