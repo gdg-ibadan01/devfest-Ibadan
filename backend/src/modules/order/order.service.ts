@@ -90,6 +90,7 @@ export class OrdersService {
     DuplicateErr: 'DuplicateErr',
     PaymentErr: 'PaymentErr',
     TicketNotFoundErr: 'TicketNotFoundErr',
+    OrderNotFoundErr: 'OrderNotFoundErr',
   } as const;
 
   private readonly logger = new Logger(OrdersService.name);
@@ -138,6 +139,30 @@ export class OrdersService {
         payload.gifter?.fullName.trim() ?? payload.attendee.fullName.trim(),
       email: gifterEmail ?? attendeeEmail,
     });
+  }
+
+  async findByReference(reference: string) {
+    const order = await this.prisma.order.findFirst({
+      where: { reference },
+      include: { ticket: { select: { name: true, validityDates: true } } },
+    });
+
+    if (!order) {
+      throw new ServiceError(
+        'Order not found',
+        OrdersService.ERRORS.OrderNotFoundErr,
+      );
+    }
+
+    return {
+      ticket: {
+        name: order.ticket.name,
+        validityDates: order.ticket.validityDates,
+      },
+      amount: order.amount.toFixed(2),
+      status: order.status,
+      code: order.reference.slice(-6),
+    };
   }
 
   private async createOrderRecord(

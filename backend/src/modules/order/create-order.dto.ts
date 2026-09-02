@@ -118,3 +118,43 @@ export class CreateOrderResponseDto {
   @ApiProperty({ type: OrderedTicketDto })
   ticket: OrderedTicketDto;
 }
+
+export class GetOrderReferenceResponseDto {
+  @ApiProperty({
+    type: 'object',
+    properties: {
+      name: { type: 'string', example: 'Early Bird' },
+      validityDates: {
+        type: 'array',
+        items: { type: 'string', format: 'date-time' },
+        example: ['2026-09-20T00:00:00.000Z', '2026-09-21T00:00:00.000Z'],
+      },
+    },
+  })
+  ticket: { name: string; validityDates: Date[] };
+
+  @ApiProperty({
+    type: String,
+    description: 'Amount paid in Naira (2 decimal places)',
+    example: '9500.00',
+  })
+  amount: string;
+
+  @ApiProperty({
+    enum: [
+      'AWAITING_PAYMENT',
+      'PAID',
+      'CANCELLED',
+      'AWAITING_REFUND',
+      'REFUNDED',
+    ],
+  })
+  status: string;
+
+  @ApiProperty({
+    type: String,
+    description: 'Ticket code',
+    example: 'ABC123',
+  })
+  code: string;
+}

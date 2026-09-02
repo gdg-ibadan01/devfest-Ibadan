@@ -1,13 +1,19 @@
 import {
   Body,
   Controller,
+  Get,
   HttpException,
   HttpStatus,
+  Param,
   Post,
 } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { OrdersService } from './order.service';
-import { CreateOrderDto, CreateOrderResponseDto } from './create-order.dto';
+import {
+  CreateOrderDto,
+  CreateOrderResponseDto,
+  GetOrderReferenceResponseDto,
+} from './create-order.dto';
 
 @ApiTags('Order')
 @Controller('orders')
@@ -63,6 +69,41 @@ export class OrdersController {
             HttpStatus.BAD_GATEWAY,
           );
         case OrdersService.ERRORS.TicketNotFoundErr:
+          throw new HttpException((err as Error).message, HttpStatus.NOT_FOUND);
+        default:
+          throw new HttpException(
+            (err as Error).message,
+            HttpStatus.INTERNAL_SERVER_ERROR,
+          );
+      }
+    }
+  }
+
+  @Get('reference/:reference')
+  @ApiOperation({
+    summary: 'Get order by payment reference',
+  })
+  @ApiParam({
+    name: 'reference',
+    example: 'EarlyBird-ABC123',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Order found',
+    type: GetOrderReferenceResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Order not found for reference',
+  })
+  async findByReference(@Param('reference') reference: string) {
+    try {
+      return await this.ordersService.findByReference(reference);
+    } catch (err) {
+      if (err instanceof HttpException) throw err;
+
+      switch ((err as Error).name) {
+        case OrdersService.ERRORS.OrderNotFoundErr:
           throw new HttpException((err as Error).message, HttpStatus.NOT_FOUND);
         default:
           throw new HttpException(
