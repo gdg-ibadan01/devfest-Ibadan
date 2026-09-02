@@ -11,6 +11,8 @@ import {
 } from '../payment/interfaces/payment-provider.interface';
 import { MonnifyRejectedPaymentWebhookEventData } from '../payment/interfaces/monnify.interface';
 import { CreateOrderDto, CreateOrderResponseDto } from './create-order.dto';
+import { ConfigType } from '@nestjs/config';
+import AppConfig from 'src/config/app.config';
 
 const ORDER_TTL_MINUTES = 30;
 const TX_MAX_ATTEMPTS = 3;
@@ -97,6 +99,8 @@ export class OrdersService {
   constructor(
     private readonly prisma: PrismaService,
     @Inject(PAYMENT_PROVIDER) private readonly paymentProvider: PaymentProvider,
+    @Inject(AppConfig.KEY)
+    private appConfig: ConfigType<typeof AppConfig>,
   ) {}
 
   async create(payload: CreateOrderDto): Promise<CreateOrderResponseDto> {
@@ -273,10 +277,11 @@ export class OrdersService {
         },
       });
 
-      return this.toResponseDto(updated, {
-        name: ticketName,
-        slug: ticketSlug,
-      });
+      return this.toResponseDto(
+        updated,
+        { name: ticketName, slug: ticketSlug },
+        initialized.vatAndCharges,
+      );
     } catch (err) {
       this.logger.error(
         `Payment initialization failed for order ${order.id}: ${(err as Error).message}`,
@@ -293,6 +298,7 @@ export class OrdersService {
   private toResponseDto(
     order: Order,
     ticket: { name: string; slug: string },
+    vatAndCharges: number,
   ): CreateOrderResponseDto {
     return {
       id: order.id,
@@ -300,6 +306,7 @@ export class OrdersService {
       status: order.status,
       amount: order.amount.toFixed(2),
       discount: order.discount.toFixed(2),
+      vatAndCharges: vatAndCharges.toFixed(2),
       currency: order.currency,
       checkoutUrl: order.checkoutUrl,
       expiresAt: order.expiresAt,
