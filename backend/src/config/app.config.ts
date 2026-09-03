@@ -15,4 +15,5 @@ export default registerAs('app', () => ({
     'http://localhost:3000/admin/reset-password',
   inviteAdminUrl:
     process.env.INVITE_ADMIN_URL || 'http://localhost:3000/admin/invite',
+  checkoutRedirectUrl: process.env.CHECKOUT_REDIRECT_URL,
 }));
