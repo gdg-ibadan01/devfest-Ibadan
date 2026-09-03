@@ -1,13 +1,30 @@
 import {
   Body,
   Controller,
+  Get,
   HttpException,
   HttpStatus,
   Post,
+  Query,
+  UseGuards,
 } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiQuery,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { OrdersService } from './order.service';
-import { CreateOrderDto, CreateOrderResponseDto } from './create-order.dto';
+import {
+  CreateOrderDto,
+  CreateOrderResponseDto,
+  OrderListResponseDto,
+  OrdersQueryDto,
+} from './create-order.dto';
+import { RequirePermission } from 'src/common/decorators/permissions.decorator';
+import { JwtAuthGuard } from '../admin/guards/jwt-auth.guard';
+import { PermissionsGuard } from '../admin/guards/permissions.guard';
 
 @ApiTags('Order')
 @Controller('orders')
@@ -71,5 +88,68 @@ export class OrdersController {
           );
       }
     }
+  }
+
+  @Get()
+  @ApiBearerAuth()
+  @RequirePermission('orders.list')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @ApiOperation({
+    summary: 'List orders',
+    description:
+      'Cursor-paginated list of orders. By default returns earlier-dated orders first.',
+  })
+  @ApiQuery({
+    name: 'search',
+    required: false,
+    description:
+      'Search orders by attendee email, attendee full name, or reference (case-insensitive)',
+  })
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    enum: [
+      'AWAITING_PAYMENT',
+      'PAID',
+      'CANCELLED',
+      'AWAITING_REFUND',
+      'REFUNDED',
+    ],
+    description:
+      'Filter by order status. When omitted, orders of all statuses are returned.',
+  })
+  @ApiQuery({
+    name: 'direction',
+    required: false,
+    enum: ['next', 'previous'],
+    description:
+      'Pagination direction. `next` returns earlier-dated orders, `previous` returns more recent orders.',
+  })
+  @ApiQuery({
+    name: 'cursor',
+    required: false,
+    description:
+      'Cursor for pagination. Pass the ID of the last item from the previous page.',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    description: 'Number of results per page (default 20, max 50)',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Orders retrieved successfully',
+    type: OrderListResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.UNAUTHORIZED,
+    description: 'Not authenticated',
+  })
+  @ApiResponse({
+    status: HttpStatus.FORBIDDEN,
+    description: 'Requires permission',
+  })
+  findAll(@Query() query: OrdersQueryDto) {
+    return this.ordersService.list(query);
   }
 }

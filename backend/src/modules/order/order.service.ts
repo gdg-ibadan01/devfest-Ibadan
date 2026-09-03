@@ -10,7 +10,11 @@ import {
   PaymentProvider,
 } from '../payment/interfaces/payment-provider.interface';
 import { MonnifyRejectedPaymentWebhookEventData } from '../payment/interfaces/monnify.interface';
-import { CreateOrderDto, CreateOrderResponseDto } from './create-order.dto';
+import {
+  CreateOrderDto,
+  CreateOrderResponseDto,
+  OrdersQueryDto,
+} from './create-order.dto';
 
 const ORDER_TTL_MINUTES = 30;
 const TX_MAX_ATTEMPTS = 3;
@@ -584,5 +588,64 @@ Initiating refund for order ${order.id}`,
   }
   private generateRefundReference(): string {
     return `REFUND-${randomUUID().replace(/-/g, '').slice(0, 10).toUpperCase()}`;
+  }
+
+  async list(query: OrdersQueryDto) {
+    const { cursor, direction = 'next', limit = 20, search, status } = query;
+
+    const where: Prisma.OrderWhereInput = {};
+    if (status) {
+      where.status = status;
+    }
+    if (search) {
+      where.OR = [
+        { attendeeEmail: { contains: search, mode: 'insensitive' } },
+        { attendeeFullName: { contains: search, mode: 'insensitive' } },
+        { reference: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    const orderBy =
+      direction === 'next' ? { id: 'asc' as const } : { id: 'desc' as const };
+
+    const results = await this.prisma.order.findMany({
+      where,
+      take: limit + 1,
+      ...(cursor && { cursor: { id: cursor }, skip: 1 }),
+      orderBy,
+      include: {
+        ticket: { select: { name: true, validityDates: true, id: true } },
+      },
+    });
+
+    const hasMore = results.length > limit;
+    if (hasMore) results.pop();
+
+    const data = results.map((o) => ({
+      id: o.id,
+      paidAt: o.paidAt,
+      amount: o.amount.toFixed(2),
+      status: o.status,
+      attendeeFullName: o.attendeeFullName,
+      attendeeEmail: o.attendeeEmail,
+      ticket: {
+        id: o.ticket.id,
+        name: o.ticket.name,
+        code: o.reference.slice(-6),
+        validity: o.ticket.validityDates
+          .map((d) => d.toLocaleDateString('en-US', { weekday: 'short' }))
+          .join(' + '),
+      },
+    }));
+
+    return {
+      data,
+      meta: {
+        nextCursor: hasMore ? (data[data.length - 1]?.id ?? null) : null,
+        prevCursor: cursor ?? null,
+        limit,
+        hasMore,
+      },
+    };
   }
 }
