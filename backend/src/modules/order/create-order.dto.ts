@@ -108,6 +108,13 @@ export class CreateOrderResponseDto {
   })
   discount: string;
 
+  @ApiProperty({
+    type: String,
+    description: '7.5% VAT plus payment gateway service charge',
+    example: '500.00',
+  })
+  vatAndCharges: string;
+
   @ApiProperty()
   currency: string;
 
