@@ -251,6 +251,9 @@ export class OrderListItemDto {
   @ApiProperty()
   attendeeEmail: string;
 
+  @ApiProperty({ type: [String], format: 'date-time' })
+  checkIns: Date[];
+
   @ApiProperty({
     type: 'object',
     properties: {

@@ -239,6 +239,7 @@ export class OrdersService {
       status: o.status,
       attendeeFullName: o.attendeeFullName,
       attendeeEmail: o.attendeeEmail,
+      checkIns: o.checkIns,
       ticket: {
         id: o.ticket.id,
         name: o.ticket.name,
@@ -740,6 +741,7 @@ Initiating refund for order ${order.id}`,
       data: { processed: true },
     });
   }
+
   private generateRefundReference(): string {
     return `REFUND-${randomUUID().replace(/-/g, '').slice(0, 10).toUpperCase()}`;
   }
