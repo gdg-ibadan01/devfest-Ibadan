@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import * as nodemailer from 'nodemailer';
 import { ConfigService } from '@nestjs/config';
 import { adminInviteTemplate } from './templates/admin-invite.template';
@@ -11,6 +11,8 @@ import { passwordResetTemplate } from './templates/password-reset.template';
 
 @Injectable()
 export class MailService {
+  private readonly logger = new Logger(MailService.name);
+
   private transporter: nodemailer.Transporter;
   constructor(private readonly configService: ConfigService) {
     this.transporter = nodemailer.createTransport({
@@ -22,14 +24,19 @@ export class MailService {
         pass: this.configService.get<string>('cpanel.password'),
       },
     });
+    this.transporter
+      .verify()
+      .then(() => {
+        this.logger.log('✅ cPanel SMTP connection successful');
+      })
+      .catch((error) => {
+        this.logger.error('❌ cPanel SMTP connection failed:', error.message);
+      });
   }
 
   async sendTicketConfirmationEmail(
     email: string,
     fullName: string,
-    // eventTitle: string,
-    // eventDate: string,
-    // venue: string,
     ticketType: string,
     transactionId: string,
     ticketNumber: string,
@@ -45,8 +52,6 @@ export class MailService {
 
     const html = ticketConfirmationTemplate(
       fullName,
-      // eventDate,
-      // venue,
       ticketType,
       transactionId,
       ticketNumber,
@@ -169,7 +174,7 @@ export class MailService {
     fullName: string,
     paymentUrl: string,
     amount: number,
-  ) {
+  ): Promise<void> {
     const logoUrl =
       this.configService.get<string>('app.logoUrl') ??
       'https://example.com/default-logo.png';
@@ -178,10 +183,10 @@ export class MailService {
       this.configService.get<string>('cpanel.from.email') ??
       'noreply@gdgibadan.com';
 
-    await this.transporter.sendMail({
+    const info = await this.transporter.sendMail({
       from: `"GDG Event Manager" <${supportEmail}>`,
       to: email,
-      subject: 'Complete Your Payment - DevFest Ibadan 2025',
+      subject: 'Complete Your Payment - DevFest Ibadan 2026',
       html: paymentLinkTemplate(
         fullName,
         paymentUrl,
@@ -190,8 +195,11 @@ export class MailService {
         amount,
       ),
     });
-  }
 
+    this.logger.log(
+      `📨 Payment email accepted by SMTP for ${email}. Message ID: ${info.messageId}`,
+    );
+  }
   async sendPasswordResetEmail(
     email: string,
     fullName: string,
