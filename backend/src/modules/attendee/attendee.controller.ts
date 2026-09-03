@@ -20,7 +20,7 @@ import { JwtAuthGuard } from '../admin/guards/jwt-auth.guard';
 import { PermissionsGuard } from '../admin/guards/permissions.guard';
 import { RequirePermission } from 'src/common/decorators/permissions.decorator';
 
-@ApiTags('attendees')
+@ApiTags('Attendee')
 @Controller('attendees')
 export class AttendeeController {
   constructor(private readonly attendeeService: AttendeeService) {}
