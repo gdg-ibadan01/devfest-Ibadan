@@ -151,7 +151,7 @@ export default function AdminDetailModal({
             disabled={!admin.isActive}
             className="px-6 py-[10px] rounded-lg border border-red-400 text-red-500 text-[13px] font-medium hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Deactivate
+            Deactivate Admin
           </button>
         </div>
       </div>
