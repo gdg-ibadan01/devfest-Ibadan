@@ -11,6 +11,11 @@ import {
 } from '../payment/interfaces/payment-provider.interface';
 import { MonnifyRejectedPaymentWebhookEventData } from '../payment/interfaces/monnify.interface';
 import { CreateOrderDto, CreateOrderResponseDto } from './create-order.dto';
+import { PDFService } from '../pdf/pdf.service';
+import { UploadService } from '../upload/upload.service';
+import crypto from 'node:crypto';
+import AppConfig from 'src/config/app.config';
+import { ConfigType } from '@nestjs/config';
 
 const ORDER_TTL_MINUTES = 30;
 const TX_MAX_ATTEMPTS = 3;
@@ -76,6 +81,7 @@ interface TicketQueryRawResult {
   discount: Prisma.Decimal;
   sale_starts_at: Date;
   sale_ends_at: Date;
+  validity_dates: Date[];
   name: string;
   slug: string;
 }
@@ -98,6 +104,10 @@ export class OrdersService {
   constructor(
     private readonly prisma: PrismaService,
     @Inject(PAYMENT_PROVIDER) private readonly paymentProvider: PaymentProvider,
+    private readonly pdfService: PDFService,
+    private readonly uploadService: UploadService,
+    @Inject(AppConfig.KEY)
+    private appConfig: ConfigType<typeof AppConfig>,
   ) {}
 
   async create(payload: CreateOrderDto): Promise<CreateOrderResponseDto> {
@@ -154,10 +164,33 @@ export class OrdersService {
       );
     }
 
+    let pdfBuffer: Buffer<ArrayBuffer> | undefined;
+    if (!order.ticketUrl) {
+      pdfBuffer = await this.pdfService.generateDevFest2026Ticket({
+        amount: order.amount.toNumber(),
+        ticketCode: order.reference.slice(-6),
+        downloadUrl: this.generateSignedDownloadUrl(order.reference),
+        validity: order.ticket.validityDates.map((d) =>
+          d.toLocaleDateString('en-US', { weekday: 'long' }),
+        ),
+      });
+    }
+
+    let ticketUrl: string | undefined;
+    if (pdfBuffer) {
+      const upload = await this.uploadService.uploadFile(pdfBuffer);
+      ticketUrl = upload?.secure_url;
+      await this.prisma.order.update({
+        where: { id: order.id },
+        data: { ticketUrl },
+      });
+    }
+
     return {
       ticket: {
         name: order.ticket.name,
         validityDates: order.ticket.validityDates,
+        url: order.ticketUrl ?? ticketUrl,
       },
       amount: order.amount.toFixed(2),
       status: order.status,
@@ -352,8 +385,14 @@ export class OrdersService {
   }
 
   async handlePaymentSuccess(event: PaymentSuccessPayload): Promise<void> {
-    let txResult: { refundId: string } = {
+    let txResult: {
+      refundId: string;
+      order: OrderQueryRawResult | null;
+      ticket: TicketQueryRawResult | null;
+    } = {
       refundId: '',
+      order: null,
+      ticket: null,
     };
 
     // Retrying because we're using IsolationLevel.Serializable
@@ -442,15 +481,10 @@ Initiating refund for order ${order.id}`,
                 where: { id: order.id },
                 data: { status: OrderStatus.PAID, paidAt: now },
               });
-              // TODO: create attendee record
-              console.log(
-                `[TODO] Create attendee record for order ${order.id}`,
-              );
-              // TODO: send confirmation email
-              console.log(
-                `[TODO] Send confirmation email for order ${order.id}`,
-              );
+
               await this.setEventAsProcessed(tx, event.webhookEventId);
+              txResult.order = order;
+              txResult.ticket = ticket;
               return txResult;
             }
 
@@ -485,6 +519,39 @@ Initiating refund for order ${order.id}`,
         refundId: txResult.refundId,
       });
     }
+
+    if (txResult.ticket && txResult.order) {
+      try {
+        const pdfBuffer = await this.pdfService.generateDevFest2026Ticket({
+          amount: Number(txResult.order.amount),
+          ticketCode: txResult.order.reference.slice(-6),
+          downloadUrl: this.generateSignedDownloadUrl(txResult.order.reference),
+          validity: txResult.ticket.validity_dates.map((d) =>
+            d.toLocaleDateString('en-US', { weekday: 'long' }),
+          ),
+        });
+
+        if (!pdfBuffer) return;
+
+        const upload = await this.uploadService.uploadFile(pdfBuffer);
+
+        if (!upload?.secure_url) return;
+
+        await this.prisma.order.update({
+          where: { id: txResult.order.id },
+          data: { ticketUrl: upload.secure_url },
+        });
+      } catch (err) {
+        this.logger.error(
+          `Failed to generate ticket PDF for order ${txResult.order.id}: ${(err as Error).message}`,
+        );
+      }
+    }
+
+    // TODO: send confirmation email
+    console.log(
+      `[TODO] Send confirmation email for order ${txResult.order?.id}`,
+    );
   }
 
   private async recordRefund(
@@ -609,5 +676,16 @@ Initiating refund for order ${order.id}`,
   }
   private generateRefundReference(): string {
     return `REFUND-${randomUUID().replace(/-/g, '').slice(0, 10).toUpperCase()}`;
+  }
+
+  generateSignedDownloadUrl(reference: string): string {
+    const payload = JSON.stringify({ reference });
+    const signature = crypto
+      .createHmac('sha256', this.appConfig.ticketJWTSecret)
+      .update(payload)
+      .digest('hex');
+
+    const token = Buffer.from(`${payload}:${signature}`).toString('base64url');
+    return `${this.appConfig.url}/api/v1/tickets/download?token=${token}`;
   }
 }
