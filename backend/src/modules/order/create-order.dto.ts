@@ -137,6 +137,10 @@ export class GetOrderReferenceResponseDto {
     type: 'object',
     properties: {
       name: { type: 'string', example: 'Early Bird' },
+      url: {
+        type: 'string',
+        example: 'https://example.com/download/ticket.pdf',
+      },
       validityDates: {
         type: 'array',
         items: { type: 'string', format: 'date-time' },
@@ -144,7 +148,7 @@ export class GetOrderReferenceResponseDto {
       },
     },
   })
-  ticket: { name: string; validityDates: Date[] };
+  ticket: { name: string; validityDates: Date[]; url: string };
 
   @ApiProperty({
     type: String,
