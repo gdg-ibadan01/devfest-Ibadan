@@ -89,7 +89,7 @@ export class WebhookService {
       case 'SUCCESSFUL_TRANSACTION':
         await this.ordersService.handlePaymentSuccess({
           webhookEventId: existingEvent.id,
-          amountPaid: eventData.amountPaid,
+          amountPaid: Number(eventData.settlementAmount),
           currency: eventData.currency,
           metaData: eventData.metaData,
           paidOn: eventData.paidOn,

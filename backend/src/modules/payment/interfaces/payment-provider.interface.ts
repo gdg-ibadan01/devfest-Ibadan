@@ -14,6 +14,7 @@ export interface InitializedPayment {
   provider: string;
   transactionRef: string;
   checkoutUrl: string;
+  vatAndCharges: number;
 }
 
 export interface RefundPaymentParams {

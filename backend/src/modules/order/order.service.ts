@@ -10,7 +10,16 @@ import {
   PaymentProvider,
 } from '../payment/interfaces/payment-provider.interface';
 import { MonnifyRejectedPaymentWebhookEventData } from '../payment/interfaces/monnify.interface';
-import { CreateOrderDto, CreateOrderResponseDto } from './create-order.dto';
+import {
+  CreateOrderDto,
+  CreateOrderResponseDto,
+  OrdersQueryDto,
+} from './create-order.dto';
+import { PDFService } from '../pdf/pdf.service';
+import { UploadService } from '../upload/upload.service';
+import crypto from 'node:crypto';
+import AppConfig from 'src/config/app.config';
+import { ConfigType } from '@nestjs/config';
 import { MailService } from '../mail/mail.service';
 
 const ORDER_TTL_MINUTES = 30;
@@ -78,6 +87,7 @@ interface TicketQueryRawResult {
   discount: Prisma.Decimal;
   sale_starts_at: Date;
   sale_ends_at: Date;
+  validity_dates: Date[];
   name: string;
   slug: string;
 }
@@ -92,6 +102,7 @@ export class OrdersService {
     DuplicateErr: 'DuplicateErr',
     PaymentErr: 'PaymentErr',
     TicketNotFoundErr: 'TicketNotFoundErr',
+    OrderNotFoundErr: 'OrderNotFoundErr',
   } as const;
 
   private readonly logger = new Logger(OrdersService.name);
@@ -100,6 +111,10 @@ export class OrdersService {
     private readonly prisma: PrismaService,
     private readonly mailService: MailService,
     @Inject(PAYMENT_PROVIDER) private readonly paymentProvider: PaymentProvider,
+    private readonly pdfService: PDFService,
+    private readonly uploadService: UploadService,
+    @Inject(AppConfig.KEY)
+    private appConfig: ConfigType<typeof AppConfig>,
   ) {}
 
   async create(
@@ -218,6 +233,112 @@ export class OrdersService {
     }
 
     return response;
+  }
+
+  async findByReference(reference: string) {
+    const order = await this.prisma.order.findFirst({
+      where: { reference },
+      include: { ticket: { select: { name: true, validityDates: true } } },
+    });
+
+    if (!order) {
+      throw new ServiceError(
+        'Order not found',
+        OrdersService.ERRORS.OrderNotFoundErr,
+      );
+    }
+    let pdfBuffer: Buffer<ArrayBuffer> | undefined;
+    if (!order.ticketUrl) {
+      pdfBuffer = await this.pdfService.generateDevFest2026Ticket({
+        amount: order.amount.toNumber(),
+        ticketCode: order.reference.slice(-6),
+        downloadUrl: this.generateSignedDownloadUrl(order.reference),
+        validity: order.ticket.validityDates.map((d) =>
+          d.toLocaleDateString('en-US', { weekday: 'long' }),
+        ),
+      });
+    }
+
+    let ticketUrl: string | undefined;
+    if (pdfBuffer) {
+      const upload = await this.uploadService.uploadFile(pdfBuffer);
+      ticketUrl = upload?.secure_url;
+      await this.prisma.order.update({
+        where: { id: order.id },
+        data: { ticketUrl },
+      });
+    }
+
+    return {
+      ticket: {
+        name: order.ticket.name,
+        validityDates: order.ticket.validityDates,
+        url: order.ticketUrl ?? ticketUrl,
+      },
+      amount: order.amount.toFixed(2),
+      status: order.status,
+      code: order.reference.slice(-6),
+    };
+  }
+
+  async list(query: OrdersQueryDto) {
+    const { cursor, direction = 'next', limit = 20, search, status } = query;
+
+    const where: Prisma.OrderWhereInput = {};
+    if (status) {
+      where.status = status;
+    }
+    if (search) {
+      where.OR = [
+        { attendeeEmail: { contains: search, mode: 'insensitive' } },
+        { attendeeFullName: { contains: search, mode: 'insensitive' } },
+        { reference: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    const orderBy =
+      direction === 'next' ? { id: 'asc' as const } : { id: 'desc' as const };
+
+    const results = await this.prisma.order.findMany({
+      where,
+      take: limit + 1,
+      ...(cursor && { cursor: { id: cursor }, skip: 1 }),
+      orderBy,
+      include: {
+        ticket: { select: { name: true, validityDates: true, id: true } },
+      },
+    });
+
+    const hasMore = results.length > limit;
+    if (hasMore) results.pop();
+
+    const data = results.map((o) => ({
+      id: o.id,
+      paidAt: o.paidAt,
+      amount: o.amount.toFixed(2),
+      status: o.status,
+      attendeeFullName: o.attendeeFullName,
+      attendeeEmail: o.attendeeEmail,
+      checkIns: o.checkIns,
+      ticket: {
+        id: o.ticket.id,
+        name: o.ticket.name,
+        code: o.reference.slice(-6),
+        validity: o.ticket.validityDates
+          .map((d) => d.toLocaleDateString('en-US', { weekday: 'short' }))
+          .join(' + '),
+      },
+    }));
+
+    return {
+      data,
+      meta: {
+        nextCursor: hasMore ? (data[data.length - 1]?.id ?? null) : null,
+        prevCursor: cursor ?? null,
+        limit,
+        hasMore,
+      },
+    };
   }
 
   private async createOrderRecord(
@@ -344,6 +465,7 @@ export class OrdersService {
       paymentReference: order.reference,
       description: `GDG Ibadan ticket: ${ticketName}`,
       metadata: { orderId: order.id },
+      redirectUrl: `${this.appConfig.checkoutRedirectUrl}`,
     };
 
     try {
@@ -358,10 +480,11 @@ export class OrdersService {
         },
       });
 
-      return this.toResponseDto(updated, {
-        name: ticketName,
-        slug: ticketSlug,
-      });
+      return this.toResponseDto(
+        updated,
+        { name: ticketName, slug: ticketSlug },
+        initialized.vatAndCharges,
+      );
     } catch (err) {
       this.logger.error(
         `Payment initialization failed for order ${order.id}: ${(err as Error).message}`,
@@ -378,6 +501,7 @@ export class OrdersService {
   private toResponseDto(
     order: Order,
     ticket: { name: string; slug: string },
+    vatAndCharges: number,
   ): CreateOrderResponseDto {
     return {
       id: order.id,
@@ -385,6 +509,7 @@ export class OrdersService {
       status: order.status,
       amount: order.amount.toFixed(2),
       discount: order.discount.toFixed(2),
+      vatAndCharges: vatAndCharges.toFixed(2),
       currency: order.currency,
       checkoutUrl: order.checkoutUrl,
       expiresAt: order.expiresAt,
@@ -419,8 +544,14 @@ export class OrdersService {
   }
 
   async handlePaymentSuccess(event: PaymentSuccessPayload): Promise<void> {
-    let txResult: { refundId: string } = {
+    let txResult: {
+      refundId: string;
+      order: OrderQueryRawResult | null;
+      ticket: TicketQueryRawResult | null;
+    } = {
       refundId: '',
+      order: null,
+      ticket: null,
     };
 
     // Retrying because we're using IsolationLevel.Serializable
@@ -509,15 +640,10 @@ Initiating refund for order ${order.id}`,
                 where: { id: order.id },
                 data: { status: OrderStatus.PAID, paidAt: now },
               });
-              // TODO: create attendee record
-              console.log(
-                `[TODO] Create attendee record for order ${order.id}`,
-              );
-              // TODO: send confirmation email
-              console.log(
-                `[TODO] Send confirmation email for order ${order.id}`,
-              );
+
               await this.setEventAsProcessed(tx, event.webhookEventId);
+              txResult.order = order;
+              txResult.ticket = ticket;
               return txResult;
             }
 
@@ -552,6 +678,39 @@ Initiating refund for order ${order.id}`,
         refundId: txResult.refundId,
       });
     }
+
+    if (txResult.ticket && txResult.order) {
+      try {
+        const pdfBuffer = await this.pdfService.generateDevFest2026Ticket({
+          amount: Number(txResult.order.amount),
+          ticketCode: txResult.order.reference.slice(-6),
+          downloadUrl: this.generateSignedDownloadUrl(txResult.order.reference),
+          validity: txResult.ticket.validity_dates.map((d) =>
+            d.toLocaleDateString('en-US', { weekday: 'long' }),
+          ),
+        });
+
+        if (!pdfBuffer) return;
+
+        const upload = await this.uploadService.uploadFile(pdfBuffer);
+
+        if (!upload?.secure_url) return;
+
+        await this.prisma.order.update({
+          where: { id: txResult.order.id },
+          data: { ticketUrl: upload.secure_url },
+        });
+      } catch (err) {
+        this.logger.error(
+          `Failed to generate ticket PDF for order ${txResult.order.id}: ${(err as Error).message}`,
+        );
+      }
+    }
+
+    // TODO: send confirmation email
+    console.log(
+      `[TODO] Send confirmation email for order ${txResult.order?.id}`,
+    );
   }
 
   private async recordRefund(
@@ -674,7 +833,21 @@ Initiating refund for order ${order.id}`,
       data: { processed: true },
     });
   }
+
   private generateRefundReference(): string {
     return `REFUND-${randomUUID().replace(/-/g, '').slice(0, 10).toUpperCase()}`;
+  }
+
+  generateSignedDownloadUrl(reference: string): string {
+    const signature = crypto
+      .createHmac('sha256', this.appConfig.ticketJWTSecret)
+      .update(reference)
+      .digest('hex');
+
+    const token = Buffer.from(`${reference}:${signature}`).toString(
+      'base64url',
+    );
+
+    return `${this.appConfig.url}/api/v1/tickets/download?token=${token}`;
   }
 }

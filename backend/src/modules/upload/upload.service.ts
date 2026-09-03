@@ -86,4 +86,20 @@ export class UploadService {
       throw new InternalServerErrorException('Failed to delete media');
     }
   }
+
+  async uploadFile(
+    buffer: Buffer<ArrayBuffer>,
+  ): Promise<UploadApiResponse | undefined> {
+    return new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        { folder: 'tickets' },
+        (error, result) => {
+          if (error) return reject(new Error(error.message));
+          resolve(result);
+        },
+      );
+
+      this.bufferToStream(buffer).pipe(uploadStream);
+    });
+  }
 }
