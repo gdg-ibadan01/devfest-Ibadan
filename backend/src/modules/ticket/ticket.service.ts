@@ -1,5 +1,6 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
+import crypto from 'node:crypto';
 import {
   CreateTicketResponseDto,
   GetTicketBySlugResponseDto,
@@ -11,6 +12,8 @@ import { IJwtPayload } from '../admin/interfaces/admin.interface';
 import { PrismaErrors } from 'src/common/enums/prisma-errors.enum';
 import { randomUUID } from 'node:crypto';
 import { ServiceError } from 'src/common/errors/service-error';
+import { ConfigType } from '@nestjs/config';
+import AppConfig from 'src/config/app.config';
 
 const allowedSlugChars = {};
 for (const c of 'abcdefghijklmnopqrstuvwxyz0123456789-') {
@@ -26,7 +29,11 @@ export class TicketsService {
   };
 
   private logger = new Logger(TicketsService.name);
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    @Inject(AppConfig.KEY)
+    private appConfig: ConfigType<typeof AppConfig>,
+  ) {}
 
   async create(jwtUser: IJwtPayload, payload: CreateTicketDto) {
     payload.ensureValidInputs();
@@ -326,10 +333,6 @@ export class TicketsService {
   }
   // }
 
-  findByTicketNumber(ticketNumber: string) {
-    return null;
-  }
-
   async findBySlug(slug: string): Promise<GetTicketBySlugResponseDto> {
     const ticket = await this.prisma.ticket.findUnique({
       where: { slug },
@@ -357,18 +360,6 @@ export class TicketsService {
       validityDates: ticket.validityDates,
       slug: ticket.slug,
     };
-  }
-
-  verifyTicket(ticketNumber: string) {
-    return null;
-  }
-
-  checkIn(ticketNumber: string) {
-    return null;
-  }
-
-  cancelTicket(ticketNumber: string) {
-    return null;
   }
 
   // async getEventTickets(eventId: string) {
@@ -425,4 +416,20 @@ export class TicketsService {
   //     }),
   //   };
   // }
+
+  verifyToken(token: string): string {
+    const decoded = Buffer.from(token, 'base64url').toString('utf-8');
+    const [payload, signature] = decoded.split(':');
+
+    const expectedSignature = crypto
+      .createHmac('sha256', this.appConfig.ticketJWTSecret)
+      .update(payload)
+      .digest('hex');
+
+    if (signature !== expectedSignature) {
+      throw new ServiceError('Invalid token', 'InvalidTicketDownloadTokenErr');
+    }
+
+    return JSON.parse(payload).reference;
+  }
 }
