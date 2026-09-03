@@ -15,7 +15,7 @@ export default function AppLayout({
 }>) {
   return (
     <RootLayout>
-      <Toaster position="top-right" expand={true} richColors />
+      <Toaster position="top-center" />
       {children}
     </RootLayout>
   );

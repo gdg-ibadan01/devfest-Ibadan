@@ -1,10 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { Eye, EyeOff } from 'lucide-react';
 import { cn } from '@/app/_module/lib/utils';
 import AuthBg from '../_module/components/AuthBg';
+import { useResetPassword } from '../_module/services';
 
 type Strength = 'weak' | 'fair' | 'strong' | 'very-strong';
 
@@ -56,18 +57,22 @@ function StrengthMeter({ password }: { password: string }) {
 }
 
 export default function ResetPasswordPage() {
-  const router = useRouter();
+  const searchParams = useSearchParams();
+  const token = searchParams.get('token') ?? '';
+
   const [password, setPassword] = useState<string>('');
   const [confirm, setConfirm] = useState<string>('');
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [showConfirm, setShowConfirm] = useState<boolean>(false);
+
+  const { mutate: resetPassword, isPending } = useResetPassword();
 
   const mismatch = confirm.length > 0 && password !== confirm;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (mismatch || !password || !confirm) return;
-    router.push('/password-changed');
+    resetPassword({ token, newPassword: password });
   };
 
   return (
@@ -150,10 +155,10 @@ export default function ResetPasswordPage() {
             {/* Submit */}
             <button
               type="submit"
-              disabled={mismatch || !password || !confirm}
-              className="w-full py-3 rounded-lg bg-[#1e1e1e] text-white text-[14px] font-semibold hover:bg-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed mt-1"
+              disabled={mismatch || !password || !confirm || isPending}
+              className="w-full py-3 rounded-lg bg-[#1e1e1e] text-white text-[14px] font-semibold hover:bg-black transition-colors disabled:opacity-40 disabled:cursor-not-allowed mt-1"
             >
-              Reset Password
+              {isPending ? 'Resetting…' : 'Reset Password'}
             </button>
           </form>
         </div>

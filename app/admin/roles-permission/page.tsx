@@ -8,33 +8,29 @@ import RoleDetailModal from './_components/RoleDetailModal';
 import DeactivateRoleModal from './_components/DeactivateRoleModal';
 import RoleSuccessModal from './_components/RoleSuccessModal';
 import InvitePeopleModal from './_components/InvitePeopleModal';
-import type { RoleRecord, RoleFormData, InviteFormData } from './_types/role.types';
+import type { RoleFormData, InviteFormData } from './_types/role.types';
+import type { ListRolesItemResponseDto } from '@/app/_module/api/types';
 
 type ModalState = 'none' | 'add' | 'invite' | 'detail' | 'edit' | 'deactivate' | 'success';
 
-const MOCK_ROLES_LIST: RoleRecord[] = [
-  { id: '1', name: 'Super Admin', description: '', permissions: [], status: 'Active', dateCreated: '' },
-  { id: '2', name: 'Admin', description: '', permissions: [], status: 'Active', dateCreated: '' },
-  { id: '3', name: 'Volunteer', description: '', permissions: [], status: 'Active', dateCreated: '' },
-];
-
 export default function RolesPermissionPage() {
   const [modal, setModal] = useState<ModalState>('none');
-  const [selectedRole, setSelectedRole] = useState<RoleRecord | null>(null);
+  const [selectedRole, setSelectedRole] = useState<ListRolesItemResponseDto | null>(null);
   const [deactivateSource, setDeactivateSource] = useState<'detail' | 'table'>('table');
+  const [successAction, setSuccessAction] = useState<'create' | 'edit' | undefined>(undefined);
 
-  const openDetail = (role: RoleRecord) => {
+  const openDetail = (role: ListRolesItemResponseDto) => {
     setSelectedRole(role);
     setModal('detail');
   };
 
-  const openEdit = (role: RoleRecord) => {
+  const openEdit = (role: ListRolesItemResponseDto) => {
     setSelectedRole(role);
     setModal('edit');
   };
 
   // Called from table action menu — after close, go back to detail
-  const openDeactivateFromTable = (role: RoleRecord) => {
+  const openDeactivateFromTable = (role: ListRolesItemResponseDto) => {
     setSelectedRole(role);
     setDeactivateSource('table');
     setModal('deactivate');
@@ -46,7 +42,8 @@ export default function RolesPermissionPage() {
     setModal('deactivate');
   };
 
-  const handleFormSubmit = (_data: RoleFormData | InviteFormData) => {
+  const handleFormSubmit = (action?: 'create' | 'edit') => {
+    setSuccessAction(action);
     setModal('success');
   };
 
@@ -93,15 +90,7 @@ export default function RolesPermissionPage() {
       <RoleFormModal
         open={modal === 'edit'}
         mode="edit"
-        initialData={
-          selectedRole
-            ? {
-                name: selectedRole.name,
-                description: selectedRole.description,
-                permissions: selectedRole.permissions,
-              }
-            : undefined
-        }
+        roleId={selectedRole?.id}
         onClose={closeAll}
         onSubmit={handleFormSubmit}
       />
@@ -109,7 +98,6 @@ export default function RolesPermissionPage() {
       {/* Invite People */}
       <InvitePeopleModal
         open={modal === 'invite'}
-        roles={MOCK_ROLES_LIST}
         onClose={closeAll}
         onSubmit={handleFormSubmit}
       />
@@ -126,6 +114,7 @@ export default function RolesPermissionPage() {
       {/* Deactivate Confirm */}
       <DeactivateRoleModal
         open={modal === 'deactivate'}
+        roleId={selectedRole?.id}
         onClose={handleDeactivateClose}
         onConfirm={handleDeactivateConfirm}
       />
@@ -133,6 +122,7 @@ export default function RolesPermissionPage() {
       {/* Success */}
       <RoleSuccessModal
         open={modal === 'success'}
+        action={successAction}
         onDashboard={closeAll}
       />
     </AdminWrapper>

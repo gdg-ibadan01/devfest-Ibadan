@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import * as nodemailer from 'nodemailer';
 import { ConfigService } from '@nestjs/config';
 import { adminInviteTemplate } from './templates/admin-invite.template';
@@ -10,10 +10,10 @@ import { paymentLinkTemplate } from './templates/payment-link.template';
 import { passwordResetTemplate } from './templates/password-reset.template';
 
 @Injectable()
-export class MailService {
+export class MailService implements OnModuleInit {
   private readonly logger = new Logger(MailService.name);
-
   private transporter: nodemailer.Transporter;
+
   constructor(private readonly configService: ConfigService) {
     this.transporter = nodemailer.createTransport({
       host: this.configService.get<string>('cpanel.host'),
@@ -32,6 +32,28 @@ export class MailService {
       .catch((error) => {
         this.logger.error('❌ cPanel SMTP connection failed:', error.message);
       });
+  }
+
+  async onModuleInit() {
+    try {
+      await this.transporter.verify();
+      this.logger.log('✅ cPanel SMTP connection successful');
+    } catch (error) {
+      this.logger.error(
+        `❌ cPanel SMTP connection failed: ${error instanceof Error ? error.message : error}`,
+      );
+    }
+  }
+
+  async onModuleInit() {
+    try {
+      await this.transporter.verify();
+      this.logger.log('✅ cPanel SMTP connection successful');
+    } catch (error) {
+      this.logger.error(
+        `❌ cPanel SMTP connection failed: ${error instanceof Error ? error.message : error}`,
+      );
+    }
   }
 
   async sendTicketConfirmationEmail(

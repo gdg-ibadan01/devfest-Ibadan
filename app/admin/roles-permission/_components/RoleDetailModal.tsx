@@ -1,11 +1,13 @@
 'use client';
 
 import { ArrowRight, XCircle } from 'lucide-react';
-import type { RoleRecord } from '../_types/role.types';
+import { useRole } from '@/app/_module/services/roles.service';
+import type { ListRolesItemResponseDto } from '@/app/_module/api/types';
+import { formatCreatedAt } from './RolesTable';
 
 interface RoleDetailModalProps {
   open: boolean;
-  role: RoleRecord | null;
+  role: ListRolesItemResponseDto | null;
   onClose: () => void;
   onEdit: () => void;
   onDeactivate: () => void;
@@ -18,7 +20,27 @@ export default function RoleDetailModal({
   onEdit,
   onDeactivate,
 }: RoleDetailModalProps) {
-  if (!open || !role) return null;
+  
+  const { data, isLoading } = useRole(role?.id || '');
+
+  if (!open || !role) {
+    return null;
+  }
+
+  const roleData =
+    data ??
+    ({
+      id: role.id,
+      name: role.name,
+      description: '',
+      permissions: (Array.isArray(role.permissions)
+        ? role.permissions
+        : []
+      ).map((p: any) => (typeof p === 'string' ? { id: p, label: p } : p)),
+      createdAt: (role as any).createdAt ?? '',
+      declarationDate: '',
+      isActive: (role as any).isActive ?? false,
+    } as any);
 
   return (
     <div className="fixed inset-0 z-50 flex">
@@ -45,7 +67,11 @@ export default function RoleDetailModal({
         <div className="flex-1 overflow-y-auto px-[30px] py-6">
           {/* Role name heading */}
           <h3 className="text-[22px] font-bold text-gray-900 mb-5">
-            {role.name}
+            {isLoading ? (
+              <span className="w-40 h-6 bg-gray-100 rounded block animate-pulse" />
+            ) : (
+              roleData.name
+            )}
           </h3>
 
           {/* Meta card */}
@@ -54,7 +80,11 @@ export default function RoleDetailModal({
               <div>
                 <p className="text-[11px] text-gray-400 mb-1">Role Name</p>
                 <p className="text-[13px] font-semibold text-gray-900">
-                  {role.name}
+                  {isLoading ? (
+                    <span className="w-28 h-4 bg-gray-100 rounded block animate-pulse" />
+                  ) : (
+                    roleData.name
+                  )}
                 </p>
               </div>
               <div>
@@ -62,23 +92,48 @@ export default function RoleDetailModal({
                   Declaration Date
                 </p>
                 <p className="text-[13px] font-semibold text-gray-900">
-                  {role.declarationDate ?? 'Friday, Saturday'}
+                  {isLoading ? (
+                    <span className="w-36 h-4 bg-gray-100 rounded block animate-pulse" />
+                  ) : roleData.createdAt ? (
+                    formatCreatedAt(roleData.createdAt)
+                  ) : (
+                    'N/A'
+                  )}
                 </p>
               </div>
             </div>
 
+            {/* Description */}
+            <div className="mb-4">
+              <p className="text-[11px] text-gray-400 mb-2">Description</p>
+              <p className="text-[13px] text-gray-700">
+                {isLoading ? (
+                  <span className="w-full h-12 bg-gray-100 rounded block animate-pulse" />
+                ) : (
+                  roleData.description || 'No description'
+                )}
+              </p>
+            </div>
+
             {/* Permissions */}
             <div>
-              <p className="text-[11px] text-gray-400 mb-2">Description</p>
+              <p className="text-[11px] text-gray-400 mb-2">Permissions</p>
               <div className="flex flex-wrap gap-2">
-                {role.permissions.map((perm) => (
-                  <span
-                    key={perm}
-                    className="px-3 py-[5px] border border-gray-200 rounded-md text-[12px] text-gray-700 bg-white"
-                  >
-                    {perm}
-                  </span>
-                ))}
+                {isLoading
+                  ? Array.from({ length: 4 }).map((_, i) => (
+                      <span
+                        key={i}
+                        className="px-3 py-[5px] border border-gray-200 rounded-md text-[12px] text-gray-700 bg-white w-24 h-6 animate-pulse"
+                      />
+                    ))
+                  : roleData.permissions.map((perm: any) => (
+                      <span
+                        key={perm.id || perm}
+                        className="px-3 py-[5px] border border-gray-200 rounded-md text-[12px] text-gray-700 bg-white"
+                      >
+                        {perm.label ?? perm}
+                      </span>
+                    ))}
               </div>
             </div>
           </div>
@@ -89,6 +144,7 @@ export default function RoleDetailModal({
           <button
             type="button"
             onClick={onDeactivate}
+            disabled={isLoading || !roleData.isActive}
             className="px-6 py-[10px] rounded-lg border border-red-400 text-red-500 text-[13px] font-medium hover:bg-red-50 transition-colors"
           >
             Deactivate

@@ -33,7 +33,6 @@ export interface IAdminResponse {
 
 export interface IJwtPayload {
   sub: string;
-  email: string;
   roleId: string;
   iat?: number;
   exp?: number;

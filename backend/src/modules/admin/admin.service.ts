@@ -78,7 +78,6 @@ export class AdminService {
 
     const tokens = this.generateAuthTokens({
       sub: admin.id,
-      email: admin.email,
       roleId: admin.roleId,
     });
 
@@ -112,7 +111,6 @@ export class AdminService {
 
       return this.generateAuthTokens({
         sub: admin.id,
-        email: admin.email,
         roleId: admin.roleId,
       });
     } catch (error) {

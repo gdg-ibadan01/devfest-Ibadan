@@ -9,9 +9,9 @@ import { usePathname } from 'next/navigation';
 import AdminSidenav from './_module/components/common/AdminSidenav';
 import { SidenavProvider } from './_module/context/SidenavContext';
 import { Fragment, Suspense } from 'react';
-import AdminHeader from './_module/components/common/AdminHeader';
 import ReactQueryProvider from '@/providers/react-query';
 import { ErrorBoundary } from '@/providers/error-boundary';
+import AuthGuard from './_module/components/common/AuthGuard';
 
 export const wrapperClass = {
   layout:
@@ -53,12 +53,14 @@ const AdminLayout = ({
             <Suspense fallback={<PageLoader />}>
               {/* <AdminHeader /> */}
               <SidenavProvider>
-                <div className={wrapperClass.layout}>
-                  <AdminSidenav />
-                  <main className={wrapperClass.main}>{children}</main>
-                </div>
-              </SidenavProvider>
-              <Toaster richColors position={'top-right'} duration={6000} />
+                  <div className={wrapperClass.layout}>
+                    <AdminSidenav />
+                    <main className={wrapperClass.main}>
+                      <AuthGuard>{children}</AuthGuard>
+                    </main>
+                  </div>
+                </SidenavProvider>
+              <Toaster position='top-center' duration={4000} />
             </Suspense>
           </ErrorBoundary>
         </ReactQueryProvider>
@@ -98,7 +100,7 @@ const HomeLayout = ({
                 {!shouldHideHeader && <DFIHeader />}
                 {children}
                 {!shouldHideHeader && !shouldHideFooter && <DFIFooter />}
-                <Toaster richColors position={'top-right'} duration={6000} />
+                <Toaster position='top-center' duration={4000} />
               </Suspense>
             </ErrorBoundary>
           </ReactQueryProvider>
@@ -117,9 +119,8 @@ export default function RootLayout({
   const adminRoute = '/admin';
   const pathname = usePathname();
 
-  // Auth pages (/admin sign-in and /admin-auth/*) use HomeLayout — no sidenav
+  // Auth pages (/admin sign-in *) use HomeLayout — no sidenav
   const isAdminSignIn = pathname === '/admin';
-  const isAdminAuth = pathname.startsWith('/admin-auth');
   const isAdminDashboard = pathname.startsWith(adminRoute) && !isAdminSignIn;
 
   return (

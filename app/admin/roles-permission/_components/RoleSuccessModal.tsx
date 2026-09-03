@@ -1,18 +1,18 @@
 'use client';
+
 import Image from 'next/image';
 import Success from '../../../_module/components/icons/success.svg';
 
 interface RoleSuccessModalProps {
   open: boolean;
+  action?: 'create' | 'edit';
   onDashboard: () => void;
 }
 
-export default function RoleSuccessModal({
-  open,
-  onDashboard,
-}: RoleSuccessModalProps) {
+export default function RoleSuccessModal({ open, action, onDashboard }: RoleSuccessModalProps) {
   if (!open) return null;
 
+ const title = action === 'create' ? 'Role Created' : action === 'edit' ? 'Role Edit Successful' : 'Success';
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center">
       <div className="absolute inset-0 bg-black/40" aria-hidden />
@@ -20,16 +20,13 @@ export default function RoleSuccessModal({
         {/* Illustration */}
         <Image src={Success} alt="Success" width={300} />
 
-        <h2 className="text-[20px] font-bold text-gray-900">
-          Role Edit Successful
-        </h2>
-
+        <h2 className="text-[20px] font-bold text-gray-900">{title}</h2>
         <button
           type="button"
           onClick={onDashboard}
           className="w-full py-3 rounded-lg bg-gray-900 text-white text-[14px] font-semibold hover:bg-black transition-colors mt-2"
         >
-          Go to Dashboard
+          View Roles
         </button>
       </div>
     </div>

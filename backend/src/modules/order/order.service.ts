@@ -1,5 +1,5 @@
 import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { OrderStatus, Prisma, type Order } from '@prisma/client';
+import { OrderStatus, Prisma, RefundStatus, type Order } from '@prisma/client';
 import { randomUUID } from 'node:crypto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ServiceError } from 'src/common/errors/service-error';
@@ -9,10 +9,11 @@ import {
   PAYMENT_PROVIDER,
   PaymentProvider,
 } from '../payment/interfaces/payment-provider.interface';
+import { MonnifyRejectedPaymentWebhookEventData } from '../payment/interfaces/monnify.interface';
 import { CreateOrderDto, CreateOrderResponseDto } from './create-order.dto';
 import { MailService } from '../mail/mail.service';
 
-const ORDER_TTL_MINUTES = 10;
+const ORDER_TTL_MINUTES = 30;
 const TX_MAX_ATTEMPTS = 3;
 const CANCEL_MAX_ATTEMPTS = 3;
 
@@ -24,6 +25,63 @@ interface CreatedOrderRecord {
   ticketSlug: string;
 }
 
+interface CreateRefundRecord {
+  transactionReference: string;
+  paymentReference: string;
+}
+
+interface PaymentSuccessPayload {
+  webhookEventId: string;
+  transactionReference: string;
+  paymentReference: string;
+  paidOn: string;
+  paymentDescription: string;
+  metaData: { orderId: string };
+  amountPaid: number;
+  currency: string;
+  paymentStatus: string;
+  provider: 'MONNIFY';
+}
+
+interface ProcessRefundPayload {
+  refundId: string;
+  orderId: string;
+  provider: PaymentSuccessPayload['provider'];
+}
+
+interface OrderQueryRawResult {
+  id: string;
+  reference: string;
+  ticket_id: string;
+  attendee_full_name: string;
+  attendee_email: string;
+  attendee_phone_number: null | string;
+  gifter_name: null | string;
+  gifter_email: null | string;
+  discount: number;
+  amount: number;
+  currency: string;
+  status: string;
+  payment_provider: string;
+  provider_transaction_ref: string;
+  checkout_url: string;
+  expires_at: Date;
+  paid_at: any;
+  created_at: Date;
+  updated_at: Date;
+}
+
+interface TicketQueryRawResult {
+  id: string;
+  capacity: number;
+  price: Prisma.Decimal;
+  discount: Prisma.Decimal;
+  sale_starts_at: Date;
+  sale_ends_at: Date;
+  name: string;
+  slug: string;
+}
+
 @Injectable()
 export class OrdersService {
   static ERRORS = {
@@ -33,8 +91,8 @@ export class OrdersService {
     RetryLaterErr: 'RetryLaterErr',
     DuplicateErr: 'DuplicateErr',
     PaymentErr: 'PaymentErr',
-    NotFoundErr: 'NotFoundErr',
-  } as Record<string, `${string}Err`>;
+    TicketNotFoundErr: 'TicketNotFoundErr',
+  } as const;
 
   private readonly logger = new Logger(OrdersService.name);
 
@@ -175,64 +233,27 @@ export class OrdersService {
       skipSaleWindowCheck?: boolean;
     },
   ): Promise<CreatedOrderRecord> {
-    const ticket = await tx.ticket.findUnique({
-      where: { slug: args.slug },
-      select: {
-        id: true,
-        name: true,
-        slug: true,
-        price: true,
-        discount: true,
-        maximumSaleUnits: true,
-        saleStartsAt: true,
-        saleEndsAt: true,
-      },
-    });
+    const [ticket] = await tx.$queryRaw<TicketQueryRawResult[]>`
+    SELECT *
+    FROM tickets
+    WHERE slug = ${args.slug}
+    FOR UPDATE;`;
 
     if (!ticket) {
-      throw new NotFoundException('Ticket not found');
+      throw new ServiceError(
+        'Ticket not found',
+        OrdersService.ERRORS.TicketNotFoundErr,
+      );
     }
 
     const now = new Date();
     if (
       !args.skipSaleWindowCheck &&
-      (now < ticket.saleStartsAt || now > ticket.saleEndsAt)
+      (now < ticket.sale_starts_at || now > ticket.sale_ends_at)
     ) {
       throw new ServiceError(
         'This ticket is not on sale',
         OrdersService.ERRORS.NotOnSaleErr,
-      );
-    }
-
-    const amount = ticket.price.minus(ticket.discount);
-    if (amount.lte(0)) {
-      throw new ServiceError(
-        'Ticket price configuration is invalid',
-        OrdersService.ERRORS.ValidationErr,
-      );
-    }
-
-    const paidCount = await tx.order.count({
-      where: { ticketId: ticket.id, status: OrderStatus.PAID },
-    });
-    if (paidCount >= ticket.maximumSaleUnits) {
-      throw new ServiceError(
-        'Ticket is sold out',
-        OrdersService.ERRORS.SoldOutErr,
-      );
-    }
-
-    const awaitingCount = await tx.order.count({
-      where: {
-        ticketId: ticket.id,
-        status: OrderStatus.AWAITING_PAYMENT,
-        expiresAt: { gt: now },
-      },
-    });
-    if (paidCount + awaitingCount >= ticket.maximumSaleUnits) {
-      throw new ServiceError(
-        'All remaining tickets are currently reserved. Please retry in 10 minutes',
-        OrdersService.ERRORS.RetryLaterErr,
       );
     }
 
@@ -257,9 +278,41 @@ export class OrdersService {
       );
     }
 
+    const amount = ticket.price.minus(ticket.discount);
+    if (amount.lte(0)) {
+      throw new ServiceError(
+        'Ticket price configuration is invalid',
+        OrdersService.ERRORS.ValidationErr,
+      );
+    }
+
+    const paidCount = await tx.order.count({
+      where: { ticketId: ticket.id, status: OrderStatus.PAID },
+    });
+    if (paidCount >= ticket.capacity) {
+      throw new ServiceError(
+        'Ticket is sold out',
+        OrdersService.ERRORS.SoldOutErr,
+      );
+    }
+
+    const awaitingCount = await tx.order.count({
+      where: {
+        ticketId: ticket.id,
+        status: OrderStatus.AWAITING_PAYMENT,
+        expiresAt: { gt: now },
+      },
+    });
+    if (paidCount + awaitingCount >= ticket.capacity) {
+      throw new ServiceError(
+        'All remaining tickets are currently reserved. Please retry in 10 minutes',
+        OrdersService.ERRORS.RetryLaterErr,
+      );
+    }
+
     const order = await tx.order.create({
       data: {
-        reference: this.generateReference(ticket.name),
+        reference: this.generateReference(ticket.name), // FIX what if there is a reference collision?
         ticketId: ticket.id,
         attendeeFullName: args.attendeeFullName,
         attendeeEmail: args.attendeeEmail,
@@ -363,5 +416,265 @@ export class OrdersService {
       );
       await this.cancel(orderId, attempt + 1);
     }
+  }
+
+  async handlePaymentSuccess(event: PaymentSuccessPayload): Promise<void> {
+    let txResult: { refundId: string } = {
+      refundId: '',
+    };
+
+    // Retrying because we're using IsolationLevel.Serializable
+    for (let attempt = 1; attempt <= TX_MAX_ATTEMPTS; attempt++) {
+      try {
+        txResult = await this.prisma.$transaction(
+          async (tx) => {
+            const [order] = await tx.$queryRaw<OrderQueryRawResult[]>`
+            SELECT *
+            FROM orders
+            WHERE id = ${event.metaData.orderId}
+            FOR UPDATE;`;
+
+            if (!order) {
+              this.logger.error(`Order not found: ${event.metaData.orderId}`);
+              await this.setEventAsProcessed(tx, event.webhookEventId);
+              return txResult;
+            }
+
+            if (order.status !== OrderStatus.AWAITING_PAYMENT) {
+              this.logger.log(
+                `Order ${order.id} status is ${order.status}, skipping...
+Treating only ${OrderStatus.AWAITING_PAYMENT} orders`,
+              );
+              await this.setEventAsProcessed(tx, event.webhookEventId);
+              return txResult;
+            }
+
+            const transactionRefMismatch =
+              order.provider_transaction_ref &&
+              order.provider_transaction_ref !== event.transactionReference;
+
+            // Since we're expecting only one currency now, this is fine
+            const amountMismatch = event.amountPaid < Number(order.amount);
+
+            if (transactionRefMismatch || amountMismatch) {
+              this.logger.warn(
+                `Sanity check failed for order ${order.id}: ` +
+                  `txRef mismatch=${transactionRefMismatch}, amount mismatch=${amountMismatch}`,
+              );
+              const refund = await this.recordRefund(tx, order, event);
+              txResult.refundId = refund.refundId;
+              await this.setEventAsProcessed(tx, event.webhookEventId);
+              return txResult;
+            }
+
+            // Why are we doing this? To lock this row for any other concurrent
+            // incoming events for this ticket to avoid other concurrent writes
+            // affecting this tx
+            const [ticket] = await tx.$queryRaw<TicketQueryRawResult[]>`
+              SELECT *
+              FROM tickets
+              WHERE id = ${order.ticket_id}
+              FOR UPDATE;
+            `;
+
+            const paidCount = await tx.order.count({
+              where: { ticketId: ticket.id, status: OrderStatus.PAID },
+            });
+
+            if (paidCount >= ticket.capacity) {
+              this.logger.warn(
+                `Ticket ${ticket.id} sold out
+Initiating refund for order ${order.id}`,
+              );
+              const refund = await this.recordRefund(tx, order, event);
+              txResult.refundId = refund.refundId;
+              await this.setEventAsProcessed(tx, event.webhookEventId);
+              return txResult;
+            }
+
+            const now = new Date();
+            const orderIsExpired = order.expires_at < now;
+            const awaitingCount = await tx.order.count({
+              where: {
+                ticketId: ticket.id,
+                status: OrderStatus.AWAITING_PAYMENT,
+                expiresAt: { gt: now },
+              },
+            });
+            const hasCapacity = paidCount + awaitingCount < ticket.capacity;
+            const shouldIssueTicket = !orderIsExpired || hasCapacity;
+
+            if (shouldIssueTicket) {
+              await tx.order.update({
+                where: { id: order.id },
+                data: { status: OrderStatus.PAID, paidAt: now },
+              });
+              // TODO: create attendee record
+              console.log(
+                `[TODO] Create attendee record for order ${order.id}`,
+              );
+              // TODO: send confirmation email
+              console.log(
+                `[TODO] Send confirmation email for order ${order.id}`,
+              );
+              await this.setEventAsProcessed(tx, event.webhookEventId);
+              return txResult;
+            }
+
+            const refund = await this.recordRefund(tx, order, event);
+            txResult.refundId = refund.refundId;
+            await this.setEventAsProcessed(tx, event.webhookEventId);
+            return txResult;
+          },
+          { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+        );
+        break;
+      } catch (err) {
+        const isRetryable =
+          (err as { code?: string }).code === 'P2034' ||
+          (err as { code?: string }).code ===
+            PrismaErrors.UNIQUE_CONSTRAINT_VIOLATION;
+
+        if (isRetryable && attempt < TX_MAX_ATTEMPTS) continue;
+
+        this.logger.error(
+          `handlePaymentSuccess failed: ${(err as Error).message}`,
+        );
+
+        throw err;
+      }
+    }
+
+    if (txResult.refundId) {
+      await this.processRefund({
+        orderId: event.metaData.orderId,
+        provider: event.provider,
+        refundId: txResult.refundId,
+      });
+    }
+  }
+
+  private async recordRefund(
+    tx: TxClient,
+    order: OrderQueryRawResult,
+    payload: CreateRefundRecord,
+  ): Promise<{ refundId: string; orderId: string }> {
+    await tx.order.update({
+      where: { id: order.id },
+      data: { status: OrderStatus.AWAITING_REFUND },
+    });
+
+    const refund = await tx.refund.create({
+      data: {
+        orderId: order.id,
+        email: order.gifter_email ?? order.attendee_email,
+        provider: order.payment_provider,
+        transactionReference: payload.transactionReference,
+        paymentReference: payload.paymentReference,
+        refundReference: this.generateRefundReference(),
+        status: RefundStatus.PENDING,
+      },
+    });
+
+    return { refundId: refund.id, orderId: order.id };
+  }
+
+  private async processRefund(payload: ProcessRefundPayload): Promise<void> {
+    const { refundId, orderId } = payload;
+    const refund = await this.prisma.refund.findUnique({
+      where: { id: refundId },
+    });
+
+    if (!refund || refund.status !== RefundStatus.PENDING) return;
+
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+    });
+
+    if (!order) return;
+
+    for (let attempt = 1; attempt <= TX_MAX_ATTEMPTS; attempt++) {
+      try {
+        await this.prisma.refund.update({
+          where: { id: refundId },
+          data: { status: RefundStatus.REQUESTED },
+        });
+
+        // TODO Use a switch statement to determine which provider to use
+        await this.paymentProvider.requestRefund({
+          transactionReference: order.providerTransactionRef!,
+          refundReference: refund.refundReference,
+          amount: Number(order.amount),
+          reason: 'Order could not be fulfilled',
+        });
+
+        // TODO Handle provider response via webhook
+      } catch (err) {
+        if ((err as Error).name === 'InsufficientRefundAmountErr') {
+          await this.prisma.refund.update({
+            where: { id: refundId },
+            data: {
+              status: RefundStatus.FAILED,
+              reason: (err as Error).message,
+            },
+          });
+
+          this.logger.error(
+            `Refund ${refundId} error: ${(err as Error).message}`,
+          );
+
+          break;
+        }
+
+        if (attempt < TX_MAX_ATTEMPTS) continue;
+
+        this.logger.error(
+          `Refund ${refundId} error: ${(err as Error).message}`,
+        );
+      }
+    }
+  }
+
+  async handleFailedPayment(payload: {
+    webhookEventId: string;
+    event: MonnifyRejectedPaymentWebhookEventData;
+  }): Promise<void> {
+    const order = await this.prisma.order.findFirst({
+      where: { reference: payload.event.paymentReference },
+    });
+
+    if (!order) {
+      this.logger.warn(
+        `Order not found for payment reference: ${payload.event.paymentReference}`,
+      );
+      return;
+    }
+
+    if (order.status !== OrderStatus.AWAITING_PAYMENT) {
+      this.logger.log(
+        `Order ${order.id} status is ${order.status}, skipping cancellation`,
+      );
+      return;
+    }
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.order.update({
+        where: { id: order.id },
+        data: { status: OrderStatus.CANCELLED },
+      });
+      await this.setEventAsProcessed(tx, payload.webhookEventId);
+    });
+
+    this.logger.log(`Order ${order.id} updated to CANCELLED`);
+  }
+
+  private async setEventAsProcessed(tx: TxClient, eventId: string) {
+    await tx.webhookEvent.update({
+      where: { id: eventId },
+      data: { processed: true },
+    });
+  }
+  private generateRefundReference(): string {
+    return `REFUND-${randomUUID().replace(/-/g, '').slice(0, 10).toUpperCase()}`;
   }
 }

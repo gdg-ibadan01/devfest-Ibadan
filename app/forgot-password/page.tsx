@@ -4,13 +4,15 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import AuthBg from '../_module/components/AuthBg';
-
+import { useForgotPassword } from '../_module/services';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState<string>('');
+  const { mutate: sendReset, isPending, isSuccess } = useForgotPassword();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    sendReset({ email });
   };
 
   return (
@@ -45,9 +47,10 @@ export default function ForgotPasswordPage() {
             {/* Submit */}
             <button
               type="submit"
-              className="w-full py-3 rounded-lg bg-[#1e1e1e] text-white text-[14px] font-semibold hover:bg-black transition-colors"
+              disabled={isPending || isSuccess || !email.trim()}
+              className="w-full py-3 rounded-lg bg-[#1e1e1e] text-white text-[14px] font-semibold hover:bg-black transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              Send Reset Link
+              {isPending ? 'Sending…' : isSuccess ? 'Link Sent!' : 'Send Reset Link'}
             </button>
 
             {/* Back to sign in */}

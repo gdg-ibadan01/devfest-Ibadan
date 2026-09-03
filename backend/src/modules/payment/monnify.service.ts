@@ -1,20 +1,24 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
 import axios, { AxiosError } from 'axios';
+import * as crypto from 'node:crypto';
 import { ServiceError } from 'src/common/errors/service-error';
 import {
   InitializePaymentParams,
   InitializedPayment,
   PaymentProvider,
+  RefundPaymentParams,
+  RefundPaymentResult,
 } from './interfaces/payment-provider.interface';
 import {
   MonnifyEnvelope,
   MonnifyInitResponseBody,
   MonnifyLoginResponseBody,
+  MonnifyRefundResponseBody,
 } from './interfaces/monnify.interface';
 import monnifyConfig from 'src/config/monnify.config';
 
-const REQUEST_TIMEOUT_MS = 30_000;
+const REQUEST_TIMEOUT_MS = 10_000;
 const TOKEN_SAFETY_MARGIN_SEC = 60;
 
 @Injectable()
@@ -24,8 +28,11 @@ export class MonnifyService implements PaymentProvider {
   static ERRORS = {
     AuthErr: 'MonnifyAuthErr',
     RequestErr: 'MonnifyRequestErr',
+    InsufficientRefundAmountErr: 'InsufficientRefundAmountErr',
     ConfigErr: 'MonnifyConfigErr',
   } satisfies Record<string, `${string}Err`>;
+  static REFUND_PROCESSING_FEE = 10;
+  static MONNIFY_MINIMUM_REFUND = 100;
 
   private readonly logger = new Logger(MonnifyService.name);
   private accessToken: string | null = null;
@@ -82,6 +89,63 @@ export class MonnifyService implements PaymentProvider {
       if (err instanceof ServiceError) throw err;
       this.logger.error(
         `Monnify initialize failed for ${params.paymentReference}: ${(err as Error).message}`,
+      );
+      throw new ServiceError(
+        'Payment gateway is unreachable',
+        MonnifyService.ERRORS.RequestErr,
+      );
+    }
+  }
+
+  verifyWebhookSignature(rawBody: string, signature: string): boolean {
+    const secret = this.getRequiredConfig('secretKey');
+    const computed = crypto
+      .createHmac('sha512', secret)
+      .update(rawBody)
+      .digest('hex');
+    return computed === signature;
+  }
+
+  async requestRefund(
+    params: RefundPaymentParams,
+  ): Promise<RefundPaymentResult> {
+    const tooLowToRefund =
+      params.amount - MonnifyService.MONNIFY_MINIMUM_REFUND <
+      MonnifyService.MONNIFY_MINIMUM_REFUND;
+    if (tooLowToRefund) {
+      throw new ServiceError(
+        `Refund amount ${params.amount} below Monnify minimum ${MonnifyService.MONNIFY_MINIMUM_REFUND}`,
+        MonnifyService.ERRORS.InsufficientRefundAmountErr,
+      );
+    }
+
+    const payload = {
+      transactionReference: params.transactionReference,
+      refundReference: params.refundReference,
+      refundAmount: params.amount,
+      refundReason: params.reason,
+      customerNote: 'Refund for ticket',
+    };
+
+    try {
+      const res = await this.request<MonnifyRefundResponseBody>(
+        'POST',
+        '/api/v1/refunds/initiate-refund',
+        payload,
+      );
+
+      if (!res.requestSuccessful) {
+        this.logger.error(
+          `Monnify refund rejected for ${params.refundReference}: ${res.responseMessage}`,
+        );
+        return { success: false, message: res.responseMessage };
+      }
+
+      return { success: true, message: res.responseBody?.comment };
+    } catch (err) {
+      if (err instanceof ServiceError) throw err;
+      this.logger.error(
+        `Monnify refund failed for ${params.refundReference}: ${(err as Error).message}`,
       );
       throw new ServiceError(
         'Payment gateway is unreachable',
@@ -177,7 +241,8 @@ export class MonnifyService implements PaymentProvider {
   }
 
   private getConfig(key: keyof ConfigType<typeof monnifyConfig>): string {
-    return this.mnfyCfg[key] ?? '';
+    const value = this.mnfyCfg[key];
+    return value != null ? String(value) : '';
   }
 
   private getRequiredConfig(

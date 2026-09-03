@@ -132,7 +132,7 @@ export class OrdersController {
           case OrdersService.ERRORS.NotOnSaleErr:
             throw new HttpException(err.message, HttpStatus.BAD_REQUEST);
 
-          case OrdersService.ERRORS.NotFoundErr:
+          case OrdersService.ERRORS.TicketNotFoundErr:
             throw new HttpException(err.message, HttpStatus.NOT_FOUND);
 
           case OrdersService.ERRORS.SoldOutErr:

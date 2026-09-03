@@ -1,24 +1,36 @@
 'use client';
 
-import { X, XCircle } from 'lucide-react';
-import type { TicketFormData } from '../_types/ticket.types';
+import { format, isValid, parseISO } from 'date-fns';
+import { XCircle } from 'lucide-react';
+import { useTicket } from '@/app/_module/services';
+import type { GetTicketResponseDto } from '@/app/_module/api/types';
+import { Fragment } from 'react';
 
-const LABEL_DATE_MAP: Record<string, string> = {
-  friday: 'Friday',
-  saturday: 'Saturday',
-  both: 'Friday, Saturday',
-};
+//Helpers Functions
 
-interface PreviewSectionProps {
-  title: string;
-  children: React.ReactNode;
+function formatDate(iso: string): string {
+  if (!iso) return '—';
+  const d = parseISO(iso);
+  return isValid(d) ? format(d, 'dd MMM yyyy') : iso;
 }
 
-const SeparatorLine = () => {
-  return <div className="bg-[#E4E7EC] w-full h-[0.5px]"></div>;
-};
+function formatAmount(val: string | number): string {
+  const num = typeof val === 'string' ? parseFloat(val) : val;
+  if (isNaN(num)) return '—';
+  return `₦${num.toLocaleString('en-NG')}`;
+}
 
-function PreviewSection({ title, children }: PreviewSectionProps) {
+//Layout primitives
+
+const SeparatorLine = () => <div className="bg-[#E4E7EC] w-full h-[0.5px]" />;
+
+function PreviewSection({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
   return (
     <div className="bg-[#FAFAFA] rounded-xl p-5">
       <h3 className="text-[16px] font-bold text-black mb-5">{title}</h3>
@@ -27,13 +39,15 @@ function PreviewSection({ title, children }: PreviewSectionProps) {
   );
 }
 
-interface PreviewFieldProps {
+function PreviewField({
+  label,
+  value,
+  wide,
+}: {
   label: string;
   value: string;
   wide?: boolean;
-}
-
-function PreviewField({ label, value, wide }: PreviewFieldProps) {
+}) {
   return (
     <div className={wide ? 'col-span-2' : ''}>
       <p className="text-[11px] text-gray-400 mb-1">{label}</p>
@@ -42,55 +56,149 @@ function PreviewField({ label, value, wide }: PreviewFieldProps) {
   );
 }
 
+//Skeleton Loader
+
+function SkeletonBlock({ className }: { className?: string }) {
+  return (
+    <div className={`bg-gray-200 rounded animate-pulse ${className ?? ''}`} />
+  );
+}
+
+function SkeletonSection({ rows = 2 }: { rows?: number }) {
+  return (
+    <div className="bg-[#FAFAFA] rounded-xl p-5">
+      <SkeletonBlock className="h-4 w-32 mb-5" />
+      <div className="grid grid-cols-2 gap-x-6 gap-y-5">
+        {Array.from({ length: rows * 2 }).map((_, i) => (
+          <div key={i}>
+            <SkeletonBlock className="h-2.5 w-16 mb-2" />
+            <SkeletonBlock className="h-4 w-28" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+//Ticket details content
+
+function TicketDetails({ ticket }: { ticket: GetTicketResponseDto }) {
+  const discountNum = parseFloat(ticket.discount);
+  const priceNum = parseFloat(ticket.price);
+  const discountPct =
+    !isNaN(discountNum) && discountNum > 0 && !isNaN(priceNum) && priceNum > 0
+      ? `${Math.round((discountNum / priceNum) * 100)}%`
+      : '—';
+
+  return (
+    <Fragment>
+      {/* Ticket Info */}
+      <PreviewSection title="Basic Info">
+        <div className="grid grid-cols-2 gap-x-6 gap-y-5">
+          <PreviewField label="Ticket Name" value={ticket.name} />
+          <PreviewField
+            label="Declaration Date"
+            value={
+              ticket.eventDates?.map((date) => formatDate(date)).join(', ') ||
+              '—'
+            }
+          />
+          <PreviewField label="Description" value={ticket.description} wide />
+        </div>
+      </PreviewSection>
+
+      <SeparatorLine />
+
+      {/* Event Dates */}
+      <PreviewSection title="Pricing">
+        <div className="grid grid-cols-2 gap-x-6 gap-y-5">
+          <PreviewField
+            label="Day"
+            value={
+              ticket.eventDates?.map((date) => formatDate(date)).join(', ') ||
+              '—'
+            }
+          />
+          <PreviewField label="Price" value={formatAmount(ticket.price)} />
+          <PreviewField
+            label="Discount"
+            value={
+              parseFloat(ticket.discount) > 0
+                ? formatAmount(ticket.discount)
+                : '—'
+            }
+          />
+          <PreviewField label="Discount %" value={discountPct} />
+          <PreviewField
+            label="Early Bird Discount"
+            value={ticket?.discount ? 'Yes' : 'No'}
+          />
+        </div>
+      </PreviewSection>
+
+      <SeparatorLine />
+
+      {/* Sale Period */}
+      <PreviewSection title="Advanced Settings">
+        <div className="grid grid-cols-2 gap-x-6 gap-y-5">
+          <PreviewField
+            label="Ticket Validity"
+            value={
+              ticket.validityDates
+                ?.map((date) => formatDate(date))
+                .join(', ') || '—'
+            }
+          />
+          <PreviewField
+            label="Quantity Limit"
+            value={(ticket.capacity ?? 0).toLocaleString()}
+          />
+          <PreviewField
+            label="Sale Starts"
+            value={formatDate(ticket.saleStartsAt)}
+          />
+          <PreviewField
+            label="Sale Ends"
+            value={formatDate(ticket.saleEndsAt)}
+          />
+        </div>
+      </PreviewSection>
+
+      {/* Creator */}
+      {ticket.creator && (
+        <>
+          <SeparatorLine />
+          <PreviewSection title="Creator">
+            <div className="grid grid-cols-2 gap-x-6 gap-y-5">
+              <PreviewField label="Name" value={ticket.creator.name} />
+              <PreviewField label="Role" value={ticket.creator.role} />
+            </div>
+          </PreviewSection>
+        </>
+      )}
+    </Fragment>
+  );
+}
+
+// Preview Modal
+
 interface TicketPreviewModalProps {
   open: boolean;
   onClose: () => void;
-  data: TicketFormData;
+  ticketId: string;
 }
 
 export default function TicketPreviewModal({
   open,
   onClose,
-  data,
+  ticketId,
 }: TicketPreviewModalProps) {
+  const { data: ticket, isLoading, isError } = useTicket(ticketId);
+
   if (!open) return null;
 
-  const { basicInfo, pricing, advancedSettings } = data;
-
-  const declarationLabel = LABEL_DATE_MAP[basicInfo.declarationDate] ?? '—';
-  const validityLabel = LABEL_DATE_MAP[advancedSettings.validity] ?? '—';
-
-  const dayLabel =
-    basicInfo.declarationDate === 'friday'
-      ? 'Friday (workshop)'
-      : basicInfo.declarationDate === 'saturday'
-        ? 'Saturday (Main Event)'
-        : 'Friday & Saturday';
-
-  const formatDate = (d: string) => {
-    if (!d) return '—';
-    const [year, month, day] = d.split('-');
-    return `${day}/${month}/${year}`;
-  };
-
-  const formatAmount = (val: string) => {
-    const num = parseFloat(val);
-    if (isNaN(num)) return '—';
-    return `₦${num.toLocaleString('en-NG')}`;
-  };
-
-  const discountDisplay = () => {
-    const num = parseFloat(pricing.discount);
-    if (isNaN(num) || num === 0) return '—';
-    const price = parseFloat(pricing.price);
-    if (!isNaN(price) && price > 0) {
-      return `${Math.round((num / price) * 100)}%`;
-    }
-    return formatAmount(pricing.discount);
-  };
-
   return (
-    <>
+    <Fragment>
       {/* Backdrop */}
       <div
         className="fixed inset-0 bg-black/40 z-40"
@@ -98,14 +206,14 @@ export default function TicketPreviewModal({
         aria-hidden
       />
 
-      {/* Drawer panel */}
+      {/* Drawer */}
       <div className="fixed right-[10px] top-[10px] bottom-[10px] w-[480px] bg-white shadow-2xl z-50 flex flex-col rounded-[12px]">
         {/* Header */}
-        <div className="flex items-center justify-between px-7 py-5 border-b border-gray-200">
+        <div className="flex items-center justify-between px-7 py-5 border-b border-gray-200 flex-shrink-0">
           <h2 className="text-[18px] font-bold text-black">Ticket Preview</h2>
           <button
             onClick={onClose}
-            className="rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors"
+            className="rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors p-1"
           >
             <XCircle size={22} className="text-gray-600" />
           </button>
@@ -113,56 +221,25 @@ export default function TicketPreviewModal({
 
         {/* Scrollable body */}
         <div className="flex-1 overflow-y-auto px-7 py-6 flex flex-col gap-5">
-          {/* Basic Info */}
-          <PreviewSection title="Basic Info">
-            <div className="grid grid-cols-2 gap-x-6 gap-y-5">
-              <PreviewField label="Ticket Name" value={basicInfo.name || '—'} />
-              <PreviewField label="Declaration Date" value={declarationLabel} />
-              <PreviewField
-                label="Description"
-                value={basicInfo.description || '—'}
-                wide
-              />
+          {isLoading ? (
+            <>
+              <SkeletonSection rows={3} />
+              <SeparatorLine />
+              <SkeletonSection rows={2} />
+              <SeparatorLine />
+              <SkeletonSection rows={1} />
+            </>
+          ) : isError || !ticket ? (
+            <div className="flex-1 flex items-center justify-center py-16">
+              <p className="text-[13px] text-gray-400">
+                Failed to load ticket details.
+              </p>
             </div>
-          </PreviewSection>
-          <SeparatorLine />
-          {/* Pricing */}
-          <PreviewSection title="Pricing">
-            <div className="grid grid-cols-2 gap-x-6 gap-y-5">
-              <PreviewField label="Day" value={dayLabel} />
-              <PreviewField label="Price" value={formatAmount(pricing.price)} />
-              <PreviewField label="Discount" value={discountDisplay()} />
-              <PreviewField
-                label="Early Bird Discount"
-                value={pricing.earlyBird ? 'Yes' : 'No'}
-              />
-            </div>
-          </PreviewSection>
-          <SeparatorLine />
-          {/* Advanced Settings */}
-          <PreviewSection title="Advanced Settings">
-            <div className="grid grid-cols-2 gap-x-6 gap-y-5">
-              <PreviewField label="Ticket Validity" value={validityLabel} />
-              <PreviewField
-                label="Quantity Limit"
-                value={
-                  advancedSettings.quantityLimit
-                    ? Number(advancedSettings.quantityLimit).toLocaleString()
-                    : 'Unlimited'
-                }
-              />
-              <PreviewField
-                label="Start Date"
-                value={formatDate(advancedSettings.startDate)}
-              />
-              <PreviewField
-                label="End Date"
-                value={formatDate(advancedSettings.endDate)}
-              />
-            </div>
-          </PreviewSection>
+          ) : (
+            <TicketDetails ticket={ticket} />
+          )}
         </div>
       </div>
-    </>
+    </Fragment>
   );
 }
