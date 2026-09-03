@@ -432,4 +432,18 @@ export class TicketsService {
 
     return reference;
   }
+
+  async downloadTicket(token: string): Promise<string> {
+    const reference = this.verifyQRCodeToken(token);
+    const order = await this.prisma.order.findFirst({
+      where: { reference },
+      select: { ticketUrl: true },
+    });
+
+    if (!order?.ticketUrl) {
+      throw new NotFoundException('Ticket not found');
+    }
+
+    return order.ticketUrl;
+  }
 }
