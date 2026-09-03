@@ -679,13 +679,14 @@ Initiating refund for order ${order.id}`,
   }
 
   generateSignedDownloadUrl(reference: string): string {
-    const payload = JSON.stringify({ reference });
     const signature = crypto
       .createHmac('sha256', this.appConfig.ticketJWTSecret)
-      .update(payload)
+      .update(reference)
       .digest('hex');
 
-    const token = Buffer.from(`${payload}:${signature}`).toString('base64url');
+    const token = Buffer.from(`${reference}:${signature}`).toString(
+      'base64url',
+    );
     return `${this.appConfig.url}/api/v1/tickets/download?token=${token}`;
   }
 }

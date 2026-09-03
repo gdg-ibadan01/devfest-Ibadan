@@ -417,19 +417,19 @@ export class TicketsService {
   //   };
   // }
 
-  verifyToken(token: string): string {
+  verifyQRCodeToken(token: string): string {
     const decoded = Buffer.from(token, 'base64url').toString('utf-8');
-    const [payload, signature] = decoded.split(':');
+    const [reference, signature] = decoded.split(':');
 
     const expectedSignature = crypto
       .createHmac('sha256', this.appConfig.ticketJWTSecret)
-      .update(payload)
+      .update(reference)
       .digest('hex');
 
     if (signature !== expectedSignature) {
       throw new ServiceError('Invalid token', 'InvalidTicketDownloadTokenErr');
     }
 
-    return JSON.parse(payload).reference;
+    return reference;
   }
 }
