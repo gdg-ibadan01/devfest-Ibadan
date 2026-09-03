@@ -45,6 +45,7 @@
     "class-validator": "^0.14.2",
     "cloudinary": "^2.7.0",
     "crypto": "^1.0.1",
+    "dinero.js": "^2.0.2",
     "dotenv": "^17.2.1",
     "helmet": "^8.1.0",
     "multer": "^2.0.2",

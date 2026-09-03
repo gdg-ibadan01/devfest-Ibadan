@@ -316,6 +316,7 @@ export class OrdersService {
       paymentReference: order.reference,
       description: `GDG Ibadan ticket: ${ticketName}`,
       metadata: { orderId: order.id },
+      redirectUrl: `${this.appConfig.checkoutRedirectUrl}`,
     };
 
     try {
@@ -330,10 +331,11 @@ export class OrdersService {
         },
       });
 
-      return this.toResponseDto(updated, {
-        name: ticketName,
-        slug: ticketSlug,
-      });
+      return this.toResponseDto(
+        updated,
+        { name: ticketName, slug: ticketSlug },
+        initialized.vatAndCharges,
+      );
     } catch (err) {
       this.logger.error(
         `Payment initialization failed for order ${order.id}: ${(err as Error).message}`,
@@ -350,6 +352,7 @@ export class OrdersService {
   private toResponseDto(
     order: Order,
     ticket: { name: string; slug: string },
+    vatAndCharges: number,
   ): CreateOrderResponseDto {
     return {
       id: order.id,
@@ -357,6 +360,7 @@ export class OrdersService {
       status: order.status,
       amount: order.amount.toFixed(2),
       discount: order.discount.toFixed(2),
+      vatAndCharges: vatAndCharges.toFixed(2),
       currency: order.currency,
       checkoutUrl: order.checkoutUrl,
       expiresAt: order.expiresAt,
