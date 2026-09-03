@@ -122,6 +122,7 @@ model Order {
   checkoutUrl            String?     @map("checkout_url")
   expiresAt              DateTime    @map("expires_at")
   paidAt                 DateTime?   @map("paid_at")
+  ticketUrl              String?     @map("ticket_url")
   createdAt              DateTime    @default(now()) @map("created_at")
   updatedAt              DateTime    @updatedAt @map("updated_at")
 
