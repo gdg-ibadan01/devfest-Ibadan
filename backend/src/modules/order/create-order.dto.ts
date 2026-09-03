@@ -12,9 +12,9 @@ import {
   Min,
   ValidateNested,
 } from 'class-validator';
+import { OrderStatus } from '@prisma/client';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
-import { OrderStatus } from '@prisma/client';
 
 export class OrderAttendeeDto {
   @ApiProperty({ example: 'Ada Obi' })
@@ -108,6 +108,13 @@ export class CreateOrderResponseDto {
   })
   discount: string;
 
+  @ApiProperty({
+    type: String,
+    description: '7.5% VAT plus payment gateway service charge',
+    example: '500.00',
+  })
+  vatAndCharges: string;
+
   @ApiProperty()
   currency: string;
 
@@ -123,6 +130,50 @@ export class CreateOrderResponseDto {
 
   @ApiProperty({ type: OrderedTicketDto })
   ticket: OrderedTicketDto;
+}
+
+export class GetOrderReferenceResponseDto {
+  @ApiProperty({
+    type: 'object',
+    properties: {
+      name: { type: 'string', example: 'Early Bird' },
+      url: {
+        type: 'string',
+        example: 'https://example.com/download/ticket.pdf',
+      },
+      validityDates: {
+        type: 'array',
+        items: { type: 'string', format: 'date-time' },
+        example: ['2026-09-20T00:00:00.000Z', '2026-09-21T00:00:00.000Z'],
+      },
+    },
+  })
+  ticket: { name: string; validityDates: Date[]; url: string };
+
+  @ApiProperty({
+    type: String,
+    description: 'Amount paid in Naira (2 decimal places)',
+    example: '9500.00',
+  })
+  amount: string;
+
+  @ApiProperty({
+    enum: [
+      'AWAITING_PAYMENT',
+      'PAID',
+      'CANCELLED',
+      'AWAITING_REFUND',
+      'REFUNDED',
+    ],
+  })
+  status: string;
+
+  @ApiProperty({
+    type: String,
+    description: 'Ticket code',
+    example: 'ABC123',
+  })
+  code: string;
 }
 
 export class OrdersQueryDto {

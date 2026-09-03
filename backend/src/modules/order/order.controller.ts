@@ -4,6 +4,7 @@ import {
   Get,
   HttpException,
   HttpStatus,
+  Param,
   Post,
   Query,
   UseGuards,
@@ -11,6 +12,7 @@ import {
 import {
   ApiBearerAuth,
   ApiOperation,
+  ApiParam,
   ApiQuery,
   ApiResponse,
   ApiTags,
@@ -19,12 +21,13 @@ import { OrdersService } from './order.service';
 import {
   CreateOrderDto,
   CreateOrderResponseDto,
+  GetOrderReferenceResponseDto,
   OrderListResponseDto,
   OrdersQueryDto,
 } from './create-order.dto';
-import { RequirePermission } from 'src/common/decorators/permissions.decorator';
 import { JwtAuthGuard } from '../admin/guards/jwt-auth.guard';
 import { PermissionsGuard } from '../admin/guards/permissions.guard';
+import { RequirePermission } from 'src/common/decorators/permissions.decorator';
 
 @ApiTags('Order')
 @Controller('orders')
@@ -151,5 +154,40 @@ export class OrdersController {
   })
   findAll(@Query() query: OrdersQueryDto) {
     return this.ordersService.list(query);
+  }
+
+  @Get('reference/:reference')
+  @ApiOperation({
+    summary: 'Get order by payment reference',
+  })
+  @ApiParam({
+    name: 'reference',
+    example: 'EarlyBird-ABC123',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Order found',
+    type: GetOrderReferenceResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Order not found for reference',
+  })
+  async findByReference(@Param('reference') reference: string) {
+    try {
+      return await this.ordersService.findByReference(reference);
+    } catch (err) {
+      if (err instanceof HttpException) throw err;
+
+      switch ((err as Error).name) {
+        case OrdersService.ERRORS.OrderNotFoundErr:
+          throw new HttpException((err as Error).message, HttpStatus.NOT_FOUND);
+        default:
+          throw new HttpException(
+            (err as Error).message,
+            HttpStatus.INTERNAL_SERVER_ERROR,
+          );
+      }
+    }
   }
 }
