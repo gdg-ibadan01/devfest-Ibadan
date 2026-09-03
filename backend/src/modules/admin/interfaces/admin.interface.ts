@@ -1,35 +1,40 @@
-import { Role } from '@prisma/client';
+import { type PERMISSION_ID } from 'src/common/constants/permissions';
 
 export interface IAdmin {
   id: string;
   fullName: string;
   email: string;
-  role: Role;
+  role: string;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface IAdminRole {
+  id: string;
+  name: string;
+}
+
+export interface IAdminInvitedBy {
+  id: string;
+  name: string;
 }
 
 export interface IAdminResponse {
   id: string;
   fullName: string;
   email: string;
-  role: Role;
+  role: IAdminRole;
   isActive: boolean;
+  invitedBy: IAdminInvitedBy | null;
   createdAt: Date;
   updatedAt: Date;
-}
-
-export interface ILoginResponse {
-  admin: IAdminResponse;
-  accessToken: string;
-  refreshToken: string;
 }
 
 export interface IJwtPayload {
   sub: string;
   email: string;
-  role: Role;
+  roleId: string;
   iat?: number;
   exp?: number;
 }
@@ -44,4 +49,13 @@ export interface IDashboardStats {
   completedEvents: number;
   recentRegistrations: any[];
   eventStats: any[];
+}
+
+export interface IUpdateProfileResponse {
+  id: string;
+  fullName: string;
+  email: string;
+  role: string;
+  isActive: boolean;
+  updatedAt: Date;
 }

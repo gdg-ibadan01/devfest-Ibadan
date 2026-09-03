@@ -3,7 +3,8 @@ import { ValidationPipe, Logger, BadRequestException } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
-import { TransformerInterceptor } from './common/interceptor/transformer.interceptor';
+import { apiReference } from '@scalar/nestjs-api-reference';
+// import { TransformerInterceptor } from './common/interceptor/transformer.interceptor';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
 
@@ -21,10 +22,10 @@ async function bootstrap() {
     helmet({
       contentSecurityPolicy: {
         directives: {
-          defaultSrc: ["'self'"],
-          styleSrc: ["'self'", "'unsafe-inline'"],
-          scriptSrc: ["'self'"],
-          imgSrc: ["'self'", 'data:', 'https:'],
+          defaultSrc: [`'self'`],
+          styleSrc: [`'self'`, `'unsafe-inline'`],
+          imgSrc: [`'self'`, 'data:', 'validator.swagger.io'],
+          scriptSrc: [`'self'`, 'https:', `'unsafe-inline'`],
         },
       },
     }),
@@ -55,7 +56,7 @@ async function bootstrap() {
   );
   logger.log('Global validation pipe applied');
 
-  app.useGlobalInterceptors(new TransformerInterceptor());
+  // app.useGlobalInterceptors(new TransformerInterceptor());
 
   // Global prefix
   app.setGlobalPrefix('api/v1');
@@ -69,7 +70,8 @@ async function bootstrap() {
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api/docs', app, document);
+  // SwaggerModule.setup('api/docs', app, document);
+  app.use('/api/docs', apiReference({ content: document }));
 
   // Load environment variables
   const port = configService.get<number>('PORT') || 3000;

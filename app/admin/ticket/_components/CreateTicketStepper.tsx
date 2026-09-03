@@ -3,6 +3,13 @@
 import { cn } from '@/app/_module/lib/utils';
 import { ClipboardList, Tag, Settings2, Check } from 'lucide-react';
 import type { CreateTicketStep } from '../_types/ticket.types';
+import BasicInfo from '@/app/_module/components/icons/BasicInfo';
+import Pricing, {
+  PricingInactive,
+} from '@/app/_module/components/icons/Pricing';
+import AdvancedSettings, {
+  AdvancedSettingsInactive,
+} from '@/app/_module/components/icons/AdvancedSettings';
 
 interface Step {
   id: CreateTicketStep;
@@ -15,34 +22,40 @@ const steps: Step[] = [
   {
     id: 'basicInfo',
     label: 'Basic Info',
-    icon: <ClipboardList size={14} />,
-    activeIcon: <ClipboardList size={14} />,
+    icon: <BasicInfo />,
+    activeIcon: <BasicInfo />,
   },
   {
     id: 'pricing',
     label: 'Pricing',
-    icon: <Tag size={14} />,
-    activeIcon: <Tag size={14} />,
+    icon: <PricingInactive />,
+    activeIcon: <Pricing />,
   },
   {
     id: 'advancedSettings',
     label: 'Advanced Settings',
-    icon: <Settings2 size={14} />,
-    activeIcon: <Settings2 size={14} />,
+    icon: <AdvancedSettingsInactive />,
+    activeIcon: <AdvancedSettings />,
   },
 ];
 
-const stepOrder: CreateTicketStep[] = ['basicInfo', 'pricing', 'advancedSettings'];
+const stepOrder: CreateTicketStep[] = [
+  'basicInfo',
+  'pricing',
+  'advancedSettings',
+];
 
 interface CreateTicketStepperProps {
   currentStep: CreateTicketStep;
 }
 
-export default function CreateTicketStepper({ currentStep }: CreateTicketStepperProps) {
+export default function CreateTicketStepper({
+  currentStep,
+}: CreateTicketStepperProps) {
   const currentIndex = stepOrder.indexOf(currentStep);
 
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl px-8 py-5">
+    <div className="bg-white border border-gray-200 rounded-lg px-[16px] py-[20px]">
       <div className="flex items-center">
         {steps.map((step, index) => {
           const stepIndex = stepOrder.indexOf(step.id);
@@ -50,27 +63,28 @@ export default function CreateTicketStepper({ currentStep }: CreateTicketStepper
           const isActive = stepIndex === currentIndex;
 
           return (
-            <div key={step.id} className="flex items-center flex-1 last:flex-none">
+            <div
+              key={step.id}
+              className="flex items-center flex-1 last:flex-none"
+            >
               {/* Step node */}
               <div className="flex items-center gap-2 flex-shrink-0">
                 <div
                   className={cn(
-                    'w-7 h-7 rounded-full flex items-center justify-center transition-all',
+                    'w-[32px] h-[32px] rounded-full flex items-center justify-center transition-all',
                     isCompleted || isActive
-                      ? 'bg-core-green text-white'
-                      : 'border-2 border-gray-300 text-gray-400 bg-white'
+                      ? 'bg-core-green text-[#0E6213]'
+                      : 'border border-[#7ED583] text-[#7ED583] bg-[#DEF9DF]'
                   )}
                 >
-                  {isCompleted ? (
-                    <Check size={13} strokeWidth={2.5} />
-                  ) : (
-                    step.icon
-                  )}
+                  {isCompleted || isActive ? step.activeIcon : step.icon}
                 </div>
                 <span
                   className={cn(
                     'text-[13px] font-medium whitespace-nowrap',
-                    isCompleted || isActive ? 'text-gray-800' : 'text-gray-400'
+                    isCompleted || isActive
+                      ? 'text-[#0E6213]'
+                      : 'text-[#7ED583]'
                   )}
                 >
                   {step.label}

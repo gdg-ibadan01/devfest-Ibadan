@@ -7,6 +7,7 @@ import { paymentFailedTemplate } from './templates/payment-failure.templare';
 import { ticketConfirmationTemplate } from './templates/ticket-confirmation.template';
 import { paymentSuccessTemplate } from './templates/payment-success.template';
 import { paymentLinkTemplate } from './templates/payment-link.template';
+import { passwordResetTemplate } from './templates/password-reset.template';
 
 @Injectable()
 export class MailService {
@@ -150,7 +151,7 @@ export class MailService {
     });
   }
 
-  async sendInviteEmail(email: string, fullName: string, tempPassword: string) {
+  async sendInviteEmail(email: string, fullName: string) {
     const logoUrl =
       this.configService.get<string>('app.logoUrl') ??
       'https://example.com/default-logo.png';
@@ -159,7 +160,7 @@ export class MailService {
       from: `"GDG Event Manager" <${this.configService.get<string>('cpanel.from.email')}>`,
       to: email,
       subject: 'You are invited as an Admin',
-      html: adminInviteTemplate(fullName, tempPassword, logoUrl),
+      html: adminInviteTemplate(fullName, logoUrl),
     });
   }
 
@@ -188,6 +189,27 @@ export class MailService {
         logoUrl,
         amount,
       ),
+    });
+  }
+
+  async sendPasswordResetEmail(
+    email: string,
+    fullName: string,
+    resetLink: string,
+  ) {
+    const logoUrl =
+      this.configService.get<string>('app.logoUrl') ??
+      'https://example.com/default-logo.png';
+
+    const supportEmail =
+      this.configService.get<string>('cpanel.from.email') ??
+      'noreply@gdgibadan.com';
+
+    await this.transporter.sendMail({
+      from: `"GDG Event Manager" <${supportEmail}>`,
+      to: email,
+      subject: 'Password Reset Request - GDG Ibadan Admin',
+      html: passwordResetTemplate(fullName, resetLink, supportEmail, logoUrl),
     });
   }
 }

@@ -4,6 +4,9 @@ export interface TicketBasicInfo {
   name: string;
   description: string;
   declarationDate: DeclarationDate;
+  /** Actual ISO date strings for each selected event day — maps to API eventDates[] */
+  fridayDate: string;
+  saturdayDate: string;
 }
 
 export interface TicketPricing {
@@ -14,7 +17,11 @@ export interface TicketPricing {
 
 export interface TicketAdvancedSettings {
   validity: DeclarationDate;
+  /** Actual ISO date strings for validity — maps to API validityDates[] */
+  fridayValidityDate: string;
+  saturdayValidityDate: string;
   quantityLimit: string;
+  capacity: string;
   startDate: string;
   endDate: string;
 }
@@ -37,3 +44,18 @@ export interface TicketRecord {
   endDate: string;
   quantity: number;
 }
+
+/** Derive eventDates[] array from form basicInfo */
+export function buildEventDates(info: TicketBasicInfo): string[] {
+  if (info.declarationDate === 'friday') return [info.fridayDate].filter(Boolean);
+  if (info.declarationDate === 'saturday') return [info.saturdayDate].filter(Boolean);
+  return [info.fridayDate, info.saturdayDate].filter(Boolean);
+}
+
+/** Derive validityDates[] array from advancedSettings */
+export function buildValidityDates(settings: TicketAdvancedSettings): string[] {
+  if (settings.validity === 'friday') return [settings.fridayValidityDate].filter(Boolean);
+  if (settings.validity === 'saturday') return [settings.saturdayValidityDate].filter(Boolean);
+  return [settings.fridayValidityDate, settings.saturdayValidityDate].filter(Boolean);
+}
+

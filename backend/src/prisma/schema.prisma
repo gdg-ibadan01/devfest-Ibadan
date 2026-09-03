@@ -4,185 +4,121 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
-enum Role {
-  ADMIN
-  SUPER_ADMIN
-  ATTENDEE
-}
+model Role {
+  id          String     @id @default(uuid(7))
+  name        String     @unique
+  description String
+  permissions String[]
+  isActive    Boolean    @default(true)
+  admins      Admin[]
+  auditLogs   AuditLog[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @default(now()) @updatedAt
 
-// enum EventStatus {
-//   DRAFT
-//   PUBLISHED
-//   ONGOING
-//   COMPLETED
-//   CANCELLED
-// }
-
-// enum RegistrationStatus {
-//   PENDING
-//   CONFIRMED
-//   CANCELLED
-//   WAITLIST
-// }
-
-enum TicketStatus {
-  ACTIVE
-  USED
-  CANCELLED
-  EXPIRED
-}
-
-enum PaymentStatus {
-  PENDING
-  PROCESSING
-  SUCCESS
-  FAILED
-  REFUNDED
+  @@map("roles")
 }
 
 model Admin {
-  id             String    @id @default(cuid())
-  fullName       String
-  email          String    @unique
-  password       String
-  role           Role      @default(ADMIN)
-  isActive       Boolean   @default(true)
-  invitedById    String?   
-  inviter        Admin?    @relation("AdminInvitations", fields: [invitedById], references: [id])
-  invitedAdmins  Admin[]   @relation("AdminInvitations")
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-
-  // createdEvents  Event[]
+  id                  String               @id @default(uuid(7))
+  fullName            String
+  email               String               @unique
+  password            String
+  roleId              String
+  role                Role                 @relation(fields: [roleId], references: [id])
+  isActive            Boolean              @default(true)
+  invitedById         String?
+  invitedBy           Admin?               @relation("AdminInvitations", fields: [invitedById], references: [id])
+  passwordResetTokens PasswordResetToken[]
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  admins              Admin[]              @relation("AdminInvitations")
+  auditLogs           AuditLog[]
+  tickets             Ticket[]
 
   @@map("admins")
 }
 
-model Attendee {
-  id            String         @id @default(cuid())
-  email         String         @unique
-  fullName      String
-  phoneNumber   String?
-  company       String?
-  jobTitle      String?
-  role          Role           @default(ATTENDEE)
-  isActive      Boolean        @default(true)
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  // registrations Registration[]
-  payments      Payment[]
-  tickets       Ticket[]
+model PasswordResetToken {
+  id        String    @id @default(uuid(7))
+  adminId   String
+  token     String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  admin     Admin     @relation(fields: [adminId], references: [id], onDelete: Cascade)
 
-  @@map("attendees")
+  @@map("password_reset_tokens")
 }
 
-// model Event {
-//   id                String         @id @default(cuid())
-//   title             String
-//   description       String
-//   slug              String         @unique
-//   venue             String
-//   address           String
-//   startDate         DateTime
-//   endDate           DateTime
-//   registrationStart DateTime
-//   registrationEnd   DateTime
-//   maxAttendees      Int
-//   currentAttendees  Int            @default(0)
-//   isPaid            Boolean        @default(false)
-//   price             Decimal?       @db.Decimal(10, 2)
-//   status            EventStatus    @default(DRAFT)
-//   bannerImage       String?
-//   tags              String[]
-//   requirements      String[]
-//   agenda            Json?
-//   createdById       String
-//   createdAt         DateTime       @default(now())
-//   updatedAt         DateTime       @updatedAt
-//   createdBy         Admin          @relation(fields: [createdById], references: [id])
-//   registrations     Registration[]
-//   tickets           Ticket[]
-//   payments          Payment[]
+model AuditLog {
+  id        String   @id @default(uuid(7))
+  adminId   String
+  roleId    String?
+  action    String
+  metadata  Json?
+  createdAt DateTime @default(now())
 
-//   @@map("events")
-// }
+  admin Admin @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  role  Role? @relation(fields: [roleId], references: [id], onDelete: SetNull)
 
-// model Registration {
-//   id                  String             @id @default(cuid())
-//   eventId             String
-//   attendeeId          String
-//   registrationDate    DateTime           @default(now())
-//   status              RegistrationStatus @default(PENDING)
-//   isCheckedIn         Boolean            @default(false)
-//   checkInTime         DateTime?
-//   specialRequests     String?
-//   ticketType          String?
-//   dietaryRestrictions String?
-//   createdAt           DateTime           @default(now())
-//   updatedAt           DateTime           @updatedAt
-
-//   event    Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
-//   attendee Attendee @relation(fields: [attendeeId], references: [id])
-//   ticket   Ticket?
-//   payment  Payment?
-
-//   @@unique([eventId, attendeeId])
-//   @@map("registrations")
-// }
+  @@map("audit_logs")
+}
 
 model Ticket {
-  id             String       @id @default(cuid())
-  ticketNumber   String       @unique
-  // eventId        String
-  // registrationId String       @unique
-  qrCode         String       @unique
-  status         TicketStatus @default(ACTIVE)
-  issuedAt       DateTime     @default(now())
-  validFrom      DateTime
-  validUntil     DateTime
-  ticketType     String
-  isCheckedIn    Boolean      @default(false)
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  id               String     @id @default(uuid(7))
+  name             String
+  description      String
+  slug             String     @unique
+  eventDates       DateTime[]
+  price            Decimal
+  discount         Decimal    @default(0)
+  validityDates    DateTime[]
+  maximumSaleUnits Int
+  saleStartsAt     DateTime
+  saleEndsAt       DateTime
+  creatorId        String
+  creator          Admin      @relation(fields: [creatorId], references: [id])
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
 
-  // New relations
-  attendeeId     String
-  paymentId      String
-
-  attendee       Attendee     @relation(fields: [attendeeId], references: [id])
-  payment        Payment      @relation(fields: [paymentId], references: [id])
-
-  // event        Event        @relation(fields: [eventId], references: [id])
-  // registration Registration @relation(fields: [registrationId], references: [id])
+  orders Order[]
 
   @@map("tickets")
 }
 
-model Payment {
-  id                String        @id @default(cuid())
-  // eventId           String
-  attendeeId        String
-  // registrationId    String        @unique
-  amount            Decimal       @db.Decimal(10, 2)
-  currency          String        @default("NGN")
-  paystackReference String?        @unique
-  paymentReference  String        @unique
-  status            PaymentStatus @default(PENDING)
-  paymentMethod     String?
-  paidAt            DateTime?
-  failureReason     String?
-  metadata          Json?
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
+enum OrderStatus {
+  AWAITING_PAYMENT
+  PAID
+  CANCELLED
+  EXPIRED
+  AWAITING_REFUND
+  REFUNDED
+}
 
-  // Relations
-  // event        Event        @relation(fields: [eventId], references: [id])
-  attendee     Attendee     @relation(fields: [attendeeId], references: [id])
-  tickets      Ticket[]   
-  // registration Registration @relation(fields: [registrationId], references: [id])
+model Order {
+  id                     String      @id @default(uuid(7))
+  reference              String      @unique
+  ticketId               String
+  ticket                 Ticket      @relation(fields: [ticketId], references: [id])
+  attendeeFullName       String
+  attendeeEmail          String
+  attendeePhoneNumber    String?
+  gifterName             String?
+  gifterEmail            String?
+  discount               Decimal
+  amount                 Decimal
+  currency               String      @default("NGN")
+  status                 OrderStatus @default(AWAITING_PAYMENT)
+  paymentProvider        String      @default("MONNIFY")
+  providerTransactionRef String?
+  checkoutUrl            String?
+  expiresAt              DateTime
+  paidAt                 DateTime?
+  createdAt              DateTime    @default(now())
+  updatedAt              DateTime    @updatedAt
 
-  @@map("payments")
+  @@index([ticketId, status])
+  @@map("orders")
 }

@@ -4,7 +4,7 @@ import RootLayout from './layouts';
 import { Toaster } from 'sonner';
 
 export const metadata: Metadata = {
-  title: 'Devfest Ibadan 2025',
+  title: 'Devfest Ibadan 2026',
   description: 'The Biggest GDG Event in Ibadan',
 };
 
@@ -15,7 +15,7 @@ export default function AppLayout({
 }>) {
   return (
     <RootLayout>
-      <Toaster position="top-right" expand={true} richColors />
+      <Toaster position="top-center" />
       {children}
     </RootLayout>
   );

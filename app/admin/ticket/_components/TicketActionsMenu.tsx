@@ -7,6 +7,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import Ellipsis from '@/app/_module/components/icons/Ellipsis';
 
 interface TicketActionsMenuProps {
   onPreview: () => void;
@@ -22,8 +23,8 @@ export default function TicketActionsMenu({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-gray-100 transition-colors">
-          <MoreVertical size={16} className="text-gray-500" />
+        <button className="flex items-center justify-center rounded-md hover:bg-gray-100 transition-colors">
+          <Ellipsis />
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-36">
@@ -34,20 +35,26 @@ export default function TicketActionsMenu({
           <Eye size={14} />
           Preview
         </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={onEdit}
+        {/* <DropdownMenuItem
+          onClick={(e) => {
+            e.stopPropagation();
+            onEdit();
+          }}
           className="flex items-center gap-2 text-[13px] cursor-pointer"
         >
           <Pencil size={14} />
           Edit
         </DropdownMenuItem>
         <DropdownMenuItem
-          onClick={onDelete}
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete();
+          }}
           className="flex items-center gap-2 text-[13px] text-red-500 focus:text-red-500 cursor-pointer"
         >
           <Trash2 size={14} />
           Delete
-        </DropdownMenuItem>
+        </DropdownMenuItem> */}
       </DropdownMenuContent>
     </DropdownMenu>
   );

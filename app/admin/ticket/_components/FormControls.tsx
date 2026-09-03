@@ -1,60 +1,81 @@
 import { cn } from '@/app/_module/lib/utils';
 import { Check } from 'lucide-react';
+import { DatePickerInput } from '@/app/_module/components/ui/DatePicker';
+
+// Re-export so steps only import from FormControls
+export { DatePickerInput };
 
 interface LabelProps {
   children: React.ReactNode;
   htmlFor?: string;
   className?: string;
+  required?: boolean;
 }
 
-export function FieldLabel({ children, htmlFor, className }: LabelProps) {
+export function FieldLabel({ children, htmlFor, className, required }: LabelProps) {
   return (
     <label
       htmlFor={htmlFor}
       className={cn('block text-[13px] font-medium text-gray-800 mb-2', className)}
     >
       {children}
+      {required && <span style={{ color: '#E61530' }} className="ml-1">*</span>}
     </label>
   );
 }
 
-interface TextInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
-  label?: string;
+export function FieldError({ message }: { message?: string }) {
+  if (!message) return null;
+  return <p className="mt-1 text-[12px]" style={{ color: '#E61530' }}>{message}</p>;
 }
 
-export function TextInput({ label, id, className, ...props }: TextInputProps) {
+interface TextInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  label?: string;
+  required?: boolean;
+  error?: string;
+}
+
+export function TextInput({ label, id, className, required, error, ...props }: TextInputProps) {
   return (
     <div>
-      {label && <FieldLabel htmlFor={id}>{label}</FieldLabel>}
+      {label && <FieldLabel htmlFor={id} required={required}>{label}</FieldLabel>}
       <input
         id={id}
         className={cn(
-          'w-full border border-gray-200 rounded-lg px-4 py-3 text-[13px] text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-gray-400 transition-colors bg-white',
+          'w-full border rounded-lg px-4 py-3 text-[13px] text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-black/10 transition-colors bg-white',
+          error ? 'focus:border-[#E61530]' : 'border-gray-200 focus:border-gray-400',
           className
         )}
+        style={error ? { borderColor: '#E61530' } : undefined}
         {...props}
       />
+      <FieldError message={error} />
     </div>
   );
 }
 
 interface TextAreaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
   label?: string;
+  required?: boolean;
+  error?: string;
 }
 
-export function TextArea({ label, id, className, ...props }: TextAreaProps) {
+export function TextArea({ label, id, className, required, error, ...props }: TextAreaProps) {
   return (
     <div>
-      {label && <FieldLabel htmlFor={id}>{label}</FieldLabel>}
+      {label && <FieldLabel htmlFor={id} required={required}>{label}</FieldLabel>}
       <textarea
         id={id}
         rows={5}
         className={cn(
-          'w-full border border-gray-200 rounded-lg px-4 py-3 text-[13px] text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-gray-400 transition-colors resize-none bg-white',
+          'w-full border rounded-lg px-4 py-3 text-[13px] text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-black/10 transition-colors resize-none bg-white',
+          error ? 'focus:border-[#E61530]' : 'border-gray-200 focus:border-gray-400',
           className
         )}
+        style={error ? { borderColor: '#E61530' } : undefined}
         {...props}
       />
+      <FieldError message={error} />
     </div>
   );
 }
@@ -65,6 +86,64 @@ interface CurrencyInputProps {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
+  required?: boolean;
+  error?: string;
+}
+
+/** Format a raw integer string as comma-separated thousands for display */
+function formatIntDisplay(raw: string): string {
+  if (!raw) return '';
+  const digits = raw.replace(/\D/g, '');
+  return digits ? parseInt(digits, 10).toLocaleString('en-NG') : '';
+}
+
+interface NumberInputProps {
+  label?: string;
+  id?: string;
+  value: string;
+  onChange: (raw: string) => void;
+  placeholder?: string;
+  required?: boolean;
+  error?: string;
+  className?: string;
+}
+
+export function NumberInput({ label, id, value, onChange, placeholder, required, error, className }: NumberInputProps) {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value.replace(/,/g, '').replace(/\D/g, '');
+    onChange(raw);
+  };
+  return (
+    <div>
+      {label && <FieldLabel htmlFor={id} required={required}>{label}</FieldLabel>}
+      <input
+        id={id}
+        type="text"
+        inputMode="numeric"
+        value={formatIntDisplay(value)}
+        onChange={handleChange}
+        placeholder={placeholder}
+        className={cn(
+          'w-full border rounded-lg px-4 py-3 text-[13px] text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-black/10 transition-colors bg-white',
+          error ? 'focus:border-[#E61530]' : 'border-gray-200 focus:border-gray-400',
+          className
+        )}
+        style={error ? { borderColor: '#E61530' } : undefined}
+      />
+      <FieldError message={error} />
+    </div>
+  );
+}
+
+/** Format a raw numeric string as comma-separated thousands for display (supports decimals) */
+function formatDisplay(raw: string): string {
+  if (!raw) return '';
+  // Allow partial decimal entry: don't format if ends with '.' or '0' after decimal
+  const parts = raw.split('.');
+  const intPart = parts[0].replace(/\D/g, '');
+  const formattedInt = intPart ? parseInt(intPart, 10).toLocaleString('en-NG') : '';
+  if (parts.length > 1) return `${formattedInt}.${parts[1]}`;
+  return formattedInt;
 }
 
 export function CurrencyInput({
@@ -73,25 +152,42 @@ export function CurrencyInput({
   value,
   onChange,
   placeholder = '0.00',
+  required,
+  error,
 }: CurrencyInputProps) {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Strip commas — keep raw numeric value in state
+    const raw = e.target.value.replace(/,/g, '');
+    // Only allow valid numeric input (digits, single dot, optional decimals)
+    if (raw === '' || /^\d*\.?\d*$/.test(raw)) {
+      onChange(raw);
+    }
+  };
+
   return (
     <div>
-      <FieldLabel htmlFor={id}>{label}</FieldLabel>
-      <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-black/10 focus-within:border-gray-400 transition-colors bg-white">
+      <FieldLabel htmlFor={id} required={required}>{label}</FieldLabel>
+      <div
+        className={cn(
+          'flex items-center border rounded-lg overflow-hidden transition-colors bg-white focus-within:ring-2 focus-within:ring-black/10',
+          error ? '' : 'border-gray-200 focus-within:border-gray-400'
+        )}
+        style={error ? { borderColor: '#E61530' } : undefined}
+      >
         <span className="px-4 py-3 text-[13px] text-gray-500 border-r border-gray-200 bg-gray-50 whitespace-nowrap select-none">
           NGN (Naira)
         </span>
         <input
           id={id}
-          type="number"
-          min="0"
-          step="0.01"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
+          type="text"
+          inputMode="decimal"
+          value={formatDisplay(value)}
+          onChange={handleChange}
           placeholder={placeholder}
           className="flex-1 px-4 py-3 text-[13px] text-gray-800 placeholder:text-gray-400 focus:outline-none bg-transparent"
         />
       </div>
+      <FieldError message={error} />
     </div>
   );
 }
@@ -107,6 +203,7 @@ interface DeclarationDatePickerProps {
   value: string;
   onChange: (value: string) => void;
   options: DeclarationOption[];
+  required?: boolean;
 }
 
 export function DeclarationDatePicker({
@@ -114,10 +211,11 @@ export function DeclarationDatePicker({
   value,
   onChange,
   options,
+  required,
 }: DeclarationDatePickerProps) {
   return (
     <div>
-      <FieldLabel>{label}</FieldLabel>
+      <FieldLabel required={required}>{label}</FieldLabel>
       <div className="flex gap-3 flex-wrap">
         {options.map((opt) => {
           const isSelected = value === opt.value;
@@ -127,7 +225,7 @@ export function DeclarationDatePicker({
               type="button"
               onClick={() => onChange(opt.value)}
               className={cn(
-                'flex items-center gap-2 px-4 py-[10px] rounded-lg border text-[13px] transition-all',
+                'flex items-center gap-2 px-4 py-[10px] rounded-md border text-[13px] transition-all',
                 isSelected
                   ? 'border-black bg-white text-black'
                   : 'border-gray-200 bg-white text-gray-600 hover:border-gray-400'
@@ -178,14 +276,14 @@ export function ToggleRow({ icon, label, description, checked, onChange }: Toggl
         aria-checked={checked}
         onClick={() => onChange(!checked)}
         className={cn(
-          'relative inline-flex w-10 h-6 rounded-full transition-colors duration-200 focus:outline-none',
+          'relative inline-flex w-[32px] h-[16px] rounded-[24px] transition-colors duration-200 focus:outline-none',
           checked ? 'bg-black' : 'bg-gray-300'
         )}
       >
         <span
           className={cn(
-            'inline-block w-4 h-4 rounded-full bg-white shadow-sm absolute top-1 transition-transform duration-200',
-            checked ? 'translate-x-5' : 'translate-x-1'
+            'inline-block w-[14px] h-[14px] rounded-full bg-white shadow-sm absolute top-[1px] transition-transform duration-200',
+            checked ? 'translate-x-4' : 'translate-x-[0.8px]'
           )}
         />
       </button>
@@ -198,6 +296,9 @@ interface FormActionsProps {
   onNext: () => void;
   nextLabel: string;
   cancelLabel?: string;
+  onBack?: () => void;
+  disabled?: boolean;
+  loading?: boolean;
 }
 
 export function FormActions({
@@ -205,24 +306,46 @@ export function FormActions({
   onNext,
   nextLabel,
   cancelLabel = 'Cancel',
+  onBack,
+  disabled,
+  loading,
 }: FormActionsProps) {
   return (
-    <div className="flex items-center justify-center gap-4 pt-2">
-      <button
-        type="button"
-        onClick={onCancel}
-        className="px-8 py-3 rounded-lg border border-gray-200 text-[13px] font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-      >
-        {cancelLabel}
-      </button>
-      <button
-        type="button"
-        onClick={onNext}
-        className="px-8 py-3 rounded-lg bg-black text-white text-[13px] font-medium hover:bg-gray-900 transition-colors flex items-center gap-2"
-      >
-        {nextLabel}
-        <span aria-hidden>→</span>
-      </button>
+    <div className="flex items-center justify-between gap-4 pt-2">
+      {/* Back button — left side */}
+      {onBack ? (
+        <button
+          type="button"
+          onClick={onBack}
+          disabled={loading}
+          className="px-[20px] py-3 rounded-lg border border-gray-200 text-[13px] font-medium text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50 flex items-center gap-2"
+        >
+          <span aria-hidden>←</span> Back
+        </button>
+      ) : (
+        <span />
+      )}
+
+      {/* Cancel + Proceed — right side */}
+      <div className="flex items-center gap-4">
+        <button
+          type="button"
+          onClick={onCancel}
+          disabled={loading}
+          className="px-[20px] py-3 rounded-lg border border-gray-200 text-[13px] font-medium text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
+        >
+          {cancelLabel}
+        </button>
+        <button
+          type="button"
+          onClick={onNext}
+          disabled={disabled || loading}
+          className="px-[32px] py-3 rounded-lg bg-black text-white text-[13px] font-medium hover:bg-gray-900 transition-colors flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          {loading ? 'Submitting…' : nextLabel}
+          {!loading && <span aria-hidden>→</span>}
+        </button>
+      </div>
     </div>
   );
 }
