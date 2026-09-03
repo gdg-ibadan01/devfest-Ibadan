@@ -15,5 +15,6 @@ export default registerAs('app', () => ({
     'http://localhost:3000/admin/reset-password',
   inviteAdminUrl:
     process.env.INVITE_ADMIN_URL || 'http://localhost:3000/admin/invite',
+  ticketJWTSecret: process.env.TICKET_JWT_SECRET || 'please_set_secret',
   checkoutRedirectUrl: process.env.CHECKOUT_REDIRECT_URL,
 }));
