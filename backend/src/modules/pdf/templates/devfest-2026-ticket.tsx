@@ -173,7 +173,7 @@ export function DevFest2026Ticket(payload: Params) {
         </div>
       </div>
 
-      <div tw="w-full bg-[#F5F5F5] min-h-[280] flex justify-center items-center rounded-sm mt-2">
+      <div tw="w-full bg-[#F5F5F5] min-h-[280] flex justify-center items-center rounded-sm mt-2 border border-[#EDEDED]">
         <img tw="h-[240px] w-[240px]" src={payload.qrCodeBase64} />
       </div>
     </div>

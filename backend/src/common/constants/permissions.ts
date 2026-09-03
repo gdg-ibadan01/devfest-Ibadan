@@ -17,6 +17,7 @@ export const PERMISSIONS = [
   { id: 'roles.deactivate', label: 'Deactivate role' },
   { id: 'permissions.assign', label: 'Assign permissions' },
   { id: 'payment_reports.export', label: 'Export payment report' },
+  { id: 'orders.list', label: 'View orders list' },
 ] as const;
 
 export type PERMISSION_ID = (typeof PERMISSIONS)[number]['id'];
