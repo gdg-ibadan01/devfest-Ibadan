@@ -1,6 +1,7 @@
 import {
   CallHandler,
   ExecutionContext,
+  HttpException,
   Injectable,
   Logger,
   NestInterceptor,
@@ -34,8 +35,12 @@ export class RequestLoggerInterceptor implements NestInterceptor {
         next: () => {
           this.logRequest(request, response, startTime);
         },
-        error: (_err) => {
-          this.logRequest(request, response, startTime);
+        error: (err) => {
+          const statusCode =
+            err instanceof HttpException
+              ? err.getStatus()
+              : response.statusCode;
+          this.logRequest(request, response, startTime, statusCode);
         },
       }),
     );
@@ -45,19 +50,24 @@ export class RequestLoggerInterceptor implements NestInterceptor {
     request: Request,
     response: Response,
     startTime: number,
+    statusCode?: number,
   ): void {
     const responseTime = Date.now() - startTime;
     const { method, originalUrl } = request;
-    const statusCode = response.statusCode;
+    const status = statusCode ?? response.statusCode;
 
-    const message = `[${new Date().toISOString()}] [${request['requestId']}] ${method} ${originalUrl} ${statusCode} ${responseTime}ms`;
+    const message = `[${new Date().toISOString()}] [${request['requestId']}] ${method} ${originalUrl} ${status} ${responseTime}ms`;
 
-    if (statusCode >= 500) {
+    if (status >= 500) {
       this.logger.error(message);
-    } else if (statusCode >= 400) {
-      this.logger.warn(message);
-    } else {
-      this.logger.log(message);
+      return;
     }
+
+    if (status >= 400) {
+      this.logger.warn(message);
+      return;
+    }
+
+    this.logger.log(message);
   }
 }
