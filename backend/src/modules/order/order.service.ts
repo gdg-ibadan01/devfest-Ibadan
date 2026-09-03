@@ -240,6 +240,7 @@ export class OrdersService {
       attendeeFullName: o.attendeeFullName,
       attendeeEmail: o.attendeeEmail,
       ticket: {
+        id: o.ticket.id,
         name: o.ticket.name,
         code: o.reference.slice(-6),
         validity: o.ticket.validityDates
