@@ -20,11 +20,12 @@ export const queryKeys = {
   tickets: {
     all: (params?: Record<string, unknown>) => ['tickets', params] as const,
     detail: (id: string) => ['tickets', id] as const,
+    onSale: (params?: Record<string, unknown>) => ['tickets', 'onsale', params] as const,
   },
 
-  // Attendees
-  attendees: {
-    all: (params?: Record<string, unknown>) => ['attendees', params] as const,
-    detail: (id: string) => ['attendees', id] as const,
+  // Orders (replaces the old attendees list — attendees API now only handles check-in)
+  orders: {
+    all: (params?: Record<string, unknown>) =>
+      params ? (['orders', params] as const) : (['orders'] as const),
   },
 } as const;

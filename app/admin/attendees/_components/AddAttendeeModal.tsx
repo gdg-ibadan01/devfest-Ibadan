@@ -3,16 +3,17 @@
 import { useState, useEffect } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { cn } from '@/app/_module/lib/utils';
-import { useCreateAttendee } from '@/app/_module/services';
-import type { AddAttendeeForm, TicketPackage } from '../_types/attendee.types';
-import { TICKET_PACKAGES } from './TicketPackages';
+import { useCreateOrder, useOnSaleTickets } from '@/app/_module/services';
+import type { AddAttendeeForm } from '../_types/attendee.types';
+import type { CreateOrderResponseDto } from '@/app/_module/api/types';
 import Image from 'next/image';
 import Success from '../../../_module/components/icons/success.svg';
 
 const INITIAL_FORM: AddAttendeeForm = {
   fullName: '',
   email: '',
-  ticketPackage: 'friday-workshop',
+  phoneNumber: '',
+  ticketSlug: '',
 };
 
 type Step = 'form' | 'success';
@@ -20,6 +21,7 @@ type Step = 'form' | 'success';
 interface Errors {
   fullName?: string;
   email?: string;
+  ticketSlug?: string;
 }
 
 interface AddAttendeeModalProps {
@@ -31,21 +33,35 @@ export default function AddAttendeeModal({ open, onClose }: AddAttendeeModalProp
   const [step, setStep] = useState<Step>('form');
   const [form, setForm] = useState<AddAttendeeForm>(INITIAL_FORM);
   const [errors, setErrors] = useState<Errors>({});
+  const [order, setOrder] = useState<CreateOrderResponseDto | null>(null);
 
-  const { mutate: createAttendee, isPending } = useCreateAttendee();
+  const { data: onSaleData, isLoading: ticketsLoading } = useOnSaleTickets();
+  const tickets = onSaleData?.data ?? [];
+
+  const { mutate: createOrder, isPending } = useCreateOrder();
 
   useEffect(() => {
     if (open) {
       setStep('form');
       setForm(INITIAL_FORM);
       setErrors({});
+      setOrder(null);
     }
   }, [open]);
+
+  // Default to the first on-sale ticket once loaded
+  const firstTicketSlug = tickets[0]?.slug;
+  useEffect(() => {
+    if (open && firstTicketSlug && !form.ticketSlug) {
+      setForm((f) => ({ ...f, ticketSlug: firstTicketSlug }));
+    }
+  }, [open, firstTicketSlug, form.ticketSlug]);
 
   const handleClose = () => {
     setStep('form');
     setForm(INITIAL_FORM);
     setErrors({});
+    setOrder(null);
     onClose();
   };
 
@@ -57,27 +73,30 @@ export default function AddAttendeeModal({ open, onClose }: AddAttendeeModalProp
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
       e.email = 'Please enter a valid email address.';
     }
+    if (!form.ticketSlug) e.ticketSlug = 'Please select a ticket package.';
     setErrors(e);
     return Object.keys(e).length === 0;
   };
 
-  const selectedPackage: TicketPackage | undefined = TICKET_PACKAGES.find((p) => p.id === form.ticketPackage);
+  const selectedTicket = tickets.find((t) => t.slug === form.ticketSlug);
 
   const handleSubmit = () => {
     if (!validate()) return;
 
-    const amountRaw = selectedPackage
-      ? parseFloat(selectedPackage.price.replace(/[^\d.]/g, ''))
-      : undefined;
-
-    createAttendee(
+    createOrder(
       {
-        fullName: form.fullName.trim(),
-        email: form.email.trim(),
-        amount: !isNaN(amountRaw ?? NaN) ? amountRaw : undefined,
+        slug: form.ticketSlug,
+        attendee: {
+          fullName: form.fullName.trim(),
+          email: form.email.trim(),
+          ...(form.phoneNumber.trim() ? { phoneNumber: form.phoneNumber.trim() } : {}),
+        },
       },
       {
-        onSuccess: () => setStep('success'),
+        onSuccess: (res) => {
+          setOrder(res);
+          setStep('success');
+        },
       }
     );
   };
@@ -154,49 +173,72 @@ export default function AddAttendeeModal({ open, onClose }: AddAttendeeModalProp
               {errors.email && <p className="mt-1 text-[12px]" style={{ color: '#E61530' }}>{errors.email}</p>}
             </div>
 
+            {/* Phone number (optional) */}
+            <div>
+              <p className="text-[13px] font-medium text-gray-800 mb-2">Phone Number</p>
+              <input
+                type="tel"
+                value={form.phoneNumber}
+                onChange={(e) => setForm((f) => ({ ...f, phoneNumber: e.target.value }))}
+                placeholder="Enter phone number"
+                className="w-full border border-gray-200 rounded-lg px-4 py-3 text-[13px] text-gray-800 placeholder:text-gray-400 focus:outline-none focus:border-gray-400 transition-colors bg-white"
+              />
+            </div>
+
             {/* Ticket package */}
             <div className="bg-gray-50 rounded-xl px-5 py-5">
               <p className="text-[14px] font-semibold text-gray-800 mb-4">
                 Kindly Select your Ticket Package
               </p>
-              <div className="flex flex-col gap-3">
-                {TICKET_PACKAGES.map((pkg) => {
-                  const isSelected = form.ticketPackage === pkg.id;
-                  return (
-                    <button
-                      key={pkg.id}
-                      type="button"
-                      onClick={() => setForm((f) => ({ ...f, ticketPackage: pkg.id }))}
-                      className={cn(
-                        'flex items-center gap-3 px-4 py-4 rounded-xl border bg-white transition-all text-left',
-                        isSelected ? 'border-[#4285F4]' : 'border-gray-200 hover:border-gray-300'
-                      )}
-                    >
-                      <span className={cn('w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0', isSelected ? 'border-[#4285F4]' : 'border-gray-300')}>
-                        {isSelected && <span className="w-2.5 h-2.5 rounded-full bg-[#4285F4]" />}
-                      </span>
-                      <span className={cn('text-[14px] font-semibold', isSelected ? 'text-[#4285F4]' : 'text-gray-800')}>
-                        {pkg.days}
-                      </span>
-                      <span className={cn('px-3 py-[3px] rounded-[24px] text-[11px] font-medium border', isSelected ? 'bg-[#4285F4] text-white border-[#4285F4]' : 'bg-white text-gray-500 border-gray-200')}>
-                        {pkg.type}
-                      </span>
-                      <span className={cn('ml-auto text-[15px] font-bold', isSelected ? 'text-[#4285F4]' : 'text-gray-800')}>
-                        {pkg.price}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
+              {ticketsLoading ? (
+                <div className="flex flex-col gap-3">
+                  {[0, 1].map((i) => (
+                    <div key={i} className="h-[68px] rounded-xl bg-gray-100 animate-pulse" />
+                  ))}
+                </div>
+              ) : tickets.length === 0 ? (
+                <p className="text-[13px] text-gray-400">No tickets are currently on sale.</p>
+              ) : (
+                <div className="flex flex-col gap-3">
+                  {tickets.map((pkg) => {
+                    const isSelected = form.ticketSlug === pkg.slug;
+                    return (
+                      <button
+                        key={pkg.slug}
+                        type="button"
+                        onClick={() => {
+                          setForm((f) => ({ ...f, ticketSlug: pkg.slug }));
+                          setErrors((p) => ({ ...p, ticketSlug: undefined }));
+                        }}
+                        className={cn(
+                          'flex items-center gap-3 px-4 py-4 rounded-xl border bg-white transition-all text-left',
+                          isSelected ? 'border-[#4285F4]' : 'border-gray-200 hover:border-gray-300'
+                        )}
+                      >
+                        <span className={cn('w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0', isSelected ? 'border-[#4285F4]' : 'border-gray-300')}>
+                          {isSelected && <span className="w-2.5 h-2.5 rounded-full bg-[#4285F4]" />}
+                        </span>
+                        <span className={cn('text-[14px] font-semibold', isSelected ? 'text-[#4285F4]' : 'text-gray-800')}>
+                          {pkg.name}
+                        </span>
+                        <span className={cn('ml-auto text-[15px] font-bold', isSelected ? 'text-[#4285F4]' : 'text-gray-800')}>
+                          ₦{parseFloat(pkg.price).toLocaleString('en-NG')}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+              {errors.ticketSlug && <p className="mt-2 text-[12px]" style={{ color: '#E61530' }}>{errors.ticketSlug}</p>}
             </div>
 
             <button
               type="button"
               onClick={handleSubmit}
-              disabled={isPending || !form.fullName || !form.email}
+              disabled={isPending || !form.fullName || !form.email || !form.ticketSlug}
               className="w-full py-3 rounded-xl bg-gray-900 text-white text-[14px] font-semibold hover:bg-black transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              {isPending ? 'Registering…' : 'Add Attendee'}
+              {isPending ? 'Creating order…' : 'Add Attendee'}
             </button>
           </div>
         )}
@@ -206,11 +248,27 @@ export default function AddAttendeeModal({ open, onClose }: AddAttendeeModalProp
           <div className="px-10 py-10 flex flex-col items-center gap-5">
             <Image src={Success} alt="Success" />
             <div className="text-center">
-              <h2 className="text-[20px] font-bold text-gray-900 mb-2">Attendee Added!</h2>
+              <h2 className="text-[20px] font-bold text-gray-900 mb-2">Order Created!</h2>
               <p className="text-[13px] text-gray-500 leading-relaxed">
-                <span className="font-bold text-gray-800">{form.fullName}</span> has been successfully registered as an attendee.
+                <span className="font-bold text-gray-800">{form.fullName}</span> has been registered for{' '}
+                <span className="font-semibold text-gray-800">{selectedTicket?.name}</span>.
+                {order?.checkoutUrl
+                  ? ' Share the payment link below with the attendee to complete payment.'
+                  : ' The order is now awaiting payment.'}
               </p>
             </div>
+
+            {order?.checkoutUrl && (
+              <a
+                href={order.checkoutUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full text-center py-3 rounded-xl border border-gray-200 text-[13px] font-semibold text-gray-700 hover:bg-gray-50 transition-colors truncate"
+              >
+                Open Payment Link
+              </a>
+            )}
+
             <button
               type="button"
               onClick={handleClose}

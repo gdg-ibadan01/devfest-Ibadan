@@ -5,7 +5,8 @@ import { X, CheckCircle2 } from 'lucide-react';
 import AdminWrapper from '@/app/_module/components/common/AdminWrapper';
 import AttendeesTable from './_components/AttendeesTable';
 import AddAttendeeModal from './_components/AddAttendeeModal';
-import type { AttendeeDto } from '@/app/_module/api/types';
+import { useCheckInAttendee } from '@/app/_module/services';
+import type { OrderListItemDto } from '@/app/_module/api/types';
 
 function CheckInToast({ visible, onClose }: { visible: boolean; onClose: () => void }) {
   if (!visible) return null;
@@ -32,12 +33,21 @@ export default function AttendeesPage() {
   const [showToast, setShowToast] = useState(false);
   const [toastTimer, setToastTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
 
-  const handleCheckIn = useCallback((_attendee: AttendeeDto) => {
-    if (toastTimer) clearTimeout(toastTimer);
-    setShowToast(true);
-    const t = setTimeout(() => setShowToast(false), 3000);
-    setToastTimer(t);
-  }, [toastTimer]);
+  const { mutate: checkIn } = useCheckInAttendee();
+
+  const handleCheckIn = useCallback((order: OrderListItemDto) => {
+    checkIn(
+      { orderId: order.id },
+      {
+        onSuccess: () => {
+          if (toastTimer) clearTimeout(toastTimer);
+          setShowToast(true);
+          const t = setTimeout(() => setShowToast(false), 3000);
+          setToastTimer(t);
+        },
+      }
+    );
+  }, [checkIn, toastTimer]);
 
   const handleToastClose = useCallback(() => {
     if (toastTimer) clearTimeout(toastTimer);
@@ -62,3 +72,4 @@ export default function AttendeesPage() {
     </AdminWrapper>
   );
 }
+

@@ -17,10 +17,18 @@ import AuditLog from '../../icons/AuditLog';
 import Logout from '../../icons/Logout';
 import { useSidenav } from '@/app/_module/context/SidenavContext';
 import { useMe, useAdminLogout } from '@/app/_module/services';
+import { hasAnyPermission } from '@/app/_module/lib/permissions';
+import type { PermissionId } from '@/app/_module/api/types';
 
-const navItems = [
+const navItems: {
+  label: string;
+  href: string;
+  icon: typeof Home;
+  /** Permission IDs required to see this item — any one of them grants access. Omit for always-visible items. */
+  permissions?: PermissionId[];
+}[] = [
   { label: 'Home', href: '/admin/home', icon: Home },
-  { label: 'Admins', href: '/admin/admins', icon: Admins },
+  { label: 'Admins', href: '/admin/admins', icon: Admins, permissions: ['admins.list'] },
   { label: 'Ticket', href: '/admin/ticket', icon: Ticket },
   {
     label: 'Discount & Referral',
@@ -31,9 +39,10 @@ const navItems = [
     label: 'Roles & Permission',
     href: '/admin/roles-permission',
     icon: RolesAndPermissions,
+    permissions: ['roles.list'],
   },
 
-  { label: 'Attendees', href: '/admin/attendees', icon: Attendees },
+  { label: 'Attendees', href: '/admin/attendees', icon: Attendees, permissions: ['orders.list'] },
   { label: 'Audit Log', href: '/admin/audit-log', icon: AuditLog },
 ];
 
@@ -57,12 +66,19 @@ function getInitials(fullName: string): string {
 /* ------------------------------------------------------------------ */
 function NavContent({ onLinkClick }: { onLinkClick?: () => void }) {
   const pathname = usePathname();
-  const { data: me } = useMe();
+  const { data: me, isLoading: meLoading } = useMe();
   const { mutate: logout, isPending: loggingOut } = useAdminLogout();
 
   const fullName = me?.fullName ?? '';
   const roleName = me?.role?.name ?? '';
   const initials = fullName ? getInitials(fullName) : '??';
+  const permissions = (me?.role?.permissions ?? []) as PermissionId[];
+
+  // Fail closed: while the current admin's permissions are still loading,
+  // only show always-visible items to avoid a flash of unauthorized nav items.
+  const visibleItems = navItems.filter((item) =>
+    !item.permissions ? true : !meLoading && hasAnyPermission(permissions, item.permissions)
+  );
 
   const handleLogout = () => {
     logout();
@@ -71,7 +87,7 @@ function NavContent({ onLinkClick }: { onLinkClick?: () => void }) {
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
       <div className="flex flex-1 flex-col">
-        {navItems.map(({ label, href, icon: Icon }) => {
+        {visibleItems.map(({ label, href, icon: Icon }) => {
           const active = isActivePath(pathname, href);
           return (
             <Link

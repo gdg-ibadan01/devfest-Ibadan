@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/app/_module/api/client';
 import { queryKeys } from '@/app/_module/api/queryKeys';
 import { showToast } from '@/app/_module/lib/notify';
+import { notifyApiError } from '@/app/_module/lib/apiError';
 import type {
   FindOneAdminResponseDto,
   FindAllAdminsResponseDto,
@@ -55,7 +56,7 @@ export function useInviteAdmin() {
       queryClient.invalidateQueries({ queryKey: queryKeys.admins.all(), exact: false });
     },
     onError: (error: Error) => {
-      showToast.error(error.message || 'Failed to send invitation');
+      notifyApiError(error, 'Failed to send invitation');
     },
   });
 }
@@ -77,7 +78,7 @@ export function useDeactivateAdmin() {
       queryClient.invalidateQueries({ queryKey: queryKeys.admins.all(), exact: false });
     },
     onError: (error: Error) => {
-      showToast.error(error.message || 'Failed to deactivate admin');
+      notifyApiError(error, 'Failed to deactivate admin');
     },
   });
 }

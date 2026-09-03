@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { showToast } from '@/app/_module/lib/notify';
+import { notifyApiError } from '@/app/_module/lib/apiError';
 import { apiClient } from '@/app/_module/api/client';
 import { queryKeys } from '@/app/_module/api/queryKeys';
 import type {
@@ -72,7 +73,7 @@ export function useCreateRole() {
       queryClient.invalidateQueries({ queryKey: ["roles"], exact: false });
     },
     onError: (error: Error) => {
-      showToast.error(error.message || 'Failed to create role');
+      notifyApiError(error, 'Failed to create role');
     },
   });
 }
@@ -94,7 +95,7 @@ export function useUpdateRole() {
       queryClient.invalidateQueries({ queryKey: queryKeys.roles.detail(id) });
     },
     onError: (error: Error) => {
-      showToast.error(error.message || 'Failed to update role');
+      notifyApiError(error, 'Failed to update role');
     },
   });
 }
@@ -116,7 +117,7 @@ export function useDeactivateRole() {
       queryClient.invalidateQueries({ queryKey: ["roles"], exact: false });
     },
     onError: (error: Error) => {
-      showToast.error(error.message || 'Failed to deactivate role');
+      notifyApiError(error, 'Failed to deactivate role');
     },
   });
 }
