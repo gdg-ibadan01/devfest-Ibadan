@@ -239,6 +239,7 @@ export class OrdersService {
       status: o.status,
       attendeeFullName: o.attendeeFullName,
       attendeeEmail: o.attendeeEmail,
+      checkIns: o.checkIns,
       ticket: {
         id: o.ticket.id,
         name: o.ticket.name,
