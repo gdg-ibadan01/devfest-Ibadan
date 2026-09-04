@@ -87,3 +87,53 @@ export interface TicketListParams {
   limit?: number;
   name?: string;
 }
+
+// ---- Audit Logs --------------------------------------------
+export interface AuditLogItemDto {
+  id: string;
+  adminId: string;
+  roleId: string | null;
+  action: string;
+  metadata: Record<string, any> | null;
+  createdAt: string;
+  admin: {
+    id: string;
+    fullName: string;
+    email: string;
+    role?: {
+      id: string;
+      name: string;
+    } | null;
+  };
+  role?: {
+    id: string;
+    name: string;
+  } | null;
+}
+
+export interface AuditLogPaginationMetaDto {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+}
+
+export interface AuditLogListResponseDto {
+  success: boolean;
+  message: string;
+  data: AuditLogItemDto[];
+  meta: AuditLogPaginationMetaDto;
+}
+
+export interface AuditLogListParams extends PaginationParams {
+  search?: string;
+  action?: string;
+  adminId?: string;
+  roleId?: string;
+  startDate?: string;
+  endDate?: string;
+  sortOrder?: 'asc' | 'desc';
+}
+

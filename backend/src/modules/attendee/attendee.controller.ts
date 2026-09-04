@@ -1,91 +1,68 @@
 import {
+  BadRequestException,
   Body,
   Controller,
-  HttpCode,
-  HttpException,
   HttpStatus,
-  Post,
+  InternalServerErrorException,
+  NotFoundException,
+  Patch,
   UseGuards,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
-  ApiOkResponse,
   ApiOperation,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import { AttendeeService } from './attendee.service';
+import { CheckInOrderDto, CheckInResponseDto } from './dto/check-in.dto';
 import { JwtAuthGuard } from '../admin/guards/jwt-auth.guard';
 import { PermissionsGuard } from '../admin/guards/permissions.guard';
-import { RequirePermission } from '../../common/decorators/permissions.decorator';
-import { CurrentUser } from '../../common/decorators/current-user.decorator';
-import { IJwtPayload } from '../admin/interfaces/admin.interface';
-import { ServiceError } from '../../common/errors/service-error';
-import { AttendeeService } from './attendee.service';
-import { CreateAttendeeDto } from './dto/create-attendee.dto';
-import { AttendeeResponseDto } from './dto/attendee-response.dto';
-import { OrdersService } from '../order/order.service';
+import { RequirePermission } from 'src/common/decorators/permissions.decorator';
 
-@ApiTags('Attendees')
-@UseGuards(JwtAuthGuard, PermissionsGuard)
+@ApiTags('Attendee')
 @Controller('attendees')
 export class AttendeeController {
   constructor(private readonly attendeeService: AttendeeService) {}
 
-  @Post('create')
+  @Patch('check-in')
   @ApiBearerAuth()
+  @RequirePermission('attendees.check_in')
   @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @RequirePermission('attendees.create')
-  @ApiOperation({ summary: 'Manually add a new attendee by admin' })
-  @ApiOkResponse({
-    description: 'Attendee successfully created',
-    type: AttendeeResponseDto,
-  })
-  @ApiResponse({ status: 404, description: 'Ticket slug not found' })
+  @ApiOperation({ summary: 'Check in an attendee' })
   @ApiResponse({
-    status: 409,
-    description:
-      'Ticket sold out, reserved, or duplicate order for this attendee',
+    status: HttpStatus.OK,
+    description: 'Attendee checked in successfully',
+    type: CheckInResponseDto,
   })
   @ApiResponse({
-    status: 502,
-    description: 'Payment gateway could not be initialised',
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Ticket not valid for today',
   })
-  @HttpCode(HttpStatus.CREATED)
-  async create(
-    @Body() dto: CreateAttendeeDto,
-    @CurrentUser() user: IJwtPayload,
-  ) {
+  @ApiResponse({
+    status: HttpStatus.UNAUTHORIZED,
+    description: 'Not authenticated',
+  })
+  @ApiResponse({
+    status: HttpStatus.FORBIDDEN,
+    description: 'Missing attendees.check_in permission',
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Ticket not found',
+  })
+  async checkIn(@Body() dto: CheckInOrderDto) {
     try {
-      return await this.attendeeService.create(dto, user.sub);
+      return await this.attendeeService.checkIn(dto);
     } catch (err) {
-      if (err instanceof HttpException) throw err;
-
-      if (err instanceof ServiceError) {
-        switch (err.name) {
-          case OrdersService.ERRORS.ValidationErr:
-          case OrdersService.ERRORS.NotOnSaleErr:
-            throw new HttpException(err.message, HttpStatus.BAD_REQUEST);
-
-          case OrdersService.ERRORS.SoldOutErr:
-          case OrdersService.ERRORS.RetryLaterErr:
-          case OrdersService.ERRORS.DuplicateErr:
-            throw new HttpException(err.message, HttpStatus.CONFLICT);
-
-          case OrdersService.ERRORS.PaymentErr:
-            throw new HttpException(err.message, HttpStatus.BAD_GATEWAY);
-
-          default:
-            throw new HttpException(
-              err.message,
-              HttpStatus.INTERNAL_SERVER_ERROR,
-            );
-        }
+      switch ((err as Error).name) {
+        case AttendeeService.ERRORS.UnmatchedValidityDateErr:
+          throw new BadRequestException((err as Error).message);
+        case AttendeeService.ERRORS.TicketNotFoundErr:
+          throw new NotFoundException((err as Error).message);
+        default:
+          throw new InternalServerErrorException((err as Error).message);
       }
-
-      throw new HttpException(
-        'Unable to add attendee',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
     }
   }
 }

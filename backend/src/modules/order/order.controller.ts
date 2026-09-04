@@ -42,7 +42,7 @@ export class OrdersController {
 
   @Post()
   @ApiOperation({
-    summary: 'Create a ticket order(public self-service checkout)',
+    summary: 'Create a ticket order',
   })
   @ApiResponse({
     status: HttpStatus.CREATED,
@@ -209,6 +209,10 @@ export class OrdersController {
   @ApiResponse({
     status: HttpStatus.NOT_FOUND,
     description: 'Ticket not found',
+  })
+  @ApiParam({
+    name: 'reference',
+    example: 'EarlyBird-ABC123',
   })
   @ApiResponse({
     status: HttpStatus.CONFLICT,

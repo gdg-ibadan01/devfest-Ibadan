@@ -45,17 +45,6 @@ export class MailService implements OnModuleInit {
     }
   }
 
-  async onModuleInit() {
-    try {
-      await this.transporter.verify();
-      this.logger.log('✅ cPanel SMTP connection successful');
-    } catch (error) {
-      this.logger.error(
-        `❌ cPanel SMTP connection failed: ${error instanceof Error ? error.message : error}`,
-      );
-    }
-  }
-
   async sendTicketConfirmationEmail(
     email: string,
     fullName: string,

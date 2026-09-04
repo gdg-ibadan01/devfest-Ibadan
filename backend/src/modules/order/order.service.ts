@@ -32,6 +32,7 @@ interface CreatedOrderRecord {
   order: Order;
   ticketName: string;
   ticketSlug: string;
+  createdById?: string | null;
 }
 
 interface CreateRefundRecord {
@@ -142,7 +143,7 @@ export class OrdersService {
               attendeePhoneNumber: payload.attendee.phoneNumber?.trim() || null,
               gifterName: payload.gifter?.fullName.trim() ?? null,
               gifterEmail: gifterEmail ?? null,
-              createdById,
+              createdById: createdById ?? null,
               skipSaleWindowCheck,
             }),
           { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
@@ -192,8 +193,9 @@ export class OrdersService {
     }
 
     const payer = {
-      fullName: payload.attendee.fullName.trim(),
-      email: attendeeEmail,
+      fullName:
+        payload.gifter?.fullName.trim() ?? payload.attendee.fullName.trim(),
+      email: gifterEmail ?? attendeeEmail,
     };
 
     const response = await this.initializeCheckout(record, payer);
@@ -433,14 +435,14 @@ export class OrdersService {
 
     const order = await tx.order.create({
       data: {
-        reference: this.generateReference(ticket.name), // FIX what if there is a reference collision?
+        reference: this.generateReference(ticket.name),
         ticketId: ticket.id,
         attendeeFullName: args.attendeeFullName,
         attendeeEmail: args.attendeeEmail,
         attendeePhoneNumber: args.attendeePhoneNumber,
         gifterName: args.gifterName,
         gifterEmail: args.gifterEmail,
-        createdById: args.createdById ?? null,
+        createdById: args.createdById,
         discount: ticket.discount.toFixed(2),
         amount: amount.toFixed(2),
         currency: 'NGN',
@@ -450,14 +452,19 @@ export class OrdersService {
       },
     });
 
-    return { order, ticketName: ticket.name, ticketSlug: ticket.slug };
+    return {
+      order,
+      ticketName: ticket.name,
+      ticketSlug: ticket.slug,
+      createdById: args.createdById ?? null,
+    };
   }
 
   private async initializeCheckout(
     record: CreatedOrderRecord,
     payer: { fullName: string; email: string },
   ): Promise<CreateOrderResponseDto> {
-    const { order, ticketName, ticketSlug } = record;
+    const { order, ticketName, ticketSlug, createdById } = record;
     const params: InitializePaymentParams = {
       amount: Number(order.amount),
       customerName: payer.fullName,
@@ -484,6 +491,7 @@ export class OrdersService {
         updated,
         { name: ticketName, slug: ticketSlug },
         initialized.vatAndCharges,
+        createdById,
       );
     } catch (err) {
       this.logger.error(
@@ -502,6 +510,7 @@ export class OrdersService {
     order: Order,
     ticket: { name: string; slug: string },
     vatAndCharges: number,
+    createdById?: string | null,
   ): CreateOrderResponseDto {
     return {
       id: order.id,
@@ -514,7 +523,7 @@ export class OrdersService {
       checkoutUrl: order.checkoutUrl,
       expiresAt: order.expiresAt,
       ticket,
-      createdById: order.createdById,
+      createdById: createdById ?? null,
     };
   }
 

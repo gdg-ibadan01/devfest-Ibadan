@@ -1,92 +1,78 @@
 import { Injectable } from '@nestjs/common';
-import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { ServiceError } from '../../common/errors/service-error';
-import { OrdersService } from '../order/order.service';
-import { MailService } from '../mail/mail.service';
-import { CreateAttendeeDto } from './dto/create-attendee.dto';
-import { AttendeeResponseDto } from './dto/attendee-response.dto';
-import { CreateOrderResponseDto } from '../order/create-order.dto';
+import { ServiceError } from 'src/common/errors/service-error';
+import { CheckInOrderDto } from './dto/check-in.dto';
+
+interface OrderCheckInRow {
+  id: string;
+  reference: string;
+  ticket_id: string;
+  check_ins: Date[];
+}
 
 @Injectable()
 export class AttendeeService {
-  constructor(
-    private readonly prisma: PrismaService,
-    private readonly orderService: OrdersService,
-    private readonly mailService: MailService,
-  ) {}
+  static ERRORS = {
+    UnmatchedValidityDateErr: 'UnmatchedValidityDateErr',
+    TicketNotFoundErr: 'TicketNotFoundErr',
+  } as const;
+  constructor(private readonly prisma: PrismaService) {}
 
-  async create(
-    dto: CreateAttendeeDto,
-    createdById: string,
-  ): Promise<AttendeeResponseDto> {
-    const order = await this.orderService.create({
-      slug: dto.ticketSlug,
-      attendee: {
-        fullName: dto.fullName,
-        email: dto.email,
-        phoneNumber: dto.phone,
-      },
-      gifter:
-        dto.gifterName && dto.gifterEmail
-          ? { fullName: dto.gifterName, email: dto.gifterEmail }
-          : undefined,
-    });
+  async checkIn(payload: CheckInOrderDto) {
+    const orderId = payload.orderId.trim();
+    const now = new Date();
+    const today = now.toDateString();
 
-    await this.prisma.auditLog.create({
-      data: {
-        adminId: createdById,
-        action: 'CREATE_ATTENDEE',
-        metadata: {
-          orderId: order.id,
-          reference: order.reference,
-          attendeeFullName: dto.fullName,
-          attendeeEmail: dto.email,
-          attendeePhoneNumber: dto.phone ?? null,
-          gifterName: dto.gifterName ?? null,
-          gifterEmail: dto.gifterEmail ?? null,
-          ticketSlug: dto.ticketSlug,
-          ticketName: order.ticket.name,
-          amount: order.amount,
-        },
-      },
-    });
-    this.mailService
-      .sendPaymentLinkEmail(
-        dto.email,
-        dto.fullName,
-        order.checkoutUrl ?? '',
-        Number(order.amount),
-      )
-      .catch((err: Error) => {
-        console.error(
-          `[AttendeeService] Failed to send payment link email to ${dto.email}: ${err.message}`,
+    return this.prisma.$transaction(async (tx) => {
+      const [order] = await tx.$queryRaw<OrderCheckInRow[]>`
+        SELECT id, reference, ticket_id, check_ins
+        FROM orders
+        WHERE id = ${orderId}
+        FOR UPDATE;`;
+
+      if (!order) {
+        throw new ServiceError(
+          'Ticket not found',
+          AttendeeService.ERRORS.TicketNotFoundErr,
         );
+      }
+
+      const ticket = await tx.ticket.findUnique({
+        where: { id: order.ticket_id },
+        select: { validityDates: true },
       });
 
-    return this.toResponse(order);
+      const validToday = (ticket?.validityDates ?? []).some(
+        (d) => d.toDateString() === today,
+      );
+      if (!validToday) {
+        throw new ServiceError(
+          'Ticket not valid for today',
+          AttendeeService.ERRORS.UnmatchedValidityDateErr,
+        );
+      }
+
+      const alreadyCheckedIn = order.check_ins.some(
+        (d) => d.toDateString() === today,
+      );
+      if (alreadyCheckedIn) {
+        return {
+          orderId: order.id,
+          code: order.reference.slice(-6),
+          checkIns: order.check_ins,
+        };
+      }
+
+      const updated = await tx.order.update({
+        where: { id: order.id },
+        data: { checkIns: { push: now } },
+      });
+
+      return {
+        orderId: updated.id,
+        code: updated.reference.slice(-6),
+        checkIns: updated.checkIns,
+      };
+    });
   }
-
-  private toResponse(order: CreateOrderResponseDto): AttendeeResponseDto {
-    return {
-      id: order.id,
-      reference: order.reference,
-      ticket: {
-        name: order.ticket.name,
-        slug: order.ticket.slug,
-      },
-      amount: order.amount,
-      discount: order.discount,
-      currency: order.currency,
-      status: order.status,
-      checkoutUrl: order.checkoutUrl,
-      expiresAt: order.expiresAt,
-    };
-  }
-
-  async findAll(_page: number = 1, _limit: number = 10) {}
-
-  async findOne(_id: string) {}
-
-  async findByEmail(_email: string) {}
 }
