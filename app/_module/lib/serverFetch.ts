@@ -3,11 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 // Normalize the configured base URL up front — strip any trailing
 // slash(es) *before* checking whether it already ends with `/api/v1`.
-// Without this, a value like `https://host/api/v1/` (trailing slash, e.g.
-// as configured in some deployment environments) fails the `endsWith`
-// check, so `/api/v1` gets appended a second time, producing a doubled
-// `/api/v1/api/v1/...` path that 404s on every request — which in turn
-// means login never gets a 2xx response and no auth cookie is ever set.
+
 const RAW_BASE = (
   process.env.API_BASE_URL ?? 'https://devfest-ibadan.onrender.com/api/v1'
 )
