@@ -37,7 +37,7 @@ async function getTicketsOnSale(name?: string): Promise<OnSaleTicketResponseDto>
 
 export function useTicketsOnSale(name?: string) {
   return useQuery({
-    queryKey: queryKeys.tickets.onSale(name),
+    queryKey: queryKeys.tickets.onSale(name ? { name } : undefined),
     queryFn: () => getTicketsOnSale(name),
   });
 }
