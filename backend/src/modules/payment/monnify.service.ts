@@ -1,5 +1,15 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
+import {
+  dinero,
+  add,
+  greaterThan,
+  NGN,
+  subtract,
+  Dinero,
+  toSnapshot,
+} from 'dinero.js';
+
 import axios, { AxiosError } from 'axios';
 import * as crypto from 'node:crypto';
 import { ServiceError } from 'src/common/errors/service-error';
@@ -43,23 +53,57 @@ export class MonnifyService implements PaymentProvider {
     private readonly mnfyCfg: ConfigType<typeof monnifyConfig>,
   ) {}
 
+  private withCharges(amountInKobo: number) {
+    const MONNIFY_CAP_CHARGE = 200000; // ₦2,000 in kobo
+    const VAT_RATE = 0.075; // 7.5%
+    const FEE_RATE = 0.015; // 1.5%
+
+    amountInKobo = Math.trunc(amountInKobo);
+    const effectiveFeeRate = FEE_RATE * (1 + VAT_RATE);
+    const effectiveCapKobo = Math.round(MONNIFY_CAP_CHARGE * (1 + VAT_RATE));
+    const capThresholdKobo = Math.round(MONNIFY_CAP_CHARGE / FEE_RATE);
+
+    const productPrice = dinero({ amount: amountInKobo, currency: NGN });
+    const capThreshold = dinero({ amount: capThresholdKobo, currency: NGN });
+    const effectiveCap = dinero({ amount: effectiveCapKobo, currency: NGN });
+
+    let toPay: Dinero<number>;
+    if (greaterThan(productPrice, capThreshold)) {
+      toPay = add(productPrice, effectiveCap);
+    } else {
+      const grossKobo = Math.round(amountInKobo / (1 - effectiveFeeRate));
+      toPay = dinero({ amount: grossKobo, currency: NGN });
+    }
+
+    const vatAndCharges = subtract(toPay, productPrice);
+
+    return {
+      amount: Number((toSnapshot(toPay).amount / 100).toFixed(2)),
+      vatAndCharges: Number(
+        (toSnapshot(vatAndCharges).amount / 100).toFixed(2),
+      ),
+    };
+  }
+
   async initializePayment(
     params: InitializePaymentParams,
   ): Promise<InitializedPayment> {
-    const payload = {
-      amount: params.amount,
-      customerName: params.customerName,
-      customerEmail: params.customerEmail,
-      paymentReference: params.paymentReference,
-      paymentDescription: params.description ?? 'Ticket purchase',
-      currencyCode: 'NGN',
-      contractCode: this.getRequiredConfig('contractCode'),
-      redirectUrl: params.redirectUrl ?? this.getConfig('redirectUrl'),
-      paymentMethods: ['CARD', 'ACCOUNT_TRANSFER'],
-      metaData: params.metadata ?? {},
-    };
-
     try {
+      const { amount, vatAndCharges } = this.withCharges(params.amount * 100);
+
+      const payload = {
+        amount,
+        customerName: params.customerName,
+        customerEmail: params.customerEmail,
+        paymentReference: params.paymentReference,
+        paymentDescription: params.description ?? 'Ticket purchase',
+        currencyCode: 'NGN',
+        contractCode: this.getRequiredConfig('contractCode'),
+        redirectUrl: params.redirectUrl ?? this.getConfig('redirectUrl'),
+        paymentMethods: ['CARD', 'ACCOUNT_TRANSFER'],
+        metaData: params.metadata ?? {},
+      };
+
       const res = await this.request<MonnifyInitResponseBody>(
         'POST',
         '/api/v1/merchant/transactions/init-transaction',
@@ -84,6 +128,7 @@ export class MonnifyService implements PaymentProvider {
         provider: this.name,
         transactionRef: res.responseBody.transactionReference,
         checkoutUrl: res.responseBody.checkoutUrl,
+        vatAndCharges,
       };
     } catch (err) {
       if (err instanceof ServiceError) throw err;

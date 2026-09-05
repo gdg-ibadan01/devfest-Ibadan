@@ -25,6 +25,7 @@ import { TicketsModule } from './modules/ticket/ticket.module';
 import { UploadModule } from './modules/upload/upload.module';
 import { OrdersModule } from './modules/order/order.module';
 import { WebhookModule } from './modules/webhook/webhook.module';
+import { PDFService } from './modules/pdf/pdf.service';
 
 @Module({
   imports: [
@@ -68,6 +69,7 @@ import { WebhookModule } from './modules/webhook/webhook.module';
       useClass: RequestLoggerInterceptor,
     },
     AppService,
+    PDFService,
   ],
 })
 export class AppModule {}

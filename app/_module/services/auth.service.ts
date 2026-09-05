@@ -2,6 +2,7 @@ import { useMutation } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { apiClient } from '@/app/_module/api/client';
 import { showToast } from '@/app/_module/lib/notify';
+import { notifyApiError } from '@/app/_module/lib/apiError';
 import { clearTokens } from '@/app/actions/auth';
 import type {
   LoginAdminDto,
@@ -26,7 +27,7 @@ export function useAdminLogin() {
       router.replace('/admin/home');
     },
     onError: (error: Error) => {
-      showToast.error(error.message || 'Incorrect email or password');
+      notifyApiError(error, 'Incorrect email or password');
     },
   });
 }
@@ -60,7 +61,7 @@ export function useForgotPassword() {
       showToast.success('Reset link sent — check your email');
     },
     onError: (error: Error) => {
-      showToast.error(error.message || 'Failed to send reset link');
+      notifyApiError(error, 'Failed to send reset link');
     },
   });
 }
@@ -81,7 +82,7 @@ export function useResetPassword() {
       router.replace('/password-changed');
     },
     onError: (error: Error) => {
-      showToast.error(error.message || 'Password reset failed');
+      notifyApiError(error, 'Password reset failed');
     },
   });
 }

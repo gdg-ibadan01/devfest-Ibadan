@@ -51,7 +51,7 @@ export class TicketQueryDto {
 
   @ApiPropertyOptional({
     description: 'Ticket name (case-insensitive)',
-    example: 'Early Bird',
+    example: 'Google DevFest 2026',
   })
   @IsOptional()
   @IsString()
@@ -130,7 +130,7 @@ export class TicketListResponseDto {
 export class OnSaleTicketQueryDto {
   @ApiPropertyOptional({
     description: 'Filter tickets by name (case-insensitive)',
-    example: 'Early Bird',
+    example: 'Google DevFest 2026',
   })
   @IsOptional()
   @IsString()
