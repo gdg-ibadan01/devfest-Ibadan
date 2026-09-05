@@ -1,10 +1,19 @@
 import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
 
-const RAW_BASE = process.env.API_BASE_URL ?? 'https://devfest-ibadan.onrender.com/api/v1';
-const API_BASE = RAW_BASE.endsWith('/api/v1')
-  ? RAW_BASE
-  : `${RAW_BASE.replace(/\/+$/, '')}/api/v1`;
+// Normalize the configured base URL up front — strip any trailing
+// slash(es) *before* checking whether it already ends with `/api/v1`.
+// Without this, a value like `https://host/api/v1/` (trailing slash, e.g.
+// as configured in some deployment environments) fails the `endsWith`
+// check, so `/api/v1` gets appended a second time, producing a doubled
+// `/api/v1/api/v1/...` path that 404s on every request — which in turn
+// means login never gets a 2xx response and no auth cookie is ever set.
+const RAW_BASE = (
+  process.env.API_BASE_URL ?? 'https://devfest-ibadan.onrender.com/api/v1'
+)
+  .trim()
+  .replace(/\/+$/, '');
+const API_BASE = RAW_BASE.endsWith('/api/v1') ? RAW_BASE : `${RAW_BASE}/api/v1`;
 
 /** Build auth headers using the current access token from httpOnly cookie */
 async function buildHeaders(token?: string): Promise<Record<string, string>> {
