@@ -4,7 +4,8 @@ export const queryKeys = {
 
   // Admins
   admins: {
-    all: (params?: Record<string, unknown>) => ['admins', params] as const,
+    all: (params?: Record<string, unknown>) =>
+      params ? (['admins', params] as const) : (['admins'] as const),
     detail: (id: string) => ['admins', id] as const,
   },
 
@@ -19,18 +20,22 @@ export const queryKeys = {
   tickets: {
     all: (params?: Record<string, unknown>) => ['tickets', params] as const,
     detail: (id: string) => ['tickets', id] as const,
-    onSale: (name?: string) => ['tickets', 'onsale', name] as const,
+    onSale: (params?: Record<string, unknown>) => ['tickets', 'onsale', params] as const,
   },
 
-  // Attendees
-  attendees: {
-    all: (params?: Record<string, unknown>) => ['attendees', params] as const,
-    detail: (id: string) => ['attendees', id] as const,
-  },
-
-  // Orders
+  // Orders (replaces the old attendees list — attendees API now only handles check-in)
   orders: {
-    all: (params?: Record<string, unknown>) => ['orders', params] as const,
-    detail: (id: string) => ['orders', id] as const,
+    all: (params?: Record<string, unknown>) =>
+      params ? (['orders', params] as const) : (['orders'] as const),
+    reference: (reference: string) => ['orders', 'reference', reference] as const,
+     detail: (id: string) => ['orders', id] as const,
+    /** Scan-accumulated, client-side check-in-filtered view of /orders (see order.service.ts). */
+    checkInFiltered: (params: Record<string, unknown>) =>
+      ['orders', 'checkin-filtered', params] as const,
+  },
+
+  // Attendees (check-in + the checked-in attendees list, both under /attendees)
+  attendees: {
+    checkedIn: (params: Record<string, unknown>) => ['attendees', 'checked-in', params] as const,
   },
 } as const;

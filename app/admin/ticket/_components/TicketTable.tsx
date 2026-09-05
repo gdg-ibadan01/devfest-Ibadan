@@ -111,7 +111,9 @@ export default function TicketTable() {
     const prev = stack.pop();
     setCursorStack(stack);
     setCursor(prev || undefined);
-    setDirection('prev');
+    // Once the stack is empty we're back on the true first page — reset
+    // direction too so the query params exactly match the initial fetch.
+    setDirection(prev ? 'prev' : undefined);
   };
 
   const clearFilters = () => {

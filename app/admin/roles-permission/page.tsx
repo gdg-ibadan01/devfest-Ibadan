@@ -1,130 +1,41 @@
-'use client';
+import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
+import { getQueryClient } from '@/app/_module/lib/getQueryClient';
+import { serverFetch } from '@/app/_module/lib/serverFetch';
+import { queryKeys } from '@/app/_module/api/queryKeys';
+import RolesPermissionPageClient from './RolesPermissionPageClient';
 
-import { useState } from 'react';
-import AdminWrapper from '@/app/_module/components/common/AdminWrapper';
-import RolesTable from './_components/RolesTable';
-import RoleFormModal from './_components/RoleFormModal';
-import RoleDetailModal from './_components/RoleDetailModal';
-import DeactivateRoleModal from './_components/DeactivateRoleModal';
-import RoleSuccessModal from './_components/RoleSuccessModal';
-import InvitePeopleModal from './_components/InvitePeopleModal';
-import type { RoleFormData, InviteFormData } from './_types/role.types';
-import type { ListRolesItemResponseDto } from '@/app/_module/api/types';
+export default async function RolesPermissionPage() {
+  const queryClient = getQueryClient();
 
-type ModalState = 'none' | 'add' | 'invite' | 'detail' | 'edit' | 'deactivate' | 'success';
-
-export default function RolesPermissionPage() {
-  const [modal, setModal] = useState<ModalState>('none');
-  const [selectedRole, setSelectedRole] = useState<ListRolesItemResponseDto | null>(null);
-  const [deactivateSource, setDeactivateSource] = useState<'detail' | 'table'>('table');
-  const [successAction, setSuccessAction] = useState<'create' | 'edit' | undefined>(undefined);
-
-  const openDetail = (role: ListRolesItemResponseDto) => {
-    setSelectedRole(role);
-    setModal('detail');
-  };
-
-  const openEdit = (role: ListRolesItemResponseDto) => {
-    setSelectedRole(role);
-    setModal('edit');
-  };
-
-  // Called from table action menu — after close, go back to detail
-  const openDeactivateFromTable = (role: ListRolesItemResponseDto) => {
-    setSelectedRole(role);
-    setDeactivateSource('table');
-    setModal('deactivate');
-  };
-
-  // Called from detail modal — after close, go back to detail
-  const openDeactivateFromDetail = () => {
-    setDeactivateSource('detail');
-    setModal('deactivate');
-  };
-
-  const handleFormSubmit = (action?: 'create' | 'edit') => {
-    setSuccessAction(action);
-    setModal('success');
-  };
-
-  const handleDeactivateConfirm = () => {
-    setModal('none');
-    setSelectedRole(null);
-  };
-
-  const handleDeactivateClose = () => {
-    if (deactivateSource === 'detail') {
-      setModal('detail');
-    } else {
-      setModal('none');
-      setSelectedRole(null);
-    }
-  };
-
-  const closeAll = () => {
-    setModal('none');
-    setSelectedRole(null);
-  };
+  // Prefetch both the roles list (RolesTable) and the permissions catalog
+  // (used by the Add/Edit Role modals) so both are ready the moment a user
+  // opens this page or a modal on it.
+  await Promise.all([
+    queryClient.prefetchQuery({
+      queryKey: queryKeys.roles.all(),
+      queryFn: async () => {
+        const { data, status } = await serverFetch('/roles');
+        if (status < 200 || status >= 300) {
+          throw new Error('Failed to prefetch roles');
+        }
+        return data;
+      },
+    }),
+    queryClient.prefetchQuery({
+      queryKey: queryKeys.roles.permissions(),
+      queryFn: async () => {
+        const { data, status } = await serverFetch('/roles/permissions');
+        if (status < 200 || status >= 300) {
+          throw new Error('Failed to prefetch permissions');
+        }
+        return data;
+      },
+    }),
+  ]);
 
   return (
-    <AdminWrapper title="Roles & Permission">
-      <div className="lg:px-[32px] px-[20px] py-[24px]">
-        <RolesTable
-          onAddRole={() => setModal('add')}
-          onInvite={() => setModal('invite')}
-          onRowClick={openDetail}
-          onEdit={openEdit}
-          onDeactivate={openDeactivateFromTable}
-        />
-      </div>
-
-      {/* Add New Role */}
-      <RoleFormModal
-        open={modal === 'add'}
-        mode="add"
-        onClose={closeAll}
-        onSubmit={handleFormSubmit}
-      />
-
-      {/* Edit Role */}
-      <RoleFormModal
-        open={modal === 'edit'}
-        mode="edit"
-        roleId={selectedRole?.id}
-        onClose={closeAll}
-        onSubmit={handleFormSubmit}
-      />
-
-      {/* Invite People */}
-      <InvitePeopleModal
-        open={modal === 'invite'}
-        onClose={closeAll}
-        onSubmit={handleFormSubmit}
-      />
-
-      {/* Role Detail */}
-      <RoleDetailModal
-        open={modal === 'detail'}
-        role={selectedRole}
-        onClose={closeAll}
-        onEdit={() => openEdit(selectedRole!)}
-        onDeactivate={openDeactivateFromDetail}
-      />
-
-      {/* Deactivate Confirm */}
-      <DeactivateRoleModal
-        open={modal === 'deactivate'}
-        roleId={selectedRole?.id}
-        onClose={handleDeactivateClose}
-        onConfirm={handleDeactivateConfirm}
-      />
-
-      {/* Success */}
-      <RoleSuccessModal
-        open={modal === 'success'}
-        action={successAction}
-        onDashboard={closeAll}
-      />
-    </AdminWrapper>
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <RolesPermissionPageClient />
+    </HydrationBoundary>
   );
 }

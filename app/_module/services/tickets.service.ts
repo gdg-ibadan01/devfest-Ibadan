@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { showToast } from '@/app/_module/lib/notify';
+import { notifyApiError } from '@/app/_module/lib/apiError';
 import { apiClient } from '@/app/_module/api/client';
 import { queryKeys } from '@/app/_module/api/queryKeys';
 import type {
@@ -36,7 +37,7 @@ async function getTicketsOnSale(name?: string): Promise<OnSaleTicketResponseDto>
 
 export function useTicketsOnSale(name?: string) {
   return useQuery({
-    queryKey: queryKeys.tickets.onSale(name),
+    queryKey: queryKeys.tickets.onSale(name ? { name } : undefined),
     queryFn: () => getTicketsOnSale(name),
   });
 }
@@ -74,7 +75,7 @@ export function useCreateTicket() {
       queryClient.invalidateQueries({ queryKey: ['tickets'], exact: false });
     },
     onError: (error: Error) => {
-      showToast.error(error.message || 'Failed to create ticket');
+      notifyApiError(error, 'Failed to create ticket');
     },
   });
 }
@@ -102,7 +103,21 @@ export function useUpdateTicket() {
       queryClient.invalidateQueries({ queryKey: queryKeys.tickets.detail(id) });
     },
     onError: (error: Error) => {
-      showToast.error(error.message || 'Failed to update ticket');
+      notifyApiError(error, 'Failed to update ticket');
     },
+  });
+}
+
+// ---- On-sale tickets (for the admin "add attendee" order form) -----
+
+async function getOnSaleTickets(): Promise<OnSaleTicketResponseDto> {
+  const { data } = await apiClient.get<OnSaleTicketResponseDto>('/tickets/onsale');
+  return data;
+}
+
+export function useOnSaleTickets() {
+  return useQuery({
+    queryKey: queryKeys.tickets.onSale(),
+    queryFn: getOnSaleTickets,
   });
 }

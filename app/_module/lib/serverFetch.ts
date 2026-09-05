@@ -52,21 +52,33 @@ export async function serverFetch<T = unknown>(
   options: {
     method?: string;
     body?: unknown;
-    params?: Record<string, string | number | boolean | undefined>;
+    params?: Record<string, string | number | boolean | string[] | undefined>;
     req?: NextRequest; // pass to forward query params
   } = {}
 ): Promise<{ data: T; status: number }> {
   const url = new URL(`${API_BASE}${path}`);
 
-  // Forward query params from options.params
+  // Forward query params from options.params. Array values (e.g.
+  // `eventDates`) are appended as repeated keys — `?eventDates=a&eventDates=b`
+  // — matching how the backend's query parser (and axios's own default
+  // array serialization on the client) expects them, rather than being
+  // collapsed into a single comma-joined string.
   if (options.params) {
     for (const [k, v] of Object.entries(options.params)) {
-      if (v !== undefined) url.searchParams.set(k, String(v));
+      if (v === undefined) continue;
+      if (Array.isArray(v)) {
+        v.forEach((item) => url.searchParams.append(k, String(item)));
+      } else {
+        url.searchParams.set(k, String(v));
+      }
     }
   }
-  // Forward query params from the incoming Next.js request
+  // Forward query params from the incoming Next.js request. Uses `append`
+  // (not `set`) so repeated keys — e.g. `eventDates[]=a&eventDates[]=b` from
+  // an array param — are preserved instead of the last one silently
+  // overwriting the rest.
   if (options.req) {
-    options.req.nextUrl.searchParams.forEach((v, k) => url.searchParams.set(k, v));
+    options.req.nextUrl.searchParams.forEach((v, k) => url.searchParams.append(k, v));
   }
 
   const doRequest = async (tokenOverride?: string) => {
