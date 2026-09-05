@@ -266,6 +266,7 @@ export default function CreateOrderModal({
                         </span>
                         {pkg?.eventDates?.map((date) => (
                           <span
+                            key={date}
                             className={cn(
                               'px-3 py-[3px] rounded-[24px] text-[11px] font-medium border',
                               isSelected
