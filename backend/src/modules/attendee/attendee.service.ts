@@ -1,110 +1,171 @@
-import {
-  Injectable,
-  NotFoundException,
-  ConflictException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { CreateAttendeeDto } from './dto/create-attendee.dto';
-import { IAttendee, ICreateAttendee } from './interfaces/attendee.interface';
-import { MailService } from '../mail/mail.service';
-import { PaymentsService } from '../payment/payment.service';
+import { ServiceError } from 'src/common/errors/service-error';
+import { CheckInOrderDto } from './dto/check-in.dto';
+import { CheckedInQueryDto } from './dto/checked-in.dto';
+import { OrderStatus } from '@prisma/client';
+
+interface OrderCheckInRow {
+  id: string;
+  status: OrderStatus;
+  reference: string;
+  ticket_id: string;
+  check_ins: Date[];
+}
+
+interface CheckedInOrderRow {
+  id: string;
+  reference: string;
+  amount: Prisma.Decimal;
+  status: string;
+  attendee_full_name: string;
+  attendee_email: string;
+  paid_at: Date | null;
+  check_ins: Date[];
+  ticket_id: string;
+  ticket_name: string;
+  ticket_validity_dates: Date[];
+}
+
 @Injectable()
 export class AttendeeService {
-  constructor(
-    private readonly prisma: PrismaService,
-    private mailService: MailService,
-    private readonly paymentsService: PaymentsService,
-  ) {}
+  static ERRORS = {
+    UnmatchedValidityDateErr: 'UnmatchedValidityDateErr',
+    TicketNotFoundErr: 'TicketNotFoundErr',
+    CheckInUnpaidOrderErr: 'CheckInUnpaidOrderErr',
+  } as const;
 
-  async create(createAttendeeDto: CreateAttendeeDto) {}
+  constructor(private readonly prisma: PrismaService) {}
 
-  async findAll(page: number = 1, limit: number = 10) {}
+  async checkIn(payload: CheckInOrderDto) {
+    const orderId = payload.orderId.trim();
+    const now = new Date();
+    const today = now.toDateString();
 
-  async findOne(id: string) {}
+    return this.prisma.$transaction(async (tx) => {
+      const [order] = await tx.$queryRaw<OrderCheckInRow[]>`
+        SELECT id, reference, status, ticket_id, check_ins
+        FROM orders
+        WHERE id = ${orderId}
+        FOR UPDATE;`;
 
-  async findByEmail(email: string) {}
+      if (!order) {
+        throw new ServiceError(
+          'Ticket not found',
+          AttendeeService.ERRORS.TicketNotFoundErr,
+        );
+      }
 
-  // async registerForEvent(
-  //   attendeeId: string,
-  //   registerEventDto: RegisterEventDto,
-  // ) {
-  //   const { eventId, specialRequests, dietaryRestrictions } = registerEventDto;
+      if (order.status !== OrderStatus.PAID) {
+        throw new ServiceError(
+          'Cannot check-in unpaid order',
+          AttendeeService.ERRORS.CheckInUnpaidOrderErr,
+        );
+      }
 
-  //   const event = await this.prisma.event.findUnique({
-  //     where: { id: eventId },
-  //   });
+      const ticket = await tx.ticket.findUnique({
+        where: { id: order.ticket_id },
+        select: { validityDates: true },
+      });
 
-  //   if (!event) {
-  //     throw new NotFoundException('Event not found');
-  //   }
+      const validToday = (ticket?.validityDates ?? []).some(
+        (d) => d.toDateString() === today,
+      );
+      if (!validToday) {
+        throw new ServiceError(
+          'Ticket not valid for today',
+          AttendeeService.ERRORS.UnmatchedValidityDateErr,
+        );
+      }
 
-  //   if (event.status !== 'PUBLISHED') {
-  //     throw new ConflictException('Event is not available for registration');
-  //   }
+      const alreadyCheckedIn = order.check_ins.some(
+        (d) => d.toDateString() === today,
+      );
+      if (alreadyCheckedIn) {
+        return {
+          orderId: order.id,
+          code: order.reference.slice(-6),
+          checkIns: order.check_ins,
+        };
+      }
 
-  //   // Current UTC time
-  //   const nowUTC = new Date();
+      const updated = await tx.order.update({
+        where: { id: order.id },
+        data: { checkIns: { push: now } },
+      });
 
-  //   // Registration starts at event.registrationStart
-  //   const startUTC = new Date(event.registrationStart);
+      return {
+        orderId: updated.id,
+        code: updated.reference.slice(-6),
+        checkIns: updated.checkIns,
+      };
+    });
+  }
 
-  //   // Registration ends exactly when event starts
-  //   const eventStartUTC = new Date(event.startDate);
+  async checkedIn(query: CheckedInQueryDto) {
+    const { eventDates, cursor, direction = 'next', limit = 20 } = query;
 
-  //   // // Too early
-  //   // if (nowUTC.getTime() < startUTC.getTime()) {
-  //   //   throw new ConflictException('Registration has not yet started');
-  //   // }
+    const cursorCondition = cursor
+      ? direction === 'next'
+        ? Prisma.sql`AND o.id > ${cursor}`
+        : Prisma.sql`AND o.id < ${cursor}`
+      : Prisma.empty;
+    const orderDirection = direction === 'next' ? 'ASC' : 'DESC';
 
-  //   // Too late
-  //   if (nowUTC.getTime() >= eventStartUTC.getTime()) {
-  //     throw new ConflictException(
-  //       'Registration has closed because the event has started',
-  //     );
-  //   }
+    const rows = await this.prisma.$queryRaw<CheckedInOrderRow[]>`
+      SELECT
+        o.id,
+        o.reference,
+        o.amount,
+        o.status,
+        o.attendee_full_name,
+        o.attendee_email,
+        o.paid_at,
+        o.check_ins,
+        t.id AS ticket_id,
+        t.name AS ticket_name,
+        t.validity_dates AS ticket_validity_dates
+      FROM orders o
+      JOIN tickets t ON t.id = o.ticket_id
+      WHERE EXISTS (
+        SELECT 1
+        FROM unnest(COALESCE(o.check_ins, ARRAY[]::timestamp(3)[])) AS c
+        WHERE c::date = ANY(${eventDates}::date[])
+      )
+      ${cursorCondition}
+      ORDER BY o.id ${Prisma.raw(orderDirection)}
+      LIMIT ${limit + 1};`;
 
-  //   // Check if event is full
-  //   if (event.currentAttendees >= event.maxAttendees) {
-  //     throw new ConflictException('Event is fully booked');
-  //   }
+    const hasMore = rows.length > limit;
+    if (hasMore) rows.pop();
 
-  //   // Check if already registered
-  //   const existingRegistration = await this.prisma.registration.findUnique({
-  //     where: {
-  //       eventId_attendeeId: { eventId, attendeeId },
-  //     },
-  //   });
+    const data = rows.map((o) => ({
+      id: o.id,
+      paidAt: o.paid_at,
+      amount: Number(o.amount).toFixed(2),
+      status: o.status,
+      attendeeFullName: o.attendee_full_name,
+      attendeeEmail: o.attendee_email,
+      checkIns: o.check_ins,
+      ticket: {
+        id: o.ticket_id,
+        name: o.ticket_name,
+        code: o.reference.slice(-6),
+        validity: o.ticket_validity_dates
+          .map((d) => d.toLocaleDateString('en-US', { weekday: 'short' }))
+          .join(' + '),
+      },
+    }));
 
-  //   if (existingRegistration) {
-  //     throw new ConflictException('Already registered for this event');
-  //   }
-
-  //   // Register
-  //   const registration = await this.prisma.registration.create({
-  //     data: {
-  //       eventId,
-  //       attendeeId,
-  //       specialRequests,
-  //       dietaryRestrictions,
-  //     },
-  //     include: { event: true, attendee: true },
-  //   });
-
-  //   // Increment count
-  //   await this.prisma.event.update({
-  //     where: { id: eventId },
-  //     data: { currentAttendees: { increment: 1 } },
-  //   });
-
-  //   return registration;
-  // }
-
-  // async getRegistrations(attendeeId: string) {
-  //   const attendee = await this.prisma.attendee.findUnique({
-  //     where: { id: attendeeId },
-  //     include: { registrations: true },
-  //   });
-
-  //   return attendee?.registrations ?? [];
-  // }
+    return {
+      data,
+      meta: {
+        nextCursor: hasMore ? (data[data.length - 1]?.id ?? null) : null,
+        prevCursor: cursor ?? null,
+        limit,
+        hasMore,
+      },
+    };
+  }
 }

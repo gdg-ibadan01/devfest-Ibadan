@@ -70,7 +70,7 @@ async function bootstrap() {
   // Swagger setup
   const config = new DocumentBuilder()
     .setTitle('GDG Ibadan Ticketing System')
-    .setDescription('Professional ticketing system API for GDG Ibadan events')
+    .setDescription('Ticketing application API for GDG Ibadan events')
     .setVersion('1.0')
     .addBearerAuth()
     .build();

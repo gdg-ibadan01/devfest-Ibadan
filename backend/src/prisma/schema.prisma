@@ -84,7 +84,6 @@ model Ticket {
   updatedAt     DateTime   @updatedAt @map("updated_at")
 
   orders    Order[]
-  attendees Attendee[]
 
   @@map("tickets")
 }
@@ -123,6 +122,8 @@ model Order {
   checkoutUrl            String?     @map("checkout_url")
   expiresAt              DateTime    @map("expires_at")
   paidAt                 DateTime?   @map("paid_at")
+  checkIns               DateTime[]  @default([]) @map("check_ins")
+  ticketUrl              String?     @map("ticket_url")
   createdAt              DateTime    @default(now()) @map("created_at")
   updatedAt              DateTime    @updatedAt @map("updated_at")
 

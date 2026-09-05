@@ -3,11 +3,14 @@ import { OrdersController } from './order.controller';
 import { OrdersService } from './order.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { PaymentsModule } from '../payment/payment.module';
+import { UploadModule } from '../upload/upload.module';
+import { UploadService } from '../upload/upload.service';
+import { PDFService } from '../pdf/pdf.service';
 
 @Module({
-  imports: [PaymentsModule],
+  imports: [PaymentsModule, UploadModule],
   controllers: [OrdersController],
-  providers: [OrdersService, PrismaService],
+  providers: [OrdersService, PrismaService, UploadService, PDFService],
   exports: [OrdersService],
 })
 export class OrdersModule {}
