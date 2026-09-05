@@ -1,13 +1,29 @@
 import { Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ServiceError } from 'src/common/errors/service-error';
 import { CheckInOrderDto } from './dto/check-in.dto';
+import { CheckedInQueryDto } from './dto/checked-in.dto';
 
 interface OrderCheckInRow {
   id: string;
   reference: string;
   ticket_id: string;
   check_ins: Date[];
+}
+
+interface CheckedInOrderRow {
+  id: string;
+  reference: string;
+  amount: Prisma.Decimal;
+  status: string;
+  attendee_full_name: string;
+  attendee_email: string;
+  paid_at: Date | null;
+  check_ins: Date[];
+  ticket_id: string;
+  ticket_name: string;
+  ticket_validity_dates: Date[];
 }
 
 @Injectable()
@@ -75,5 +91,71 @@ export class AttendeeService {
         checkIns: updated.checkIns,
       };
     });
+  }
+
+  async checkedIn(query: CheckedInQueryDto) {
+    const { eventDates, cursor, direction = 'next', limit = 20 } = query;
+
+    const cursorCondition = cursor
+      ? direction === 'next'
+        ? Prisma.sql`AND o.id > ${cursor}`
+        : Prisma.sql`AND o.id < ${cursor}`
+      : Prisma.empty;
+    const orderDirection = direction === 'next' ? 'ASC' : 'DESC';
+
+    const rows = await this.prisma.$queryRaw<CheckedInOrderRow[]>`
+      SELECT
+        o.id,
+        o.reference,
+        o.amount,
+        o.status,
+        o.attendee_full_name,
+        o.attendee_email,
+        o.paid_at,
+        o.check_ins,
+        t.id AS ticket_id,
+        t.name AS ticket_name,
+        t.validity_dates AS ticket_validity_dates
+      FROM orders o
+      JOIN tickets t ON t.id = o.ticket_id
+      WHERE EXISTS (
+        SELECT 1
+        FROM unnest(COALESCE(o.check_ins, ARRAY[]::timestamp(3)[])) AS c
+        WHERE c::date = ANY(${eventDates}::date[])
+      )
+      ${cursorCondition}
+      ORDER BY o.id ${Prisma.raw(orderDirection)}
+      LIMIT ${limit + 1};`;
+
+    const hasMore = rows.length > limit;
+    if (hasMore) rows.pop();
+
+    const data = rows.map((o) => ({
+      id: o.id,
+      paidAt: o.paid_at,
+      amount: Number(o.amount).toFixed(2),
+      status: o.status,
+      attendeeFullName: o.attendee_full_name,
+      attendeeEmail: o.attendee_email,
+      checkIns: o.check_ins,
+      ticket: {
+        id: o.ticket_id,
+        name: o.ticket_name,
+        code: o.reference.slice(-6),
+        validity: o.ticket_validity_dates
+          .map((d) => d.toLocaleDateString('en-US', { weekday: 'short' }))
+          .join(' + '),
+      },
+    }));
+
+    return {
+      data,
+      meta: {
+        nextCursor: hasMore ? (data[data.length - 1]?.id ?? null) : null,
+        prevCursor: cursor ?? null,
+        limit,
+        hasMore,
+      },
+    };
   }
 }
