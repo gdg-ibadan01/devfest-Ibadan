@@ -63,11 +63,7 @@ export async function serverFetch<T = unknown>(
 ): Promise<{ data: T; status: number }> {
   const url = new URL(`${API_BASE}${path}`);
 
-  // Forward query params from options.params. Array values (e.g.
-  // `eventDates`) are appended as repeated keys — `?eventDates=a&eventDates=b`
-  // — matching how the backend's query parser (and axios's own default
-  // array serialization on the client) expects them, rather than being
-  // collapsed into a single comma-joined string.
+
   if (options.params) {
     for (const [k, v] of Object.entries(options.params)) {
       if (v === undefined) continue;
@@ -78,10 +74,7 @@ export async function serverFetch<T = unknown>(
       }
     }
   }
-  // Forward query params from the incoming Next.js request. Uses `append`
-  // (not `set`) so repeated keys — e.g. `eventDates[]=a&eventDates[]=b` from
-  // an array param — are preserved instead of the last one silently
-  // overwriting the rest.
+
   if (options.req) {
     options.req.nextUrl.searchParams.forEach((v, k) => url.searchParams.append(k, v));
   }
