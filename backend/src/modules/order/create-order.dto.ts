@@ -55,7 +55,7 @@ export class OrderGifterDto {
 export class CreateOrderDto {
   @ApiProperty({
     description: 'Slug of the ticket to purchase',
-    example: 'early-bird-2026-08-17',
+    example: 'google-devfest-2026',
   })
   @IsString()
   @IsNotEmpty()
@@ -136,7 +136,7 @@ export class GetOrderReferenceResponseDto {
   @ApiProperty({
     type: 'object',
     properties: {
-      name: { type: 'string', example: 'Early Bird' },
+      name: { type: 'string', example: 'Google DevFest 2026' },
       url: {
         type: 'string',
         example: 'https://example.com/download/ticket.pdf',
@@ -258,7 +258,7 @@ export class OrderListItemDto {
     type: 'object',
     properties: {
       id: { type: 'string' },
-      name: { type: 'string', example: 'Early Bird' },
+      name: { type: 'string', example: 'Google DevFest 2026' },
       code: { type: 'string', example: 'ABC123' },
       validity: { type: 'string', example: 'Fri + Sat' },
     },
