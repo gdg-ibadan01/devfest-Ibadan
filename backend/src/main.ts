@@ -1,5 +1,9 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe, Logger, BadRequestException } from '@nestjs/common';
+import {
+  ValidationPipe,
+  BadRequestException,
+  ConsoleLogger,
+} from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
@@ -11,11 +15,13 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     bufferLogs: true,
+    logger: new ConsoleLogger({
+      prefix: 'GDGIbadan',
+    }),
   });
 
   const configService = app.get(ConfigService);
   const logger = app.get(WINSTON_MODULE_NEST_PROVIDER);
-  app.useLogger(logger);
 
   // Security middleware
   app.use(
@@ -64,7 +70,7 @@ async function bootstrap() {
   // Swagger setup
   const config = new DocumentBuilder()
     .setTitle('GDG Ibadan Ticketing System')
-    .setDescription('Professional ticketing system API for GDG Ibadan events')
+    .setDescription('Ticketing application API for GDG Ibadan events')
     .setVersion('1.0')
     .addBearerAuth()
     .build();

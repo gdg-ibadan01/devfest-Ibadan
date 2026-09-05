@@ -1,8 +1,17 @@
 import axios, { AxiosError } from 'axios';
 import { showToast } from '@/app/_module/lib/notify';
 
+const getBaseUrl = () => {
+  const url =
+    process.env.NEXT_PUBLIC_API_BASE_URL ||
+    process.env.NEXT_PUBLIC_API_URL ||
+    'https://devfest-ibadan.onrender.com/api/v1';
+
+  return url.endsWith('/api/v1') ? url : `${url.replace(/\/+$/, '')}/api/v1`;
+};
+
 export const apiClient = axios.create({
-  baseURL: '/api',
+  baseURL: getBaseUrl(),
   headers: { 'Content-Type': 'application/json' },
   timeout: 30_000,
 });

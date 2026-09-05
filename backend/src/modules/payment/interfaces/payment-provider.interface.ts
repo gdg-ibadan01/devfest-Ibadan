@@ -14,6 +14,19 @@ export interface InitializedPayment {
   provider: string;
   transactionRef: string;
   checkoutUrl: string;
+  vatAndCharges: number;
+}
+
+export interface RefundPaymentParams {
+  transactionReference: string;
+  refundReference: string;
+  amount: number;
+  reason: string;
+}
+
+export interface RefundPaymentResult {
+  success: boolean;
+  message?: string;
 }
 
 export interface PaymentProvider {
@@ -21,4 +34,5 @@ export interface PaymentProvider {
   initializePayment(
     params: InitializePaymentParams,
   ): Promise<InitializedPayment>;
+  requestRefund(params: RefundPaymentParams): Promise<RefundPaymentResult>;
 }

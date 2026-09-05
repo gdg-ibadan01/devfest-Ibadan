@@ -8,9 +8,12 @@ import {
   UseGuards,
   HttpStatus,
   Body,
+  Res,
   BadRequestException,
   InternalServerErrorException,
+  NotFoundException,
 } from '@nestjs/common';
+import { Response } from 'express';
 import {
   ApiTags,
   ApiOperation,
@@ -29,9 +32,6 @@ import {
   TicketListResponseDto,
   TicketQueryDto,
 } from './dto/ticket.dto';
-import { RolesGuard } from '../admin/guards/roles.guard';
-import { Roles } from '../../common/decorators/roles.decorator';
-import { Role } from '../../common/enums/role.enum';
 import { RequirePermission } from 'src/common/decorators/permissions.decorator';
 import { PermissionsGuard } from '../admin/guards/permissions.guard';
 import { CurrentUser } from 'src/common/decorators/current-user.decorator';
@@ -131,6 +131,28 @@ export class TicketsController {
   })
   findBySlug(@Param('slug') slug: string) {
     return this.ticketsService.findBySlug(slug);
+  }
+
+  @Get('download')
+  @ApiOperation({ summary: 'Download a ticket PDF' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Redirect to ticket PDF',
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Invalid token or ticket not found',
+  })
+  async download(@Query('token') token: string, @Res() res: Response) {
+    try {
+      const ticketUrl = await this.ticketsService.downloadTicket(token);
+      return res.redirect(ticketUrl);
+    } catch (err) {
+      if ((err as Error).name === 'InvalidTicketDownloadTokenErr') {
+        throw new NotFoundException('Invalid or expired token');
+      }
+      throw err;
+    }
   }
 
   @Get(':ticketId')

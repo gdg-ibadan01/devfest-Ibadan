@@ -43,6 +43,8 @@ export type TicketListItemDto = Schemas['TicketListItemDto'];
 export type TicketPaginationMetaDto = Schemas['TicketPaginationMetaDto'];
 export type TicketListResponseDto = Schemas['TicketListResponseDto'];
 export type GetTicketResponseDto = Schemas['GetTicketResponseDto'];
+export type OnSaleTicketItemDto = Schemas['OnSaleTicketItemDto'];
+export type OnSaleTicketResponseDto = Schemas['OnSaleTicketResponseDto'];
 
 // ---- Attendees (check-in only; listing moved to Orders) -----
 export type CheckInOrderDto = Schemas['CheckInOrderDto'];
@@ -62,10 +64,6 @@ export type OrderListItemDto = Schemas['OrderListItemDto'];
 export type OrdersPaginationMetaDto = Schemas['OrdersPaginationMetaDto'];
 export type OrderListResponseDto = Schemas['OrderListResponseDto'];
 export type GetOrderReferenceResponseDto = Schemas['GetOrderReferenceResponseDto'];
-
-// ---- On-sale tickets (for order/attendee creation) -----------
-export type OnSaleTicketItemDto = Schemas['OnSaleTicketItemDto'];
-export type OnSaleTicketResponseDto = Schemas['OnSaleTicketResponseDto'];
 
 // ---- Query param helpers -----------------------------------
 export interface OrderListParams {

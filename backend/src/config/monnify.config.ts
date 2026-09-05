@@ -8,4 +8,5 @@ export default registerAs('monnify', () => ({
   redirectUrl:
     process.env.MONNIFY_REDIRECT_URL ||
     `${process.env.FRONTEND_URL || 'http://localhost:3000'}/orders/confirm`,
+  shouldVerifySignature: process.env.SHOULD_VERIFY_MONNIFY_SIGNATURE || false,
 }));

@@ -26,6 +26,22 @@ export function useTickets(params: TicketListParams = {}) {
   });
 }
 
+// ---- Get tickets on sale ------------------------------------
+
+async function getTicketsOnSale(name?: string): Promise<OnSaleTicketResponseDto> {
+  const { data } = await apiClient.get<OnSaleTicketResponseDto>('/tickets/onsale', {
+    params: name ? { name } : undefined,
+  });
+  return data;
+}
+
+export function useTicketsOnSale(name?: string) {
+  return useQuery({
+    queryKey: queryKeys.tickets.onSale(name),
+    queryFn: () => getTicketsOnSale(name),
+  });
+}
+
 // ---- Get ticket ---------------------------------------------
 
 async function getTicket(id: string): Promise<GetTicketResponseDto> {

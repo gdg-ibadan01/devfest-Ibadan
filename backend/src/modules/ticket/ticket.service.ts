@@ -1,5 +1,6 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
+import crypto from 'node:crypto';
 import {
   CreateTicketResponseDto,
   GetTicketBySlugResponseDto,
@@ -11,6 +12,8 @@ import { IJwtPayload } from '../admin/interfaces/admin.interface';
 import { PrismaErrors } from 'src/common/enums/prisma-errors.enum';
 import { randomUUID } from 'node:crypto';
 import { ServiceError } from 'src/common/errors/service-error';
+import { ConfigType } from '@nestjs/config';
+import AppConfig from 'src/config/app.config';
 
 const allowedSlugChars = {};
 for (const c of 'abcdefghijklmnopqrstuvwxyz0123456789-') {
@@ -26,7 +29,11 @@ export class TicketsService {
   };
 
   private logger = new Logger(TicketsService.name);
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    @Inject(AppConfig.KEY)
+    private appConfig: ConfigType<typeof AppConfig>,
+  ) {}
 
   async create(jwtUser: IJwtPayload, payload: CreateTicketDto) {
     payload.ensureValidInputs();
@@ -57,9 +64,9 @@ export class TicketsService {
         data: {
           name: payload.name,
           description: payload.description,
-          price: payload.price,
-          discount: payload.discount,
-          maximumSaleUnits: payload.maximumSaleUnits,
+          price: Number(payload.price.toFixed(2)),
+          discount: Number(payload.discount.toFixed(2)),
+          capacity: payload.capacity,
           eventDates: payload.eventDates
             .map((dateStr) => new Date(dateStr))
             .sort((da, db) => da.getTime() - db.getTime())
@@ -84,7 +91,7 @@ export class TicketsService {
         slug: updatedTicket.slug,
         price: updatedTicket.price.toFixed(2),
         discount: updatedTicket.discount.toFixed(2),
-        maximumSaleUnits: updatedTicket.maximumSaleUnits,
+        capacity: updatedTicket.capacity,
         eventDates: updatedTicket.eventDates,
         validityDates: updatedTicket.validityDates,
         saleStartsAt: updatedTicket.saleStartsAt,
@@ -113,9 +120,9 @@ export class TicketsService {
           description: payload.description,
           slug,
           creatorId,
-          price: payload.price,
-          discount: payload.discount,
-          maximumSaleUnits: payload.maximumSaleUnits,
+          price: Number(payload.price.toFixed(2)),
+          discount: Number(payload.discount.toFixed(2)),
+          capacity: payload.capacity,
           eventDates: payload.eventDates
             .map((dateStr) => new Date(dateStr))
             .sort((da, db) => da.getTime() - db.getTime())
@@ -140,7 +147,7 @@ export class TicketsService {
         slug: ticket.slug,
         price: ticket.price.toFixed(2),
         discount: ticket.discount.toFixed(2),
-        maximumSaleUnits: ticket.maximumSaleUnits,
+        capacity: ticket.capacity,
         eventDates: ticket.eventDates,
         validityDates: ticket.validityDates,
         saleStartsAt: ticket.saleStartsAt,
@@ -211,12 +218,13 @@ export class TicketsService {
       select: {
         id: true,
         name: true,
+        slug: true,
         eventDates: true,
         price: true,
         discount: true,
         saleStartsAt: true,
         saleEndsAt: true,
-        maximumSaleUnits: true,
+        capacity: true,
       },
     });
 
@@ -308,11 +316,12 @@ export class TicketsService {
       id: ticket.id,
       name: ticket.name,
       description: ticket.description,
+      slug: ticket.slug,
       eventDates: ticket.eventDates,
       price: ticket.price.toFixed(2),
       discount: ticket.discount.toFixed(2),
       validityDates: ticket.validityDates,
-      maximumSaleUnits: ticket.maximumSaleUnits,
+      capacity: ticket.capacity,
       saleStartsAt: ticket.saleStartsAt,
       saleEndsAt: ticket.saleEndsAt,
       createdAt: ticket.createdAt,
@@ -323,10 +332,6 @@ export class TicketsService {
     };
   }
   // }
-
-  findByTicketNumber(ticketNumber: string) {
-    return null;
-  }
 
   async findBySlug(slug: string): Promise<GetTicketBySlugResponseDto> {
     const ticket = await this.prisma.ticket.findUnique({
@@ -355,18 +360,6 @@ export class TicketsService {
       validityDates: ticket.validityDates,
       slug: ticket.slug,
     };
-  }
-
-  verifyTicket(ticketNumber: string) {
-    return null;
-  }
-
-  checkIn(ticketNumber: string) {
-    return null;
-  }
-
-  cancelTicket(ticketNumber: string) {
-    return null;
   }
 
   // async getEventTickets(eventId: string) {
@@ -423,4 +416,34 @@ export class TicketsService {
   //     }),
   //   };
   // }
+
+  verifyQRCodeToken(token: string): string {
+    const decoded = Buffer.from(token, 'base64url').toString('utf-8');
+    const [reference, signature] = decoded.split(':');
+
+    const expectedSignature = crypto
+      .createHmac('sha256', this.appConfig.ticketJWTSecret)
+      .update(reference)
+      .digest('hex');
+
+    if (signature !== expectedSignature) {
+      throw new ServiceError('Invalid token', 'InvalidTicketDownloadTokenErr');
+    }
+
+    return reference;
+  }
+
+  async downloadTicket(token: string): Promise<string> {
+    const reference = this.verifyQRCodeToken(token);
+    const order = await this.prisma.order.findFirst({
+      where: { reference },
+      select: { ticketUrl: true },
+    });
+
+    if (!order?.ticketUrl) {
+      throw new NotFoundException('Ticket not found');
+    }
+
+    return order.ticketUrl;
+  }
 }

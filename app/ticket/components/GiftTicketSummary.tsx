@@ -1,6 +1,5 @@
 import React from 'react';
 import { ArrowLeft } from 'lucide-react';
-import { toast } from 'sonner';
 import { formatAmount } from '@/utils/formatAmount';
 import { TicketPackage } from './TicketPackageRow';
 
@@ -24,16 +23,9 @@ export default function GiftTicketSummary({
   onBack,
   onPay,
   isLoading,
-}: GiftTicketSummaryProps) {
+}: Readonly<GiftTicketSummaryProps>) {
   const vat = 270;
   const total = selectedPackage.price + vat;
-
-  const handleCopyLink = () => {
-    if (typeof window !== 'undefined') {
-      navigator.clipboard.writeText(window.location.href);
-      toast.success('Payment link copied to clipboard!');
-    }
-  };
 
   return (
     <div className="w-full md:max-w-[732px] md:bg-white md:rounded-[20px] md:shadow-lg md:border border-gray-100 overflow-hidden">
@@ -60,15 +52,23 @@ export default function GiftTicketSummary({
             <span className="font-bold text-[#1E1E1E]">{senderName}</span>
           </div>
           <div className="flex flex-col gap-1 select-none font-sans text-[14px] md:text-[16px]">
-            <span className="text-gray-400 font-normal">Name of Ticket Receiver</span>
+            <span className="text-gray-400 font-normal">
+              Name of Ticket Receiver
+            </span>
             <span className="font-bold text-[#1E1E1E]">{receiverName}</span>
           </div>
           <div className="flex flex-col gap-1 select-none font-sans text-[14px] md:text-[16px]">
-            <span className="text-gray-400 font-normal">Receiver&apos;s Email Address</span>
-            <span className="font-bold text-[#1E1E1E] break-all">{receiverEmail}</span>
+            <span className="text-gray-400 font-normal">
+              Receiver&apos;s Email Address
+            </span>
+            <span className="font-bold text-[#1E1E1E] break-all">
+              {receiverEmail}
+            </span>
           </div>
           <div className="flex flex-col gap-1 select-none font-sans text-[14px] md:text-[16px]">
-            <span className="text-gray-400 font-normal">Receiver&apos;s Phone Number</span>
+            <span className="text-gray-400 font-normal">
+              Receiver&apos;s Phone Number
+            </span>
             <span className="font-bold text-[#1E1E1E]">{receiverPhone}</span>
           </div>
         </div>
@@ -76,14 +76,18 @@ export default function GiftTicketSummary({
         {/* Package Details Box */}
         <div className="bg-[#FAF8F5] p-5 rounded-[12px] flex flex-col gap-4">
           <div className="flex justify-between items-center text-[#515151] text-[14px] md:text-[16px] select-none">
-            <span className="font-normal text-gray-500 font-sans">Selected Package Price</span>
+            <span className="font-normal text-gray-500 font-sans">
+              Selected Package Price
+            </span>
             <span className="font-bold text-[#1E1E1E]">
               {formatAmount(selectedPackage.price)}
             </span>
           </div>
 
           <div className="flex justify-between items-center text-[#515151] text-[14px] md:text-[16px] select-none">
-            <span className="font-normal text-gray-500 font-sans">Date paid for</span>
+            <span className="font-normal text-gray-500 font-sans">
+              Date paid for
+            </span>
             <span className="font-bold text-[#1E1E1E]">
               {selectedPackage.title}
             </span>
@@ -109,14 +113,6 @@ export default function GiftTicketSummary({
 
         {/* Action Buttons */}
         <div className="flex flex-col md:flex-row md:justify-end gap-4 mt-2">
-          <button
-            type="button"
-            onClick={handleCopyLink}
-            className="w-full md:w-fit border border-black hover:border-core-blue text-black hover:text-core-blue bg-white py-[15px] px-[34px] rounded-[100px] font-bold transition-all text-center flex justify-center items-center cursor-pointer focus:outline-none text-[15px] md:text-[16px] font-sans"
-          >
-            Copy Payment Link
-          </button>
-
           <button
             type="button"
             onClick={onPay}

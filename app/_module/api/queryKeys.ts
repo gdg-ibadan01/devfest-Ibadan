@@ -28,5 +28,6 @@ export const queryKeys = {
     all: (params?: Record<string, unknown>) =>
       params ? (['orders', params] as const) : (['orders'] as const),
     reference: (reference: string) => ['orders', 'reference', reference] as const,
+     detail: (id: string) => ['orders', id] as const,
   },
 } as const;

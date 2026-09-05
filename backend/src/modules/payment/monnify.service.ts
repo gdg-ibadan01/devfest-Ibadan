@@ -1,20 +1,34 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
+import {
+  dinero,
+  add,
+  greaterThan,
+  NGN,
+  subtract,
+  Dinero,
+  toSnapshot,
+} from 'dinero.js';
+
 import axios, { AxiosError } from 'axios';
+import * as crypto from 'node:crypto';
 import { ServiceError } from 'src/common/errors/service-error';
 import {
   InitializePaymentParams,
   InitializedPayment,
   PaymentProvider,
+  RefundPaymentParams,
+  RefundPaymentResult,
 } from './interfaces/payment-provider.interface';
 import {
   MonnifyEnvelope,
   MonnifyInitResponseBody,
   MonnifyLoginResponseBody,
+  MonnifyRefundResponseBody,
 } from './interfaces/monnify.interface';
 import monnifyConfig from 'src/config/monnify.config';
 
-const REQUEST_TIMEOUT_MS = 30_000;
+const REQUEST_TIMEOUT_MS = 10_000;
 const TOKEN_SAFETY_MARGIN_SEC = 60;
 
 @Injectable()
@@ -24,8 +38,11 @@ export class MonnifyService implements PaymentProvider {
   static ERRORS = {
     AuthErr: 'MonnifyAuthErr',
     RequestErr: 'MonnifyRequestErr',
+    InsufficientRefundAmountErr: 'InsufficientRefundAmountErr',
     ConfigErr: 'MonnifyConfigErr',
   } satisfies Record<string, `${string}Err`>;
+  static REFUND_PROCESSING_FEE = 10;
+  static MONNIFY_MINIMUM_REFUND = 100;
 
   private readonly logger = new Logger(MonnifyService.name);
   private accessToken: string | null = null;
@@ -36,23 +53,58 @@ export class MonnifyService implements PaymentProvider {
     private readonly mnfyCfg: ConfigType<typeof monnifyConfig>,
   ) {}
 
+  private withCharges(amountInKobo: number) {
+    const MONNIFY_CAP_CHARGE = 200000; // ₦2,000 in kobo
+    const VAT_RATE = 0.075; // 7.5%
+    const FEE_RATE = 0.015; // 1.5%
+
+    amountInKobo = Math.trunc(amountInKobo);
+    this.logger.debug({ amountInKobo });
+    const effectiveFeeRate = FEE_RATE * (1 + VAT_RATE);
+    const effectiveCapKobo = Math.round(MONNIFY_CAP_CHARGE * (1 + VAT_RATE));
+    const capThresholdKobo = Math.round(MONNIFY_CAP_CHARGE / FEE_RATE);
+
+    const productPrice = dinero({ amount: amountInKobo, currency: NGN });
+    const capThreshold = dinero({ amount: capThresholdKobo, currency: NGN });
+    const effectiveCap = dinero({ amount: effectiveCapKobo, currency: NGN });
+
+    let toPay: Dinero<number>;
+    if (greaterThan(productPrice, capThreshold)) {
+      toPay = add(productPrice, effectiveCap);
+    } else {
+      const grossKobo = Math.round(amountInKobo / (1 - effectiveFeeRate));
+      toPay = dinero({ amount: grossKobo, currency: NGN });
+    }
+
+    const vatAndCharges = subtract(toPay, productPrice);
+
+    return {
+      amount: Number((toSnapshot(toPay).amount / 100).toFixed(2)),
+      vatAndCharges: Number(
+        (toSnapshot(vatAndCharges).amount / 100).toFixed(2),
+      ),
+    };
+  }
+
   async initializePayment(
     params: InitializePaymentParams,
   ): Promise<InitializedPayment> {
-    const payload = {
-      amount: params.amount,
-      customerName: params.customerName,
-      customerEmail: params.customerEmail,
-      paymentReference: params.paymentReference,
-      paymentDescription: params.description ?? 'Ticket purchase',
-      currencyCode: 'NGN',
-      contractCode: this.getRequiredConfig('contractCode'),
-      redirectUrl: params.redirectUrl ?? this.getConfig('redirectUrl'),
-      paymentMethods: ['CARD', 'ACCOUNT_TRANSFER'],
-      metaData: params.metadata ?? {},
-    };
-
     try {
+      const { amount, vatAndCharges } = this.withCharges(params.amount * 100);
+
+      const payload = {
+        amount,
+        customerName: params.customerName,
+        customerEmail: params.customerEmail,
+        paymentReference: params.paymentReference,
+        paymentDescription: params.description ?? 'Ticket purchase',
+        currencyCode: 'NGN',
+        contractCode: this.getRequiredConfig('contractCode'),
+        redirectUrl: params.redirectUrl ?? this.getConfig('redirectUrl'),
+        paymentMethods: ['CARD', 'ACCOUNT_TRANSFER'],
+        metaData: params.metadata ?? {},
+      };
+
       const res = await this.request<MonnifyInitResponseBody>(
         'POST',
         '/api/v1/merchant/transactions/init-transaction',
@@ -77,11 +129,69 @@ export class MonnifyService implements PaymentProvider {
         provider: this.name,
         transactionRef: res.responseBody.transactionReference,
         checkoutUrl: res.responseBody.checkoutUrl,
+        vatAndCharges,
       };
     } catch (err) {
       if (err instanceof ServiceError) throw err;
       this.logger.error(
         `Monnify initialize failed for ${params.paymentReference}: ${(err as Error).message}`,
+      );
+      throw new ServiceError(
+        'Payment gateway is unreachable',
+        MonnifyService.ERRORS.RequestErr,
+      );
+    }
+  }
+
+  verifyWebhookSignature(rawBody: string, signature: string): boolean {
+    const secret = this.getRequiredConfig('secretKey');
+    const computed = crypto
+      .createHmac('sha512', secret)
+      .update(rawBody)
+      .digest('hex');
+    return computed === signature;
+  }
+
+  async requestRefund(
+    params: RefundPaymentParams,
+  ): Promise<RefundPaymentResult> {
+    const tooLowToRefund =
+      params.amount - MonnifyService.MONNIFY_MINIMUM_REFUND <
+      MonnifyService.MONNIFY_MINIMUM_REFUND;
+    if (tooLowToRefund) {
+      throw new ServiceError(
+        `Refund amount ${params.amount} below Monnify minimum ${MonnifyService.MONNIFY_MINIMUM_REFUND}`,
+        MonnifyService.ERRORS.InsufficientRefundAmountErr,
+      );
+    }
+
+    const payload = {
+      transactionReference: params.transactionReference,
+      refundReference: params.refundReference,
+      refundAmount: params.amount,
+      refundReason: params.reason,
+      customerNote: 'Refund for ticket',
+    };
+
+    try {
+      const res = await this.request<MonnifyRefundResponseBody>(
+        'POST',
+        '/api/v1/refunds/initiate-refund',
+        payload,
+      );
+
+      if (!res.requestSuccessful) {
+        this.logger.error(
+          `Monnify refund rejected for ${params.refundReference}: ${res.responseMessage}`,
+        );
+        return { success: false, message: res.responseMessage };
+      }
+
+      return { success: true, message: res.responseBody?.comment };
+    } catch (err) {
+      if (err instanceof ServiceError) throw err;
+      this.logger.error(
+        `Monnify refund failed for ${params.refundReference}: ${(err as Error).message}`,
       );
       throw new ServiceError(
         'Payment gateway is unreachable',
@@ -177,7 +287,8 @@ export class MonnifyService implements PaymentProvider {
   }
 
   private getConfig(key: keyof ConfigType<typeof monnifyConfig>): string {
-    return this.mnfyCfg[key] ?? '';
+    const value = this.mnfyCfg[key];
+    return value != null ? String(value) : '';
   }
 
   private getRequiredConfig(
