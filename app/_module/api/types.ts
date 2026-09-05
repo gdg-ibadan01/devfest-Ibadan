@@ -63,10 +63,10 @@ export type CreateOrderResponseDto = Schemas['CreateOrderResponseDto'];
 export type OrderAttendeeDto = Schemas['OrderAttendeeDto'];
 export type OrderGifterDto = Schemas['OrderGifterDto'];
 export type OrderedTicketDto = Schemas['OrderedTicketDto'];
-export type OrderListItemDto = Schemas['OrderListItemDto'];
+// export type OrderListItemDto = Schemas['OrderListItemDto'];
 export type OrdersPaginationMetaDto = Schemas['OrdersPaginationMetaDto'];
 export type OrderListResponseDto = Schemas['OrderListResponseDto'];
-export type GetOrderReferenceResponseDto = Schemas['GetOrderReferenceResponseDto'];
+// export type GetOrderReferenceResponseDto = Schemas['GetOrderReferenceResponseDto'];
 
 /** GET /api/v1/orders/reference/{reference} — 200 response */
 export interface GetOrderReferenceResponseDto {
@@ -79,11 +79,7 @@ export interface GetOrderReferenceResponseDto {
   /** Amount paid in Naira (2 decimal places), e.g. "9500.00" */
   amount: string;
   status:
-    | 'AWAITING_PAYMENT'
-    | 'PAID'
-    | 'CANCELLED'
-    | 'AWAITING_REFUND'
-    | 'REFUNDED';
+    'AWAITING_PAYMENT' | 'PAID' | 'CANCELLED' | 'AWAITING_REFUND' | 'REFUNDED';
   /** Ticket code used as the download token */
   code: string;
 }
@@ -94,11 +90,7 @@ export interface OrderListItemDto {
   paidAt: string | null;
   amount: string;
   status:
-    | 'AWAITING_PAYMENT'
-    | 'PAID'
-    | 'CANCELLED'
-    | 'AWAITING_REFUND'
-    | 'REFUNDED';
+    'AWAITING_PAYMENT' | 'PAID' | 'CANCELLED' | 'AWAITING_REFUND' | 'REFUNDED';
   attendeeFullName: string;
   attendeeEmail: string;
   checkIns: string[];
@@ -113,7 +105,8 @@ export interface OrderListItemDto {
 // ---- Query param helpers -----------------------------------
 export interface OrderListParams {
   search?: string;
-  status?: 'AWAITING_PAYMENT' | 'PAID' | 'CANCELLED' | 'AWAITING_REFUND' | 'REFUNDED';
+  status?:
+    'AWAITING_PAYMENT' | 'PAID' | 'CANCELLED' | 'AWAITING_REFUND' | 'REFUNDED';
   direction?: 'next' | 'previous';
   cursor?: string;
   limit?: number;
