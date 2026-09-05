@@ -1,17 +1,20 @@
 import axios, { AxiosError } from 'axios';
 import { showToast } from '@/app/_module/lib/notify';
 
-const getBaseUrl = () => {
-  const url =
-    process.env.NEXT_PUBLIC_API_BASE_URL ||
-    process.env.NEXT_PUBLIC_API_URL ||
-    'https://devfest-ibadan.onrender.com/api/v1';
-
-  return url.endsWith('/api/v1') ? url : `${url.replace(/\/+$/, '')}/api/v1`;
-};
+// The browser always talks to our own Next.js API routes (app/api/**),
+// never the external backend directly. Those routes run server-side, read
+// the httpOnly admin_access_token/admin_refresh_token cookies (via
+// serverFetch.ts), attach the Authorization header, and transparently
+// refresh expired tokens — none of which the browser can (or should) do on
+// its own. This is intentionally a fixed relative path: it needs no env var
+// at all, since only server-side code (serverFetch.ts) ever talks to the
+// real API and reads `API_BASE_URL` directly (no NEXT_PUBLIC_ prefix
+// required — that prefix is only needed for values read from the browser
+// bundle, which this is not).
+const API_PROXY_BASE_URL = '/api';
 
 export const apiClient = axios.create({
-  baseURL: getBaseUrl(),
+  baseURL: API_PROXY_BASE_URL,
   headers: { 'Content-Type': 'application/json' },
   timeout: 30_000,
 });
