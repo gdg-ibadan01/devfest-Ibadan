@@ -83,6 +83,7 @@ export class AttendeeController {
     } catch (err) {
       switch ((err as Error).name) {
         case AttendeeService.ERRORS.UnmatchedValidityDateErr:
+        case AttendeeService.ERRORS.CheckInUnpaidOrderErr:
           throw new BadRequestException((err as Error).message);
         case AttendeeService.ERRORS.TicketNotFoundErr:
           throw new NotFoundException((err as Error).message);

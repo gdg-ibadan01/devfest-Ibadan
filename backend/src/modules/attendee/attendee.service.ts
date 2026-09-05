@@ -4,9 +4,11 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { ServiceError } from 'src/common/errors/service-error';
 import { CheckInOrderDto } from './dto/check-in.dto';
 import { CheckedInQueryDto } from './dto/checked-in.dto';
+import { OrderStatus } from '@prisma/client';
 
 interface OrderCheckInRow {
   id: string;
+  status: OrderStatus;
   reference: string;
   ticket_id: string;
   check_ins: Date[];
@@ -31,6 +33,7 @@ export class AttendeeService {
   static ERRORS = {
     UnmatchedValidityDateErr: 'UnmatchedValidityDateErr',
     TicketNotFoundErr: 'TicketNotFoundErr',
+    CheckInUnpaidOrderErr: 'CheckInUnpaidOrderErr',
   } as const;
 
   constructor(private readonly prisma: PrismaService) {}
@@ -42,7 +45,7 @@ export class AttendeeService {
 
     return this.prisma.$transaction(async (tx) => {
       const [order] = await tx.$queryRaw<OrderCheckInRow[]>`
-        SELECT id, reference, ticket_id, check_ins
+        SELECT id, reference, status, ticket_id, check_ins
         FROM orders
         WHERE id = ${orderId}
         FOR UPDATE;`;
@@ -51,6 +54,13 @@ export class AttendeeService {
         throw new ServiceError(
           'Ticket not found',
           AttendeeService.ERRORS.TicketNotFoundErr,
+        );
+      }
+
+      if (order.status !== OrderStatus.PAID) {
+        throw new ServiceError(
+          'Cannot check-in unpaid order',
+          AttendeeService.ERRORS.CheckInUnpaidOrderErr,
         );
       }
 
