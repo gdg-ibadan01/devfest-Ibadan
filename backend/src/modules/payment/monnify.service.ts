@@ -59,7 +59,6 @@ export class MonnifyService implements PaymentProvider {
     const FEE_RATE = 0.015; // 1.5%
 
     amountInKobo = Math.trunc(amountInKobo);
-    this.logger.debug({ amountInKobo });
     const effectiveFeeRate = FEE_RATE * (1 + VAT_RATE);
     const effectiveCapKobo = Math.round(MONNIFY_CAP_CHARGE * (1 + VAT_RATE));
     const capThresholdKobo = Math.round(MONNIFY_CAP_CHARGE / FEE_RATE);
