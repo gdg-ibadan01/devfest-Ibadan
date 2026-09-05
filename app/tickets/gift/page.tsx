@@ -49,14 +49,19 @@ export default function GiftTicket() {
   const [receiverEmail, setReceiverEmail] = useState('');
   const [receiverPhone, setReceiverPhone] = useState('');
   const [selectedPackageId, setSelectedPackageId] = useState('');
-  const [orderData, setOrderData] = useState<CreateOrderResponseDto | null>(null);
+  const [orderData, setOrderData] = useState<CreateOrderResponseDto | null>(
+    null
+  );
 
   const { mutate: createOrder, isPending } = useCreateOrder();
 
   // Sync selected package ID when tickets load
   useEffect(() => {
     if (packages.length > 0) {
-      if (!selectedPackageId || !packages.some((p) => p.id === selectedPackageId)) {
+      if (
+        !selectedPackageId ||
+        !packages.some((p) => p.id === selectedPackageId)
+      ) {
         setSelectedPackageId(packages[0].id);
       }
     }
@@ -115,7 +120,88 @@ export default function GiftTicket() {
       name: receiverName,
       email: receiverEmail,
     });
-    router.push(`/ticket/preview?${params.toString()}`);
+    router.push(`/tickets/preview?${params.toString()}`);
+  };
+
+  const renderContent = () => {
+    if (isLoadingTickets) {
+      return <TicketFormSkeleton isGift title="Gift Ticket" />;
+    }
+
+    if (packages.length === 0) {
+      return (
+        <EmptyTicketState
+          onRetry={() => refetchTickets()}
+          isRetrying={isRefetchingTickets}
+        />
+      );
+    }
+
+    return (
+      <AnimatePresence mode="wait">
+        {view === 'form' && (
+          <motion.div
+            key="form"
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -15 }}
+            transition={{ duration: 0.25, ease: 'easeOut' }}
+            className="w-full flex justify-center z-10"
+          >
+            <GiftTicketForm
+              senderName={senderName}
+              setSenderName={setSenderName}
+              receiverName={receiverName}
+              setReceiverName={setReceiverName}
+              receiverEmail={receiverEmail}
+              setReceiverEmail={setReceiverEmail}
+              receiverPhone={receiverPhone}
+              setReceiverPhone={setReceiverPhone}
+              selectedPackageId={selectedPackageId}
+              setSelectedPackageId={setSelectedPackageId}
+              packages={packages}
+              onSubmit={handleFormSubmit}
+              onBack={handleBack}
+            />
+          </motion.div>
+        )}
+
+        {view === 'summary' && (
+          <motion.div
+            key="summary"
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -15 }}
+            transition={{ duration: 0.25, ease: 'easeOut' }}
+            className="w-full flex justify-center z-10"
+          >
+            <GiftTicketSummary
+              senderName={senderName}
+              receiverName={receiverName}
+              receiverEmail={receiverEmail}
+              receiverPhone={receiverPhone}
+              selectedPackage={selectedPackage}
+              onBack={handleBack}
+              onPay={handlePay}
+              isLoading={isPending}
+            />
+          </motion.div>
+        )}
+
+        {view === 'success' && (
+          <motion.div
+            key="success"
+            initial={{ opacity: 0, scale: 0.96, y: 15 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, y: -15 }}
+            transition={{ duration: 0.3, ease: 'easeOut' }}
+            className="w-full flex justify-center z-10"
+          >
+            <PaymentSuccess onDownload={handleDownload} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    );
   };
 
   return (
@@ -130,78 +216,7 @@ export default function GiftTicket() {
         backgroundSize: 'cover',
       }}
     >
-      {isLoadingTickets ? (
-        <TicketFormSkeleton isGift title="Gift Ticket" />
-      ) : packages.length === 0 ? (
-        <EmptyTicketState
-          onRetry={() => refetchTickets()}
-          isRetrying={isRefetchingTickets}
-        />
-      ) : (
-        <AnimatePresence mode="wait">
-          {view === 'form' && (
-            <motion.div
-              key="form"
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -15 }}
-              transition={{ duration: 0.25, ease: 'easeOut' }}
-              className="w-full flex justify-center z-10"
-            >
-              <GiftTicketForm
-                senderName={senderName}
-                setSenderName={setSenderName}
-                receiverName={receiverName}
-                setReceiverName={setReceiverName}
-                receiverEmail={receiverEmail}
-                setReceiverEmail={setReceiverEmail}
-                receiverPhone={receiverPhone}
-                setReceiverPhone={setReceiverPhone}
-                selectedPackageId={selectedPackageId}
-                setSelectedPackageId={setSelectedPackageId}
-                packages={packages}
-                onSubmit={handleFormSubmit}
-                onBack={handleBack}
-              />
-            </motion.div>
-          )}
-
-          {view === 'summary' && (
-            <motion.div
-              key="summary"
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -15 }}
-              transition={{ duration: 0.25, ease: 'easeOut' }}
-              className="w-full flex justify-center z-10"
-            >
-              <GiftTicketSummary
-                senderName={senderName}
-                receiverName={receiverName}
-                receiverEmail={receiverEmail}
-                receiverPhone={receiverPhone}
-                selectedPackage={selectedPackage}
-                onBack={handleBack}
-                onPay={handlePay}
-                isLoading={isPending}
-              />
-            </motion.div>
-          )}
-
-          {view === 'success' && (
-            <motion.div
-              key="success"
-              initial={{ opacity: 0, scale: 0.96, y: 15 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, y: -15 }}
-              transition={{ duration: 0.3, ease: 'easeOut' }}
-              className="w-full flex justify-center z-10"
-            >
-              <PaymentSuccess onDownload={handleDownload} />
-            </motion.div>
-          )}
-        </AnimatePresence>
-      )}
+      {renderContent()}
 
       {/* Decorative footer art matching the bg background layer */}
       <Image

@@ -19,7 +19,12 @@ const config = {
     },
     extend: {
       fontFamily: {
-        sans: ['"Product Sans"', 'sans-serif'],
+        sans: ['var(--font-google-sans)', '"Product Sans"', 'sans-serif'],
+        grotesk: ['var(--font-grotesk)', 'sans-serif'],
+        caleit: ['var(--font-caleit)', 'sans-serif'],
+        mono: ['var(--font-geist-mono)', '"Geist Mono"', 'monospace'],
+        'geist-mono': ['var(--font-geist-mono)', '"Geist Mono"', 'monospace'],
+        inter: ['var(--font-inter)', '"Inter"', 'sans-serif'],
       },
       backgroundImage: {
         eclipse: "url('/eclipse.svg')",

@@ -61,6 +61,48 @@ export type CreateOrderResponseDto = Schemas['CreateOrderResponseDto'];
 export type OrderAttendeeDto = Schemas['OrderAttendeeDto'];
 export type OrderGifterDto = Schemas['OrderGifterDto'];
 
+/** GET /api/v1/orders/reference/{reference} — 200 response */
+export interface GetOrderReferenceResponseDto {
+  ticket: {
+    name: string;
+    /** Signed URL to the ticket PDF */
+    url: string;
+    validityDates: string[];
+  };
+  /** Amount paid in Naira (2 decimal places), e.g. "9500.00" */
+  amount: string;
+  status:
+    | 'AWAITING_PAYMENT'
+    | 'PAID'
+    | 'CANCELLED'
+    | 'AWAITING_REFUND'
+    | 'REFUNDED';
+  /** Ticket code used as the download token */
+  code: string;
+}
+
+/** Single item from GET /api/v1/orders list */
+export interface OrderListItemDto {
+  id: string;
+  paidAt: string | null;
+  amount: string;
+  status:
+    | 'AWAITING_PAYMENT'
+    | 'PAID'
+    | 'CANCELLED'
+    | 'AWAITING_REFUND'
+    | 'REFUNDED';
+  attendeeFullName: string;
+  attendeeEmail: string;
+  checkIns: string[];
+  ticket?: {
+    id: string;
+    name: string;
+    code: string;
+    validity: string;
+  };
+}
+
 // ---- Query param helpers -----------------------------------
 export interface AttendeeListParams {
   page?: number;

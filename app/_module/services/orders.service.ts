@@ -1,16 +1,20 @@
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { showToast } from '@/app/_module/lib/notify';
-import { apiClient } from '@/app/_module/api/client';
+import { queryKeys } from '@/app/_module/api/queryKeys';
+import {
+  createOrderAction,
+  getOrderByReferenceAction,
+} from '@/app/actions/orders';
 import type {
   CreateOrderDto,
   CreateOrderResponseDto,
+  GetOrderReferenceResponseDto,
 } from '@/app/_module/api/types';
 
 // ---- Create order -------------------------------------------
 
 async function createOrder(dto: CreateOrderDto): Promise<CreateOrderResponseDto> {
-  const { data } = await apiClient.post<CreateOrderResponseDto>('/orders', dto);
-  return data;
+  return await createOrderAction(dto);
 }
 
 export function useCreateOrder() {
@@ -19,5 +23,22 @@ export function useCreateOrder() {
     onError: (error: Error) => {
       showToast.error(error.message || 'Failed to create order');
     },
+  });
+}
+
+// ---- Get order by reference ---------------------------------
+
+async function getOrderByReference(
+  reference: string
+): Promise<GetOrderReferenceResponseDto> {
+  return await getOrderByReferenceAction(reference);
+}
+
+export function useOrderByReference(reference: string | null) {
+  return useQuery({
+    queryKey: queryKeys.orders.byReference(reference ?? ''),
+    queryFn: () => getOrderByReference(reference!),
+    enabled: !!reference,
+    retry: 1,
   });
 }

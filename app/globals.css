@@ -1,10 +1,12 @@
-@import url('https://fonts.googleapis.com/css2?family=Product+Sans:wght@500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Geist+Mono:wght@100..900&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Product+Sans:wght@500&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
+    --font-geist-mono: 'Geist Mono', monospace;
+    --font-inter: 'Inter', sans-serif;
     --background: 0 0% 100%;
     --foreground: '#060606';
     --card: 0 0% 100%;
