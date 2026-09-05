@@ -19,6 +19,7 @@ import { useSidenav } from '@/app/_module/context/SidenavContext';
 import { useMe, useAdminLogout } from '@/app/_module/services';
 import type { PermissionId } from '@/app/_module/api/types';
 import AdminOrders from '../../icons/AdminOrders';
+import Checkins from '../../icons/Checkins';
 // import { hasAnyPermission } from '@/app/_module/lib/permissions';
 
 // NOTE: Permission-based nav gating is temporarily disabled (commented out below).
@@ -50,6 +51,12 @@ const navItems: {
     href: '/admin/attendees',
     icon: Attendees,
     // permissions: ['orders.list'],
+  },
+  {
+    label: 'Checkins',
+    href: '/admin/checkins',
+    icon: Checkins,
+    // permissions: ['attendees.list'],
   },
   {
     label: 'Discount & Referral',

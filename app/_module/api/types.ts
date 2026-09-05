@@ -49,6 +49,9 @@ export type OnSaleTicketResponseDto = Schemas['OnSaleTicketResponseDto'];
 // ---- Attendees (check-in only; listing moved to Orders) -----
 export type CheckInOrderDto = Schemas['CheckInOrderDto'];
 export type CheckInResponseDto = Schemas['CheckInResponseDto'];
+export type CheckedInListItemDto = Schemas['CheckedInListItemDto'];
+export type CheckedInPaginationMetaDto = Schemas['CheckedInPaginationMetaDto'];
+export type CheckedInListResponseDto = Schemas['CheckedInListResponseDto'];
 
 // ---- Payments ----------------------------------------------
 export type InitiatePaymentDto = Schemas['InitiatePaymentDto'];
@@ -90,4 +93,12 @@ export interface TicketListParams {
   direction?: 'next' | 'prev';
   limit?: number;
   name?: string;
+}
+
+export interface CheckedInListParams {
+  /** Event dates (YYYY-MM-DD) to match check-ins against — pass the selected ticket's `eventDates`. */
+  eventDates: string[];
+  direction?: 'next' | 'previous';
+  cursor?: string;
+  limit?: number;
 }

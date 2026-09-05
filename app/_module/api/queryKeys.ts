@@ -29,5 +29,13 @@ export const queryKeys = {
       params ? (['orders', params] as const) : (['orders'] as const),
     reference: (reference: string) => ['orders', 'reference', reference] as const,
      detail: (id: string) => ['orders', id] as const,
+    /** Scan-accumulated, client-side check-in-filtered view of /orders (see order.service.ts). */
+    checkInFiltered: (params: Record<string, unknown>) =>
+      ['orders', 'checkin-filtered', params] as const,
+  },
+
+  // Attendees (check-in + the checked-in attendees list, both under /attendees)
+  attendees: {
+    checkedIn: (params: Record<string, unknown>) => ['attendees', 'checked-in', params] as const,
   },
 } as const;

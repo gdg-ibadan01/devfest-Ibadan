@@ -20,6 +20,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/attendees/checked-in": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List checked-in attendees
+         * @description Cursor-paginated list of checked-in attendees. By default returns earlier-created attendees first.
+         */
+        get: operations["AttendeeController_checkedIn"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/attendees/check-in": {
         parameters: {
             query?: never;
@@ -523,6 +543,44 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        CheckedInListItemDto: {
+            id: string;
+            /** Format: date-time */
+            paidAt: string | null;
+            /**
+             * @description Amount paid in Naira (2 decimal places)
+             * @example 9500.00
+             */
+            amount: string;
+            /** @enum {string} */
+            status: "AWAITING_PAYMENT" | "PAID" | "CANCELLED" | "AWAITING_REFUND" | "REFUNDED";
+            attendeeFullName: string;
+            attendeeEmail: string;
+            checkIns: string[];
+            ticket: {
+                id?: string;
+                /** @example Google DevFest 2026 */
+                name?: string;
+                /** @example ABC123 */
+                code?: string;
+                /** @example Fri + Sat */
+                validity?: string;
+            };
+        };
+        CheckedInPaginationMetaDto: {
+            /** @description Cursor to fetch the next page */
+            nextCursor: string | null;
+            /** @description Cursor to fetch the previous page */
+            prevCursor: string | null;
+            /** @description Number of results per page */
+            limit: number;
+            /** @description Whether more items exist in the direction of travel */
+            hasMore: boolean;
+        };
+        CheckedInListResponseDto: {
+            data: components["schemas"]["CheckedInListItemDto"][];
+            meta: components["schemas"]["CheckedInPaginationMetaDto"];
+        };
         CheckInOrderDto: {
             /**
              * @description ID of the order being checked in
@@ -1124,6 +1182,51 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AttendeeController_checkedIn: {
+        parameters: {
+            query: {
+                /**
+                 * @description Event dates to match check-ins against (YYYY-MM-DD)
+                 * @example [
+                 *       "2026-09-20",
+                 *       "2026-09-21"
+                 *     ]
+                 */
+                eventDates: string[];
+                /** @description Pagination direction. `next` returns earlier-created attendees, `previous` returns more recent attendees. */
+                direction?: "next" | "previous";
+                /** @description Cursor for pagination. Pass the ID of the last item from the previous page. */
+                cursor?: string;
+                /**
+                 * @description Number of results to return per page
+                 * @example 20
+                 */
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Checked-in orders retrieved successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CheckedInListResponseDto"];
+                };
+            };
+            /** @description Missing attendees.list permission */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };

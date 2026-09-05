@@ -16,7 +16,7 @@ import type { OrderListItemDto } from '@/app/_module/api/types';
 import type { OrderStatus } from '../_types/attendee.types';
 import AttendeeActionsMenu from './AttendeeActionsMenu';
 import EmptyState from '@/app/_module/components/common/EmptyState';
-import { useOrders } from '@/app/_module/services/order.service';
+import { useOrders, useCheckInFilteredOrders } from '@/app/_module/services/order.service';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -275,6 +275,10 @@ export default function AttendeesTable({
   const [searchInput, setSearchInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [checkInFilter, setCheckInFilter] = useState<CheckInFilter>('');
+  const isFiltering = checkInFilter !== '';
+
+  // Unfiltered pagination state (checkInFilter === '') — a single /orders
+  // page, exactly as before.
   const [cursor, setCursor] = useState<string | undefined>(undefined);
   const [direction, setDirection] = useState<'next' | 'previous' | undefined>(
     undefined
@@ -284,28 +288,59 @@ export default function AttendeesTable({
   // page), instead of relying on the API's `prevCursor`, which doesn't
   // reliably resolve back to page one.
   const [cursorStack, setCursorStack] = useState<string[]>([]);
+
+  // Check-in-filtered ("scan") pagination state — used whenever a check-in
+  // filter is active. The /orders API has no check-in filter param, so we
+  // scan sequential /orders pages accumulating matches (see
+  // useCheckInFilteredOrders in order.service.ts) instead of naively
+  // filtering whatever single page happens to be loaded — the latter is
+  // what caused "Checked In" to appear empty even when checked-in
+  // attendees existed, just not on the currently-loaded page.
+  const [scanCursor, setScanCursor] = useState<string | undefined>(undefined);
+  const [scanCursorStack, setScanCursorStack] = useState<string[]>([]);
+
   const [exportOpen, setExportOpen] = useState(false);
 
-  const { data, isLoading, isFetching, isError } = useOrders({
-    limit: PAGE_SIZE,
+  const unfilteredResult = useOrders(
+    {
+      limit: PAGE_SIZE,
+      search: searchQuery || undefined,
+      cursor,
+      direction,
+    },
+    { enabled: !isFiltering }
+  );
+
+  const filteredResult = useCheckInFilteredOrders({
     search: searchQuery || undefined,
-    cursor,
-    direction,
+    checkedIn: checkInFilter === 'CHECKED_IN',
+    cursor: scanCursor,
+    pageSize: PAGE_SIZE,
+    enabled: isFiltering,
   });
 
-  // Raw page of orders from the API — used for pagination cursors, which
-  // must stay in sync with what the server actually returned.
-  const orders = data?.data ?? [];
-  const meta = data?.meta;
+  const { isLoading, isFetching, isError } = isFiltering
+    ? filteredResult
+    : unfilteredResult;
+
+  // Orders to render — already fully filtered server-side-equivalent by the
+  // scan when a check-in filter is active, or the raw unfiltered page
+  // otherwise. No further client-side filtering needed here.
+  const visibleOrders = isFiltering
+    ? filteredResult.data?.data ?? []
+    : unfilteredResult.data?.data ?? [];
+
+  const hasMore = isFiltering
+    ? filteredResult.data?.hasMore ?? false
+    : unfilteredResult.data?.meta?.hasMore ?? false;
+
+  const hasPrev = isFiltering
+    ? scanCursorStack.length > 0
+    : cursorStack.length > 0;
+
+  const scanLimitReached = isFiltering && filteredResult.data?.scanLimitReached;
+
   const showLoadingOverlay = isFetching && !isLoading;
-
-  // Attendees are filtered client-side by check-in state, since the Orders
-  // API (shared with this list) doesn't expose a check-in filter param.
-  const visibleOrders = orders.filter((o) => {
-    if (checkInFilter === 'CHECKED_IN') return o.checkIns.length > 0;
-    if (checkInFilter === 'NOT_CHECKED_IN') return o.checkIns.length === 0;
-    return true;
-  });
 
   const hasFilters = !!(searchQuery || checkInFilter);
 
@@ -313,6 +348,8 @@ export default function AttendeesTable({
     setCursor(undefined);
     setDirection(undefined);
     setCursorStack([]);
+    setScanCursor(undefined);
+    setScanCursorStack([]);
   };
 
   const handleSearch = useCallback(() => {
@@ -332,13 +369,25 @@ export default function AttendeesTable({
   };
 
   const goNext = () => {
-    if (!meta?.hasMore) return;
+    if (!hasMore) return;
+    if (isFiltering) {
+      setScanCursorStack((prev) => [...prev, scanCursor ?? '']);
+      setScanCursor(filteredResult.data?.resumeCursor);
+      return;
+    }
     setCursorStack((prev) => [...prev, cursor ?? '']);
-    setCursor(orders[orders.length - 1]?.id);
+    setCursor(unfilteredResult.data?.data[unfilteredResult.data.data.length - 1]?.id);
     setDirection('next');
   };
 
   const goPrev = () => {
+    if (isFiltering) {
+      const stack = [...scanCursorStack];
+      const prevCursor = stack.pop();
+      setScanCursorStack(stack);
+      setScanCursor(prevCursor || undefined);
+      return;
+    }
     const stack = [...cursorStack];
     const prevCursor = stack.pop();
     setCursorStack(stack);
@@ -517,13 +566,13 @@ export default function AttendeesTable({
                       </td>
                       <td className="px-5 py-4 whitespace-nowrap">
                         <CheckInBadge checkedIn={checkedIn} />
-                        {checkedIn && (
+                        {/* {checkedIn && (
                           <span className="block mt-1 text-[11px] text-gray-400">
                             {formatDateSafe(
                               order.checkIns[order.checkIns.length - 1]
                             )}
                           </span>
-                        )}
+                        )} */}
                       </td>
                       <td
                         className="px-5 py-4"
@@ -544,19 +593,24 @@ export default function AttendeesTable({
         </div>
 
         {/* Pagination — cursor based */}
-        {!isLoading && (cursorStack.length > 0 || meta?.hasMore) && (
+        {!isLoading && (hasPrev || hasMore) && (
           <div className="flex items-center justify-between px-5 py-3 border-t border-gray-100 bg-white">
             <span className="text-[12px] text-gray-400">
               {visibleOrders.length} attendee{visibleOrders.length === 1 ? '' : 's'} on this
               page
+              {scanLimitReached && (
+                <span className="ml-2 text-amber-500">
+                  (showing partial results — try narrowing your search)
+                </span>
+              )}
             </span>
             <div className="flex items-center gap-2">
               <button
                 onClick={goPrev}
-                disabled={cursorStack.length === 0}
+                disabled={!hasPrev}
                 className={cn(
                   'flex items-center gap-1 px-3 py-1.5 rounded-md border text-[12px] transition-colors',
-                  cursorStack.length === 0
+                  !hasPrev
                     ? 'border-gray-100 text-gray-300 cursor-not-allowed'
                     : 'border-gray-200 text-gray-600 hover:bg-gray-50'
                 )}
@@ -565,10 +619,10 @@ export default function AttendeesTable({
               </button>
               <button
                 onClick={goNext}
-                disabled={!meta?.hasMore}
+                disabled={!hasMore}
                 className={cn(
                   'flex items-center gap-1 px-3 py-1.5 rounded-md border text-[12px] transition-colors',
-                  !meta?.hasMore
+                  !hasMore
                     ? 'border-gray-100 text-gray-300 cursor-not-allowed'
                     : 'border-gray-200 text-gray-600 hover:bg-gray-50'
                 )}
