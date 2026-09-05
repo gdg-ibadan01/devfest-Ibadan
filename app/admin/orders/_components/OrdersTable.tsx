@@ -5,6 +5,7 @@ import {
   Search,
   Download,
   ChevronDown,
+  Plus,
   X,
   ChevronLeft,
   ChevronRight,
@@ -13,21 +14,20 @@ import {
 import { format, isValid, parseISO } from 'date-fns';
 import { cn } from '@/app/_module/lib/utils';
 import type { OrderListItemDto } from '@/app/_module/api/types';
-import type { OrderStatus } from '../_types/attendee.types';
-import AttendeeActionsMenu from './AttendeeActionsMenu';
+import type { OrderStatus } from '../_types/order.types';
+import OrderActionsMenu from './OrderActionsMenu';
 import EmptyState from '@/app/_module/components/common/EmptyState';
 import { useOrders } from '@/app/_module/services/order.service';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-// Check-in filter — the Attendees filter is based on check-in state rather
-// than payment status (payment status filtering now lives in the Orders module).
-type CheckInFilter = '' | 'CHECKED_IN' | 'NOT_CHECKED_IN';
-
-const CHECKIN_FILTER_LABELS: Record<Exclude<CheckInFilter, ''>, string> = {
-  CHECKED_IN: 'Checked In',
-  NOT_CHECKED_IN: 'Not Checked In',
-};
+const STATUSES: OrderStatus[] = [
+  'PAID',
+  'AWAITING_PAYMENT',
+  'CANCELLED',
+  'AWAITING_REFUND',
+  'REFUNDED',
+];
 
 const STATUS_LABELS: Record<OrderStatus, string> = {
   PAID: 'Paid',
@@ -68,7 +68,6 @@ const COLUMNS = [
   'Validity',
   'Amount',
   'Status',
-  'Check In',
   'Action',
 ];
 
@@ -94,26 +93,6 @@ function StatusBadge({ status }: { status: OrderStatus }) {
   );
 }
 
-// Check-in badge reuses the same colors as the payment-status badge:
-// "Paid" green for checked-in, "Awaiting Payment" amber for not-checked-in.
-function CheckInBadge({ checkedIn }: { checkedIn: boolean }) {
-  const cfg = checkedIn ? STATUS_CONFIG.PAID : STATUS_CONFIG.AWAITING_PAYMENT;
-  return (
-    <span
-      className={cn(
-        'inline-flex items-center gap-1.5 px-3 py-[3px] rounded-[30px] w-fit text-[11px] font-medium whitespace-nowrap',
-        cfg.bg,
-        cfg.text
-      )}
-    >
-      <span
-        className={cn('w-[7px] h-[7px] rounded-full flex-shrink-0', cfg.dot)}
-      />
-      {checkedIn ? 'Checked In' : 'Not Checked In'}
-    </span>
-  );
-}
-
 function SkeletonRow() {
   return (
     <tr className="border-b border-gray-100 animate-pulse">
@@ -126,12 +105,12 @@ function SkeletonRow() {
   );
 }
 
-function CheckInFilterDropdown({
+function StatusDropdown({
   value,
   onChange,
 }: {
-  value: CheckInFilter;
-  onChange: (v: CheckInFilter) => void;
+  value: string;
+  onChange: (v: string) => void;
 }) {
   const [open, setOpen] = useState(false);
   return (
@@ -140,7 +119,7 @@ function CheckInFilterDropdown({
         onClick={() => setOpen((p) => !p)}
         className="flex items-center gap-1.5 px-5 py-[11px] border border-gray-200 rounded-md text-[13px] font-medium text-gray-700 hover:bg-gray-50 transition-colors whitespace-nowrap"
       >
-        {value ? CHECKIN_FILTER_LABELS[value] : 'Check-in Status'}{' '}
+        {value ? STATUS_LABELS[value as OrderStatus] : 'Payment Status'}{' '}
         <ChevronDown size={14} />
       </button>
       {open && (
@@ -159,23 +138,21 @@ function CheckInFilterDropdown({
             >
               All
             </button>
-            {(Object.keys(CHECKIN_FILTER_LABELS) as Exclude<CheckInFilter, ''>[]).map(
-              (s) => (
-                <button
-                  key={s}
-                  onClick={() => {
-                    onChange(s);
-                    setOpen(false);
-                  }}
-                  className={cn(
-                    'w-full text-left px-4 py-2.5 text-[13px] hover:bg-gray-50 whitespace-nowrap',
-                    value === s && 'font-semibold'
-                  )}
-                >
-                  {CHECKIN_FILTER_LABELS[s]}
-                </button>
-              )
-            )}
+            {STATUSES.map((s) => (
+              <button
+                key={s}
+                onClick={() => {
+                  onChange(s);
+                  setOpen(false);
+                }}
+                className={cn(
+                  'w-full text-left px-4 py-2.5 text-[13px] hover:bg-gray-50 whitespace-nowrap',
+                  value === s && 'font-semibold'
+                )}
+              >
+                {STATUS_LABELS[s]}
+              </button>
+            ))}
           </div>
         </>
       )}
@@ -200,9 +177,6 @@ function exportRows(rows: OrderListItemDto[]) {
     o.ticket?.validity ?? '',
     o.amount,
     STATUS_LABELS[o.status as OrderStatus] ?? o.status,
-    o.checkIns.length > 0
-      ? formatDateSafe(o.checkIns[o.checkIns.length - 1])
-      : 'Not checked in',
   ]);
 }
 
@@ -215,7 +189,6 @@ function exportCSV(rows: OrderListItemDto[]) {
     'Validity',
     'Amount',
     'Status',
-    'Check In',
   ];
   const lines = exportRows(rows).map((row) =>
     row.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(',')
@@ -226,7 +199,7 @@ function exportCSV(rows: OrderListItemDto[]) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `attendees-${format(new Date(), 'yyyy-MM-dd')}.csv`;
+  a.download = `orders-${format(new Date(), 'yyyy-MM-dd')}.csv`;
   a.click();
   URL.revokeObjectURL(url);
 }
@@ -236,45 +209,33 @@ async function exportPDF(rows: OrderListItemDto[]) {
   const { default: autoTable } = await import('jspdf-autotable');
 
   const doc = new jsPDF({ orientation: 'landscape' });
-  doc.text('Attendees List', 14, 14);
+  doc.text('Orders List', 14, 14);
 
   autoTable(doc, {
     startY: 22,
-    head: [
-      [
-        'Full Name',
-        'Email',
-        'Ticket',
-        'Code',
-        'Validity',
-        'Amount',
-        'Status',
-        'Check In',
-      ],
-    ],
+    head: [['Full Name', 'Email', 'Ticket', 'Code', 'Validity', 'Amount', 'Status']],
     body: exportRows(rows),
     styles: { fontSize: 9 },
     headStyles: { fillColor: [20, 20, 20] },
   });
 
-  doc.save(`attendees-${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+  doc.save(`orders-${format(new Date(), 'yyyy-MM-dd')}.pdf`);
 }
 
 // ── Main Table ────────────────────────────────────────────────────────────────
 
-interface AttendeesTableProps {
-  onCheckIn: (order: OrderListItemDto) => void;
-  /** ID of the order currently being checked in, if any — shows a per-row loader. */
-  checkingInOrderId?: string;
+interface OrdersTableProps {
+  onCreateNew: () => void;
+  onViewDetails: (order: OrderListItemDto) => void;
 }
 
-export default function AttendeesTable({
-  onCheckIn,
-  checkingInOrderId,
-}: AttendeesTableProps) {
+export default function OrdersTable({
+  onCreateNew,
+  onViewDetails,
+}: OrdersTableProps) {
   const [searchInput, setSearchInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-  const [checkInFilter, setCheckInFilter] = useState<CheckInFilter>('');
+  const [filterStatus, setFilterStatus] = useState('');
   const [cursor, setCursor] = useState<string | undefined>(undefined);
   const [direction, setDirection] = useState<'next' | 'previous' | undefined>(
     undefined
@@ -289,25 +250,15 @@ export default function AttendeesTable({
   const { data, isLoading, isFetching, isError } = useOrders({
     limit: PAGE_SIZE,
     search: searchQuery || undefined,
+    status: (filterStatus || undefined) as OrderStatus | undefined,
     cursor,
     direction,
   });
 
-  // Raw page of orders from the API — used for pagination cursors, which
-  // must stay in sync with what the server actually returned.
   const orders = data?.data ?? [];
   const meta = data?.meta;
+  const hasFilters = !!(searchQuery || filterStatus);
   const showLoadingOverlay = isFetching && !isLoading;
-
-  // Attendees are filtered client-side by check-in state, since the Orders
-  // API (shared with this list) doesn't expose a check-in filter param.
-  const visibleOrders = orders.filter((o) => {
-    if (checkInFilter === 'CHECKED_IN') return o.checkIns.length > 0;
-    if (checkInFilter === 'NOT_CHECKED_IN') return o.checkIns.length === 0;
-    return true;
-  });
-
-  const hasFilters = !!(searchQuery || checkInFilter);
 
   const resetPagination = () => {
     setCursor(undefined);
@@ -327,7 +278,7 @@ export default function AttendeesTable({
   const clearFilters = () => {
     setSearchInput('');
     setSearchQuery('');
-    setCheckInFilter('');
+    setFilterStatus('');
     resetPagination();
   };
 
@@ -349,11 +300,11 @@ export default function AttendeesTable({
   };
 
   const handleExportCSV = () => {
-    exportCSV(visibleOrders);
+    exportCSV(orders);
     setExportOpen(false);
   };
   const handleExportPDF = () => {
-    exportPDF(visibleOrders);
+    exportPDF(orders);
     setExportOpen(false);
   };
 
@@ -369,7 +320,7 @@ export default function AttendeesTable({
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Search for attendee"
+            placeholder="Search for order (name, email or reference)"
             className="flex-1 px-3 py-[11px] text-[13px] text-gray-700 placeholder:text-gray-400 focus:outline-none bg-transparent min-w-0"
           />
           {searchInput && (
@@ -395,12 +346,12 @@ export default function AttendeesTable({
           Search
         </button>
 
-        {/* Check-in filter + export — right-aligned */}
+        {/* Status filter + export/create — right-aligned */}
         <div className="flex flex-wrap items-center gap-3 sm:ml-auto w-full sm:w-auto">
-          <CheckInFilterDropdown
-            value={checkInFilter}
+          <StatusDropdown
+            value={filterStatus}
             onChange={(v) => {
-              setCheckInFilter(v);
+              setFilterStatus(v);
               resetPagination();
             }}
           />
@@ -413,6 +364,13 @@ export default function AttendeesTable({
               <X size={12} /> Clear filters
             </button>
           )}
+
+          <button
+            onClick={onCreateNew}
+            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-[11px] bg-gray-900 text-white text-[13px] font-medium rounded-lg hover:bg-black transition-colors whitespace-nowrap"
+          >
+            Create New Order <Plus size={16} strokeWidth={2.5} />
+          </button>
 
           {/* Export dropdown */}
           <div className="relative flex-shrink-0">
@@ -479,65 +437,50 @@ export default function AttendeesTable({
                     colSpan={COLUMNS.length}
                     className="text-center py-12 text-[13px] text-red-400"
                   >
-                    Failed to load attendees. Please refresh.
+                    Failed to load orders. Please refresh.
                   </td>
                 </tr>
-              ) : visibleOrders.length === 0 ? (
+              ) : orders.length === 0 ? (
                 <EmptyState />
               ) : (
-                visibleOrders.map((order) => {
-                  const checkedIn = order.checkIns.length > 0;
-                  return (
-                    <tr
-                      key={order.id}
-                      className="border-b border-gray-100 last:border-0 hover:bg-gray-50/50 transition-colors"
+                orders.map((order) => (
+                  <tr
+                    key={order.id}
+                    className="border-b border-gray-100 last:border-0 hover:bg-gray-50/50 transition-colors"
+                  >
+                    <td className="px-5 py-4 text-[13px] font-medium text-gray-800 whitespace-nowrap">
+                      {order.attendeeFullName}
+                    </td>
+                    <td className="px-5 py-4 text-[13px] text-gray-500 whitespace-nowrap">
+                      {order.attendeeEmail}
+                    </td>
+                    <td className="px-5 py-4 text-[13px] text-gray-600 whitespace-nowrap">
+                      {order.ticket?.name ?? '—'}
+                    </td>
+                    <td className="px-5 py-4 text-[13px] font-mono text-gray-700 whitespace-nowrap">
+                      {order.ticket?.code ?? '—'}
+                    </td>
+                    <td className="px-5 py-4 text-[13px] text-gray-600 whitespace-nowrap">
+                      {order.ticket?.validity ?? '—'}
+                    </td>
+                    <td className="px-5 py-4 text-[13px] font-semibold text-gray-800 whitespace-nowrap">
+                      {order.amount
+                        ? `₦${parseFloat(order.amount).toLocaleString('en-NG')}`
+                        : '—'}
+                    </td>
+                    <td className="px-5 py-4 whitespace-nowrap">
+                      <StatusBadge status={order.status as OrderStatus} />
+                    </td>
+                    <td
+                      className="px-5 py-4"
+                      onClick={(e) => e.stopPropagation()}
                     >
-                      <td className="px-5 py-4 text-[13px] font-medium text-gray-800 whitespace-nowrap">
-                        {order.attendeeFullName}
-                      </td>
-                      <td className="px-5 py-4 text-[13px] text-gray-500 whitespace-nowrap">
-                        {order.attendeeEmail}
-                      </td>
-                      <td className="px-5 py-4 text-[13px] text-gray-600 whitespace-nowrap">
-                        {order.ticket?.name ?? '—'}
-                      </td>
-                      <td className="px-5 py-4 text-[13px] font-mono text-gray-700 whitespace-nowrap">
-                        {order.ticket?.code ?? '—'}
-                      </td>
-                      <td className="px-5 py-4 text-[13px] text-gray-600 whitespace-nowrap">
-                        {order.ticket?.validity ?? '—'}
-                      </td>
-                      <td className="px-5 py-4 text-[13px] font-semibold text-gray-800 whitespace-nowrap">
-                        {order.amount
-                          ? `₦${parseFloat(order.amount).toLocaleString('en-NG')}`
-                          : '—'}
-                      </td>
-                      <td className="px-5 py-4 whitespace-nowrap">
-                        <StatusBadge status={order.status as OrderStatus} />
-                      </td>
-                      <td className="px-5 py-4 whitespace-nowrap">
-                        <CheckInBadge checkedIn={checkedIn} />
-                        {checkedIn && (
-                          <span className="block mt-1 text-[11px] text-gray-400">
-                            {formatDateSafe(
-                              order.checkIns[order.checkIns.length - 1]
-                            )}
-                          </span>
-                        )}
-                      </td>
-                      <td
-                        className="px-5 py-4"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <AttendeeActionsMenu
-                          onCheckIn={() => onCheckIn(order)}
-                          disabled={checkedIn}
-                          loading={checkingInOrderId === order.id}
-                        />
-                      </td>
-                    </tr>
-                  );
-                })
+                      <OrderActionsMenu
+                        onViewDetails={() => onViewDetails(order)}
+                      />
+                    </td>
+                  </tr>
+                ))
               )}
             </tbody>
           </table>
@@ -547,7 +490,7 @@ export default function AttendeesTable({
         {!isLoading && (cursorStack.length > 0 || meta?.hasMore) && (
           <div className="flex items-center justify-between px-5 py-3 border-t border-gray-100 bg-white">
             <span className="text-[12px] text-gray-400">
-              {visibleOrders.length} attendee{visibleOrders.length === 1 ? '' : 's'} on this
+              {orders.length} order{orders.length === 1 ? '' : 's'} on this
               page
             </span>
             <div className="flex items-center gap-2">

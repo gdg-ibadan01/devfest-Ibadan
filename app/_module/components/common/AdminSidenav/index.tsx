@@ -17,11 +17,40 @@ import AuditLog from '../../icons/AuditLog';
 import Logout from '../../icons/Logout';
 import { useSidenav } from '@/app/_module/context/SidenavContext';
 import { useMe, useAdminLogout } from '@/app/_module/services';
+import type { PermissionId } from '@/app/_module/api/types';
+import AdminOrders from '../../icons/AdminOrders';
+// import { hasAnyPermission } from '@/app/_module/lib/permissions';
 
-const navItems = [
+// NOTE: Permission-based nav gating is temporarily disabled (commented out below).
+// All nav items are shown regardless of the current admin's permissions.
+
+const navItems: {
+  label: string;
+  href: string;
+  icon: typeof Home;
+  /** Permission IDs required to see this item — any one of them grants access. Omit for always-visible items. */
+  permissions?: PermissionId[];
+}[] = [
   { label: 'Home', href: '/admin/home', icon: Home },
-  { label: 'Admins', href: '/admin/admins', icon: Admins },
+  {
+    label: 'Admins',
+    href: '/admin/admins',
+    icon: Admins,
+    // permissions: ['admins.list'],
+  },
   { label: 'Ticket', href: '/admin/ticket', icon: Ticket },
+  {
+    label: 'Orders',
+    href: '/admin/orders',
+    icon: AdminOrders,
+    // permissions: ['orders.list'],
+  },
+  {
+    label: 'Attendees',
+    href: '/admin/attendees',
+    icon: Attendees,
+    // permissions: ['orders.list'],
+  },
   {
     label: 'Discount & Referral',
     href: '/admin/discount-referral',
@@ -31,9 +60,8 @@ const navItems = [
     label: 'Roles & Permission',
     href: '/admin/roles-permission',
     icon: RolesAndPermissions,
+    // permissions: ['roles.list'],
   },
-
-  { label: 'Attendees', href: '/admin/attendees', icon: Attendees },
   { label: 'Audit Log', href: '/admin/audit-log', icon: AuditLog },
 ];
 
@@ -63,6 +91,16 @@ function NavContent({ onLinkClick }: { onLinkClick?: () => void }) {
   const fullName = me?.fullName ?? '';
   const roleName = me?.role?.name ?? '';
   const initials = fullName ? getInitials(fullName) : '??';
+  // const permissions = (me?.role?.permissions ?? []) as PermissionId[];
+
+  // Permission-based filtering disabled: all nav items are shown regardless
+  // of the current admin's permissions.
+  // const visibleItems = navItems.filter((item) =>
+  //   !item.permissions
+  //     ? true
+  //     : !meLoading && hasAnyPermission(permissions, item.permissions)
+  // );
+  const visibleItems = navItems;
 
   const handleLogout = () => {
     logout();
@@ -71,7 +109,7 @@ function NavContent({ onLinkClick }: { onLinkClick?: () => void }) {
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
       <div className="flex flex-1 flex-col">
-        {navItems.map(({ label, href, icon: Icon }) => {
+        {visibleItems.map(({ label, href, icon: Icon }) => {
           const active = isActivePath(pathname, href);
           return (
             <Link

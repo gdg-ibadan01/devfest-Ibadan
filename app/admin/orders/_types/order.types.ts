@@ -5,3 +5,10 @@ export type OrderStatus =
   | 'CANCELLED'
   | 'AWAITING_REFUND'
   | 'REFUNDED';
+
+export interface CreateOrderForm {
+  fullName: string;
+  email: string;
+  phoneNumber: string;
+  ticketSlug: string;
+}

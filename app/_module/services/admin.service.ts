@@ -9,6 +9,7 @@ import type {
   AdminActionResponseDto,
   AdminListParams,
 } from '@/app/_module/api/types';
+import { notifyApiError } from '../lib/apiError';
 
 //Get current admin (me) 
 
@@ -55,7 +56,7 @@ export function useInviteAdmin() {
       queryClient.invalidateQueries({ queryKey: queryKeys.admins.all(), exact: false });
     },
     onError: (error: Error) => {
-      showToast.error(error.message || 'Failed to send invitation');
+      notifyApiError(error, 'Failed to send invitation');
     },
   });
 }
@@ -77,7 +78,7 @@ export function useDeactivateAdmin() {
       queryClient.invalidateQueries({ queryKey: queryKeys.admins.all(), exact: false });
     },
     onError: (error: Error) => {
-      showToast.error(error.message || 'Failed to deactivate admin');
+      notifyApiError(error, 'Failed to deactivate admin');
     },
   });
 }

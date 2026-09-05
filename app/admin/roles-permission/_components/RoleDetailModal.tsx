@@ -128,10 +128,10 @@ export default function RoleDetailModal({
                     ))
                   : roleData.permissions.map((perm: any) => (
                       <span
-                        key={perm.id || perm}
+                        key={perm?.id || perm}
                         className="px-3 py-[5px] border border-gray-200 rounded-md text-[12px] text-gray-700 bg-white"
                       >
-                        {perm.label ?? perm}
+                        {perm?.label ?? perm}
                       </span>
                     ))}
               </div>

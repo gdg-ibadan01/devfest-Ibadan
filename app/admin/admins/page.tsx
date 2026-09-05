@@ -1,78 +1,34 @@
-'use client';
+import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
+import { getQueryClient } from '@/app/_module/lib/getQueryClient';
+import { serverFetch } from '@/app/_module/lib/serverFetch';
+import { queryKeys } from '@/app/_module/api/queryKeys';
+import AdminsPageClient from './AdminsPageClient';
 
-import { useState } from 'react';
-import AdminWrapper from '@/app/_module/components/common/AdminWrapper';
-import AdminsTable from './_components/AdminsTable';
-import AdminDetailModal from './_components/AdminDetailModal';
-import DeactivateAdminModal from './_components/DeactivateAdminModal';
-import type { FindAllAdminsItemDto } from '@/app/_module/api/types';
+// Keep in sync with `page`/`limit` in ./_components/AdminsTable.tsx — this
+// is the exact param shape `useAdmins` is called with on first mount, so the
+// prefetched cache entry is picked up instantly instead of refetched.
+const PAGE = 1;
+const FETCH_LIMIT = 100;
 
-type ModalState = 'none' | 'detail' | 'deactivate';
+export default async function AdminsPage() {
+  const queryClient = getQueryClient();
 
-export default function AdminsPage() {
-  const [modal, setModal] = useState<ModalState>('none');
-  const [selectedAdmin, setSelectedAdmin] = useState<FindAllAdminsItemDto | null>(null);
-  const [deactivateSource, setDeactivateSource] = useState<'detail' | 'table'>('table');
-
-  const openDetail = (admin: FindAllAdminsItemDto) => {
-    setSelectedAdmin(admin);
-    setModal('detail');
-  };
-
-  // Called from table action menu
-  const openDeactivateFromTable = (admin: FindAllAdminsItemDto) => {
-    setSelectedAdmin(admin);
-    setDeactivateSource('table');
-    setModal('deactivate');
-  };
-
-  // Called from detail modal
-  const openDeactivateFromDetail = () => {
-    setDeactivateSource('detail');
-    setModal('deactivate');
-  };
-
-  const handleDeactivateConfirm = () => {
-    setModal('none');
-    setSelectedAdmin(null);
-  };
-
-  const handleDeactivateClose = () => {
-    if (deactivateSource === 'detail') {
-      setModal('detail');
-    } else {
-      setModal('none');
-      setSelectedAdmin(null);
-    }
-  };
-
-  const closeAll = () => {
-    setModal('none');
-    setSelectedAdmin(null);
-  };
+  await queryClient.prefetchQuery({
+    queryKey: queryKeys.admins.all({ page: PAGE, limit: FETCH_LIMIT }),
+    queryFn: async () => {
+      const { data, status } = await serverFetch('/admin', {
+        params: { page: PAGE, limit: FETCH_LIMIT },
+      });
+      if (status < 200 || status >= 300) {
+        throw new Error('Failed to prefetch admins');
+      }
+      return data;
+    },
+  });
 
   return (
-    <AdminWrapper title="Admins">
-      <div className="lg:px-[32px] px-[20px] py-[24px]">
-        <AdminsTable onRowClick={openDetail} onDeactivate={openDeactivateFromTable} />
-      </div>
-
-      {/* Admin Detail */}
-      <AdminDetailModal
-        open={modal === 'detail'}
-        admin={selectedAdmin}
-        onClose={closeAll}
-        onDeactivate={openDeactivateFromDetail}
-      />
-
-      {/* Deactivate Confirm */}
-      <DeactivateAdminModal
-        open={modal === 'deactivate'}
-        adminId={selectedAdmin?.id}
-        adminName={selectedAdmin?.fullName}
-        onClose={handleDeactivateClose}
-        onConfirm={handleDeactivateConfirm}
-      />
-    </AdminWrapper>
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <AdminsPageClient />
+    </HydrationBoundary>
   );
 }

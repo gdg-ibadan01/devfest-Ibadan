@@ -2,17 +2,14 @@ import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
 import { getQueryClient } from '@/app/_module/lib/getQueryClient';
 import { serverFetch } from '@/app/_module/lib/serverFetch';
 import { queryKeys } from '@/app/_module/api/queryKeys';
-import AttendeesPageClient from './AttendeesPageClient';
+import OrdersPageClient from './OrdersPageClient';
 
-// Keep in sync with PAGE_SIZE in ./_components/AttendeesTable.tsx — this is
-// the exact param shape `useOrders` is called with on first mount (no
-// filters), so the prefetched cache entry is picked up instantly instead of
-// refetched. Note this resolves to the same cache key as the Orders page's
-// prefetch below (both hash to `['orders', { limit: 15 }]`), which is fine —
-// they're genuinely the same unfiltered first-page request.
+// Keep in sync with PAGE_SIZE in ./_components/OrdersTable.tsx — this is the
+// exact param shape `useOrders` is called with on first mount (no filters),
+// so the prefetched cache entry is picked up instantly instead of refetched.
 const PAGE_SIZE = 15;
 
-export default async function AttendeesPage() {
+export default async function OrdersPage() {
   const queryClient = getQueryClient();
 
   await queryClient.prefetchQuery({
@@ -22,7 +19,7 @@ export default async function AttendeesPage() {
         params: { limit: PAGE_SIZE },
       });
       if (status < 200 || status >= 300) {
-        throw new Error('Failed to prefetch attendees');
+        throw new Error('Failed to prefetch orders');
       }
       return data;
     },
@@ -30,7 +27,7 @@ export default async function AttendeesPage() {
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      <AttendeesPageClient />
+      <OrdersPageClient />
     </HydrationBoundary>
   );
 }
