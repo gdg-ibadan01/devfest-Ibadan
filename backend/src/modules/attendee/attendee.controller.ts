@@ -2,10 +2,12 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Get,
   HttpStatus,
   InternalServerErrorException,
   NotFoundException,
   Patch,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -16,6 +18,8 @@ import {
 } from '@nestjs/swagger';
 import { AttendeeService } from './attendee.service';
 import { CheckInOrderDto, CheckInResponseDto } from './dto/check-in.dto';
+import { CheckedInQueryDto } from './dto/checked-in.dto';
+import { CheckedInListResponseDto } from './dto/checked-in-response.dto';
 import { JwtAuthGuard } from '../admin/guards/jwt-auth.guard';
 import { PermissionsGuard } from '../admin/guards/permissions.guard';
 import { RequirePermission } from 'src/common/decorators/permissions.decorator';
@@ -24,6 +28,28 @@ import { RequirePermission } from 'src/common/decorators/permissions.decorator';
 @Controller('attendees')
 export class AttendeeController {
   constructor(private readonly attendeeService: AttendeeService) {}
+
+  @Get('checked-in')
+  @ApiBearerAuth()
+  @RequirePermission('attendees.list')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @ApiOperation({
+    summary: 'List checked-in attendees',
+    description:
+      'Cursor-paginated list of checked-in attendees. By default returns earlier-created attendees first.',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Checked-in orders retrieved successfully',
+    type: CheckedInListResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.FORBIDDEN,
+    description: 'Missing attendees.list permission',
+  })
+  checkedIn(@Query() query: CheckedInQueryDto) {
+    return this.attendeeService.checkedIn(query);
+  }
 
   @Patch('check-in')
   @ApiBearerAuth()
@@ -57,6 +83,7 @@ export class AttendeeController {
     } catch (err) {
       switch ((err as Error).name) {
         case AttendeeService.ERRORS.UnmatchedValidityDateErr:
+        case AttendeeService.ERRORS.CheckInUnpaidOrderErr:
           throw new BadRequestException((err as Error).message);
         case AttendeeService.ERRORS.TicketNotFoundErr:
           throw new NotFoundException((err as Error).message);

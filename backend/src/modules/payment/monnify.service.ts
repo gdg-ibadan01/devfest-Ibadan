@@ -58,6 +58,7 @@ export class MonnifyService implements PaymentProvider {
     const VAT_RATE = 0.075; // 7.5%
     const FEE_RATE = 0.015; // 1.5%
 
+    amountInKobo = Math.trunc(amountInKobo);
     const effectiveFeeRate = FEE_RATE * (1 + VAT_RATE);
     const effectiveCapKobo = Math.round(MONNIFY_CAP_CHARGE * (1 + VAT_RATE));
     const capThresholdKobo = Math.round(MONNIFY_CAP_CHARGE / FEE_RATE);
@@ -87,22 +88,22 @@ export class MonnifyService implements PaymentProvider {
   async initializePayment(
     params: InitializePaymentParams,
   ): Promise<InitializedPayment> {
-    const { amount, vatAndCharges } = this.withCharges(params.amount * 100);
-
-    const payload = {
-      amount,
-      customerName: params.customerName,
-      customerEmail: params.customerEmail,
-      paymentReference: params.paymentReference,
-      paymentDescription: params.description ?? 'Ticket purchase',
-      currencyCode: 'NGN',
-      contractCode: this.getRequiredConfig('contractCode'),
-      redirectUrl: params.redirectUrl ?? this.getConfig('redirectUrl'),
-      paymentMethods: ['CARD', 'ACCOUNT_TRANSFER'],
-      metaData: params.metadata ?? {},
-    };
-
     try {
+      const { amount, vatAndCharges } = this.withCharges(params.amount * 100);
+
+      const payload = {
+        amount,
+        customerName: params.customerName,
+        customerEmail: params.customerEmail,
+        paymentReference: params.paymentReference,
+        paymentDescription: params.description ?? 'Ticket purchase',
+        currencyCode: 'NGN',
+        contractCode: this.getRequiredConfig('contractCode'),
+        redirectUrl: params.redirectUrl ?? this.getConfig('redirectUrl'),
+        paymentMethods: ['CARD', 'ACCOUNT_TRANSFER'],
+        metaData: params.metadata ?? {},
+      };
+
       const res = await this.request<MonnifyInitResponseBody>(
         'POST',
         '/api/v1/merchant/transactions/init-transaction',
