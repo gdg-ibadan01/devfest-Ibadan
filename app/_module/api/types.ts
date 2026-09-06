@@ -95,7 +95,6 @@ export interface TicketListParams {
   name?: string;
 }
 
-<<<<<<< HEAD
 // ---- Audit Logs --------------------------------------------
 export interface AuditLogItemDto {
   id: string;
@@ -145,7 +144,6 @@ export interface AuditLogListParams extends PaginationParams {
   sortOrder?: 'asc' | 'desc';
 }
 
-=======
 export interface CheckedInListParams {
   /** Event dates (YYYY-MM-DD) to match check-ins against — pass the selected ticket's `eventDates`. */
   eventDates: string[];
@@ -153,4 +151,3 @@ export interface CheckedInListParams {
   cursor?: string;
   limit?: number;
 }
->>>>>>> origin/dev-26
