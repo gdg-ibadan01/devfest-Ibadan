@@ -3,6 +3,7 @@ import { showToast } from '@/app/_module/lib/notify';
 import { notifyApiError } from '@/app/_module/lib/apiError';
 import { apiClient } from '@/app/_module/api/client';
 import { queryKeys } from '@/app/_module/api/queryKeys';
+import { getTicketsOnSaleAction } from '@/app/actions/tickets';
 import type {
   CreateTicketDto,
   CreateTicketResponseDto,
@@ -29,10 +30,7 @@ export function useTickets(params: TicketListParams = {}) {
 // ---- Get tickets on sale ------------------------------------
 
 async function getTicketsOnSale(name?: string): Promise<OnSaleTicketResponseDto> {
-  const { data } = await apiClient.get<OnSaleTicketResponseDto>('/tickets/onsale', {
-    params: name ? { name } : undefined,
-  });
-  return data;
+  return await getTicketsOnSaleAction(name);
 }
 
 export function useTicketsOnSale(name?: string) {

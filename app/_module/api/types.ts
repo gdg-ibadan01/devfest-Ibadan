@@ -71,7 +71,8 @@ export type GetOrderReferenceResponseDto = Schemas['GetOrderReferenceResponseDto
 // ---- Query param helpers -----------------------------------
 export interface OrderListParams {
   search?: string;
-  status?: 'AWAITING_PAYMENT' | 'PAID' | 'CANCELLED' | 'AWAITING_REFUND' | 'REFUNDED';
+  status?:
+    'AWAITING_PAYMENT' | 'PAID' | 'CANCELLED' | 'AWAITING_REFUND' | 'REFUNDED';
   direction?: 'next' | 'previous';
   cursor?: string;
   limit?: number;
