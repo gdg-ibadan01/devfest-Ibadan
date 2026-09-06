@@ -72,7 +72,7 @@ export type GetOrderReferenceResponseDto = Schemas['GetOrderReferenceResponseDto
 export interface OrderListParams {
   search?: string;
   status?:
-    'AWAITING_PAYMENT' | 'PAID' | 'CANCELLED' | 'AWAITING_REFUND' | 'REFUNDED';
+  'AWAITING_PAYMENT' | 'PAID' | 'CANCELLED' | 'AWAITING_REFUND' | 'REFUNDED';
   direction?: 'next' | 'previous';
   cursor?: string;
   limit?: number;
@@ -96,7 +96,6 @@ export interface TicketListParams {
   name?: string;
 }
 
-<<<<<<< HEAD
 // ---- Audit Logs --------------------------------------------
 export interface AuditLogItemDto {
   id: string;
@@ -146,12 +145,9 @@ export interface AuditLogListParams extends PaginationParams {
   sortOrder?: 'asc' | 'desc';
 }
 
-=======
 export interface CheckedInListParams {
-  /** Event dates (YYYY-MM-DD) to match check-ins against — pass the selected ticket's `eventDates`. */
   eventDates: string[];
   direction?: 'next' | 'previous';
   cursor?: string;
   limit?: number;
 }
->>>>>>> d396c255d06c117af3fdc8ca6a6530adba6c10b1
