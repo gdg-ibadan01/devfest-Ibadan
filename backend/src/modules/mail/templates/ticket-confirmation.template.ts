@@ -38,11 +38,11 @@ export function ticketConfirmationTemplate(
           <tr>
             <td style="padding: 30px; text-align: left; font-size: 16px; color: #333;">
               <h2 style="color: #007BFF; margin-top: 0;">
-                Your DevFest Ibadan 2025 Ticket is Confirmed! 🎉
+                Your DevFest Ibadan ${new Date().getFullYear()} Ticket is Confirmed! 🎉
               </h2>
 
               <p>Hi <strong>${fullName}</strong>,</p>
-              <p>Congratulations, your ticket for <strong>DevFest Ibadan 2025 Saturday Conference</strong> is confirmed! 🚀</p>
+              <p>Congratulations, your ticket for <strong>DevFest Ibadan ${new Date().getFullYear()} Saturday Conference</strong> is confirmed! 🚀</p>
 
               <p>We’re thrilled you’ll be joining us on <strong>Saturday, November 29th, 2025</strong>, for a full-day conference experience celebrating innovation, knowledge-sharing, and community building.</p>
 
@@ -76,7 +76,7 @@ export function ticketConfirmationTemplate(
                 <li>Save the dates — November 28th & 29th, 2025.</li>
               </ul>
 
-              <p>We can’t wait to welcome you to DevFest Ibadan 2025 — come ready to learn, connect, and be inspired 🎉.</p>  
+              <p>We can’t wait to welcome you to DevFest Ibadan ${new Date().getFullYear()} — come ready to learn, connect, and be inspired 🎉.</p>  
 
               <p>Need help? Contact us at 
                 <a href="mailto:${supportEmail}" style="color:#007BFF; text-decoration:none;">

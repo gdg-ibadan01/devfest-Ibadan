@@ -43,4 +43,10 @@ export const queryKeys = {
     checkedIn: (params: Record<string, unknown>) =>
       ['attendees', 'checked-in', params] as const,
   },
+
+  // Audit Logs
+  auditLogs: {
+    all: (params?: Record<string, unknown>) => ['auditLogs', params] as const,
+    detail: (id: string) => ['auditLogs', id] as const,
+  },
 } as const;

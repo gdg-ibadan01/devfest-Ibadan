@@ -24,6 +24,14 @@ export class MailService implements OnModuleInit {
         pass: this.configService.get<string>('cpanel.password'),
       },
     });
+    this.transporter
+      .verify()
+      .then(() => {
+        this.logger.log('✅ cPanel SMTP connection successful');
+      })
+      .catch((error) => {
+        this.logger.error('❌ cPanel SMTP connection failed:', error.message);
+      });
   }
 
   async onModuleInit() {
@@ -40,9 +48,6 @@ export class MailService implements OnModuleInit {
   async sendTicketConfirmationEmail(
     email: string,
     fullName: string,
-    // eventTitle: string,
-    // eventDate: string,
-    // venue: string,
     ticketType: string,
     transactionId: string,
     ticketNumber: string,
@@ -58,8 +63,6 @@ export class MailService implements OnModuleInit {
 
     const html = ticketConfirmationTemplate(
       fullName,
-      // eventDate,
-      // venue,
       ticketType,
       transactionId,
       ticketNumber,
@@ -182,7 +185,7 @@ export class MailService implements OnModuleInit {
     fullName: string,
     paymentUrl: string,
     amount: number,
-  ) {
+  ): Promise<void> {
     const logoUrl =
       this.configService.get<string>('app.logoUrl') ??
       'https://example.com/default-logo.png';
@@ -191,10 +194,10 @@ export class MailService implements OnModuleInit {
       this.configService.get<string>('cpanel.from.email') ??
       'noreply@gdgibadan.com';
 
-    await this.transporter.sendMail({
+    const info = await this.transporter.sendMail({
       from: `"GDG Event Manager" <${supportEmail}>`,
       to: email,
-      subject: 'Complete Your Payment - DevFest Ibadan 2025',
+      subject: 'Complete Your Payment - DevFest Ibadan 2026',
       html: paymentLinkTemplate(
         fullName,
         paymentUrl,
@@ -203,8 +206,11 @@ export class MailService implements OnModuleInit {
         amount,
       ),
     });
-  }
 
+    this.logger.log(
+      `📨 Payment email accepted by SMTP for ${email}. Message ID: ${info.messageId}`,
+    );
+  }
   async sendPasswordResetEmail(
     email: string,
     fullName: string,
