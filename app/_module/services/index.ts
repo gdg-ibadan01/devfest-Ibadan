@@ -3,5 +3,5 @@ export * from './admin.service';
 export * from './roles.service';
 export * from './tickets.service';
 export * from './attendees.service';
-export * from './order.service';
-
+export * from './orders.service';
+// export * from './audit-log.service';
