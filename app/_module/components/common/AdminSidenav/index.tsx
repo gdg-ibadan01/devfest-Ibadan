@@ -11,18 +11,64 @@ import Home from '../../icons/Home';
 import Ticket from '../../icons/Ticket';
 import DiscountReferral from '../../icons/DiscountReferral';
 import RolesAndPermissions from '../../icons/RolesAndPermissions';
+import Admins from '../../icons/Admins';
 import Attendees from '../../icons/Attendees';
 import AuditLog from '../../icons/AuditLog';
 import Logout from '../../icons/Logout';
 import { useSidenav } from '@/app/_module/context/SidenavContext';
 import { useMe, useAdminLogout } from '@/app/_module/services';
+import type { PermissionId } from '@/app/_module/api/types';
+import AdminOrders from '../../icons/AdminOrders';
+import Checkins from '../../icons/Checkins';
+// import { hasAnyPermission } from '@/app/_module/lib/permissions';
 
-const navItems = [
+// NOTE: Permission-based nav gating is temporarily disabled (commented out below).
+// All nav items are shown regardless of the current admin's permissions.
+
+const navItems: {
+  label: string;
+  href: string;
+  icon: typeof Home;
+  /** Permission IDs required to see this item — any one of them grants access. Omit for always-visible items. */
+  permissions?: PermissionId[];
+}[] = [
   { label: 'Home', href: '/admin/home', icon: Home },
+  {
+    label: 'Admins',
+    href: '/admin/admins',
+    icon: Admins,
+    // permissions: ['admins.list'],
+  },
   { label: 'Ticket', href: '/admin/ticket', icon: Ticket },
-  { label: 'Discount & Referral', href: '/admin/discount-referral', icon: DiscountReferral },
-  { label: 'Roles & Permission', href: '/admin/roles-permission', icon: RolesAndPermissions },
-  { label: 'Attendees', href: '/admin/attendees', icon: Attendees },
+  {
+    label: 'Orders',
+    href: '/admin/orders',
+    icon: AdminOrders,
+    // permissions: ['orders.list'],
+  },
+  {
+    label: 'Attendees',
+    href: '/admin/attendees',
+    icon: Attendees,
+    // permissions: ['orders.list'],
+  },
+  {
+    label: 'Checkins',
+    href: '/admin/checkins',
+    icon: Checkins,
+    // permissions: ['attendees.list'],
+  },
+  {
+    label: 'Discount & Referral',
+    href: '/admin/discount-referral',
+    icon: DiscountReferral,
+  },
+  {
+    label: 'Roles & Permission',
+    href: '/admin/roles-permission',
+    icon: RolesAndPermissions,
+    // permissions: ['roles.list'],
+  },
   { label: 'Audit Log', href: '/admin/audit-log', icon: AuditLog },
 ];
 
@@ -31,7 +77,7 @@ const isActivePath = (pathname: string, href: string) => {
   return pathname === href || pathname.startsWith(`${href}/`);
 };
 
-/** Extract initials from a full name — e.g. "Mary Esivue" → "ME" */
+/** Extract initials from a full name */
 function getInitials(fullName: string): string {
   return fullName
     .trim()
@@ -52,6 +98,16 @@ function NavContent({ onLinkClick }: { onLinkClick?: () => void }) {
   const fullName = me?.fullName ?? '';
   const roleName = me?.role?.name ?? '';
   const initials = fullName ? getInitials(fullName) : '??';
+  // const permissions = (me?.role?.permissions ?? []) as PermissionId[];
+
+  // Permission-based filtering disabled: all nav items are shown regardless
+  // of the current admin's permissions.
+  // const visibleItems = navItems.filter((item) =>
+  //   !item.permissions
+  //     ? true
+  //     : !meLoading && hasAnyPermission(permissions, item.permissions)
+  // );
+  const visibleItems = navItems;
 
   const handleLogout = () => {
     logout();
@@ -60,7 +116,7 @@ function NavContent({ onLinkClick }: { onLinkClick?: () => void }) {
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
       <div className="flex flex-1 flex-col">
-        {navItems.map(({ label, href, icon: Icon }) => {
+        {visibleItems.map(({ label, href, icon: Icon }) => {
           const active = isActivePath(pathname, href);
           return (
             <Link
@@ -125,19 +181,24 @@ const AdminSidenav = () => {
       <aside className="hidden lg:flex flex-col bg-[#1f1f1f] text-white h-screen sticky top-0">
         {/* Logo */}
         <div className="flex h-[80px] items-center justify-center bg-white px-8 flex-shrink-0">
-          <Link href="/admin/home" className="flex w-[120px] items-center justify-center">
+          <Link
+            href="/admin/home"
+            className="flex w-[120px] items-center justify-center"
+          >
             <Image src={DevfestLogo} alt="DevFest Ibadan" priority />
           </Link>
         </div>
         <NavContent />
       </aside>
 
-      {/* ---- MOBILE DRAWER (below lg) ---- */}
+      {/* MOBILE DRAWER (below lg) */}
       {/* Overlay */}
       <div
         className={cn(
           'fixed inset-0 z-40 bg-black/50 transition-opacity duration-300 lg:hidden',
-          isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+          isOpen
+            ? 'opacity-100 pointer-events-auto'
+            : 'opacity-0 pointer-events-none'
         )}
         onClick={close}
         aria-hidden
@@ -153,7 +214,11 @@ const AdminSidenav = () => {
       >
         {/* Drawer header: logo + close button */}
         <div className="flex h-[80px] items-center justify-between bg-white px-5 flex-shrink-0">
-          <Link href="/admin/home" onClick={close} className="flex w-[90px] items-center">
+          <Link
+            href="/admin/home"
+            onClick={close}
+            className="flex w-[90px] items-center"
+          >
             <Image src={DevfestLogo} alt="DevFest Ibadan" priority />
           </Link>
           <button

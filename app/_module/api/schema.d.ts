@@ -20,33 +20,18 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/attendees": {
+    "/api/v1/attendees/checked-in": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Get all attendees */
-        get: operations["AttendeeController_findAll"];
-        put?: never;
-        /** Create a new attendee */
-        post: operations["AttendeeController_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/attendees/{id}/retrieve": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get attendee by ID */
-        get: operations["AttendeeController_findOne"];
+        /**
+         * List checked-in attendees
+         * @description Cursor-paginated list of checked-in attendees. By default returns earlier-created attendees first.
+         */
+        get: operations["AttendeeController_checkedIn"];
         put?: never;
         post?: never;
         delete?: never;
@@ -55,24 +40,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/attendees/email/{email}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get attendee by email */
-        get: operations["AttendeeController_findByEmail"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/payments/initialize": {
+    "/api/v1/attendees/check-in": {
         parameters: {
             query?: never;
             header?: never;
@@ -81,79 +49,12 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Initialize payment */
-        post: operations["PaymentsController_initiatePayment"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/payments/verify": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Verify payment */
-        post: operations["PaymentsController_verifyPayment"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/payments/webhook": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["PaymentsController_handleWebhook"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/payments": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get all payments */
-        get: operations["PaymentsController_findAll"];
-        put?: never;
         post?: never;
         delete?: never;
         options?: never;
         head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/payments/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get payment by ID */
-        get: operations["PaymentsController_findOne"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
+        /** Check in an attendee */
+        patch: operations["AttendeeController_checkIn"];
         trace?: never;
     };
     "/api/v1/admin/login": {
@@ -412,6 +313,90 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/payments/initialize": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Initialize payment */
+        post: operations["PaymentsController_initiatePayment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/payments/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Verify payment */
+        post: operations["PaymentsController_verifyPayment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/payments/webhook": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PaymentsController_handleWebhook"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/payments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get all payments */
+        get: operations["PaymentsController_findAll"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/payments/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get payment by ID */
+        get: operations["PaymentsController_findOne"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/tickets": {
         parameters: {
             query?: never;
@@ -482,7 +467,62 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/tickets/download": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Download a ticket PDF */
+        get: operations["TicketsController_download"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List orders
+         * @description Cursor-paginated list of orders. By default returns earlier-dated orders first.
+         */
+        get: operations["OrdersController_findAll"];
+        put?: never;
+        /** Create a ticket order */
+        post: operations["OrdersController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orders/reference/{reference}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get order by payment reference */
+        get: operations["OrdersController_findByReference"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/webhooks/monnify": {
         parameters: {
             query?: never;
             header?: never;
@@ -491,8 +531,8 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Create a ticket order */
-        post: operations["OrdersController_create"];
+        /** Receive Monnify webhook events */
+        post: operations["WebhookController_handleMonnifyWebhook"];
         delete?: never;
         options?: never;
         head?: never;
@@ -503,67 +543,56 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
-        CreateAttendeeDto: {
-            email: string;
-            fullName: string;
-            phoneNumber?: string;
-            company?: string;
-            jobTitle?: string;
-            amount?: number;
-        };
-        AttendeeDto: {
+        CheckedInListItemDto: {
             id: string;
-            fullName: string;
-            email: string;
-            phoneNumber?: string;
-            company?: string;
-            jobTitle?: string;
-            /** @description Unique attendee check-in code */
-            code: string;
-            /** @description Event days the attendee is registered for */
-            eventDays?: string;
-            /** @description Amount paid in Naira */
-            amount?: string;
-            /** @description Payment/registration status */
-            status: 'Successful' | 'Failed' | 'Pending';
-            /** @description Ticket reference ID */
-            ticketId?: string;
             /** Format: date-time */
-            createdAt: string;
+            paidAt: string | null;
+            /**
+             * @description Amount paid in Naira (2 decimal places)
+             * @example 9500.00
+             */
+            amount: string;
+            /** @enum {string} */
+            status: "AWAITING_PAYMENT" | "PAID" | "CANCELLED" | "AWAITING_REFUND" | "REFUNDED";
+            attendeeFullName: string;
+            attendeeEmail: string;
+            checkIns: string[];
+            ticket: {
+                id?: string;
+                /** @example Google DevFest 2026 */
+                name?: string;
+                /** @example ABC123 */
+                code?: string;
+                /** @example Fri + Sat */
+                validity?: string;
+            };
         };
-        AttendeePaginationMetaDto: {
-            total: number;
-            page: number;
+        CheckedInPaginationMetaDto: {
+            /** @description Cursor to fetch the next page */
+            nextCursor: string | null;
+            /** @description Cursor to fetch the previous page */
+            prevCursor: string | null;
+            /** @description Number of results per page */
             limit: number;
-            totalPages: number;
+            /** @description Whether more items exist in the direction of travel */
+            hasMore: boolean;
         };
-        AttendeeListResponseDto: {
-            data: components['schemas']['AttendeeDto'][];
-            meta: components['schemas']['AttendeePaginationMetaDto'];
+        CheckedInListResponseDto: {
+            data: components["schemas"]["CheckedInListItemDto"][];
+            meta: components["schemas"]["CheckedInPaginationMetaDto"];
         };
-        InitiatePaymentDto: {
+        CheckInOrderDto: {
             /**
-             * @description Unique identifier of the attendee making the payment
-             * @example att_1234567890abcdef
+             * @description ID of the order being checked in
+             * @example 0191a2b3-...
              */
-            attendeeId: string;
-            /**
-             * @description Email address of the attendee making the payment
-             * @example john.doe@example.com
-             */
-            email: string;
-            /**
-             * @description Amount to be paid in the smallest currency unit (e.g., Naira kobo)
-             * @example 5000
-             */
-            amount: number;
+            orderId: string;
         };
-        VerifyPaymentDto: {
-            /**
-             * @description Unique payment reference generated by the payment gateway to identify the transaction
-             * @example pay_1234567890abcdef
-             */
-            reference: string;
+        CheckInResponseDto: {
+            orderId: string;
+            /** @description Ticket code */
+            code: string;
+            checkIns: string[];
         };
         LoginAdminDto: {
             /**
@@ -627,7 +656,7 @@ export interface components {
              *       "attendees.list"
              *     ]
              */
-            permissions: ("tickets.create" | "tickets.edit" | "tickets.disable" | "attendees.check_in" | "attendees.list" | "admins.create" | "admins.list" | "admins.invite" | "admins.update" | "admins.profile" | "admins.deactivate" | "roles.create" | "roles.edit" | "roles.assign" | "roles.list" | "roles.deactivate" | "permissions.assign" | "payment_reports.export")[];
+            permissions: ("tickets.create" | "tickets.edit" | "tickets.disable" | "attendees.check_in" | "attendees.list" | "admins.create" | "admins.list" | "admins.invite" | "admins.update" | "admins.profile" | "admins.deactivate" | "roles.create" | "roles.edit" | "roles.assign" | "roles.list" | "roles.deactivate" | "permissions.assign" | "payment_reports.export" | "orders.list")[];
         };
         FindOneAdminResponseDto: {
             id: string;
@@ -727,14 +756,14 @@ export interface components {
             /** @description Description of the role */
             description: string;
             /** @description Permissions for this role */
-            permissions: ("tickets.create" | "tickets.edit" | "tickets.disable" | "attendees.check_in" | "attendees.list" | "admins.create" | "admins.list" | "admins.invite" | "admins.update" | "admins.profile" | "admins.deactivate" | "roles.create" | "roles.edit" | "roles.assign" | "roles.list" | "roles.deactivate" | "permissions.assign" | "payment_reports.export")[];
+            permissions: ("tickets.create" | "tickets.edit" | "tickets.disable" | "attendees.check_in" | "attendees.list" | "admins.create" | "admins.list" | "admins.invite" | "admins.update" | "admins.profile" | "admins.deactivate" | "roles.create" | "roles.edit" | "roles.assign" | "roles.list" | "roles.deactivate" | "permissions.assign" | "payment_reports.export" | "orders.list")[];
             isActive: boolean;
         };
         PermissionDto: {
             /** @enum {string} */
-            readonly id: "tickets.create" | "tickets.edit" | "tickets.disable" | "attendees.check_in" | "attendees.list" | "admins.create" | "admins.list" | "admins.invite" | "admins.update" | "admins.profile" | "admins.deactivate" | "roles.create" | "roles.edit" | "roles.assign" | "roles.list" | "roles.deactivate" | "permissions.assign" | "payment_reports.export";
+            readonly id: "tickets.create" | "tickets.edit" | "tickets.disable" | "attendees.check_in" | "attendees.list" | "admins.create" | "admins.list" | "admins.invite" | "admins.update" | "admins.profile" | "admins.deactivate" | "roles.create" | "roles.edit" | "roles.assign" | "roles.list" | "roles.deactivate" | "permissions.assign" | "payment_reports.export" | "orders.list";
             /** @enum {string} */
-            readonly label: "Create tickets" | "Edit tickets" | "Disable tickets" | "Check-in attendees" | "View attendee list" | "Create admin" | "View admin list" | "Invite admin" | "Update admin" | "View admin profile" | "Deactivate admin" | "Create role" | "Edit role" | "Assign role" | "View roles list" | "Deactivate role" | "Assign permissions" | "Export payment report";
+            readonly label: "Create tickets" | "Edit tickets" | "Disable tickets" | "Check-in attendees" | "View attendee list" | "Create admin" | "View admin list" | "Invite admin" | "Update admin" | "View admin profile" | "Deactivate admin" | "Create role" | "Edit role" | "Assign role" | "View roles list" | "Deactivate role" | "Assign permissions" | "Export payment report" | "View orders list";
         };
         CreateRoleResponseDto: {
             readonly id: string;
@@ -768,7 +797,7 @@ export interface components {
             /** @description Description of the role */
             description?: string;
             /** @description Permissions for this role */
-            permissions?: ("tickets.create" | "tickets.edit" | "tickets.disable" | "attendees.check_in" | "attendees.list" | "admins.create" | "admins.list" | "admins.invite" | "admins.update" | "admins.profile" | "admins.deactivate" | "roles.create" | "roles.edit" | "roles.assign" | "roles.list" | "roles.deactivate" | "permissions.assign" | "payment_reports.export")[];
+            permissions?: ("tickets.create" | "tickets.edit" | "tickets.disable" | "attendees.check_in" | "attendees.list" | "admins.create" | "admins.list" | "admins.invite" | "admins.update" | "admins.profile" | "admins.deactivate" | "roles.create" | "roles.edit" | "roles.assign" | "roles.list" | "roles.deactivate" | "permissions.assign" | "payment_reports.export" | "orders.list")[];
             isActive?: boolean;
         };
         RoleResponseDto: {
@@ -821,6 +850,30 @@ export interface components {
             /** Format: date-time */
             readonly createdAt: string;
         };
+        InitiatePaymentDto: {
+            /**
+             * @description Unique identifier of the attendee making the payment
+             * @example att_1234567890abcdef
+             */
+            attendeeId: string;
+            /**
+             * @description Email address of the attendee making the payment
+             * @example john.doe@example.com
+             */
+            email: string;
+            /**
+             * @description Amount to be paid in the smallest currency unit (e.g., Naira kobo)
+             * @example 5000
+             */
+            amount: number;
+        };
+        VerifyPaymentDto: {
+            /**
+             * @description Unique payment reference generated by the payment gateway to identify the transaction
+             * @example pay_1234567890abcdef
+             */
+            reference: string;
+        };
         CreateTicketDto: {
             name: string;
             description: string;
@@ -847,7 +900,7 @@ export interface components {
              *     ]
              */
             validityDates: string[];
-            /** @description Total capacity / number of tickets available */
+            /** @description Maximum units of this ticket available for sale */
             capacity: number;
             /**
              * Format: date-time
@@ -866,10 +919,17 @@ export interface components {
             description: string;
             slug: string;
             eventDates: string[];
+            /**
+             * @description Price in Naira (formatted to 2 decimal places)
+             * @example 10000.00
+             */
             price: string;
+            /**
+             * @description Discount in Naira (formatted to 2 decimal places)
+             * @example 500.00
+             */
             discount: string;
             validityDates: string[];
-            maximumSaleUnits: number;
             capacity: number;
             /** Format: date-time */
             saleStartsAt: string;
@@ -896,10 +956,8 @@ export interface components {
             saleStartsAt: string;
             /** Format: date-time */
             saleEndsAt: string;
-            maximumSaleUnits: number;
-            /** @description Total capacity of the ticket */
             capacity: number;
-            validityDates: string[];
+            slug: string;
         };
         TicketPaginationMetaDto: {
             /** @description Cursor to fetch the next page */
@@ -959,12 +1017,20 @@ export interface components {
         GetTicketResponseDto: {
             id: string;
             name: string;
+            slug: string;
             description: string;
             eventDates: string[];
+            /**
+             * @description Price in Naira (formatted to 2 decimal places)
+             * @example 10000.00
+             */
             price: string;
+            /**
+             * @description Discount in Naira (formatted to 2 decimal places)
+             * @example 500.00
+             */
             discount: string;
             validityDates: string[];
-            maximumSaleUnits: number;
             capacity: number;
             /** Format: date-time */
             saleStartsAt: string;
@@ -1020,12 +1086,82 @@ export interface components {
              * @example 500.00
              */
             discount: string;
+            /**
+             * @description 7.5% VAT plus payment gateway service charge
+             * @example 500.00
+             */
+            vatAndCharges: string;
             currency: string;
             /** @description Payment checkout URL to redirect the payer to */
             checkoutUrl: string | null;
             /** Format: date-time */
             expiresAt: string;
             ticket: components["schemas"]["OrderedTicketDto"];
+        };
+        OrderListItemDto: {
+            id: string;
+            /** Format: date-time */
+            paidAt: string | null;
+            /**
+             * @description Amount paid in Naira (2 decimal places)
+             * @example 9500.00
+             */
+            amount: string;
+            /** @enum {string} */
+            status: "AWAITING_PAYMENT" | "PAID" | "CANCELLED" | "AWAITING_REFUND" | "REFUNDED";
+            attendeeFullName: string;
+            attendeeEmail: string;
+            checkIns: string[];
+            ticket: {
+                id?: string;
+                /** @example Early Bird */
+                name?: string;
+                /** @example ABC123 */
+                code?: string;
+                /** @example Fri + Sat */
+                validity?: string;
+            };
+        };
+        OrdersPaginationMetaDto: {
+            /** @description Cursor to fetch the next page */
+            nextCursor: string | null;
+            /** @description Cursor to fetch the previous page */
+            prevCursor: string | null;
+            /** @description Number of results per page */
+            limit: number;
+            /** @description Whether more items exist in the direction of travel */
+            hasMore: boolean;
+        };
+        OrderListResponseDto: {
+            data: components["schemas"]["OrderListItemDto"][];
+            meta: components["schemas"]["OrdersPaginationMetaDto"];
+        };
+        GetOrderReferenceResponseDto: {
+            ticket: {
+                /** @example Early Bird */
+                name?: string;
+                /** @example https://example.com/download/ticket.pdf */
+                url?: string;
+                /**
+                 * @example [
+                 *       "2026-09-20T00:00:00.000Z",
+                 *       "2026-09-21T00:00:00.000Z"
+                 *     ]
+                 */
+                validityDates?: string[];
+            };
+            /**
+             * @description Amount paid in Naira (2 decimal places)
+             * @example 9500.00
+             */
+            amount: string;
+            /** @enum {string} */
+            status: "AWAITING_PAYMENT" | "PAID" | "CANCELLED" | "AWAITING_REFUND" | "REFUNDED";
+            /**
+             * @description Ticket code
+             * @example ABC123
+             */
+            code: string;
         };
     };
     responses: never;
@@ -1053,11 +1189,26 @@ export interface operations {
             };
         };
     };
-    AttendeeController_findAll: {
+    AttendeeController_checkedIn: {
         parameters: {
             query: {
-                page: number;
-                limit: number;
+                /**
+                 * @description Event dates to match check-ins against (YYYY-MM-DD)
+                 * @example [
+                 *       "2026-09-20",
+                 *       "2026-09-21"
+                 *     ]
+                 */
+                eventDates: string[];
+                /** @description Pagination direction. `next` returns earlier-created attendees, `previous` returns more recent attendees. */
+                direction?: "next" | "previous";
+                /** @description Cursor for pagination. Pass the ID of the last item from the previous page. */
+                cursor?: string;
+                /**
+                 * @description Number of results to return per page
+                 * @example 20
+                 */
+                limit?: number;
             };
             header?: never;
             path?: never;
@@ -1065,30 +1216,17 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Attendees retrieved successfully */
+            /** @description Checked-in orders retrieved successfully */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["CheckedInListResponseDto"];
+                };
             };
-        };
-    };
-    AttendeeController_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateAttendeeDto"];
-            };
-        };
-        responses: {
-            /** @description Attendee created successfully */
-            201: {
+            /** @description Missing attendees.list permission */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -1096,47 +1234,7 @@ export interface operations {
             };
         };
     };
-    AttendeeController_findOne: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Attendee retrieved successfully */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AttendeeController_findByEmail: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                email: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Attendee retrieved successfully */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    PaymentsController_initiatePayment: {
+    AttendeeController_checkIn: {
         parameters: {
             query?: never;
             header?: never;
@@ -1145,94 +1243,42 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["InitiatePaymentDto"];
+                "application/json": components["schemas"]["CheckInOrderDto"];
             };
         };
         responses: {
-            /** @description Payment initialized successfully */
-            201: {
+            /** @description Attendee checked in successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CheckInResponseDto"];
+                };
+            };
+            /** @description Ticket not valid for today */
+            400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content?: never;
             };
-        };
-    };
-    PaymentsController_verifyPayment: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["VerifyPaymentDto"];
-            };
-        };
-        responses: {
-            /** @description Payment verified successfully */
-            200: {
+            /** @description Not authenticated */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content?: never;
             };
-        };
-    };
-    PaymentsController_handleWebhook: {
-        parameters: {
-            query?: never;
-            header: {
-                "x-paystack-signature": string;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
+            /** @description Missing attendees.check_in permission */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content?: never;
             };
-        };
-    };
-    PaymentsController_findAll: {
-        parameters: {
-            query: {
-                page: number;
-                limit: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Payments retrieved successfully */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    PaymentsController_findOne: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Payment retrieved successfully */
-            200: {
+            /** @description Ticket not found */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -1698,6 +1744,110 @@ export interface operations {
             };
         };
     };
+    PaymentsController_initiatePayment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InitiatePaymentDto"];
+            };
+        };
+        responses: {
+            /** @description Payment initialized successfully */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PaymentsController_verifyPayment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VerifyPaymentDto"];
+            };
+        };
+        responses: {
+            /** @description Payment verified successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PaymentsController_handleWebhook: {
+        parameters: {
+            query?: never;
+            header: {
+                "x-paystack-signature": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PaymentsController_findAll: {
+        parameters: {
+            query: {
+                page: number;
+                limit: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Payments retrieved successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PaymentsController_findOne: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Payment retrieved successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     TicketsController_findAll: {
         parameters: {
             query?: {
@@ -1849,6 +1999,78 @@ export interface operations {
             };
         };
     };
+    TicketsController_download: {
+        parameters: {
+            query: {
+                token: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Redirect to ticket PDF */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid token or ticket not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    OrdersController_findAll: {
+        parameters: {
+            query?: {
+                /** @description Search orders by attendee email, attendee full name, or reference (case-insensitive) */
+                search?: string;
+                /** @description Filter by order status. When omitted, orders of all statuses are returned. */
+                status?: "AWAITING_PAYMENT" | "PAID" | "CANCELLED" | "AWAITING_REFUND" | "REFUNDED";
+                /** @description Pagination direction. `next` returns earlier-dated orders, `previous` returns more recent orders. */
+                direction?: "next" | "previous";
+                /** @description Cursor for pagination. Pass the ID of the last item from the previous page. */
+                cursor?: string;
+                /** @description Number of results per page (default 20, max 50) */
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Orders retrieved successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderListResponseDto"];
+                };
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Requires permission */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     OrdersController_create: {
         parameters: {
             query?: never;
@@ -1894,6 +2116,52 @@ export interface operations {
             };
             /** @description Payment initialization failed */
             502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    OrdersController_findByReference: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reference: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Order found */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GetOrderReferenceResponseDto"];
+                };
+            };
+            /** @description Order not found for reference */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    WebhookController_handleMonnifyWebhook: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };

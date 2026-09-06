@@ -83,10 +83,12 @@ export default function RoleFormModal({
   const { data: permsData, isLoading: permsLoading } = usePermissions();
   const { mutate: createRole, isPending: creating } = useCreateRole();
   const { mutate: updateRole, isPending: updating } = useUpdateRole();
-  const { data: roleDetail } = useRole(roleId ?? '');
+  const { data: roleDetail, isLoading: roleLoading } = useRole(roleId ?? '');
 
   const isPending = creating || updating;
   const allPermissions: PermissionDto[] = permsData?.permissions ?? [];
+  // Only block on the role-detail fetch when actually editing an existing role.
+  const showFieldsSkeleton = mode === 'edit' && roleLoading;
 
   useEffect(() => {
     if (!open) return;
@@ -94,8 +96,8 @@ export default function RoleFormModal({
     if (mode === 'edit' && roleDetail) {
       setForm({
         name: roleDetail.name || initialData?.name || '',
-        description: roleDetail.description || initialData?.description || '',
-        permissions: (roleDetail.permissions || []).map((p: any) => p.id as PermissionId),
+        description: roleDetail?.description || initialData?.description || '',
+        permissions: (roleDetail?.permissions || [])?.map((p: any) => p?.id as PermissionId),
       });
       setErrors({});
       return;
@@ -177,15 +179,21 @@ export default function RoleFormModal({
             <p className="text-[13px] font-medium text-gray-800 mb-2">
               Role Name <span style={{ color: '#E61530' }}>*</span>
             </p>
-            <input
-              type="text"
-              value={form.name}
-              onChange={(e) => { setForm((f) => ({ ...f, name: e.target.value })); setErrors((e) => ({ ...e, name: undefined })); }}
-              placeholder="Input Role Name"
-              className="w-full border rounded-[8px] p-[12px] text-[13px] text-gray-800 placeholder:text-gray-300 focus:outline-none transition-colors bg-transparent"
-              style={errors.name ? { borderColor: '#E61530' } : { borderColor: '#E6E6E6' }}
-            />
-            {errors.name && <p className="mt-1 text-[12px]" style={{ color: '#E61530' }}>{errors.name}</p>}
+            {showFieldsSkeleton ? (
+              <div className="h-[46px] bg-gray-100 rounded-[8px] animate-pulse" />
+            ) : (
+              <>
+                <input
+                  type="text"
+                  value={form.name}
+                  onChange={(e) => { setForm((f) => ({ ...f, name: e.target.value })); setErrors((e) => ({ ...e, name: undefined })); }}
+                  placeholder="Input Role Name"
+                  className="w-full border rounded-[8px] p-[12px] text-[13px] text-gray-800 placeholder:text-gray-300 focus:outline-none transition-colors bg-transparent"
+                  style={errors.name ? { borderColor: '#E61530' } : { borderColor: '#E6E6E6' }}
+                />
+                {errors.name && <p className="mt-1 text-[12px]" style={{ color: '#E61530' }}>{errors.name}</p>}
+              </>
+            )}
           </div>
 
           {/* Description */}
@@ -193,15 +201,21 @@ export default function RoleFormModal({
             <p className="text-[13px] font-medium text-gray-800 mb-2">
               Role Description <span style={{ color: '#E61530' }}>*</span>
             </p>
-            <textarea
-              value={form.description}
-              onChange={(e) => { setForm((f) => ({ ...f, description: e.target.value })); setErrors((er) => ({ ...er, description: undefined })); }}
-              placeholder="Description here"
-              rows={4}
-              className="w-full border rounded-lg px-4 py-3 text-[13px] text-gray-800 placeholder:text-gray-300 focus:outline-none transition-colors resize-none bg-white"
-              style={errors.description ? { borderColor: '#E61530' } : { borderColor: '#e5e7eb' }}
-            />
-            {errors.description && <p className="mt-1 text-[12px]" style={{ color: '#E61530' }}>{errors.description}</p>}
+            {showFieldsSkeleton ? (
+              <div className="h-[92px] bg-gray-100 rounded-lg animate-pulse" />
+            ) : (
+              <>
+                <textarea
+                  value={form.description}
+                  onChange={(e) => { setForm((f) => ({ ...f, description: e.target.value })); setErrors((er) => ({ ...er, description: undefined })); }}
+                  placeholder="Description here"
+                  rows={4}
+                  className="w-full border rounded-lg px-4 py-3 text-[13px] text-gray-800 placeholder:text-gray-300 focus:outline-none transition-colors resize-none bg-white"
+                  style={errors.description ? { borderColor: '#E61530' } : { borderColor: '#e5e7eb' }}
+                />
+                {errors.description && <p className="mt-1 text-[12px]" style={{ color: '#E61530' }}>{errors.description}</p>}
+              </>
+            )}
           </div>
 
           {/* Permissions */}
@@ -211,10 +225,17 @@ export default function RoleFormModal({
             </p>
             {errors.permissions && <p className="mb-3 text-[12px]" style={{ color: '#E61530' }}>{errors.permissions}</p>}
 
-            {permsLoading ? (
-              <div className="space-y-2">
-                {Array.from({ length: 4 }).map((_, i) => (
-                  <div key={i} className="h-8 bg-gray-100 rounded animate-pulse" />
+            {permsLoading || showFieldsSkeleton ? (
+              <div className="space-y-4">
+                {Array.from({ length: 3 }).map((_, groupIdx) => (
+                  <div key={groupIdx}>
+                    <div className="h-3 w-24 bg-gray-100 rounded animate-pulse mb-2" />
+                    <div className="flex flex-wrap gap-x-3 gap-y-2">
+                      {Array.from({ length: 4 }).map((_, i) => (
+                        <div key={i} className="h-9 w-28 bg-gray-100 rounded-lg animate-pulse" />
+                      ))}
+                    </div>
+                  </div>
                 ))}
               </div>
             ) : (
@@ -252,7 +273,7 @@ export default function RoleFormModal({
           <button
             type="button"
             onClick={handleSubmit}
-            disabled={isPending}
+            disabled={isPending || showFieldsSkeleton}
             className="flex items-center gap-2 px-6 py-[10px] rounded-lg bg-gray-900 text-white text-[13px] font-medium hover:bg-black transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {isPending ? 'Saving…' : mode === 'add' ? 'Create Role' : 'Save Changes'}

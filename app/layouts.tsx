@@ -12,6 +12,7 @@ import { Fragment, Suspense } from 'react';
 import ReactQueryProvider from '@/providers/react-query';
 import { ErrorBoundary } from '@/providers/error-boundary';
 import AuthGuard from './_module/components/common/AuthGuard';
+import NextTopLoader from 'nextjs-toploader';
 
 export const wrapperClass = {
   layout:
@@ -45,6 +46,8 @@ const AdminLayout = ({
     <html lang="en">
       {/* <ReactLenis root> */}
       <body className={`${google_sans.className}`}>
+        {/* Route-change progress bar; color matches the active AdminSidenav link background (tailwind `core-blue`) */}
+        <NextTopLoader color="#4285f4" showSpinner={false} />
         <ReactQueryProvider>
           <ErrorBoundary
             fallbackMessage="Something went wrong with the admin panel. Please refresh and try again."

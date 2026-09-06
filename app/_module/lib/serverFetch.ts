@@ -1,10 +1,15 @@
 import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
 
-const RAW_BASE = process.env.API_BASE_URL ?? 'https://devfest-ibadan.onrender.com/api/v1';
-const API_BASE = RAW_BASE.endsWith('/api/v1')
-  ? RAW_BASE
-  : `${RAW_BASE.replace(/\/+$/, '')}/api/v1`;
+// Normalize the configured base URL up front — strip any trailing
+// slash(es) *before* checking whether it already ends with `/api/v1`.
+
+const RAW_BASE = (
+  process.env.API_BASE_URL ?? 'https://devfest-ibadan.onrender.com/api/v1'
+)
+  .trim()
+  .replace(/\/+$/, '');
+const API_BASE = RAW_BASE.endsWith('/api/v1') ? RAW_BASE : `${RAW_BASE}/api/v1`;
 
 /** Build auth headers using the current access token from httpOnly cookie */
 async function buildHeaders(token?: string): Promise<Record<string, string>> {
@@ -52,21 +57,26 @@ export async function serverFetch<T = unknown>(
   options: {
     method?: string;
     body?: unknown;
-    params?: Record<string, string | number | boolean | undefined>;
+    params?: Record<string, string | number | boolean | string[] | undefined>;
     req?: NextRequest; // pass to forward query params
   } = {}
 ): Promise<{ data: T; status: number }> {
   const url = new URL(`${API_BASE}${path}`);
 
-  // Forward query params from options.params
+
   if (options.params) {
     for (const [k, v] of Object.entries(options.params)) {
-      if (v !== undefined) url.searchParams.set(k, String(v));
+      if (v === undefined) continue;
+      if (Array.isArray(v)) {
+        v.forEach((item) => url.searchParams.append(k, String(item)));
+      } else {
+        url.searchParams.set(k, String(v));
+      }
     }
   }
-  // Forward query params from the incoming Next.js request
+
   if (options.req) {
-    options.req.nextUrl.searchParams.forEach((v, k) => url.searchParams.set(k, v));
+    options.req.nextUrl.searchParams.forEach((v, k) => url.searchParams.append(k, v));
   }
 
   const doRequest = async (tokenOverride?: string) => {
