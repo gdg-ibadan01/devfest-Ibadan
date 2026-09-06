@@ -14,29 +14,28 @@ const MenuLink: FC<MenuLinkProps> = ({ slur, label }) => {
   const splittedPathname = pathname.split('/');
   const currentPath = splittedPathname[splittedPathname.length - 1];
 
+  const cleanSlur = slur.replace(/^\//, '');
+  const isInternal =
+    slur.startsWith('/') ||
+    [
+      'agenda',
+      'speakers',
+      'organizers',
+      'schedule',
+      'sponsors',
+      'team',
+      'tickets',
+      'rsvp',
+    ].indexOf(cleanSlur) > -1;
+
   return (
     <li className={menulinkClasses.list}>
-      {/* <Link
-        href={slur}
-        aria-label={label}
-        className={`${(menulinkClasses.link, currentPath === slur ? 'font-semibold' : '')}`}
-      >
-        {label}
-      </Link> */}
-      {[
-        'agenda',
-        'speakers',
-        'organizers',
-        'schedule',
-        'sponsors',
-        'team',
-        'ticket',
-      ].indexOf(slur) > -1 ? (
+      {isInternal ? (
         <Link
-          href={`/${slur}`}
+          href={`/${cleanSlur}`}
           aria-label={label}
           className={`${menulinkClasses.link} ${
-            currentPath === slur
+            currentPath === cleanSlur
               ? 'font-semibold text-[14px]'
               : 'font-normal text-[14px]'
           }`}
