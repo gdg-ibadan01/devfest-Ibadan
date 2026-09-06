@@ -1,8 +1,8 @@
 'use client';
 
 import DFIHeader from './_module/components/common/DFIheader';
-import DFIFooter from './_module/components/common/DFIfooter';
-import { google_sans } from './shared/font';
+import DFIFooter, { DFIFooterV2 } from './_module/components/common/DFIfooter';
+import { google_sans, grotesk, caleit, inter } from './shared/font';
 import { ReactLenis } from '@/utils/lenis';
 import { Toaster } from 'sonner';
 import { usePathname } from 'next/navigation';
@@ -12,6 +12,7 @@ import { Fragment, Suspense } from 'react';
 import ReactQueryProvider from '@/providers/react-query';
 import { ErrorBoundary } from '@/providers/error-boundary';
 import AuthGuard from './_module/components/common/AuthGuard';
+import NextTopLoader from 'nextjs-toploader';
 
 export const wrapperClass = {
   layout:
@@ -44,7 +45,11 @@ const AdminLayout = ({
   return (
     <html lang="en">
       {/* <ReactLenis root> */}
-      <body className={`${google_sans.className}`}>
+      <body
+        className={`${google_sans.variable} ${grotesk.variable} ${caleit.variable} ${inter.variable} ${google_sans.className}`}
+      >
+        {/* Route-change progress bar; color matches the active AdminSidenav link background (tailwind `core-blue`) */}
+        <NextTopLoader color="#4285f4" showSpinner={false} />
         <ReactQueryProvider>
           <ErrorBoundary
             fallbackMessage="Something went wrong with the admin panel. Please refresh and try again."
@@ -53,14 +58,14 @@ const AdminLayout = ({
             <Suspense fallback={<PageLoader />}>
               {/* <AdminHeader /> */}
               <SidenavProvider>
-                  <div className={wrapperClass.layout}>
-                    <AdminSidenav />
-                    <main className={wrapperClass.main}>
-                      <AuthGuard>{children}</AuthGuard>
-                    </main>
-                  </div>
-                </SidenavProvider>
-              <Toaster position='top-center' duration={4000} />
+                <div className={wrapperClass.layout}>
+                  <AdminSidenav />
+                  <main className={wrapperClass.main}>
+                    <AuthGuard>{children}</AuthGuard>
+                  </main>
+                </div>
+              </SidenavProvider>
+              <Toaster position="top-center" duration={4000} />
             </Suspense>
           </ErrorBoundary>
         </ReactQueryProvider>
@@ -82,15 +87,19 @@ const HomeLayout = ({
   // Define the route where you want to hide the footer
   const hideFooterRoutes = [
     '/rsvp',
-    '/ticket/buy',
-    '/ticket/gift',
-    '/ticket/preview',
+    '/tickets/buy',
+    '/tickets/gift',
+    '/tickets/preview',
   ];
   const shouldHideFooter = hideFooterRoutes.includes(pathname);
+  const isHomePage = pathname === '/';
+
   return (
     <html lang="en">
       <ReactLenis root>
-        <body className={`${google_sans.className}`}>
+        <body
+          className={`${google_sans.variable} ${grotesk.variable} ${caleit.variable} ${inter.variable} ${google_sans.className}`}
+        >
           <ReactQueryProvider>
             <ErrorBoundary
               fallbackMessage="We're having trouble loading the page. Please refresh and try again."
@@ -99,8 +108,10 @@ const HomeLayout = ({
               <Suspense fallback={<PageLoader />}>
                 {!shouldHideHeader && <DFIHeader />}
                 {children}
-                {!shouldHideHeader && !shouldHideFooter && <DFIFooter />}
-                <Toaster position='top-center' duration={4000} />
+                {!shouldHideHeader &&
+                  !shouldHideFooter &&
+                  (isHomePage ? <DFIFooterV2 /> : <DFIFooter />)}
+                <Toaster position="top-center" duration={4000} />
               </Suspense>
             </ErrorBoundary>
           </ReactQueryProvider>

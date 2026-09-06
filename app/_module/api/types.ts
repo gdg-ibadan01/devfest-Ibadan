@@ -27,6 +27,7 @@ export type AdminActionResponseDto = Schemas['AdminActionResponseDto'];
 
 // ---- Roles -------------------------------------------------
 export type PermissionDto = Schemas['PermissionDto'];
+export type PermissionId = PermissionDto['id'];
 export type CreateRoleDto = Schemas['CreateRoleDto'];
 export type UpdateRoleDto = Schemas['UpdateRoleDto'];
 export type CreateRoleResponseDto = Schemas['CreateRoleResponseDto'];
@@ -45,11 +46,12 @@ export type GetTicketResponseDto = Schemas['GetTicketResponseDto'];
 export type OnSaleTicketItemDto = Schemas['OnSaleTicketItemDto'];
 export type OnSaleTicketResponseDto = Schemas['OnSaleTicketResponseDto'];
 
-// ---- Attendees ---------------------------------------------
-export type CreateAttendeeDto = Schemas['CreateAttendeeDto'];
-export type AttendeeDto = Schemas['AttendeeDto'];
-export type AttendeePaginationMetaDto = Schemas['AttendeePaginationMetaDto'];
-export type AttendeeListResponseDto = Schemas['AttendeeListResponseDto'];
+// ---- Attendees (check-in only; listing moved to Orders) -----
+export type CheckInOrderDto = Schemas['CheckInOrderDto'];
+export type CheckInResponseDto = Schemas['CheckInResponseDto'];
+export type CheckedInListItemDto = Schemas['CheckedInListItemDto'];
+export type CheckedInPaginationMetaDto = Schemas['CheckedInPaginationMetaDto'];
+export type CheckedInListResponseDto = Schemas['CheckedInListResponseDto'];
 
 // ---- Payments ----------------------------------------------
 export type InitiatePaymentDto = Schemas['InitiatePaymentDto'];
@@ -60,14 +62,20 @@ export type CreateOrderDto = Schemas['CreateOrderDto'];
 export type CreateOrderResponseDto = Schemas['CreateOrderResponseDto'];
 export type OrderAttendeeDto = Schemas['OrderAttendeeDto'];
 export type OrderGifterDto = Schemas['OrderGifterDto'];
+export type OrderedTicketDto = Schemas['OrderedTicketDto'];
+export type OrderListItemDto = Schemas['OrderListItemDto'];
+export type OrdersPaginationMetaDto = Schemas['OrdersPaginationMetaDto'];
+export type OrderListResponseDto = Schemas['OrderListResponseDto'];
+export type GetOrderReferenceResponseDto = Schemas['GetOrderReferenceResponseDto'];
 
 // ---- Query param helpers -----------------------------------
-export interface AttendeeListParams {
-  page?: number;
-  limit?: number;
+export interface OrderListParams {
   search?: string;
-  status?: string;
-  date?: string;
+  status?:
+    'AWAITING_PAYMENT' | 'PAID' | 'CANCELLED' | 'AWAITING_REFUND' | 'REFUNDED';
+  direction?: 'next' | 'previous';
+  cursor?: string;
+  limit?: number;
 }
 
 export interface PaginationParams {
@@ -88,6 +96,7 @@ export interface TicketListParams {
   name?: string;
 }
 
+<<<<<<< HEAD
 // ---- Audit Logs --------------------------------------------
 export interface AuditLogItemDto {
   id: string;
@@ -137,3 +146,12 @@ export interface AuditLogListParams extends PaginationParams {
   sortOrder?: 'asc' | 'desc';
 }
 
+=======
+export interface CheckedInListParams {
+  /** Event dates (YYYY-MM-DD) to match check-ins against — pass the selected ticket's `eventDates`. */
+  eventDates: string[];
+  direction?: 'next' | 'previous';
+  cursor?: string;
+  limit?: number;
+}
+>>>>>>> d396c255d06c117af3fdc8ca6a6530adba6c10b1

@@ -1,16 +1,10 @@
 import axios, { AxiosError } from 'axios';
+import { showToast } from '@/app/_module/lib/notify';
 
-const getBaseUrl = () => {
-  const url =
-    process.env.NEXT_PUBLIC_API_BASE_URL ||
-    process.env.NEXT_PUBLIC_API_URL ||
-    'https://devfest-ibadan.onrender.com/api/v1';
-
-  return url.endsWith('/api/v1') ? url : `${url.replace(/\/+$/, '')}/api/v1`;
-};
+const API_PROXY_BASE_URL = '/api';
 
 export const apiClient = axios.create({
-  baseURL: getBaseUrl(),
+  baseURL: API_PROXY_BASE_URL,
   headers: { 'Content-Type': 'application/json' },
   timeout: 30_000,
 });
@@ -19,14 +13,22 @@ export const apiClient = axios.create({
 apiClient.interceptors.response.use(
   (response) => response,
   (error: AxiosError<{ message?: string }>) => {
+    const status = error.response?.status;
     const message =
       error.response?.data?.message ??
       error.message ??
       'An unexpected error occurred';
 
+    let handled = false;
+    if (status === 403) {
+      showToast.error("You don't have permission to perform this action.");
+      handled = true;
+    }
+
     const apiError = Object.assign(new Error(message), {
-      status: error.response?.status,
+      status,
       data: error.response?.data,
+      handled,
     });
 
     return Promise.reject(apiError);
