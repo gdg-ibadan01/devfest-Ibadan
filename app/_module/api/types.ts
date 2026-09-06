@@ -127,6 +127,13 @@ export interface AuditLogPaginationMetaDto {
   hasPrevPage: boolean;
 }
 
+export interface CheckedInListParams {
+  eventDates: string[];
+  direction?: 'next' | 'previous';
+  cursor?: string;
+  limit?: number;
+}
+
 export interface AuditLogListResponseDto {
   success: boolean;
   message: string;
