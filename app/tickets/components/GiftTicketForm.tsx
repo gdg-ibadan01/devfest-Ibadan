@@ -32,7 +32,7 @@ export default function GiftTicketForm({
   packages,
   onSubmit,
   onBack,
-}: GiftTicketFormProps) {
+}: Readonly<GiftTicketFormProps>) {
   const isFormInvalid =
     !senderName.trim() ||
     !receiverName.trim() ||
@@ -66,7 +66,10 @@ export default function GiftTicketForm({
               htmlFor="senderName"
               className="text-[#1E1E1E] text-[14px] md:text-[16px] font-medium font-sans"
             >
-              Name of Sender <span className="text-gray-400 font-normal">(Who is gifting this ticket)</span>
+              Name of Sender{' '}
+              <span className="text-gray-400 font-normal">
+                (Who is gifting this ticket)
+              </span>
             </label>
             <input
               type="text"
@@ -85,7 +88,10 @@ export default function GiftTicketForm({
               htmlFor="receiverName"
               className="text-[#1E1E1E] text-[14px] md:text-[16px] font-medium font-sans"
             >
-              Name of Gifted Ticket Receiver <span className="text-gray-400 font-normal">(Who is this gifted ticket for)</span>
+              Name of Gifted Ticket Receiver{' '}
+              <span className="text-gray-400 font-normal">
+                (Who is this gifted ticket for)
+              </span>
             </label>
             <input
               type="text"

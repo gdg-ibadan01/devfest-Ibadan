@@ -1,25 +1,30 @@
-import { formatAmount } from '@/utils/formatAmount';
+import React from 'react';
 import { ArrowLeft } from 'lucide-react';
+import { formatAmount } from '@/utils/formatAmount';
 import { TicketPackage } from './TicketPackageRow';
 
-interface TicketSummaryProps {
-  fullName: string;
-  email: string;
+interface GiftTicketSummaryProps {
+  senderName: string;
+  receiverName: string;
+  receiverEmail: string;
+  receiverPhone: string;
   selectedPackage: TicketPackage;
   onBack: () => void;
   onPay: () => void;
   isLoading: boolean;
 }
 
-export default function TicketSummary({
-  fullName,
-  email,
+export default function GiftTicketSummary({
+  senderName,
+  receiverName,
+  receiverEmail,
+  receiverPhone,
   selectedPackage,
   onBack,
   onPay,
   isLoading,
-}: Readonly<TicketSummaryProps>) {
-  const vat = 270;
+}: Readonly<GiftTicketSummaryProps>) {
+  const vat = 50;
   const total = selectedPackage.price + vat;
 
   return (
@@ -34,12 +39,40 @@ export default function TicketSummary({
         >
           <ArrowLeft className="w-full h-full text-[#515151]" />
         </button>
-        <h1 className="text-20 md:text-24 font-bold text-[#515151]">
-          Ticket Summary
+        <h1 className="text-20 md:text-24 font-bold text-[#515151] font-sans">
+          Summary
         </h1>
       </div>
 
-      <div className="w-full md:px-5 md:pb-24 flex flex-col gap-6">
+      <div className="w-full px-4 md:px-5 md:pb-24 flex flex-col gap-6">
+        {/* Gift Information Box */}
+        <div className="bg-white border border-gray-200 rounded-[12px] p-5 flex flex-col gap-4 md:grid md:grid-cols-2 md:gap-y-4 md:gap-x-8">
+          <div className="flex flex-col gap-1 select-none font-sans text-[14px] md:text-[16px]">
+            <span className="text-gray-400 font-normal">Name of Sender</span>
+            <span className="font-bold text-[#1E1E1E]">{senderName}</span>
+          </div>
+          <div className="flex flex-col gap-1 select-none font-sans text-[14px] md:text-[16px]">
+            <span className="text-gray-400 font-normal">
+              Name of Ticket Receiver
+            </span>
+            <span className="font-bold text-[#1E1E1E]">{receiverName}</span>
+          </div>
+          <div className="flex flex-col gap-1 select-none font-sans text-[14px] md:text-[16px]">
+            <span className="text-gray-400 font-normal">
+              Receiver&apos;s Email Address
+            </span>
+            <span className="font-bold text-[#1E1E1E] break-all">
+              {receiverEmail}
+            </span>
+          </div>
+          <div className="flex flex-col gap-1 select-none font-sans text-[14px] md:text-[16px]">
+            <span className="text-gray-400 font-normal">
+              Receiver&apos;s Phone Number
+            </span>
+            <span className="font-bold text-[#1E1E1E]">{receiverPhone}</span>
+          </div>
+        </div>
+
         {/* Package Details Box */}
         <div className="bg-[#FAF8F5] p-5 rounded-[12px] flex flex-col gap-4">
           <div className="flex justify-between items-center text-[#515151] text-[14px] md:text-[16px] select-none">
@@ -61,7 +94,7 @@ export default function TicketSummary({
           </div>
 
           <div className="flex justify-between items-center text-[#515151] text-[14px] md:text-[16px] select-none">
-            <span className="font-normal text-gray-500 font-sans">VAT</span>
+            <span className="font-normal text-gray-500 font-sans">Charges</span>
             <span className="font-bold text-[#1E1E1E]">
               {formatAmount(vat)}
             </span>

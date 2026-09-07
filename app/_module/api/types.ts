@@ -71,7 +71,8 @@ export type GetOrderReferenceResponseDto = Schemas['GetOrderReferenceResponseDto
 // ---- Query param helpers -----------------------------------
 export interface OrderListParams {
   search?: string;
-  status?: 'AWAITING_PAYMENT' | 'PAID' | 'CANCELLED' | 'AWAITING_REFUND' | 'REFUNDED';
+  status?:
+  'AWAITING_PAYMENT' | 'PAID' | 'CANCELLED' | 'AWAITING_REFUND' | 'REFUNDED';
   direction?: 'next' | 'previous';
   cursor?: string;
   limit?: number;
@@ -127,6 +128,13 @@ export interface AuditLogPaginationMetaDto {
   hasPrevPage: boolean;
 }
 
+export interface CheckedInListParams {
+  eventDates: string[];
+  direction?: 'next' | 'previous';
+  cursor?: string;
+  limit?: number;
+}
+
 export interface AuditLogListResponseDto {
   success: boolean;
   message: string;
@@ -145,9 +153,18 @@ export interface AuditLogListParams extends PaginationParams {
 }
 
 export interface CheckedInListParams {
-  /** Event dates (YYYY-MM-DD) to match check-ins against — pass the selected ticket's `eventDates`. */
   eventDates: string[];
   direction?: 'next' | 'previous';
   cursor?: string;
   limit?: number;
+}
+
+export interface OrderListParams {
+  search?: string;
+  status?:
+  | 'AWAITING_PAYMENT'
+  | 'PAID'
+  | 'CANCELLED'
+  | 'AWAITING_REFUND'
+  | 'REFUNDED';
 }

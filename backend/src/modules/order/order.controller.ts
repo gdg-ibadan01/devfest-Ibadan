@@ -90,6 +90,8 @@ export class OrdersController {
             (err as Error).message,
             HttpStatus.BAD_GATEWAY,
           );
+        case OrdersService.ERRORS.TicketNotFoundErr:
+          throw new HttpException((err as Error).message, HttpStatus.NOT_FOUND);
         default:
           throw new HttpException(
             (err as Error).message,
@@ -197,7 +199,7 @@ export class OrdersController {
     }
   }
 
-  @Post('attendees')
+  @Post('')
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @RequirePermission('attendees.create')
@@ -209,10 +211,6 @@ export class OrdersController {
   @ApiResponse({
     status: HttpStatus.NOT_FOUND,
     description: 'Ticket not found',
-  })
-  @ApiParam({
-    name: 'reference',
-    example: 'EarlyBird-ABC123',
   })
   @ApiResponse({
     status: HttpStatus.CONFLICT,

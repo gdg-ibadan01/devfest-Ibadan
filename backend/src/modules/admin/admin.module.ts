@@ -13,13 +13,15 @@ import { RolesService } from './roles.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { SuperadminSeedService } from './superadmin-seed.service';
 import { AuditLogModule } from './audit-log/audit-log.module';
+import { DashboardModule } from './dashboard/dashboard.module';
 
 @Module({
   imports: [
-    AuditLogModule,
+    // AuditLogModule,
     AttendeeModule,
     ConfigModule,
     PaymentsModule,
+    DashboardModule,
     MailModule,
     PassportModule,
     JwtModule.registerAsync({
@@ -48,6 +50,9 @@ import { AuditLogModule } from './audit-log/audit-log.module';
     PrismaService,
     SuperadminSeedService,
   ],
-  exports: [AdminService, AuditLogModule],
+  exports: [
+    AdminService,
+    // AuditLogModule
+  ],
 })
 export class AdminModule {}

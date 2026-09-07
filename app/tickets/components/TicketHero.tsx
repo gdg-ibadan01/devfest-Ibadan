@@ -22,14 +22,14 @@ const TicketHero = () => {
 
         <div className="flex gap-3 md:gap-5 text-sm'">
           <Link
-            href="/ticket/buy"
+            href="/tickets/buy"
             className="bg-black py-[17px] px-[23px] md:py-[33px] md:px-[101px] text-white hover:bg-core-blue hover:text-white rounded-[100px] flex"
           >
             Buy Ticket <ArrowUpRight />
           </Link>
 
           <Link
-            href="/ticket/gift"
+            href="/tickets/gift"
             className="bg-white py-[17px] px-[23px] md:py-[33px] md:px-[101px] border-[1px] border-black hover:border-core-blue text-black hover:bg-core-blue hover:text-white rounded-[100px]"
           >
             Gift Ticket
