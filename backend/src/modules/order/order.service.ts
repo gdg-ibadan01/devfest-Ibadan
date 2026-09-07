@@ -859,4 +859,28 @@ Initiating refund for order ${order.id}`,
 
     return `${this.appConfig.url}/api/v1/tickets/download?token=${token}`;
   }
+
+  async count(where: Prisma.OrderWhereInput): Promise<number> {
+    return this.prisma.order.count({ where });
+  }
+
+  async sumAmount(where: Prisma.OrderWhereInput): Promise<number> {
+    const result = await this.prisma.order.aggregate({
+      _sum: { amount: true },
+      where,
+    });
+    return Number(result._sum.amount ?? 0);
+  }
+
+  async findMany(args: Prisma.OrderFindManyArgs) {
+    return this.prisma.order.findMany(args);
+  }
+
+  async groupByTicket() {
+    return this.prisma.order.groupBy({
+      by: ['ticketId'],
+      where: { status: OrderStatus.PAID },
+      _count: { _all: true },
+    });
+  }
 }
