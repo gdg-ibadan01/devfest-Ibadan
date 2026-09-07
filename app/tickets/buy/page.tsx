@@ -47,14 +47,19 @@ export default function BuyTicket() {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [selectedPackageId, setSelectedPackageId] = useState('');
-  const [orderData, setOrderData] = useState<CreateOrderResponseDto | null>(null);
+  const [orderData, setOrderData] = useState<CreateOrderResponseDto | null>(
+    null
+  );
 
   const { mutate: createOrder, isPending } = useCreateOrder();
 
   // Sync selected package ID when tickets load
   useEffect(() => {
     if (packages.length > 0) {
-      if (!selectedPackageId || !packages.some((p) => p.id === selectedPackageId)) {
+      if (
+        !selectedPackageId ||
+        !packages.some((p) => p.id === selectedPackageId)
+      ) {
         setSelectedPackageId(packages[0].id);
       }
     }
@@ -106,7 +111,82 @@ export default function BuyTicket() {
       name: fullName,
       email: email,
     });
-    router.push(`/ticket/preview?${params.toString()}`);
+    router.push(`/tickets/preview?${params.toString()}`);
+  };
+
+  const renderContent = () => {
+    if (isLoadingTickets) {
+      return <TicketFormSkeleton title="Buy Ticket" />;
+    }
+
+    if (packages.length === 0) {
+      return (
+        <EmptyTicketState
+          onRetry={() => refetchTickets()}
+          isRetrying={isRefetchingTickets}
+        />
+      );
+    }
+
+    return (
+      <AnimatePresence mode="wait">
+        {view === 'form' && (
+          <motion.div
+            key="form"
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -15 }}
+            transition={{ duration: 0.25, ease: 'easeOut' }}
+            className="w-full flex justify-center z-10"
+          >
+            <BuyTicketForm
+              fullName={fullName}
+              setFullName={setFullName}
+              email={email}
+              setEmail={setEmail}
+              selectedPackageId={selectedPackageId}
+              setSelectedPackageId={setSelectedPackageId}
+              packages={packages}
+              onSubmit={handleFormSubmit}
+              onBack={handleBack}
+            />
+          </motion.div>
+        )}
+
+        {view === 'summary' && (
+          <motion.div
+            key="summary"
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -15 }}
+            transition={{ duration: 0.25, ease: 'easeOut' }}
+            className="w-full flex justify-center z-10"
+          >
+            <TicketSummary
+              fullName={fullName}
+              email={email}
+              selectedPackage={selectedPackage}
+              onBack={handleBack}
+              onPay={handlePay}
+              isLoading={isPending}
+            />
+          </motion.div>
+        )}
+
+        {view === 'success' && (
+          <motion.div
+            key="success"
+            initial={{ opacity: 0, scale: 0.96, y: 15 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, y: -15 }}
+            transition={{ duration: 0.3, ease: 'easeOut' }}
+            className="w-full flex justify-center z-10"
+          >
+            <PaymentSuccess onDownload={handleDownload} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    );
   };
 
   return (
@@ -121,72 +201,7 @@ export default function BuyTicket() {
         backgroundSize: 'cover',
       }}
     >
-      {isLoadingTickets ? (
-        <TicketFormSkeleton title="Buy Ticket" />
-      ) : packages.length === 0 ? (
-        <EmptyTicketState
-          onRetry={() => refetchTickets()}
-          isRetrying={isRefetchingTickets}
-        />
-      ) : (
-        <AnimatePresence mode="wait">
-          {view === 'form' && (
-            <motion.div
-              key="form"
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -15 }}
-              transition={{ duration: 0.25, ease: 'easeOut' }}
-              className="w-full flex justify-center z-10"
-            >
-              <BuyTicketForm
-                fullName={fullName}
-                setFullName={setFullName}
-                email={email}
-                setEmail={setEmail}
-                selectedPackageId={selectedPackageId}
-                setSelectedPackageId={setSelectedPackageId}
-                packages={packages}
-                onSubmit={handleFormSubmit}
-                onBack={handleBack}
-              />
-            </motion.div>
-          )}
-
-          {view === 'summary' && (
-            <motion.div
-              key="summary"
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -15 }}
-              transition={{ duration: 0.25, ease: 'easeOut' }}
-              className="w-full flex justify-center z-10"
-            >
-              <TicketSummary
-                fullName={fullName}
-                email={email}
-                selectedPackage={selectedPackage}
-                onBack={handleBack}
-                onPay={handlePay}
-                isLoading={isPending}
-              />
-            </motion.div>
-          )}
-
-          {view === 'success' && (
-            <motion.div
-              key="success"
-              initial={{ opacity: 0, scale: 0.96, y: 15 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, y: -15 }}
-              transition={{ duration: 0.3, ease: 'easeOut' }}
-              className="w-full flex justify-center z-10"
-            >
-              <PaymentSuccess onDownload={handleDownload} />
-            </motion.div>
-          )}
-        </AnimatePresence>
-      )}
+      {renderContent()}
 
       {/* Decorative footer art matching the bg background layer */}
       <Image

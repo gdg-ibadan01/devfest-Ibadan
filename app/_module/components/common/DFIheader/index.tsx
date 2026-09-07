@@ -51,20 +51,18 @@ const DFIHeader = (): ReactNode => {
           <Image src={DevfestLogo} alt="DevfestLogo" />
         </Link>
         {isTablet && (
-          <>
-            <nav className="lg:block">
-              <ul className={styles.headerMenu}>
-                {menuItems.map(({ label, slur }) => (
-                  <div key={slur} onClick={showMenuFunc}>
-                    <MenuLink key={slur} label={label} slur={slur} />
-                  </div>
-                ))}
-                <Link href="https://dev2024-game.vercel.app/" target="_blank">
-                  <Button className={styles.btn}>Play Puzzle Game</Button>
-                </Link>
-              </ul>
-            </nav>
-          </>
+          <nav className="lg:block">
+            <ul className={styles.headerMenu}>
+              {menuItems.map(({ label, slur }) => (
+                <div key={slur} onClick={showMenuFunc}>
+                  <MenuLink key={slur} label={label} slur={slur} />
+                </div>
+              ))}
+              <Link href="https://dev2024-game.vercel.app/" target="_blank">
+                <Button className={styles.btn}>Play Puzzle Game</Button>
+              </Link>
+            </ul>
+          </nav>
         )}
         {showMenu && (
           <nav className={styles.showMenu}>

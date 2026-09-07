@@ -18,7 +18,7 @@ export default function TicketPackageRow({
   pkg,
   isSelected,
   onSelect,
-}: TicketPackageRowProps) {
+}: Readonly<TicketPackageRowProps>) {
   return (
     <div
       onClick={() => onSelect(pkg.id)}
@@ -47,7 +47,7 @@ export default function TicketPackageRow({
           <span className="font-normal md:font-semibold text-gray-800 text-[14px] md:text-[17px] shrink-0">
             {pkg.title}
           </span>
-          <span
+          {/* <span
             className={`px-2 py-0.5 rounded-[24px] text-[10px] md:text-[14px] border transition-colors shrink-0 ${
               isSelected
                 ? 'bg-[#4285F4] border-[#4285F4] text-white'
@@ -55,7 +55,7 @@ export default function TicketPackageRow({
             }`}
           >
             {pkg.badge}
-          </span>
+          </span> */}
         </div>
         <span
           className={`font-bold text-[15px] md:text-[17px] shrink-0 ${
