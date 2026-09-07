@@ -35,7 +35,6 @@ export class AttendeeService {
     TicketNotFoundErr: 'TicketNotFoundErr',
     CheckInUnpaidOrderErr: 'CheckInUnpaidOrderErr',
   } as const;
-
   constructor(private readonly prisma: PrismaService) {}
 
   async checkIn(payload: CheckInOrderDto) {

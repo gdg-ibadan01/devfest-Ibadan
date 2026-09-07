@@ -36,6 +36,7 @@ model Admin {
   admins              Admin[]              @relation("AdminInvitations")
   auditLogs           AuditLog[]
   tickets             Ticket[]
+  createdOrders       Order[]              @relation("OrderCreatedBy")
 
   @@map("admins")
 }
@@ -124,6 +125,8 @@ model Order {
   paidAt                 DateTime?   @map("paid_at")
   checkIns               DateTime[]  @default([]) @map("check_ins")
   ticketUrl              String?     @map("ticket_url")
+  createdById            String?     @map("created_by_id")
+  createdBy              Admin?      @relation("OrderCreatedBy", fields: [createdById], references: [id])
   createdAt              DateTime    @default(now()) @map("created_at")
   updatedAt              DateTime    @updatedAt @map("updated_at")
 

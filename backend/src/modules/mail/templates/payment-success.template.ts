@@ -35,7 +35,7 @@ export function paymentSuccessTemplate(
           <tr>
             <td style="padding: 30px; color: #333333; font-size: 16px; line-height: 1.6;">
               <p>Hi <strong>${fullName}</strong>,</p>
-              <p>Thank you! Your payment of <strong>₦${amount}</strong> for <strong>DevFest Ibadan 2025</strong> was successful.</p>
+              <p>Thank you! Your payment of <strong>₦${amount}</strong> for <strong>DevFest Ibadan ${new Date().getFullYear()}</strong> was successful.</p>
               <p>You can access your ticket and event details here:</p>
               <p style="margin-top: 20px; text-align: center;">
                 <a href="${successUrl}" 

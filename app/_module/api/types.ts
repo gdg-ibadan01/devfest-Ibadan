@@ -72,7 +72,7 @@ export type GetOrderReferenceResponseDto = Schemas['GetOrderReferenceResponseDto
 export interface OrderListParams {
   search?: string;
   status?:
-    'AWAITING_PAYMENT' | 'PAID' | 'CANCELLED' | 'AWAITING_REFUND' | 'REFUNDED';
+  'AWAITING_PAYMENT' | 'PAID' | 'CANCELLED' | 'AWAITING_REFUND' | 'REFUNDED';
   direction?: 'next' | 'previous';
   cursor?: string;
   limit?: number;
@@ -96,8 +96,56 @@ export interface TicketListParams {
   name?: string;
 }
 
+// ---- Audit Logs --------------------------------------------
+export interface AuditLogItemDto {
+  id: string;
+  adminId: string;
+  roleId: string | null;
+  action: string;
+  metadata: Record<string, any> | null;
+  createdAt: string;
+  admin: {
+    id: string;
+    fullName: string;
+    email: string;
+    role?: {
+      id: string;
+      name: string;
+    } | null;
+  };
+  role?: {
+    id: string;
+    name: string;
+  } | null;
+}
+
+export interface AuditLogPaginationMetaDto {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+}
+
+export interface AuditLogListResponseDto {
+  success: boolean;
+  message: string;
+  data: AuditLogItemDto[];
+  meta: AuditLogPaginationMetaDto;
+}
+
+export interface AuditLogListParams extends PaginationParams {
+  search?: string;
+  action?: string;
+  adminId?: string;
+  roleId?: string;
+  startDate?: string;
+  endDate?: string;
+  sortOrder?: 'asc' | 'desc';
+}
+
 export interface CheckedInListParams {
-  /** Event dates (YYYY-MM-DD) to match check-ins against — pass the selected ticket's `eventDates`. */
   eventDates: string[];
   direction?: 'next' | 'previous';
   cursor?: string;

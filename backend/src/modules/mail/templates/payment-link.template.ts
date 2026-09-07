@@ -38,7 +38,7 @@ export function paymentLinkTemplate(
           <tr>
             <td style="padding: 30px; color: #333333; font-size: 16px; line-height: 1.6;">
               <p>Hi <strong>${fullName}</strong>,</p>
-              <p>We’re excited to have you at <strong>DevFest Ibadan 2025</strong> 🎉.</p>
+              <p>We’re excited to have you at <strong>DevFest Ibadan ${new Date().getFullYear()}</strong> 🎉.</p>
               <p>Your registration has been received. To complete your booking, please make a payment of <strong>₦${amount}</strong> using the link below:</p>
               <p style="margin-top: 20px; text-align: center;">
                 <a href="${paymentUrl}" 
