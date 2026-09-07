@@ -191,32 +191,26 @@ export class OrdersService {
           ),
         );
     }
-
     const payer = {
       fullName:
         payload.gifter?.fullName.trim() ?? payload.attendee.fullName.trim(),
       email: gifterEmail ?? attendeeEmail,
     };
-
     const response = await this.initializeCheckout(record, payer);
-
     this.logger.log(
       `Email check => createdById: ${createdById}, checkoutUrl: ${response.checkoutUrl ? 'present' : 'missing'}, payer: ${payer.email}`,
     );
-
     if (createdById && response.checkoutUrl) {
       try {
         this.logger.log(
           `Sending payment link email to ${payer.email} for order ${response.id}`,
         );
-
         await this.mailService.sendPaymentLinkEmail(
           payer.email,
           payer.fullName,
           response.checkoutUrl,
           Number(response.amount),
         );
-
         this.logger.log(
           `Payment link email successfully sent to ${payer.email}`,
         );
@@ -226,15 +220,17 @@ export class OrdersService {
             err instanceof Error ? err.message : err
           }`,
         );
-
         throw new ServiceError(
           'Order created, but payment email could not be sent',
           OrdersService.ERRORS.PaymentErr,
         );
       }
     }
-
-    return response;
+    return this.initializeCheckout(record, {
+      fullName:
+        payload.gifter?.fullName.trim() ?? payload.attendee.fullName.trim(),
+      email: gifterEmail ?? attendeeEmail,
+    });
   }
 
   async findByReference(reference: string) {

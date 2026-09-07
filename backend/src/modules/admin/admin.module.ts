@@ -17,7 +17,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
 
 @Module({
   imports: [
-    AuditLogModule,
+    // AuditLogModule,
     AttendeeModule,
     ConfigModule,
     PaymentsModule,
@@ -50,6 +50,9 @@ import { DashboardModule } from './dashboard/dashboard.module';
     PrismaService,
     SuperadminSeedService,
   ],
-  exports: [AdminService, AuditLogModule],
+  exports: [
+    AdminService,
+    // AuditLogModule
+  ],
 })
 export class AdminModule {}
