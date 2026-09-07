@@ -158,3 +158,13 @@ export interface CheckedInListParams {
   cursor?: string;
   limit?: number;
 }
+
+export interface OrderListParams {
+  search?: string;
+  status?:
+  | 'AWAITING_PAYMENT'
+  | 'PAID'
+  | 'CANCELLED'
+  | 'AWAITING_REFUND'
+  | 'REFUNDED';
+}

@@ -39,8 +39,6 @@ export class AuditLogService {
   ): Promise<PaginatedAuditLogResponseDto> {
     const page = query.page ?? 1;
     const limit = query.limit ?? 10;
-    const from = query.from || query.startDate;
-    const to = query.to || query.endDate;
 
     const where: Prisma.AuditLogWhereInput = {
       ...(query.adminId ? { adminId: query.adminId } : {}),
@@ -124,7 +122,7 @@ export class AuditLogService {
     };
   }
 
-  /** Distinct action names in use, for populating a filter dropdown. */
+  // Distinct action names in use, for populating a filter dropdown.
   async findDistinctActions(): Promise<string[]> {
     const rows = await this.prisma.auditLog.findMany({
       distinct: ['action'],
