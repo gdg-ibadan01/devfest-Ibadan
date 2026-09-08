@@ -18,6 +18,18 @@ import {
   Max,
 } from 'class-validator';
 
+export class DiscountByCodeResponseDto {
+  @ApiProperty({
+    type: String,
+    example: '1000.00',
+    description: 'The discount amount',
+  })
+  amount: string;
+
+  @ApiProperty({ description: 'Whether the discount is currently active' })
+  isActive: boolean;
+}
+
 export class CreateDiscountResponseDto {
   @ApiProperty()
   id: string;
@@ -41,11 +53,14 @@ export class CreateDiscountResponseDto {
   @ApiProperty({ type: [String] })
   ticketSlugs: string[];
 
-  @ApiProperty({ type: Number, nullable: true })
-  limit: number | null;
+  @ApiProperty({ type: Number })
+  limit: number;
 
   @ApiProperty({ type: Date, format: 'date-time' })
   validFrom: Date;
+
+  @ApiProperty({ type: Date, format: 'date-time', nullable: true })
+  validTo: Date | null;
 
   @ApiProperty()
   forFirstTimersOnly: boolean;
@@ -91,16 +106,16 @@ export class CreateDiscountDto {
   @IsNotEmpty()
   ticketSlugs!: string[];
 
-  @ApiPropertyOptional({
+  @ApiProperty({
     minimum: 1,
     example: 100,
     description:
-      'Maximum number of times this discount can be used. Required for BULK discounts. Set to null for unlimited.',
+      'Maximum number of times this discount can be used. Required for BULK discounts.',
   })
-  @IsOptional()
+  @IsNotEmpty()
   @IsInt()
   @Min(1)
-  limit?: number | null;
+  limit!: number;
 
   @ApiProperty({
     example: '2026-01-01',
@@ -108,6 +123,14 @@ export class CreateDiscountDto {
   })
   @IsDateString()
   validFrom!: string;
+
+  @ApiProperty({
+    example: '2026-12-31',
+    description:
+      'End date in YYYY-MM-DD format. Discount expires at end of day.',
+  })
+  @IsDateString()
+  validTo!: string;
 
   @ApiPropertyOptional({ example: false, default: false })
   @IsOptional()
@@ -141,7 +164,7 @@ export class CreateDiscountDto {
     if (
       isBulk &&
       this.recipientEmails &&
-      this.recipientEmails.length > this.limit!
+      this.recipientEmails.length > this.limit
     ) {
       throw new BadRequestException('Recipient emails cannot exceed limit');
     }
@@ -227,11 +250,21 @@ export class DiscountListItemDto {
   @ApiProperty()
   name: string;
 
-  @ApiProperty({ type: Number, nullable: true })
-  limit: number | null;
+  @ApiProperty()
+  code: string;
 
-  @ApiProperty({ enum: ['SCHEDULED', 'ACTIVE'] })
-  status: 'SCHEDULED' | 'ACTIVE';
+  @ApiProperty({ type: Number })
+  limit: number;
+
+  @ApiProperty({
+    type: String,
+    nullable: true,
+    description: 'End date in YYYY-MM-DD format',
+  })
+  validTo: string | null;
+
+  @ApiProperty({ enum: ['SCHEDULED', 'ACTIVE', 'EXPIRED'] })
+  status: 'SCHEDULED' | 'ACTIVE' | 'EXPIRED';
 
   @ApiProperty({ type: Date, format: 'date-time' })
   createdAt: Date;

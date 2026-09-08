@@ -5,6 +5,7 @@ import {
   HttpCode,
   HttpException,
   HttpStatus,
+  Param,
   Post,
   Query,
   UseGuards,
@@ -21,6 +22,7 @@ import { RequirePermission } from 'src/common/decorators/permissions.decorator';
 import {
   CreateDiscountDto,
   CreateDiscountResponseDto,
+  DiscountByCodeResponseDto,
   DiscountListQueryDto,
   DiscountListResponseDto,
 } from './dto/discount.dto';
@@ -55,6 +57,21 @@ export class DiscountsController {
   })
   findAll(@Query() query: DiscountListQueryDto) {
     return this.discountsService.list(query);
+  }
+
+  @Get('code/:discountCode')
+  @ApiOperation({ summary: 'Get discount amount' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Discount found',
+    type: DiscountByCodeResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Discount not found',
+  })
+  findByCode(@Param('discountCode') discountCode: string) {
+    return this.discountsService.findByCode(discountCode);
   }
 
   @Post()
