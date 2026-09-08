@@ -7,30 +7,29 @@ import {
   PieChart,
   ResponsiveContainer,
 } from 'recharts';
+import type { TicketBreakdownSliceDto } from '@/app/_module/api/types';
 
-const TicketBreakdown = () => {
-  const ticketBreakdown = [
-    {
-      label: 'Early Bird',
-      value: 45,
-      color: '#4285F4',
-    },
-    {
-      label: 'Regular',
-      value: 35,
-      color: '#34A853',
-    },
-    {
-      label: 'VIP',
-      value: 15,
-      color: '#F9AB00',
-    },
-    {
-      label: 'Student',
-      value: 5,
-      color: '#EA4335',
-    },
-  ];
+const SLICE_COLORS = ['#4285F4', '#34A853', '#F9AB00', '#EA4335', '#9AA0A6', '#AB47BC'];
+
+interface TicketBreakdownProps {
+  data: TicketBreakdownSliceDto[];
+}
+
+const TicketBreakdown = ({ data }: TicketBreakdownProps) => {
+  const ticketBreakdown = (data ?? []).map((slice, index) => ({
+    label: slice.ticketName,
+    value: slice.percentage,
+    color: SLICE_COLORS[index % SLICE_COLORS.length],
+  }));
+
+  if (ticketBreakdown.length === 0) {
+    return (
+      <div className="mt-8 flex h-[150px] items-center justify-center">
+        <p className="text-[13px] text-gray-400">No ticket sales yet.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="mt-8 flex flex-col items-center gap-8 md:flex-row md:items-start md:justify-center lg:gap-10">
       <div className="h-[150px] w-[150px] shrink-0">

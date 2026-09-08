@@ -10,6 +10,7 @@ import type {
   OrderListParams,
   OrderListItemDto,
   GetOrderReferenceResponseDto,
+  AdminCreateOrderDto,
 } from '@/app/_module/api/types';
 
 // ---- List orders (replaces the old attendees list) -------------
@@ -145,6 +146,32 @@ export function useCreateOrder() {
 
   return useMutation({
     mutationFn: createOrder,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['orders'], exact: false });
+    },
+    onError: (error: Error) => {
+      notifyApiError(error, 'Failed to create order');
+    },
+  });
+}
+
+// ---- Create order on behalf of an attendee (admin-only) -----------
+// Distinct from the public `/orders` endpoint above — this is what the
+// admin dashboard's "Create New Order" flow should use, since it also
+// allows admins to bypass ticket sale-window checks via `skipSaleWindowCheck`.
+
+async function createOrderForAttendee(
+  dto: AdminCreateOrderDto
+): Promise<CreateOrderResponseDto> {
+  const { data } = await apiClient.post<CreateOrderResponseDto>('/orders/attendees', dto);
+  return data;
+}
+
+export function useCreateOrderForAttendee() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: createOrderForAttendee,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['orders'], exact: false });
     },

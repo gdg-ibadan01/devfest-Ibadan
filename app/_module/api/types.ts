@@ -67,6 +67,35 @@ export type OrderListItemDto = Schemas['OrderListItemDto'];
 export type OrdersPaginationMetaDto = Schemas['OrdersPaginationMetaDto'];
 export type OrderListResponseDto = Schemas['OrderListResponseDto'];
 export type GetOrderReferenceResponseDto = Schemas['GetOrderReferenceResponseDto'];
+export type AdminCreateOrderDto = Schemas['AdminCreateOrderDto'];
+
+// ---- Dashboard -----------------------------------------------
+export type DashboardStatsDto = Schemas['DashboardStatsDto'];
+export type RegistrationTrendPointDto = Schemas['RegistrationTrendPointDto'];
+export type TicketBreakdownSliceDto = Schemas['TicketBreakdownSliceDto'];
+export type RecentAttendeeDto = Schemas['RecentAttendeeDto'];
+export type DashboardOverviewResponseDto = Schemas['DashboardOverviewResponseDto'];
+
+// ---- Discounts -------------------------------------------------
+// The generated schema describes `limit` as an object because the upstream
+// OpenAPI document marks a nullable numeric field with `type: object`.
+// Keep the API's actual contract explicit for callers.
+export type CreateDiscountDto = Omit<Schemas['CreateDiscountDto'], 'limit'> & {
+  limit?: number | null;
+};
+export type CreateDiscountResponseDto = Schemas['CreateDiscountResponseDto'];
+export type DiscountListTicketDto = Schemas['DiscountListTicketDto'];
+export type DiscountListItemDto = Schemas['DiscountListItemDto'];
+export type DiscountPaginationMetaDto = Schemas['DiscountPaginationMetaDto'];
+export type DiscountListResponseDto = Schemas['DiscountListResponseDto'];
+
+// ---- Audit Log ---------------------------------------------------
+export type AuditLogAdminDto = Schemas['AuditLogAdminDto'];
+export type AuditLogRoleDto = Schemas['AuditLogRoleDto'];
+export type AuditLogResponseDto = Schemas['AuditLogResponseDto'];
+export type PaginationMetaDto = Schemas['PaginationMetaDto'];
+export type PaginatedAuditLogResponseDto = Schemas['PaginatedAuditLogResponseDto'];
+export type AuditLogDetailResponseDto = Schemas['AuditLogDetailResponseDto'];
 
 // ---- Query param helpers -----------------------------------
 export interface OrderListParams {
@@ -101,4 +130,23 @@ export interface CheckedInListParams {
   direction?: 'next' | 'previous';
   cursor?: string;
   limit?: number;
+}
+
+export interface DiscountListParams {
+  name?: string;
+  direction?: 'next' | 'previous';
+  cursor?: string;
+  limit?: number;
+}
+
+export interface AuditLogListParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  action?: string;
+  adminId?: string;
+  roleId?: string;
+  startDate?: string;
+  endDate?: string;
+  sortOrder?: 'asc' | 'desc';
 }

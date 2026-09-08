@@ -1,76 +1,106 @@
 'use client';
 
-import { useState } from 'react';
-import { Search, Plus } from 'lucide-react';
+import { useState, useCallback } from 'react';
+import { Search, Plus, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { format, isValid, parseISO } from 'date-fns';
 import { cn } from '@/app/_module/lib/utils';
-import type { DiscountRecord, DiscountStatus } from '../_types/discount.types';
-import DiscountActionsMenu from './DiscountActionsMenu';
+import { useDiscounts } from '@/app/_module/services/discounts.service';
 import EmptyState from '@/app/_module/components/common/EmptyState';
-import MOCK_DISCOUNTS from './MockData';
+import type { DiscountListItemDto } from '@/app/_module/api/types';
 
-const statusConfig: Record<
-  DiscountStatus,
-  { dot: string; text: string; bg: string }
+const STATUS_CONFIG: Record<
+  DiscountListItemDto['status'],
+  { dot: string; text: string; bg: string; label: string }
 > = {
-  Active: {
-    dot: 'bg-[#34A853]',
-    text: 'text-[#1B873B]',
-    bg: 'bg-[#E8F5E9]',
-  },
-  Expired: {
-    dot: 'bg-[#6B7280]',
-    text: 'text-[#374151]',
-    bg: 'bg-[#F3F4F6]',
-  },
-  Scheduled: {
-    dot: 'bg-[#F59E0B]',
-    text: 'text-[#92400E]',
-    bg: 'bg-[#FEF3C7]',
-  },
+  ACTIVE: { dot: 'bg-[#34A853]', text: 'text-[#1B873B]', bg: 'bg-[#E8F5E9]', label: 'Active' },
+  SCHEDULED: { dot: 'bg-[#F59E0B]', text: 'text-[#92400E]', bg: 'bg-[#FEF3C7]', label: 'Scheduled' },
 };
 
-function typeLabel(type: DiscountRecord['type']) {
-  return type === 'percentage' ? 'Percentage (%)' : 'Fixed (₦)';
+const COLUMNS = [
+  'Discount Name',
+  'Type',
+  'Amount',
+  'Tickets',
+  'Usage',
+  'Valid From',
+  'Status',
+];
+
+function formatAmount(val: string): string {
+  const num = parseFloat(val);
+  if (isNaN(num)) return '—';
+  return `₦${num.toLocaleString('en-NG')}`;
 }
 
-const COLUMNS = [
-  { key: 'check', label: '' },
-  { key: 'id', label: 'Discount ID' },
-  { key: 'type', label: 'Type' },
-  { key: 'value', label: 'Value' },
-  { key: 'usage', label: 'Usage' },
-  { key: 'validity', label: 'Validity' },
-  { key: 'status', label: 'Status' },
-  { key: 'action', label: 'Action' },
-];
+function formatDate(iso: string): string {
+  if (!iso) return '—';
+  const d = parseISO(iso);
+  return isValid(d) ? format(d, 'dd MMM yyyy') : iso;
+}
+
+function SkeletonRow() {
+  return (
+    <tr className="border-b border-gray-100 animate-pulse">
+      {COLUMNS.map((c) => (
+        <td key={c} className="px-5 py-4">
+          <div className="h-3 bg-gray-100 rounded w-3/4" />
+        </td>
+      ))}
+    </tr>
+  );
+}
 
 interface DiscountTableProps {
   onCreateClick: () => void;
-  onEditClick: (record: DiscountRecord) => void;
-  onDeleteClick: (record: DiscountRecord) => void;
 }
 
-export default function DiscountTable({
-  onCreateClick,
-  onEditClick,
-  onDeleteClick,
-}: DiscountTableProps) {
-  const [search, setSearch] = useState('');
-  const [selected, setSelected] = useState<Set<string>>(new Set());
+export default function DiscountTable({ onCreateClick }: DiscountTableProps) {
+  const [searchInput, setSearchInput] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [cursor, setCursor] = useState<string | undefined>(undefined);
+  const [direction, setDirection] = useState<'next' | 'previous' | undefined>(undefined);
+  const [cursorStack, setCursorStack] = useState<string[]>([]);
 
-  const filtered = MOCK_DISCOUNTS.filter((d) =>
-    d.discountId.toLowerCase().includes(search.toLowerCase())
-  );
+  const { data, isLoading, isError, isFetching } = useDiscounts({
+    name: searchQuery || undefined,
+    cursor,
+    direction,
+    limit: 15,
+  });
 
-  const toggleSelect = (id: string) => {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
+  const discounts = data?.data ?? [];
+  const meta = data?.meta;
+
+  const handleSearch = useCallback(() => {
+    setSearchQuery(searchInput);
+    setCursor(undefined);
+    setDirection(undefined);
+    setCursorStack([]);
+  }, [searchInput]);
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') handleSearch();
   };
 
-  const hasData = filtered.length > 0;
+  const handleNextPage = () => {
+    if (!meta?.hasMore || discounts.length === 0) return;
+    setCursorStack((prev) => [...prev, cursor ?? '']);
+    setCursor(discounts[discounts.length - 1].id);
+    setDirection('next');
+  };
+
+  const handlePrevPage = () => {
+    const stack = [...cursorStack];
+    const prev = stack.pop();
+    setCursorStack(stack);
+    setCursor(prev || undefined);
+    // Once the stack is empty we're back on the true first page — reset
+    // direction too so the query params exactly match the initial fetch.
+    setDirection(prev ? 'previous' : undefined);
+  };
+
+  const hasData = discounts.length > 0;
+  const showLoading = isLoading || isFetching;
 
   return (
     <>
@@ -80,14 +110,29 @@ export default function DiscountTable({
           <Search size={15} className="ml-4 text-gray-400 flex-shrink-0" />
           <input
             type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search for ticket"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Search discounts by name"
             className="flex-1 px-3 py-[11px] text-[13px] text-gray-700 placeholder:text-gray-400 focus:outline-none bg-transparent"
           />
+          {searchInput && (
+            <button
+              onClick={() => {
+                setSearchInput('');
+                setSearchQuery('');
+              }}
+              className="mr-3 text-gray-400 hover:text-gray-600"
+            >
+              <X size={14} />
+            </button>
+          )}
         </div>
 
-        <button className="px-5 py-[11px] bg-gray-900 text-white text-[13px] font-medium rounded-md hover:bg-black transition-colors">
+        <button
+          onClick={handleSearch}
+          className="px-5 py-[11px] bg-gray-900 text-white text-[13px] font-medium rounded-md hover:bg-black transition-colors"
+        >
           Search
         </button>
 
@@ -105,120 +150,113 @@ export default function DiscountTable({
       {/* Table */}
       <div className="border border-gray-200 rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-gray-200 bg-gray-50">
-              {COLUMNS.map((col) => (
-                <th
-                  key={col.key}
-                  className={cn(
-                    'text-left px-5 py-4 text-[12px] font-semibold text-[#121212] whitespace-nowrap',
-                    col.key === 'check' && 'w-10 pr-0'
-                  )}
-                >
-                  {col.key === 'check' ? <span /> : col.label}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {!hasData ? (
-              <EmptyState />
-            ) : (
-              filtered.map((record) => {
-                const badge = statusConfig[record.status];
-                const isChecked = selected.has(record.id);
-
-                return (
-                  <tr
-                    key={record.id}
-                    className="border-b border-gray-100 last:border-0 hover:bg-gray-50/50 transition-colors"
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-gray-200 bg-gray-50">
+                {COLUMNS.map((col) => (
+                  <th
+                    key={col}
+                    className="text-left px-5 py-4 text-[12px] font-semibold text-[#121212] whitespace-nowrap"
                   >
-                    {/* Checkbox */}
-                    <td className="px-5 py-4 w-10 pr-0">
-                      <button
-                        type="button"
-                        onClick={() => toggleSelect(record.id)}
-                        className={cn(
-                          'w-4 h-4 rounded border flex items-center justify-center transition-colors',
-                          isChecked
-                            ? 'bg-gray-900 border-gray-900'
-                            : 'border-gray-300 bg-white hover:border-gray-500'
-                        )}
-                      >
-                        {isChecked && (
-                          <svg
-                            width="8"
-                            height="8"
-                            viewBox="0 0 8 8"
-                            fill="none"
-                          >
-                            <path
-                              d="M1 4L3 6L7 2"
-                              stroke="white"
-                              strokeWidth="1.5"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                          </svg>
-                        )}
-                      </button>
-                    </td>
-
-                    <td className="px-5 py-4 text-[13px] text-gray-800 font-medium">
-                      {record.discountId}
-                    </td>
-                    <td className="px-5 py-4 text-[13px] text-gray-600">
-                      {typeLabel(record.type)}
-                    </td>
-                    <td className="px-5 py-4 text-[13px] text-gray-700">
-                      {record.value}
-                    </td>
-                    <td className="px-5 py-4 text-[13px] text-gray-600">
-                      {record.usage}
-                    </td>
-                    <td className="px-5 py-4 text-[13px] text-gray-600">
-                      {record.validity}
-                    </td>
-
-                    {/* Status badge */}
-                    <td className="px-5 py-4">
-                      <span
-                        className={cn(
-                          'flex items-center gap-[2px] px-3 py-[3px] rounded-[30px] w-fit text-[11px] font-medium',
-                          badge.bg,
-                          badge.text
-                        )}
-                      >
+                    {col}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {showLoading ? (
+                Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} />)
+              ) : isError ? (
+                <tr>
+                  <td colSpan={COLUMNS.length} className="text-center py-12 text-[13px] text-red-400">
+                    Failed to load discounts. Please refresh.
+                  </td>
+                </tr>
+              ) : !hasData ? (
+                <EmptyState />
+              ) : (
+                discounts.map((discount) => {
+                  const badge = STATUS_CONFIG[discount.status] ?? STATUS_CONFIG.SCHEDULED;
+                  return (
+                    <tr
+                      key={discount.id}
+                      className="border-b border-gray-100 last:border-0 hover:bg-gray-50/50 transition-colors"
+                    >
+                      <td className="px-5 py-4 text-[13px] text-gray-800 font-medium">
+                        {discount.name}
+                      </td>
+                      <td className="px-5 py-4 text-[13px] text-gray-600">
+                        {discount.type === 'SINGLE' ? 'Single Use' : 'Bulk'}
+                      </td>
+                      <td className="px-5 py-4 text-[13px] text-gray-700">
+                        {formatAmount(discount.amount)}
+                      </td>
+                      <td className="px-5 py-4 text-[13px] text-gray-600">
+                        {discount.tickets.length > 0
+                          ? discount.tickets.map((t) => t.name).join(', ')
+                          : '—'}
+                      </td>
+                      <td className="px-5 py-4 text-[13px] text-gray-600">
+                        {discount.usage}
+                        {discount.limit != null ? ` / ${discount.limit}` : ''}
+                      </td>
+                      <td className="px-5 py-4 text-[13px] text-gray-600">
+                        {formatDate(discount.validFrom)}
+                      </td>
+                      <td className="px-5 py-4">
                         <span
                           className={cn(
-                            'w-[8px] h-[8px] rounded-[1.3px]',
-                            badge.dot
+                            'flex items-center gap-[5px] px-3 py-[3px] rounded-[30px] w-fit text-[11px] font-medium',
+                            badge.bg,
+                            badge.text
                           )}
-                        />
-                        <span
-                          className={cn(
-                            'w-[6px] h-[6px] rounded-full flex-shrink-0'
-                          )}
-                        />
-                        {record.status}
-                      </span>
-                    </td>
-
-                    {/* Action */}
-                    <td className="px-5 py-4">
-                      <DiscountActionsMenu
-                        onEdit={() => onEditClick(record)}
-                        onDelete={() => onDeleteClick(record)}
-                      />
-                    </td>
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
+                        >
+                          <span className={cn('w-[7px] h-[7px] rounded-full flex-shrink-0', badge.dot)} />
+                          {badge.label}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
         </div>
+
+        {/* Pagination */}
+        {!showLoading && (meta?.hasMore || cursorStack.length > 0) && (
+          <div className="flex items-center justify-between px-5 py-3 border-t border-gray-100 bg-white">
+            <span className="text-[12px] text-gray-400">
+              {discounts.length} discount{discounts.length !== 1 ? 's' : ''} shown
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handlePrevPage}
+                disabled={cursorStack.length === 0}
+                className={cn(
+                  'flex items-center gap-1 px-3 py-1.5 rounded-md border text-[12px] transition-colors',
+                  cursorStack.length === 0
+                    ? 'border-gray-100 text-gray-300 cursor-not-allowed'
+                    : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                )}
+              >
+                <ChevronLeft size={14} /> Prev
+              </button>
+              <button
+                onClick={handleNextPage}
+                disabled={!meta?.hasMore}
+                className={cn(
+                  'flex items-center gap-1 px-3 py-1.5 rounded-md border text-[12px] transition-colors',
+                  !meta?.hasMore
+                    ? 'border-gray-100 text-gray-300 cursor-not-allowed'
+                    : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                )}
+              >
+                Next <ChevronRight size={14} />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </>
   );

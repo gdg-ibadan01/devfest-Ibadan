@@ -38,4 +38,21 @@ export const queryKeys = {
   attendees: {
     checkedIn: (params: Record<string, unknown>) => ['attendees', 'checked-in', params] as const,
   },
+
+  // Dashboard
+  dashboard: {
+    overview: () => ['dashboard', 'overview'] as const,
+  },
+
+  // Discounts
+  discounts: {
+    all: (params?: Record<string, unknown>) => ['discounts', params] as const,
+  },
+
+  // Audit Logs
+  auditLogs: {
+    all: (params?: Record<string, unknown>) => ['audit-logs', params] as const,
+    detail: (id: string) => ['audit-logs', id] as const,
+    actions: () => ['audit-logs', 'actions'] as const,
+  },
 } as const;

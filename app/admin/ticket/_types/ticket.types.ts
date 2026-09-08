@@ -11,7 +11,7 @@ export interface TicketBasicInfo {
 
 export interface TicketPricing {
   price: string;
-  discount: string;
+  // discount removed — no longer part of the ticket creation API.
   earlyBird: boolean;
 }
 
@@ -39,7 +39,6 @@ export interface TicketRecord {
   name: string;
   declarationDates: { label: string; day: 'fri' | 'sat' }[];
   price: string;
-  discount: string;
   startDate: string;
   endDate: string;
   quantity: number;

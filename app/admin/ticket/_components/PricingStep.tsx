@@ -7,7 +7,6 @@ import { CurrencyInput, ToggleRow, FormActions } from './FormControls';
 
 interface Errors {
   price?: string;
-  discount?: string;
 }
 
 interface PricingStepProps {
@@ -38,14 +37,7 @@ export default function PricingStep({
     if (!data.price || isNaN(price) || price <= 0) {
       e.price = 'Price must be greater than 0.';
     }
-    if (data.discount) {
-      const discount = parseFloat(data.discount);
-      if (isNaN(discount) || discount < 0) {
-        e.discount = 'Discount must be a positive number.';
-      } else if (!isNaN(price) && discount >= price) {
-        e.discount = 'Discount must be less than the price.';
-      }
-    }
+    // Discount field removed — no longer part of the ticket creation API.
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -70,14 +62,15 @@ export default function PricingStep({
           error={errors.price}
         />
 
-        <CurrencyInput
+        {/* Discount field removed — no longer part of the ticket creation API. */}
+        {/* <CurrencyInput
           label="Discount"
           id="discount"
           value={data.discount}
           onChange={(val) => set('discount', val)}
           error={errors.discount}
           placeholder="0.00 (optional)"
-        />
+        /> */}
 
         <ToggleRow
           icon={<Clock size={20} />}

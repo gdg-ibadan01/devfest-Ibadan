@@ -1,69 +1,45 @@
-'use client';
+import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
+import { getQueryClient } from '@/app/_module/lib/getQueryClient';
+import { serverFetch } from '@/app/_module/lib/serverFetch';
+import { queryKeys } from '@/app/_module/api/queryKeys';
+import DiscountReferralPageClient from './DiscountReferralPageClient';
 
-import { useState } from 'react';
-import AdminWrapper from '@/app/_module/components/common/AdminWrapper';
-import DiscountTable from './_components/DiscountTable';
-import CreateDiscountModal from './_components/CreateDiscountModal';
-import DeleteDiscountModal from './_components/DeleteDiscountModal';
-import type {
-  DiscountRecord,
-  CreateDiscountForm,
-} from './_types/discount.types';
+const DISCOUNTS_LIMIT = 15;
+const TICKETS_LIMIT = 50;
 
-export default function DiscountReferralPage() {
-  const [createOpen, setCreateOpen] = useState(false);
-  const [deleteOpen, setDeleteOpen] = useState(false);
-  const [selectedRecord, setSelectedRecord] = useState<DiscountRecord | null>(
-    null
-  );
+export default async function DiscountReferralPage() {
+  const queryClient = getQueryClient();
 
-  const handleCreate = (data: CreateDiscountForm) => {
-    console.log('Create discount', data);
-  };
-
-  const handleEdit = (record: DiscountRecord) => {
-    setSelectedRecord(record);
-    setCreateOpen(true);
-  };
-
-  const handleDeleteClick = (record: DiscountRecord) => {
-    setSelectedRecord(record);
-    setDeleteOpen(true);
-  };
-
-  const handleDeleteConfirm = () => {
-    console.log('Delete discount', selectedRecord?.id);
-    setDeleteOpen(false);
-    setSelectedRecord(null);
-  };
+  await Promise.all([
+    queryClient.prefetchQuery({
+      queryKey: queryKeys.discounts.all({ limit: DISCOUNTS_LIMIT }),
+      queryFn: async () => {
+        const { data, status } = await serverFetch('/discounts', {
+          params: { limit: DISCOUNTS_LIMIT },
+        });
+        if (status < 200 || status >= 300) {
+          throw new Error('Failed to prefetch discounts');
+        }
+        return data;
+      },
+    }),
+    queryClient.prefetchQuery({
+      queryKey: queryKeys.tickets.all({ limit: TICKETS_LIMIT }),
+      queryFn: async () => {
+        const { data, status } = await serverFetch('/tickets', {
+          params: { limit: TICKETS_LIMIT },
+        });
+        if (status < 200 || status >= 300) {
+          throw new Error('Failed to prefetch tickets');
+        }
+        return data;
+      },
+    }),
+  ]);
 
   return (
-    <AdminWrapper title="Discount">
-      <div className="lg:px-[32px] px-[20px] py-[24px]">
-        <DiscountTable
-          onCreateClick={() => setCreateOpen(true)}
-          onEditClick={handleEdit}
-          onDeleteClick={handleDeleteClick}
-        />
-      </div>
-
-      <CreateDiscountModal
-        open={createOpen}
-        onClose={() => {
-          setCreateOpen(false);
-          setSelectedRecord(null);
-        }}
-        onSubmit={handleCreate}
-      />
-
-      <DeleteDiscountModal
-        open={deleteOpen}
-        onClose={() => {
-          setDeleteOpen(false);
-          setSelectedRecord(null);
-        }}
-        onConfirm={handleDeleteConfirm}
-      />
-    </AdminWrapper>
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <DiscountReferralPageClient />
+    </HydrationBoundary>
   );
 }
