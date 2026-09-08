@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { randomString } from 'src/common/transformers/strings';
-import { CreateDiscountDto } from './discount.dto';
+import { CreateDiscountDto } from './dto/discount.dto';
 
 @Injectable()
 export class DiscountsService {
@@ -43,8 +43,7 @@ export class DiscountsService {
           limit: payload.limit ?? null,
           validFrom,
           forFirstTimersOnly: payload.forFirstTimersOnly ?? false,
-          recipientEmails,
-          unusedCount: payload.limit ?? 0,
+          recipientEmails: payload.type === 'BULK' ? recipientEmails : [],
         },
       })
       .then((result) => ({ ...result, amount: result.amount.toFixed(2) }));

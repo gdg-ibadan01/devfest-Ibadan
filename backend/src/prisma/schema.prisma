@@ -74,7 +74,6 @@ model Ticket {
   slug          String     @unique
   eventDates    DateTime[] @map("event_dates")
   price         Decimal
-  discount      Decimal    @default(0)
   validityDates DateTime[] @map("validity_dates")
   capacity      Int
   saleStartsAt  DateTime   @map("sale_starts_at")
@@ -119,7 +118,6 @@ model Order {
   attendeePhoneNumber    String?     @map("attendee_phone_number")
   gifterName             String?     @map("gifter_name")
   gifterEmail            String?     @map("gifter_email")
-  discount               Decimal
   amount                 Decimal
   currency               String      @default("NGN")
   status                 OrderStatus @default(AWAITING_PAYMENT)
@@ -130,6 +128,8 @@ model Order {
   paidAt                 DateTime?   @map("paid_at")
   checkIns               DateTime[]  @default([]) @map("check_ins")
   ticketUrl              String?     @map("ticket_url")
+  discountId             String?     @map("discount_id")
+  discount               Discount?   @relation(fields: [discountId], references: [id])
   createdById            String?     @map("created_by_id")
   createdBy              Admin?      @relation("OrderCreatedBy", fields: [createdById], references: [id])
   createdAt              DateTime    @default(now()) @map("created_at")
@@ -186,9 +186,10 @@ model Discount {
   validFrom          DateTime     @map("valid_from")
   forFirstTimersOnly Boolean      @default(false) @map("for_first_timers_only")
   recipientEmails    String[]     @default([]) @map("recipient_emails")
-  unusedCount        Int          @map("unused_count")
   createdAt          DateTime     @default(now()) @map("created_at")
   updatedAt          DateTime     @updatedAt @map("updated_at")
+
+  orders Order[]
 
   @@map("discounts")
 }

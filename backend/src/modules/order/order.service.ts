@@ -1,5 +1,12 @@
 import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { OrderStatus, Prisma, RefundStatus, type Order } from '@prisma/client';
+import {
+  Discount,
+  DiscountType,
+  OrderStatus,
+  Prisma,
+  RefundStatus,
+  type Order,
+} from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ServiceError } from 'src/common/errors/service-error';
 import { PrismaErrors } from 'src/common/enums/prisma-errors.enum';
@@ -14,7 +21,7 @@ import {
   CreateOrderDto,
   CreateOrderResponseDto,
   OrdersQueryDto,
-} from './create-order.dto';
+} from './dto/order.dto';
 import { PDFService } from '../pdf/pdf.service';
 import { UploadService } from '../upload/upload.service';
 import crypto from 'node:crypto';
@@ -68,7 +75,6 @@ interface OrderQueryRawResult {
   attendee_phone_number: null | string;
   gifter_name: null | string;
   gifter_email: null | string;
-  discount: number;
   amount: number;
   currency: string;
   status: string;
@@ -85,12 +91,23 @@ interface TicketQueryRawResult {
   id: string;
   capacity: number;
   price: Prisma.Decimal;
-  discount: Prisma.Decimal;
   sale_starts_at: Date;
   sale_ends_at: Date;
   validity_dates: Date[];
   name: string;
   slug: string;
+}
+
+interface CreateOrderRecordArgs {
+  slug: string;
+  attendeeFullName: string;
+  attendeeEmail: string;
+  attendeePhoneNumber: string | null;
+  gifterName: string | null;
+  gifterEmail: string | null;
+  createdById?: string | null;
+  skipSaleWindowCheck?: boolean;
+  discountCode?: string;
 }
 
 @Injectable()
@@ -104,6 +121,10 @@ export class OrdersService {
     PaymentErr: 'PaymentErr',
     TicketNotFoundErr: 'TicketNotFoundErr',
     OrderNotFoundErr: 'OrderNotFoundErr',
+    MaxedOutDiscountCodeErr: 'MaxedOutDiscountCodeErr',
+    BulkDiscountRecipientMismatchErr: 'BulkDiscountRecipientMismatchErr',
+    TicketDiscountCodeMismatchErr: 'TicketDiscountCodeMismatchErr',
+    InvalidDiscountCodeErr: 'InvalidDiscountCodeErr',
   } as const;
 
   private readonly logger = new Logger(OrdersService.name);
@@ -145,6 +166,7 @@ export class OrdersService {
               gifterEmail: gifterEmail ?? null,
               createdById: createdById ?? null,
               skipSaleWindowCheck,
+              discountCode: payload.discountCode,
             }),
           { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
         );
@@ -160,7 +182,7 @@ export class OrdersService {
         }
         this.logger.error(err);
         throw new ServiceError(
-          'Unable to create order. Retry in about 10 minutes',
+          'Unable to create order. Retry in a few minutes',
           OrdersService.ERRORS.RetryLaterErr,
         );
       }
@@ -197,40 +219,33 @@ export class OrdersService {
       email: gifterEmail ?? attendeeEmail,
     };
     const response = await this.initializeCheckout(record, payer);
-    this.logger.log(
-      `Email check => createdById: ${createdById}, checkoutUrl: ${response.checkoutUrl ? 'present' : 'missing'}, payer: ${payer.email}`,
-    );
+
     if (createdById && response.checkoutUrl) {
-      try {
-        this.logger.log(
-          `Sending payment link email to ${payer.email} for order ${response.id}`,
-        );
-        await this.mailService.sendPaymentLinkEmail(
+      this.logger.log(
+        `Sending payment link email to ${payer.email} for order ${response.id}`,
+      );
+      await this.mailService
+        .sendPaymentLinkEmail(
           payer.email,
           payer.fullName,
           response.checkoutUrl,
           Number(response.amount),
-        );
-        this.logger.log(
-          `Payment link email successfully sent to ${payer.email}`,
-        );
-      } catch (err) {
-        this.logger.error(
-          `Failed to send payment link email for order ${response.id} to ${payer.email}: ${
-            err instanceof Error ? err.message : err
-          }`,
-        );
-        throw new ServiceError(
-          'Order created, but payment email could not be sent',
-          OrdersService.ERRORS.PaymentErr,
-        );
-      }
+        )
+        .then(() => {
+          this.logger.log(
+            `Payment link email successfully sent to ${payer.email}`,
+          );
+        })
+        .catch((err) => {
+          this.logger.error(
+            `Failed to send payment link email for order ${response.id} to ${payer.email}: ${
+              err instanceof Error ? err.message : err
+            }`,
+          );
+        });
     }
-    return this.initializeCheckout(record, {
-      fullName:
-        payload.gifter?.fullName.trim() ?? payload.attendee.fullName.trim(),
-      email: gifterEmail ?? attendeeEmail,
-    });
+
+    return response;
   }
 
   async findByReference(reference: string) {
@@ -341,16 +356,7 @@ export class OrdersService {
 
   private async createOrderRecord(
     tx: TxClient,
-    args: {
-      slug: string;
-      attendeeFullName: string;
-      attendeeEmail: string;
-      attendeePhoneNumber: string | null;
-      gifterName: string | null;
-      gifterEmail: string | null;
-      createdById?: string | null;
-      skipSaleWindowCheck?: boolean;
-    },
+    args: CreateOrderRecordArgs,
   ): Promise<CreatedOrderRecord> {
     const [ticket] = await tx.$queryRaw<TicketQueryRawResult[]>`
     SELECT *
@@ -397,7 +403,14 @@ export class OrdersService {
       );
     }
 
-    const amount = ticket.price.minus(ticket.discount);
+    const discount = await this.validateDiscountCode(tx, {
+      attendeeEmail: args.attendeeEmail,
+      ticketSlug: ticket.slug,
+      code: args.discountCode,
+      currentDate: now,
+    });
+
+    const amount = ticket.price.minus(discount?.amount ?? 0);
     if (amount.lte(0)) {
       throw new ServiceError(
         'Ticket price configuration is invalid',
@@ -424,7 +437,7 @@ export class OrdersService {
     });
     if (paidCount + awaitingCount >= ticket.capacity) {
       throw new ServiceError(
-        'All remaining tickets are currently reserved. Please retry in 10 minutes',
+        'All remaining tickets are currently reserved. Please retry in a few minutes',
         OrdersService.ERRORS.RetryLaterErr,
       );
     }
@@ -439,12 +452,12 @@ export class OrdersService {
         gifterName: args.gifterName,
         gifterEmail: args.gifterEmail,
         createdById: args.createdById,
-        discount: ticket.discount.toFixed(2),
         amount: amount.toFixed(2),
         currency: 'NGN',
         status: OrderStatus.AWAITING_PAYMENT,
         paymentProvider: this.paymentProvider.name,
         expiresAt: new Date(now.getTime() + ORDER_TTL_MINUTES * 60_000),
+        discountId: discount ? discount.id : null,
       },
     });
 
@@ -454,6 +467,78 @@ export class OrdersService {
       ticketSlug: ticket.slug,
       createdById: args.createdById ?? null,
     };
+  }
+
+  private async validateDiscountCode(
+    tx: TxClient,
+    args: {
+      code?: string;
+      ticketSlug: string;
+      attendeeEmail: string;
+      currentDate: Date;
+    },
+  ): Promise<Discount | null> {
+    if (!args.code) return null;
+
+    const discount = await tx.discount.findFirst({
+      where: { code: args.code },
+    });
+    if (!discount) {
+      throw new ServiceError('Invalid discount code', 'InvalidDiscountCodeErr');
+    }
+
+    if (discount.validFrom > new Date()) {
+      throw new ServiceError(
+        'Discount code not valid yet',
+        'InvalidDiscountCodeErr',
+      );
+    }
+
+    if (
+      discount.type === DiscountType.BULK &&
+      !discount.ticketSlugs.includes(args.ticketSlug)
+    ) {
+      throw new ServiceError(
+        'Invalid ticket discount code',
+        'TicketDiscountCodeMismatchErr',
+      );
+    }
+
+    if (
+      discount.type === DiscountType.BULK &&
+      !discount.recipientEmails.includes(args.attendeeEmail)
+    ) {
+      throw new ServiceError(
+        'Not permitted to use this discount code',
+        'BulkDiscountRecipientMismatchErr',
+      );
+    }
+
+    const paidCount = await tx.order.count({
+      where: { discountId: discount.id, status: OrderStatus.PAID },
+    });
+    if (discount.limit && discount.limit < paidCount) {
+      throw new ServiceError(
+        'Discount code has reached its maximum usage',
+        'MaxedOutDiscountCodeErr',
+      );
+    }
+
+    const awaitingCount = await tx.order.count({
+      where: {
+        discountId: discount.id,
+        status: OrderStatus.AWAITING_PAYMENT,
+        expiresAt: { gt: args.currentDate },
+      },
+    });
+    if (discount.limit && paidCount + awaitingCount >= discount.limit) {
+      throw new ServiceError(
+        'All remaining discounted seats are currently reserved. Please retry in a few minutes',
+        'MaxedOutDiscountCodeErr',
+      );
+    }
+
+    return discount;
   }
 
   private async initializeCheckout(
@@ -513,7 +598,6 @@ export class OrdersService {
       reference: order.reference,
       status: order.status,
       amount: order.amount.toFixed(2),
-      discount: order.discount.toFixed(2),
       vatAndCharges: vatAndCharges.toFixed(2),
       currency: order.currency,
       checkoutUrl: order.checkoutUrl,

@@ -81,6 +81,11 @@ export class CreateOrderDto {
 
   /** Internal — set by AttendeeService to bypass the sale-window date check for admin-created orders. */
   skipSaleWindowCheck?: boolean;
+
+  @IsOptional()
+  @IsString()
+  @ApiProperty()
+  discountCode?: string;
 }
 
 export class AdminCreateOrderDto extends CreateOrderDto {
@@ -117,13 +122,6 @@ export class CreateOrderResponseDto {
     example: '9500.00',
   })
   amount: string;
-
-  @ApiProperty({
-    type: String,
-    description: 'Discount applied in Naira (2 decimal places)',
-    example: '500.00',
-  })
-  discount: string;
 
   @ApiProperty({
     type: String,

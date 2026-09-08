@@ -13,6 +13,7 @@ import {
   IsString,
   MinLength,
   Min,
+  IsNumber,
 } from 'class-validator';
 
 export class CreateDiscountResponseDto {
@@ -75,11 +76,12 @@ export class CreateDiscountDto {
   })
   @IsNotEmpty()
   @Min(1)
+  @IsNumber({ maxDecimalPlaces: 2 })
   amount!: number;
 
   @ApiProperty({
     type: [String],
-    example: ['devfest2026-early-bird', 'devfest2026-early-vip'],
+    example: ['devfest2026-gdsc-discount', 'devfest2026-student-discount'],
     description: 'Array of ticket slugs this discount applies to',
   })
   @IsArray()
@@ -114,7 +116,7 @@ export class CreateDiscountDto {
     type: [String],
     example: ['user1@example.com', 'user2@example.com'],
     description:
-      'Required for BULK discounts. Array length cannot exceed capacity.',
+      'Required for BULK discounts. Array length cannot exceed limit.',
   })
   @IsOptional()
   @IsArray()
@@ -125,7 +127,7 @@ export class CreateDiscountDto {
     const isBulk = this.type === 'BULK';
 
     if (isBulk && !this.limit) {
-      throw new BadRequestException('Capacity required for BULK discounts');
+      throw new BadRequestException('limit required for BULK discounts');
     }
 
     if (isBulk && !this.recipientEmails?.length) {
@@ -139,7 +141,7 @@ export class CreateDiscountDto {
       this.recipientEmails &&
       this.recipientEmails.length > this.limit!
     ) {
-      throw new BadRequestException('Recipient emails cannot exceed capacity');
+      throw new BadRequestException('Recipient emails cannot exceed limit');
     }
   }
 }
