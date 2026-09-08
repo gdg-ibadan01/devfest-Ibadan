@@ -178,6 +178,7 @@ model WebhookEvent {
 model Discount {
   id                 String       @id @default(uuid(7))
   name               String
+  code               String       @unique
   type               DiscountType
   amount             Decimal
   ticketSlugs        String[]     @map("ticket_slugs")
