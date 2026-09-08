@@ -14,7 +14,6 @@ interface FooterLink {
 const columnOneLinks: FooterLink[] = [
   { label: 'Sponsors', href: '/sponsors' },
   { label: 'Schedule', href: '/schedule' },
-  { label: 'Speakers', href: '/speakers' },
   { label: 'Merch', href: 'https://selar.co/m/gdg-ibadan1', isExternal: true },
 ];
 
@@ -22,11 +21,6 @@ const columnTwoLinks: FooterLink[] = [
   {
     label: 'Apply to Speak',
     href: 'https://tinyurl.com/devfestib2026',
-    isExternal: true,
-  },
-  {
-    label: 'Apply to be a volunteer',
-    href: 'https://bit.ly/4yAESFa',
     isExternal: true,
   },
   {
@@ -81,11 +75,10 @@ export const DFIFooterV2: FC = () => {
 
     const content = (
       <span
-        className={`text-sm sm:text-[15px] font-normal transition-colors ${
-          isActive
-            ? 'text-[#4285F4] underline decoration-[#4285F4] underline-offset-4'
-            : 'text-[#9CA3AF] hover:text-white hover:underline hover:decoration-[#4285F4]/70 hover:underline-offset-4'
-        }`}
+        className={`text-sm sm:text-[15px] font-normal transition-colors ${isActive
+          ? 'text-[#4285F4] underline decoration-[#4285F4] underline-offset-4'
+          : 'text-[#9CA3AF] hover:text-white hover:underline hover:decoration-[#4285F4]/70 hover:underline-offset-4'
+          }`}
       >
         {item.label}
       </span>
@@ -114,39 +107,57 @@ export const DFIFooterV2: FC = () => {
 
   return (
     <footer className="w-full bg-[#0A0A0A] text-white">
-      <div className="w-full md:max-w-[1500px] mx-auto px-6 sm:px-10 lg:px-24 py-56 space-y-[40px] md:gap-0">
+      <div className="w-full md:max-w-[1500px] mx-auto">
+        <div className="container mx-auto px-6 sm:px-10 lg:px-24 py-56 space-y-[40px] md:gap-0">
         {/* Top Section */}
         <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-[48px] lg:gap-16">
-          {/* Left: Logos */}
-          <div className="flex flex-wrap items-center gap-4 sm:gap-6 shrink-0">
-            <Link
-              href="/"
-              className="inline-block transition-opacity hover:opacity-90"
-            >
-              <Image
-                src="/devfest_logo.svg"
-                alt="DevFest Ibadan 2026"
-                width={269}
-                height={77}
-                className="h-10 sm:h-12 md:h-14 w-auto object-contain"
-                priority
-              />
-            </Link>
-            <a
-              href="https://gdg.community.dev/gdg-ibadan/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-block transition-opacity hover:opacity-90"
-            >
-              <Image
-                src="/gdg_logo.svg"
-                alt="Google Developer Groups"
-                width={239}
-                height={78}
-                className="h-10 sm:h-12 md:h-14 w-auto object-contain"
-                priority
-              />
-            </a>
+          {/* Left: Logos + Enquiry */}
+          <div className="flex flex-col gap-8 shrink-0">
+            <div className="flex flex-wrap items-center gap-4 sm:gap-6">
+              <Link
+                href="/"
+                className="inline-block transition-opacity hover:opacity-90"
+              >
+                <Image
+                  src="/devfest_logo.svg"
+                  alt="DevFest Ibadan 2026"
+                  width={269}
+                  height={77}
+                  className="h-10 sm:h-12 md:h-14 w-auto object-contain"
+                  priority
+                />
+              </Link>
+              <a
+                href="https://gdg.community.dev/gdg-ibadan/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block transition-opacity hover:opacity-90"
+              >
+                <Image
+                  src="/gdg_logo.svg"
+                  alt="Google Developer Groups"
+                  width={239}
+                  height={78}
+                  className="h-10 sm:h-12 md:h-14 w-auto object-contain"
+                  priority
+                />
+              </a>
+            </div>
+
+            {/* Enquiry Contact */}
+            <div className='mt-14'>
+              <p className="font-mono font-bold text-xs uppercase tracking-wider text-gray-400 mb-4">
+                REACH OUT FOR ENQUIRY:
+              </p>
+              <div className="flex flex-wrap items-center gap-8">
+                <a
+                  href="mailto:info@gdgibadan.com"
+                  className="text-[#FBBC04] underline underline-offset-4 text-sm sm:text-base font-medium transition-opacity hover:opacity-80"
+                >
+                  info@gdgibadan.com
+                </a>
+              </div>
+            </div>
           </div>
 
           {/* Right: Navigation Columns */}
@@ -194,6 +205,7 @@ export const DFIFooterV2: FC = () => {
               DevFest Ibadan 2026, POWERED BY ABIT TECHNOLOGY HUB
             </p>
           </div>
+        </div>
         </div>
       </div>
     </footer>

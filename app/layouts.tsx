@@ -92,7 +92,7 @@ const HomeLayout = ({
     '/tickets/preview',
   ];
   const shouldHideFooter = hideFooterRoutes.includes(pathname);
-  const isHomePage = pathname === '/';
+
 
   return (
     <html lang="en">
@@ -110,7 +110,7 @@ const HomeLayout = ({
                 {children}
                 {!shouldHideHeader &&
                   !shouldHideFooter &&
-                  (isHomePage ? <DFIFooterV2 /> : <DFIFooter />)}
+                  <DFIFooterV2 />}
                 <Toaster position="top-center" duration={4000} />
               </Suspense>
             </ErrorBoundary>

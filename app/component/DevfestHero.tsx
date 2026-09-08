@@ -85,19 +85,17 @@ const DevfestHero: FC = () => {
                 transition={{ duration: 0.6, delay: 0.1, ease: 'easeOut' }}
                 className="mt-6 text-base sm:text-lg text-[#4B5563] max-w-xl leading-[160%] font-normal font-inter"
               >
-                The biggest developer gathering in South-West Nigeria is back.
-                One day. Four tracks. Thousands of builders shaping tomorrow
-                with innovative cloud, AI, web, and mobile technologies.
+                The biggest developer gathering in South-West Nigeria is back. 3 weekends of PreDevFest Series (Oct–Nov), a Virtual Event on Friday Nov 20th, and the main Physical Event on Saturday Nov 21st.
               </motion.p>
 
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.2, ease: 'easeOut' }}
-                className="mt-[20px] sm:mt-10"
+                className="mt-[20px] sm:mt-10 flex flex-wrap items-center gap-4"
               >
                 <Link
-                  href="/tickets"
+                  href="/tickets/buy"
                   className="group relative inline-flex p-[2px] rounded-[100px] overflow-hidden transition-all duration-300 hover:scale-105 active:scale-95 shadow-md hover:shadow-lg"
                 >
                   {/* Google Multi-Color Gradient Ring */}
@@ -105,6 +103,17 @@ const DevfestHero: FC = () => {
                   {/* Inner Button */}
                   <span className="relative px-[20px] lg:px-10 py-3 sm:py-3.5 rounded-[100px] bg-[#18181b] group-hover:bg-[#232326] text-white text-sm sm:text-base font-semibold tracking-wide transition-colors flex items-center justify-center">
                     Get Ticket
+                  </span>
+                </Link>
+                <Link
+                  href="/tickets/gift"
+                  className="group relative inline-flex p-[2px] rounded-[100px] overflow-hidden transition-all duration-300 hover:scale-105 active:scale-95 shadow-md hover:shadow-lg"
+                >
+                  {/* Google Multi-Color Gradient Ring */}
+                  <span className="absolute inset-0 bg-gradient-to-r from-[#34A853] via-[#FBBC04] to-[#4285F4] rounded-[100px] transition-opacity group-hover:opacity-90" />
+                  {/* Inner Button */}
+                  <span className="relative px-[20px] lg:px-10 py-3 sm:py-3.5 rounded-[100px] bg-[#18181b] group-hover:bg-[#232326] text-white text-sm sm:text-base font-semibold tracking-wide transition-colors flex items-center justify-center">
+                    Gift Ticket
                   </span>
                 </Link>
               </motion.div>
@@ -123,7 +132,7 @@ const DevfestHero: FC = () => {
                   KAKANFO INN &amp; CONFERENCE CENTRE
                 </span>
                 <span className="inline-flex items-center px-3.5 py-1.5 rounded-[100px] border border-black text-[11px] sm:text-xs font-mono font-bold tracking-wider text-black bg-white/70 backdrop-blur-xs uppercase">
-                  26 NOV 2026
+                  21 NOV 2026
                 </span>
               </motion.div>
 
@@ -193,7 +202,7 @@ const DevfestHero: FC = () => {
             <div className="w-full max-w-[500px] sm:max-w-[560px] md:max-w-[620px] lg:max-w-[680px] xl:max-w-[740px] -mb-[36%] md:-mb-[21%]">
               <Image
                 src="/hero_attendees.png"
-                alt="Devfest Ibadan Attendees"
+                alt="DevFest Ibadan Attendees"
                 width={740}
                 height={538}
                 priority

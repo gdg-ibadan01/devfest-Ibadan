@@ -1,5 +1,6 @@
 import CallForSpeakers from './component/CallForSpeakers';
 import DevfestHero from './component/DevfestHero';
+import HowItGoesDown from './component/HowItGoesDown';
 import SwagsAndTickets from './component/SwagsAndTickets';
 
 export const metadata = {
@@ -63,6 +64,7 @@ export default function Home() {
       <DevfestHero />
       <CallForSpeakers />
       <SwagsAndTickets />
+      <HowItGoesDown />
     </>
   );
 }

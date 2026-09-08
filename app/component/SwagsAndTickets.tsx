@@ -37,7 +37,7 @@ const cardsData: SwagTicketCardProps[] = [
       'Reserve your guaranteed spot at the biggest developer experience in Ibadan.',
     perks: ticketPerks,
     buttonText: 'Get Tickets',
-    buttonHref: '/tickets',
+    buttonHref: '/tickets/buy',
     colorScheme: 'red',
     delay: 0.15,
   },
