@@ -1,10 +1,5 @@
 'use client';
-import { useState } from 'react';
-import { agendaClass as Styles } from './agenda';
-import { agendaData } from './AgendaData';
-import AgendaTabs from './AgendaTabs';
-import AgendaTable from './AgendaTable';
-import { Calendar } from '../_module/components/icons';
+import ComingSoon from '../_module/components/common/ComingSoon';
 
 function Day1VirtualEvent() {
   return (
@@ -22,35 +17,41 @@ function Day1VirtualEvent() {
 }
 
 export default function Agenda() {
-  const [activeDay, setActiveDay] = useState('day1');
+  // const [activeDay, setActiveDay] = useState('day1');
 
   return (
-    <div className={Styles.container}>
-      <main className={Styles.main}>
-        <header className={Styles.header}>
-          <h2 className={Styles.headerHeading}>The Promised Agenda</h2>
-          <section className={Styles.dateContainer}>
-            <Calendar className="md:w-[98px] md:h-[98px] w-[53px] h-[53px]" />
-            <p className={Styles.date}>
-              November 28th & 29th, 2025, from 9:00 AM to 5:00 PM
-            </p>
-          </section>
-          <p className={Styles.headerText}>
-            Mark your calendar for a day filled with{' '}
-            <span className={Styles.inspirationText}>inspiration,</span>{' '}
-            <span className={Styles.innovationText}>innovation,</span>{' '}
-            <span className={Styles.connectionText}>and connection.</span>
-          </p>
-        </header>
-
-        <AgendaTabs activeDay={activeDay} setActiveDay={setActiveDay} />
-
-        {activeDay === 'day1' ? (
-          <Day1VirtualEvent />
-        ) : (
-          <AgendaTable data={agendaData} />
-        )}
-      </main>
+    <div className="bg-white min-h-[100vh]">
+      <ComingSoon page="Agenda" fullArt />
     </div>
   );
+
+  // return (
+  //   <div className={Styles.container}>
+  //     <main className={Styles.main}>
+  //       <header className={Styles.header}>
+  //         <h2 className={Styles.headerHeading}>The Promised Agenda</h2>
+  //         <section className={Styles.dateContainer}>
+  //           <Calendar className="md:w-[98px] md:h-[98px] w-[53px] h-[53px]" />
+  //           <p className={Styles.date}>
+  //             November 28th & 29th, 2025, from 9:00 AM to 5:00 PM
+  //           </p>
+  //         </section>
+  //         <p className={Styles.headerText}>
+  //           Mark your calendar for a day filled with{' '}
+  //           <span className={Styles.inspirationText}>inspiration,</span>{' '}
+  //           <span className={Styles.innovationText}>innovation,</span>{' '}
+  //           <span className={Styles.connectionText}>and connection.</span>
+  //         </p>
+  //       </header>
+
+  //       <AgendaTabs activeDay={activeDay} setActiveDay={setActiveDay} />
+
+  //       {activeDay === 'day1' ? (
+  //         <Day1VirtualEvent />
+  //       ) : (
+  //         <AgendaTable data={agendaData} />
+  //       )}
+  //     </main>
+  //   </div>
+  // );
 }
