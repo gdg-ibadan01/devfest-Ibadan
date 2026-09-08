@@ -5,7 +5,6 @@ export const menuItems = [
   { label: 'Merch', slur: 'https://selar.co/m/gdg-ibadan1' },
   // { label: 'Team', slur: 'team' },
   // { label: 'RSVP', slur: '/rsvp' },
-  { label: 'CFV', slur: 'https://bit.ly/4yAESFa' },
   { label: 'CFP', slur: 'https://tinyurl.com/devfestib2026' },
 ];
 

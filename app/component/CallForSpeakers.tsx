@@ -21,7 +21,7 @@ const submissionSteps = [
     dotColor: '#EA4335', // Red
   },
   {
-    title: 'Event Day — 26 Nov 2026',
+    title: 'Event Day — 21st Nov 2026',
     description: 'Take the stage at DevFest Ibadan',
     dotColor: '#4285F4', // Blue
   },
@@ -29,9 +29,9 @@ const submissionSteps = [
 
 const statsData = [
   {
-    stat: '1 DAY',
+    stat: '2-DAY',
     color: '#34A853', // Green
-    label: '26 NOVEMBER 2026',
+    label: '21 NOVEMBER 2026',
     description:
       'One power-packed day of expert talks, code labs, and pure technical vibes.',
   },
@@ -43,7 +43,7 @@ const statsData = [
       'Deep-dive tracks tailored specifically to the domains defining modern global tech.',
   },
   {
-    stat: '20+ SPEAKERS',
+    stat: '30+ SPEAKERS',
     color: '#FBBC04', // Yellow
     label: 'INDUSTRY LEADERS',
     description:
@@ -54,7 +54,7 @@ const statsData = [
     color: '#4285F4', // Blue
     label: 'COMMUNITY LEGACY',
     description:
-      'Celebrating 10+ years of empowering and connecting South-West devs.',
+      'Celebrating10+ years of empowering and connecting South-West devs.',
   },
 ];
 
