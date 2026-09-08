@@ -81,7 +81,7 @@ export class CreateDiscountDto {
 
   @ApiProperty({
     type: [String],
-    example: ['devfest2026-early-bird', 'devfest2026-early-vip'],
+    example: ['devfest2026-gdsc-discount', 'devfest2026-student-discount'],
     description: 'Array of ticket slugs this discount applies to',
   })
   @IsArray()

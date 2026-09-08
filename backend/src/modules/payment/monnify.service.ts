@@ -133,7 +133,7 @@ export class MonnifyService implements PaymentProvider {
     } catch (err) {
       if (err instanceof ServiceError) throw err;
       this.logger.error(
-        `Monnify initialize failed for ${params.paymentReference}: ${(err as Error).message}`,
+        `Monnify initialize payment failed for ${params.paymentReference}: ${(err as Error).message}`,
       );
       throw new ServiceError(
         'Payment gateway is unreachable',

@@ -81,6 +81,11 @@ export class CreateOrderDto {
 
   /** Internal — set by AttendeeService to bypass the sale-window date check for admin-created orders. */
   skipSaleWindowCheck?: boolean;
+
+  @IsOptional()
+  @IsString()
+  @ApiProperty()
+  discountCode?: string;
 }
 
 export class AdminCreateOrderDto extends CreateOrderDto {

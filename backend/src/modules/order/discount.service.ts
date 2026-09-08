@@ -43,7 +43,7 @@ export class DiscountsService {
           limit: payload.limit ?? null,
           validFrom,
           forFirstTimersOnly: payload.forFirstTimersOnly ?? false,
-          recipientEmails,
+          recipientEmails: payload.type === 'BULK' ? recipientEmails : [],
           unusedCount: payload.limit ?? 0,
         },
       })
