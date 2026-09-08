@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 
-const TARGET_DATE = new Date('2026-11-26T08:00:00+01:00').getTime();
+const TARGET_DATE = new Date('2026-11-20T08:00:00+01:00').getTime();
 
 interface TimeLeft {
   days: number;

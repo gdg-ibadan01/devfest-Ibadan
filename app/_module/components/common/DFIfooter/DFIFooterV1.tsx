@@ -71,7 +71,7 @@ export const DFIFooterV1: FC = () => {
               </div>
               <div className={styles.middle}>
                 <p className={styles.location}>
-                  Devfest is taking place on November 28th and 29th, 2025, 8AM
+                  Devfest is taking place on November 20th and 21st, 2026, 8AM
                   Prompt at Jogor Center, No. 1 Harvester Drive, Liberty Road,
                   New GRA, Ibadan
                 </p>
@@ -151,6 +151,9 @@ export const DFIFooterV1: FC = () => {
                   </div>
                   <p className={styles.pSm}>
                     @Devfest{new Date().getFullYear()}. All Right Reserved
+                  </p>
+                  <p className={`${styles.pSm} opacity-60 text-xs`}>
+                    DevFest Ibadan 2026, POWERED BY ABIT TECHNOLOGY HUB
                   </p>
                 </div>
                 <Link href="https://dev2024-game.vercel.app/" target="_blank">

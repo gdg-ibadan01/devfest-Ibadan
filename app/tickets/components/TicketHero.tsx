@@ -20,7 +20,7 @@ const TicketHero = () => {
           className="hidden md:block h-[222px] w-auto mx-auto"
         />
 
-        <div className="flex gap-3 md:gap-5 text-sm'">
+        <div className="relative flex gap-3 md:gap-5 text-sm z-10">
           <Link
             href="/tickets/buy"
             className="bg-black py-[17px] px-[23px] md:py-[33px] md:px-[101px] text-white hover:bg-core-blue hover:text-white rounded-[100px] flex"
@@ -43,7 +43,7 @@ const TicketHero = () => {
         height={10000}
         className="block md:hidden w-full h-auto mt-[48px]"
       />
-      <IconsArt className="absolute bottom-0" showFull={false} />
+      <IconsArt className="absolute bottom-0 z-0" showFull={false} />
     </section>
   );
 };

@@ -7,14 +7,13 @@ import { ReactNode, useEffect, useState } from 'react';
 // import { DevfestLogo } from '../../icons';
 // import Cancel from '../../icons/Cancel';
 // import Hamburger from '../../icons/Hamburger';
-import Hamburger from '../../icons/Hamburger.svg';
-import DevfestLogo from '../../icons/DevfestLogo.svg';
 import Cancel from '../../icons/Cancel.svg';
+import DevfestLogo from '../../icons/DevfestLogo.svg';
+import Hamburger from '../../icons/Hamburger.svg';
 import MenuLink from '../../menulink';
 
-import { Button } from '../../ui/button';
-import { headerClass as styles } from './DFIheader.classes';
 import Image from 'next/image';
+import { headerClass as styles } from './DFIheader.classes';
 
 const DFIHeader = (): ReactNode => {
   const [showMenu, setShowMenu] = useState(false);
@@ -58,8 +57,17 @@ const DFIHeader = (): ReactNode => {
                   <MenuLink key={slur} label={label} slur={slur} />
                 </div>
               ))}
-              <Link href="https://dev2024-game.vercel.app/" target="_blank">
+              {/* <Link href="https://dev2024-game.vercel.app/" target="_blank">
                 <Button className={styles.btn}>Play Puzzle Game</Button>
+              </Link> */}
+              <Link
+                href="/tickets"
+                className="group relative inline-flex p-[2px] rounded-[100px] overflow-hidden transition-all duration-300 hover:scale-105 active:scale-95 shadow-md hover:shadow-lg"
+              >
+                <span className="absolute inset-0 bg-gradient-to-r from-[#34A853] via-[#FBBC04] to-[#4285F4] rounded-[100px] transition-opacity group-hover:opacity-90" />
+                <span className="relative px-[20px] lg:px-10 py-3 sm:py-3.5 rounded-[100px] bg-[#18181b] group-hover:bg-[#232326] text-white text-sm sm:text-base font-semibold tracking-wide transition-colors flex items-center justify-center">
+                  Get Ticket
+                </span>
               </Link>
             </ul>
           </nav>
@@ -72,8 +80,17 @@ const DFIHeader = (): ReactNode => {
                   <MenuLink key={slur} label={label} slur={slur} />
                 </div>
               ))}
-              <Link href="https://dev2024-game.vercel.app/" target="_blank">
+              {/* <Link href="https://dev2024-game.vercel.app/" target="_blank">
                 <Button className={styles.btn}>Play Puzzle Game</Button>
+              </Link> */}
+              <Link
+                href="/tickets"
+                className="group relative inline-flex p-[2px] rounded-[100px] overflow-hidden transition-all duration-300 hover:scale-105 active:scale-95 shadow-md hover:shadow-lg"
+              >
+                <span className="absolute inset-0 bg-gradient-to-r from-[#34A853] via-[#FBBC04] to-[#4285F4] rounded-[100px] transition-opacity group-hover:opacity-90" />
+                <span className="relative px-[20px] lg:px-10 py-3 sm:py-3.5 rounded-[100px] bg-[#18181b] group-hover:bg-[#232326] text-white text-sm sm:text-base font-semibold tracking-wide transition-colors flex items-center justify-center">
+                  Get Ticket
+                </span>
               </Link>
             </ul>
           </nav>
