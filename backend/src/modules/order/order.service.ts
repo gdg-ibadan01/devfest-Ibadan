@@ -487,11 +487,11 @@ export class OrdersService {
       throw new ServiceError('Invalid discount code', 'InvalidDiscountCodeErr');
     }
 
-    if (discount.validFrom > new Date()) {
-      throw new ServiceError(
-        'Discount code not valid yet',
-        'InvalidDiscountCodeErr',
-      );
+    if (
+      discount.validFrom > args.currentDate ||
+      (discount.validTo && discount.validTo < args.currentDate)
+    ) {
+      throw new ServiceError('Invalid discount code', 'InvalidDiscountCodeErr');
     }
 
     if (
