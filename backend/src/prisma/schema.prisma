@@ -182,8 +182,9 @@ model Discount {
   type               DiscountType
   amount             Decimal
   ticketSlugs        String[]     @map("ticket_slugs")
-  limit              Int?
-  validFrom          DateTime     @map("valid_from")
+limit              Int           @default(0)
+  validFrom          DateTime      @map("valid_from")
+  validTo            DateTime?     @map("valid_to")
   forFirstTimersOnly Boolean      @default(false) @map("for_first_timers_only")
   recipientEmails    String[]     @default([]) @map("recipient_emails")
   createdAt          DateTime     @default(now()) @map("created_at")
