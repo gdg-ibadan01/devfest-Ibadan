@@ -21,12 +21,12 @@ const columnOneLinks: FooterLink[] = [
 const columnTwoLinks: FooterLink[] = [
   {
     label: 'Apply to Speak',
-    href: 'https://sessionize.com/devfest-ibadan-2025/',
+    href: 'https://tinyurl.com/devfestib2026',
     isExternal: true,
   },
   {
     label: 'Apply to be a volunteer',
-    href: 'https://gdg.community.dev/events/details/google-gdg-ibadan-presents-devfest-ibadan-2026/',
+    href: 'https://bit.ly/4yAESFa',
     isExternal: true,
   },
   {
@@ -75,8 +75,8 @@ export const DFIFooterV2: FC = () => {
       !item.isExternal &&
       Boolean(
         pathname &&
-          (pathname === item.href ||
-            (item.href !== '/' && pathname.startsWith(item.href)))
+        (pathname === item.href ||
+          (item.href !== '/' && pathname.startsWith(item.href)))
       );
 
     const content = (
@@ -189,6 +189,9 @@ export const DFIFooterV2: FC = () => {
           <div>
             <p className="font-mono text-xs sm:text-sm text-[#71717A]">
               © {new Date().getFullYear()} Google Developer Group Ibadan.
+            </p>
+            <p className="font-mono text-[10px] sm:text-xs text-[#4A4A57] mt-1">
+              DevFest Ibadan 2026, POWERED BY ABIT TECHNOLOGY HUB
             </p>
           </div>
         </div>

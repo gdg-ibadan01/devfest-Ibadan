@@ -1,9 +1,16 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
-import { OrderStatus, Prisma, RefundStatus, type Order } from '@prisma/client';
-import { randomUUID } from 'node:crypto';
+import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+  Discount,
+  DiscountType,
+  OrderStatus,
+  Prisma,
+  RefundStatus,
+  type Order,
+} from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ServiceError } from 'src/common/errors/service-error';
 import { PrismaErrors } from 'src/common/enums/prisma-errors.enum';
+import { randomString } from 'src/common/transformers/strings';
 import {
   InitializePaymentParams,
   PAYMENT_PROVIDER,
@@ -14,15 +21,17 @@ import {
   CreateOrderDto,
   CreateOrderResponseDto,
   OrdersQueryDto,
-} from './create-order.dto';
+} from './dto/order.dto';
 import { PDFService } from '../pdf/pdf.service';
 import { UploadService } from '../upload/upload.service';
 import crypto from 'node:crypto';
 import AppConfig from 'src/config/app.config';
 import { ConfigType } from '@nestjs/config';
+import { MailService } from '../mail/mail.service';
 
 const ORDER_TTL_MINUTES = 30;
 const TX_MAX_ATTEMPTS = 3;
+const CANCEL_MAX_ATTEMPTS = 3;
 
 type TxClient = Prisma.TransactionClient;
 
@@ -30,6 +39,7 @@ interface CreatedOrderRecord {
   order: Order;
   ticketName: string;
   ticketSlug: string;
+  createdById?: string | null;
 }
 
 interface CreateRefundRecord {
@@ -65,7 +75,6 @@ interface OrderQueryRawResult {
   attendee_phone_number: null | string;
   gifter_name: null | string;
   gifter_email: null | string;
-  discount: number;
   amount: number;
   currency: string;
   status: string;
@@ -82,12 +91,23 @@ interface TicketQueryRawResult {
   id: string;
   capacity: number;
   price: Prisma.Decimal;
-  discount: Prisma.Decimal;
   sale_starts_at: Date;
   sale_ends_at: Date;
   validity_dates: Date[];
   name: string;
   slug: string;
+}
+
+interface CreateOrderRecordArgs {
+  slug: string;
+  attendeeFullName: string;
+  attendeeEmail: string;
+  attendeePhoneNumber: string | null;
+  gifterName: string | null;
+  gifterEmail: string | null;
+  createdById?: string | null;
+  skipSaleWindowCheck?: boolean;
+  discountCode?: string;
 }
 
 @Injectable()
@@ -101,12 +121,17 @@ export class OrdersService {
     PaymentErr: 'PaymentErr',
     TicketNotFoundErr: 'TicketNotFoundErr',
     OrderNotFoundErr: 'OrderNotFoundErr',
+    MaxedOutDiscountCodeErr: 'MaxedOutDiscountCodeErr',
+    BulkDiscountRecipientMismatchErr: 'BulkDiscountRecipientMismatchErr',
+    TicketDiscountCodeMismatchErr: 'TicketDiscountCodeMismatchErr',
+    InvalidDiscountCodeErr: 'InvalidDiscountCodeErr',
   } as const;
 
   private readonly logger = new Logger(OrdersService.name);
 
   constructor(
     private readonly prisma: PrismaService,
+    private readonly mailService: MailService,
     @Inject(PAYMENT_PROVIDER) private readonly paymentProvider: PaymentProvider,
     private readonly pdfService: PDFService,
     private readonly uploadService: UploadService,
@@ -114,9 +139,18 @@ export class OrdersService {
     private appConfig: ConfigType<typeof AppConfig>,
   ) {}
 
-  async create(payload: CreateOrderDto): Promise<CreateOrderResponseDto> {
+  async create(
+    payload: CreateOrderDto,
+    options?: {
+      createdById?: string | null;
+      skipSaleWindowCheck?: boolean;
+    },
+  ): Promise<CreateOrderResponseDto> {
     const attendeeEmail = payload.attendee.email.trim().toLowerCase();
     const gifterEmail = payload.gifter?.email.trim().toLowerCase();
+    const createdById = options?.createdById ?? payload.createdById ?? null;
+    const skipSaleWindowCheck =
+      options?.skipSaleWindowCheck ?? payload.skipSaleWindowCheck ?? false;
 
     let record!: CreatedOrderRecord;
     for (let attempt = 1; attempt <= TX_MAX_ATTEMPTS; attempt++) {
@@ -130,6 +164,9 @@ export class OrdersService {
               attendeePhoneNumber: payload.attendee.phoneNumber?.trim() || null,
               gifterName: payload.gifter?.fullName.trim() ?? null,
               gifterEmail: gifterEmail ?? null,
+              createdById: createdById ?? null,
+              skipSaleWindowCheck,
+              discountCode: payload.discountCode,
             }),
           { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
         );
@@ -140,19 +177,75 @@ export class OrdersService {
           (err as { code?: string }).code ===
             PrismaErrors.UNIQUE_CONSTRAINT_VIOLATION;
         if (isRetryable && attempt < TX_MAX_ATTEMPTS) continue;
+        if (err instanceof ServiceError || err instanceof NotFoundException) {
+          throw err;
+        }
         this.logger.error(err);
         throw new ServiceError(
-          (err as Error).message,
-          (err as Error).name as `${string}Err`,
+          'Unable to create order. Retry in a few minutes',
+          OrdersService.ERRORS.RetryLaterErr,
         );
       }
     }
-
-    return this.initializeCheckout(record, {
+    if (createdById) {
+      this.prisma.auditLog
+        .create({
+          data: {
+            adminId: createdById,
+            action: 'CREATE_ATTENDEE',
+            metadata: {
+              orderId: record.order.id,
+              reference: record.order.reference,
+              attendeeFullName: record.order.attendeeFullName,
+              attendeeEmail: record.order.attendeeEmail,
+              attendeePhoneNumber: record.order.attendeePhoneNumber,
+              gifterName: record.order.gifterName,
+              gifterEmail: record.order.gifterEmail,
+              ticketSlug: record.ticketSlug,
+              ticketName: record.ticketName,
+              amount: record.order.amount.toFixed(2),
+            },
+          },
+        })
+        .catch((err: Error) =>
+          this.logger.error(
+            `Failed to write audit log for order ${record.order.id}: ${err.message}`,
+          ),
+        );
+    }
+    const payer = {
       fullName:
         payload.gifter?.fullName.trim() ?? payload.attendee.fullName.trim(),
       email: gifterEmail ?? attendeeEmail,
-    });
+    };
+    const response = await this.initializeCheckout(record, payer);
+
+    if (createdById && response.checkoutUrl) {
+      this.logger.log(
+        `Sending payment link email to ${payer.email} for order ${response.id}`,
+      );
+      await this.mailService
+        .sendPaymentLinkEmail(
+          payer.email,
+          payer.fullName,
+          response.checkoutUrl,
+          Number(response.amount),
+        )
+        .then(() => {
+          this.logger.log(
+            `Payment link email successfully sent to ${payer.email}`,
+          );
+        })
+        .catch((err) => {
+          this.logger.error(
+            `Failed to send payment link email for order ${response.id} to ${payer.email}: ${
+              err instanceof Error ? err.message : err
+            }`,
+          );
+        });
+    }
+
+    return response;
   }
 
   async findByReference(reference: string) {
@@ -263,14 +356,7 @@ export class OrdersService {
 
   private async createOrderRecord(
     tx: TxClient,
-    args: {
-      slug: string;
-      attendeeFullName: string;
-      attendeeEmail: string;
-      attendeePhoneNumber: string | null;
-      gifterName: string | null;
-      gifterEmail: string | null;
-    },
+    args: CreateOrderRecordArgs,
   ): Promise<CreatedOrderRecord> {
     const [ticket] = await tx.$queryRaw<TicketQueryRawResult[]>`
     SELECT *
@@ -286,7 +372,10 @@ export class OrdersService {
     }
 
     const now = new Date();
-    if (now < ticket.sale_starts_at || now > ticket.sale_ends_at) {
+    if (
+      !args.skipSaleWindowCheck &&
+      (now < ticket.sale_starts_at || now > ticket.sale_ends_at)
+    ) {
       throw new ServiceError(
         'This ticket is not on sale',
         OrdersService.ERRORS.NotOnSaleErr,
@@ -314,7 +403,14 @@ export class OrdersService {
       );
     }
 
-    const amount = ticket.price.minus(ticket.discount);
+    const discount = await this.validateDiscountCode(tx, {
+      attendeeEmail: args.attendeeEmail,
+      ticketSlug: ticket.slug,
+      code: args.discountCode,
+      currentDate: now,
+    });
+
+    const amount = ticket.price.minus(discount?.amount ?? 0);
     if (amount.lte(0)) {
       throw new ServiceError(
         'Ticket price configuration is invalid',
@@ -341,7 +437,7 @@ export class OrdersService {
     });
     if (paidCount + awaitingCount >= ticket.capacity) {
       throw new ServiceError(
-        'All remaining tickets are currently reserved. Please retry in 10 minutes',
+        'All remaining tickets are currently reserved. Please retry in a few minutes',
         OrdersService.ERRORS.RetryLaterErr,
       );
     }
@@ -355,23 +451,101 @@ export class OrdersService {
         attendeePhoneNumber: args.attendeePhoneNumber,
         gifterName: args.gifterName,
         gifterEmail: args.gifterEmail,
-        discount: ticket.discount.toFixed(2),
+        createdById: args.createdById,
         amount: amount.toFixed(2),
         currency: 'NGN',
         status: OrderStatus.AWAITING_PAYMENT,
         paymentProvider: this.paymentProvider.name,
         expiresAt: new Date(now.getTime() + ORDER_TTL_MINUTES * 60_000),
+        discountId: discount ? discount.id : null,
       },
     });
 
-    return { order, ticketName: ticket.name, ticketSlug: ticket.slug };
+    return {
+      order,
+      ticketName: ticket.name,
+      ticketSlug: ticket.slug,
+      createdById: args.createdById ?? null,
+    };
+  }
+
+  private async validateDiscountCode(
+    tx: TxClient,
+    args: {
+      code?: string;
+      ticketSlug: string;
+      attendeeEmail: string;
+      currentDate: Date;
+    },
+  ): Promise<Discount | null> {
+    if (!args.code) return null;
+
+    const discount = await tx.discount.findFirst({
+      where: { code: args.code },
+    });
+    if (!discount) {
+      throw new ServiceError('Invalid discount code', 'InvalidDiscountCodeErr');
+    }
+
+    if (discount.validFrom > new Date()) {
+      throw new ServiceError(
+        'Discount code not valid yet',
+        'InvalidDiscountCodeErr',
+      );
+    }
+
+    if (
+      discount.type === DiscountType.BULK &&
+      !discount.ticketSlugs.includes(args.ticketSlug)
+    ) {
+      throw new ServiceError(
+        'Invalid ticket discount code',
+        'TicketDiscountCodeMismatchErr',
+      );
+    }
+
+    if (
+      discount.type === DiscountType.BULK &&
+      !discount.recipientEmails.includes(args.attendeeEmail)
+    ) {
+      throw new ServiceError(
+        'Not permitted to use this discount code',
+        'BulkDiscountRecipientMismatchErr',
+      );
+    }
+
+    const paidCount = await tx.order.count({
+      where: { discountId: discount.id, status: OrderStatus.PAID },
+    });
+    if (discount.limit && discount.limit < paidCount) {
+      throw new ServiceError(
+        'Discount code has reached its maximum usage',
+        'MaxedOutDiscountCodeErr',
+      );
+    }
+
+    const awaitingCount = await tx.order.count({
+      where: {
+        discountId: discount.id,
+        status: OrderStatus.AWAITING_PAYMENT,
+        expiresAt: { gt: args.currentDate },
+      },
+    });
+    if (discount.limit && paidCount + awaitingCount >= discount.limit) {
+      throw new ServiceError(
+        'All remaining discounted seats are currently reserved. Please retry in a few minutes',
+        'MaxedOutDiscountCodeErr',
+      );
+    }
+
+    return discount;
   }
 
   private async initializeCheckout(
     record: CreatedOrderRecord,
     payer: { fullName: string; email: string },
   ): Promise<CreateOrderResponseDto> {
-    const { order, ticketName, ticketSlug } = record;
+    const { order, ticketName, ticketSlug, createdById } = record;
     const params: InitializePaymentParams = {
       amount: Number(order.amount),
       customerName: payer.fullName,
@@ -398,6 +572,7 @@ export class OrdersService {
         updated,
         { name: ticketName, slug: ticketSlug },
         initialized.vatAndCharges,
+        createdById,
       );
     } catch (err) {
       this.logger.error(
@@ -416,38 +591,44 @@ export class OrdersService {
     order: Order,
     ticket: { name: string; slug: string },
     vatAndCharges: number,
+    createdById?: string | null,
   ): CreateOrderResponseDto {
     return {
       id: order.id,
       reference: order.reference,
       status: order.status,
       amount: order.amount.toFixed(2),
-      discount: order.discount.toFixed(2),
       vatAndCharges: vatAndCharges.toFixed(2),
       currency: order.currency,
       checkoutUrl: order.checkoutUrl,
       expiresAt: order.expiresAt,
       ticket,
+      createdById: createdById ?? null,
     };
   }
 
   private generateReference(name: string): string {
-    return `${name.replace(/\s+/g, '')}-${randomUUID().replace(/-/g, '').slice(0, 6).toUpperCase()}`;
+    return `${name.replace(/\s+/g, '')}-${randomString(6)}`;
   }
 
-  private async cancel(orderId: string) {
+  private async cancel(orderId: string, attempt = 1): Promise<void> {
     try {
       await this.prisma.order.update({
         where: { id: orderId },
         data: { status: OrderStatus.CANCELLED },
       });
-      this.logger.error(`Cancelled order ${orderId}`);
+      this.logger.error(`Cancelled order ${orderId} after failed payment init`);
     } catch (error) {
-      this.logger.error(
-        `Failed to cancel order ${orderId}: ${(error as Error).message}...Retrying cancellation`,
+      if (attempt >= CANCEL_MAX_ATTEMPTS) {
+        this.logger.error(
+          `Giving up cancelling order ${orderId} after ${attempt} attempts: ${(error as Error).message}. Needs manual cleanup.`,
+        );
+        return;
+      }
+      this.logger.warn(
+        `Retrying cancellation for order ${orderId} (attempt ${attempt + 1}/${CANCEL_MAX_ATTEMPTS})`,
       );
-      this.logger.error(`Retrying cancellation for order ${orderId}`);
-      await this.cancel(orderId);
+      await this.cancel(orderId, attempt + 1);
     }
   }
 
@@ -743,7 +924,7 @@ Initiating refund for order ${order.id}`,
   }
 
   private generateRefundReference(): string {
-    return `REFUND-${randomUUID().replace(/-/g, '').slice(0, 10).toUpperCase()}`;
+    return `REFUND-${randomString(10)}`;
   }
 
   generateSignedDownloadUrl(reference: string): string {
@@ -757,5 +938,29 @@ Initiating refund for order ${order.id}`,
     );
 
     return `${this.appConfig.url}/api/v1/tickets/download?token=${token}`;
+  }
+
+  async count(where: Prisma.OrderWhereInput): Promise<number> {
+    return this.prisma.order.count({ where });
+  }
+
+  async sumAmount(where: Prisma.OrderWhereInput): Promise<number> {
+    const result = await this.prisma.order.aggregate({
+      _sum: { amount: true },
+      where,
+    });
+    return Number(result._sum.amount ?? 0);
+  }
+
+  async findMany(args: Prisma.OrderFindManyArgs) {
+    return this.prisma.order.findMany(args);
+  }
+
+  async groupByTicket() {
+    return this.prisma.order.groupBy({
+      by: ['ticketId'],
+      where: { status: OrderStatus.PAID },
+      _count: { _all: true },
+    });
   }
 }

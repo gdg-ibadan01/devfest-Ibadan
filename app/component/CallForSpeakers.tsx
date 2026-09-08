@@ -121,7 +121,7 @@ const CallForSpeakers: FC = () => {
 
             <div className="mt-[10px]] sm:mt-[32px]">
               <Link
-                href="https://sessionize.com/devfest-ibadan-2025/"
+                href="https://tinyurl.com/devfestib2026"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group relative inline-flex p-[2px] rounded-[100px] overflow-hidden transition-all duration-300 hover:scale-105 active:scale-95 shadow-md hover:shadow-lg"

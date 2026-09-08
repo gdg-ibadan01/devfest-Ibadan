@@ -51,9 +51,12 @@ export class RolesController {
     status: HttpStatus.CREATED,
     type: CreateRoleResponseDto,
   })
-  async create(@Body() payload: CreateRoleDto) {
+  async create(
+    @Body() payload: CreateRoleDto,
+    @CurrentUser() user: IJwtPayload,
+  ) {
     try {
-      return await this.roleService.create(payload);
+      return await this.roleService.create(payload, user.sub);
     } catch (error) {
       switch ((error as Error).name) {
         case RolesService.ERRORS.DuplicateRoleErr:

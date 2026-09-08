@@ -5,7 +5,7 @@ export default function Ticket() {
   return (
     <>
       <TicketHero />
-      <AgendaView />
+      {/* <AgendaView /> */}
     </>
   );
 }
