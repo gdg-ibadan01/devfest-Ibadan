@@ -1,9 +1,9 @@
 import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { OrderStatus, Prisma, RefundStatus, type Order } from '@prisma/client';
-import { randomUUID } from 'node:crypto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ServiceError } from 'src/common/errors/service-error';
 import { PrismaErrors } from 'src/common/enums/prisma-errors.enum';
+import { randomString } from 'src/common/transformers/strings';
 import {
   InitializePaymentParams,
   PAYMENT_PROVIDER,
@@ -524,7 +524,7 @@ export class OrdersService {
   }
 
   private generateReference(name: string): string {
-    return `${name.replace(/\s+/g, '')}-${randomUUID().replace(/-/g, '').slice(0, 6).toUpperCase()}`;
+    return `${name.replace(/\s+/g, '')}-${randomString(6)}`;
   }
 
   private async cancel(orderId: string, attempt = 1): Promise<void> {
@@ -840,7 +840,7 @@ Initiating refund for order ${order.id}`,
   }
 
   private generateRefundReference(): string {
-    return `REFUND-${randomUUID().replace(/-/g, '').slice(0, 10).toUpperCase()}`;
+    return `REFUND-${randomString(10)}`;
   }
 
   generateSignedDownloadUrl(reference: string): string {
