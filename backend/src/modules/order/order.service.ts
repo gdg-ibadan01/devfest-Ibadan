@@ -437,7 +437,7 @@ export class OrdersService {
     });
     if (paidCount + awaitingCount >= ticket.capacity) {
       throw new ServiceError(
-        'All remaining tickets are currently reserved. Please retry in a few',
+        'All remaining tickets are currently reserved. Please retry in a few minutes',
         OrdersService.ERRORS.RetryLaterErr,
       );
     }
