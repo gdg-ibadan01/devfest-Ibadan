@@ -120,13 +120,6 @@ export class CreateOrderResponseDto {
 
   @ApiProperty({
     type: String,
-    description: 'Discount applied in Naira (2 decimal places)',
-    example: '500.00',
-  })
-  discount: string;
-
-  @ApiProperty({
-    type: String,
     description: '7.5% VAT plus payment gateway service charge',
     example: '500.00',
   })
