@@ -96,7 +96,7 @@ const HowItGoesDown: FC = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: 0.1 }}
-              className="mt-3 sm:mt-4 text-sm sm:text-base text-[#4B5563] leading-relaxed font-normal"
+              className="mt-3 sm:mt-4 text-sm sm:text-base text-[#4B5563] leading-relaxed font-normal mb-10"
             >
               DevFest Ibadan 2026 is more than one day. Here is how the experience
               unfolds across the PreDevFest Series, Virtual Event, and Physical
