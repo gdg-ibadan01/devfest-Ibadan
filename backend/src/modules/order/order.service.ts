@@ -457,6 +457,7 @@ export class OrdersService {
         status: OrderStatus.AWAITING_PAYMENT,
         paymentProvider: this.paymentProvider.name,
         expiresAt: new Date(now.getTime() + ORDER_TTL_MINUTES * 60_000),
+        discountId: discount ? discount.id : null,
       },
     });
 
