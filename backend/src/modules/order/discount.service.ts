@@ -44,7 +44,6 @@ export class DiscountsService {
           validFrom,
           forFirstTimersOnly: payload.forFirstTimersOnly ?? false,
           recipientEmails: payload.type === 'BULK' ? recipientEmails : [],
-          unusedCount: payload.limit ?? 0,
         },
       })
       .then((result) => ({ ...result, amount: result.amount.toFixed(2) }));
