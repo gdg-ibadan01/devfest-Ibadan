@@ -16,7 +16,7 @@ import {
 import { JwtAuthGuard } from '../admin/guards/jwt-auth.guard';
 import { PermissionsGuard } from '../admin/guards/permissions.guard';
 import { RequirePermission } from 'src/common/decorators/permissions.decorator';
-import { CreateDiscountDto } from './create-discount.dto';
+import { CreateDiscountDto, CreateDiscountResponseDto } from './discount.dto';
 import { DiscountsService } from './discount.service';
 
 @ApiTags('Discount')
@@ -33,6 +33,7 @@ export class DiscountsController {
   @ApiResponse({
     status: HttpStatus.CREATED,
     description: 'Discount created successfully',
+    type: CreateDiscountResponseDto,
   })
   @ApiResponse({
     status: HttpStatus.BAD_REQUEST,

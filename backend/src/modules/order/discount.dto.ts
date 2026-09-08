@@ -15,6 +15,45 @@ import {
   Min,
 } from 'class-validator';
 
+export class CreateDiscountResponseDto {
+  @ApiProperty()
+  id: string;
+
+  @ApiProperty()
+  name: string;
+
+  @ApiProperty()
+  code: string;
+
+  @ApiProperty({ enum: DiscountType })
+  type: DiscountType;
+
+  @ApiProperty({
+    type: String,
+    description: 'Discount amount (2 decimal places)',
+    example: '1000.00',
+  })
+  amount: string;
+
+  @ApiProperty({ type: [String] })
+  ticketSlugs: string[];
+
+  @ApiProperty({ type: Number, nullable: true })
+  limit: number | null;
+
+  @ApiProperty({ type: Date, format: 'date-time' })
+  validFrom: Date;
+
+  @ApiProperty()
+  forFirstTimersOnly: boolean;
+
+  @ApiProperty({ type: [String] })
+  recipientEmails: string[];
+
+  @ApiProperty({ type: Date, format: 'date-time' })
+  createdAt: Date;
+}
+
 export class CreateDiscountDto {
   @ApiProperty({ example: 'DevFest2026 Early Bird' })
   @IsString()
