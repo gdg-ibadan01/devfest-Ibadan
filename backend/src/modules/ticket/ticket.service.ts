@@ -10,7 +10,7 @@ import {
 import { CreateTicketDto } from './dto/ticket.dto';
 import { IJwtPayload } from '../admin/interfaces/admin.interface';
 import { PrismaErrors } from 'src/common/enums/prisma-errors.enum';
-import { randomUUID } from 'node:crypto';
+import { randomString } from 'src/common/transformers/strings';
 import { ServiceError } from 'src/common/errors/service-error';
 import { ConfigType } from '@nestjs/config';
 import AppConfig from 'src/config/app.config';
@@ -163,7 +163,7 @@ export class TicketsService {
         return await this.createTicket(
           creatorId,
           payload,
-          slug + randomUUID().slice(0, 6),
+          slug + randomString(6),
         );
       }
 

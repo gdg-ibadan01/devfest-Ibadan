@@ -11,7 +11,7 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
-  Length,
+  MinLength,
   Min,
 } from 'class-validator';
 
@@ -19,7 +19,7 @@ export class CreateDiscountDto {
   @ApiProperty({ example: 'DevFest2026 Early Bird' })
   @IsString()
   @IsNotEmpty()
-  @Length(3, 255)
+  @MinLength(3)
   @Transform(({ value }: { value: unknown }) =>
     typeof value === 'string' ? value.trim() : value,
   )
@@ -30,15 +30,17 @@ export class CreateDiscountDto {
   type!: DiscountType;
 
   @ApiProperty({
+    minimum: 1,
     example: 1000.0,
     description: 'Discount amount with 2 decimal places',
   })
   @IsNotEmpty()
+  @Min(1)
   amount!: number;
 
   @ApiProperty({
     type: [String],
-    example: ['early-bird', 'vip'],
+    example: ['devfest2026-early-bird', 'devfest2026-early-vip'],
     description: 'Array of ticket slugs this discount applies to',
   })
   @IsArray()
@@ -47,6 +49,7 @@ export class CreateDiscountDto {
   ticketSlugs!: string[];
 
   @ApiPropertyOptional({
+    minimum: 1,
     example: 100,
     description:
       'Maximum number of times this discount can be used. Required for BULK discounts. Set to null for unlimited.',
@@ -54,7 +57,7 @@ export class CreateDiscountDto {
   @IsOptional()
   @IsInt()
   @Min(1)
-  capacity?: number | null;
+  limit?: number | null;
 
   @ApiProperty({
     example: '2026-01-01',
@@ -66,12 +69,13 @@ export class CreateDiscountDto {
   @ApiPropertyOptional({ example: false, default: false })
   @IsOptional()
   @IsBoolean()
-  forFirstTimersOnly?: boolean;
+  forFirstTimersOnly?: boolean = false;
 
   @ApiPropertyOptional({
     type: [String],
     example: ['user1@example.com', 'user2@example.com'],
-    description: 'Required for BULK discounts. Cannot exceed capacity.',
+    description:
+      'Required for BULK discounts. Array length cannot exceed capacity.',
   })
   @IsOptional()
   @IsArray()
@@ -81,7 +85,7 @@ export class CreateDiscountDto {
   validateForType(): void {
     const isBulk = this.type === 'BULK';
 
-    if (isBulk && !this.capacity) {
+    if (isBulk && !this.limit) {
       throw new BadRequestException('Capacity required for BULK discounts');
     }
 
@@ -94,7 +98,7 @@ export class CreateDiscountDto {
     if (
       isBulk &&
       this.recipientEmails &&
-      this.recipientEmails.length > this.capacity!
+      this.recipientEmails.length > this.limit!
     ) {
       throw new BadRequestException('Recipient emails cannot exceed capacity');
     }

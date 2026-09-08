@@ -1,26 +1,37 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { randomString } from 'src/common/transformers/strings';
 import { CreateDiscountDto } from './create-discount.dto';
 
 @Injectable()
 export class DiscountsService {
-  static ERRORS = {
-    ValidationErr: 'ValidationErr',
-  } as const;
-
-  private readonly logger = new Logger(DiscountsService.name);
-
   constructor(private readonly prisma: PrismaService) {}
 
-  create(payload: CreateDiscountDto) {
+  async create(payload: CreateDiscountDto) {
     payload.validateForType();
 
-    // TODO: Implement discount creation logic
-    this.logger.log('Creating discount', {
-      name: payload.name,
-      type: payload.type,
-    });
+    const code = `${payload.name.slice(0, 3).toUpperCase()}-${randomString(6)}`;
 
-    return { message: 'Discount creation not yet implemented' };
+    const recipientEmails = (payload.recipientEmails ?? []).map((email) =>
+      email.toLowerCase(),
+    );
+
+    const validFrom = new Date(payload.validFrom);
+    validFrom.setUTCHours(0, 0, 0, 0);
+
+    return this.prisma.discount.create({
+      data: {
+        name: payload.name,
+        code,
+        type: payload.type,
+        amount: payload.amount,
+        ticketSlugs: payload.ticketSlugs,
+        limit: payload.limit ?? null,
+        validFrom,
+        forFirstTimersOnly: payload.forFirstTimersOnly ?? false,
+        recipientEmails,
+        unusedCount: payload.limit ?? 0,
+      },
+    });
   }
 }
