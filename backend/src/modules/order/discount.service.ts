@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
+import { OrderStatus } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { randomString } from 'src/common/transformers/strings';
-import { CreateDiscountDto } from './dto/discount.dto';
+import { CreateDiscountDto, DiscountListQueryDto } from './dto/discount.dto';
 
 @Injectable()
 export class DiscountsService {
@@ -39,7 +40,7 @@ export class DiscountsService {
           code,
           type: payload.type,
           amount: payload.amount,
-          ticketSlugs: payload.ticketSlugs,
+          ticketSlugs: [...new Set(payload.ticketSlugs)],
           limit: payload.limit ?? null,
           validFrom,
           forFirstTimersOnly: payload.forFirstTimersOnly ?? false,
@@ -47,5 +48,78 @@ export class DiscountsService {
         },
       })
       .then((result) => ({ ...result, amount: result.amount.toFixed(2) }));
+  }
+
+  async list(query: DiscountListQueryDto) {
+    const { cursor, direction = 'next', limit = 20, name } = query;
+
+    const where: { name?: { contains: string; mode: 'insensitive' } } = {};
+    if (name) {
+      where.name = { contains: name, mode: 'insensitive' };
+    }
+
+    const orderBy =
+      direction === 'next' ? { id: 'asc' as const } : { id: 'desc' as const };
+
+    const results = await this.prisma.discount.findMany({
+      where,
+      take: limit + 1,
+      ...(cursor && { cursor: { id: cursor }, skip: 1 }),
+      orderBy,
+      select: {
+        id: true,
+        type: true,
+        amount: true,
+        validFrom: true,
+        name: true,
+        limit: true,
+        createdAt: true,
+        ticketSlugs: true,
+        _count: {
+          select: {
+            orders: { where: { status: OrderStatus.PAID } },
+          },
+        },
+      },
+    });
+
+    const hasMore = results.length > limit;
+    if (hasMore) results.pop();
+
+    const slugs = results.flatMap((d) => d.ticketSlugs);
+    const tickets = await this.prisma.ticket.findMany({
+      where: { slug: { in: [...new Set(slugs)] } },
+      select: { id: true, name: true, slug: true },
+    });
+    const ticketBySlug = new Map(tickets.map((t) => [t.slug, t]));
+
+    const now = new Date();
+    const data = results.map((d) => ({
+      id: d.id,
+      type: d.type,
+      amount: d.amount.toFixed(2),
+      usage: d._count.orders,
+      validFrom: d.validFrom.toISOString().slice(0, 10),
+      name: d.name,
+      limit: d.limit,
+      status: d.validFrom > now ? 'SCHEDULED' : 'ACTIVE',
+      createdAt: d.createdAt,
+      tickets: d.ticketSlugs
+        .map((slug) => ticketBySlug.get(slug))
+        .filter((t): t is { id: string; name: string; slug: string } =>
+          Boolean(t),
+        )
+        .map(({ id, name }) => ({ id, name })),
+    }));
+
+    return {
+      data,
+      meta: {
+        nextCursor: hasMore ? (data[data.length - 1]?.id ?? null) : null,
+        prevCursor: cursor ?? null,
+        limit,
+        hasMore,
+      },
+    };
   }
 }

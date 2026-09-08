@@ -1,10 +1,12 @@
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
   HttpException,
   HttpStatus,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -19,6 +21,8 @@ import { RequirePermission } from 'src/common/decorators/permissions.decorator';
 import {
   CreateDiscountDto,
   CreateDiscountResponseDto,
+  DiscountListQueryDto,
+  DiscountListResponseDto,
 } from './dto/discount.dto';
 import { DiscountsService } from './discount.service';
 
@@ -26,6 +30,32 @@ import { DiscountsService } from './discount.service';
 @Controller('discounts')
 export class DiscountsController {
   constructor(private readonly discountsService: DiscountsService) {}
+
+  @Get()
+  @ApiBearerAuth()
+  @RequirePermission('discounts.list')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @ApiOperation({
+    summary: 'List discounts',
+    description:
+      'Cursor-paginated list of discounts. Optionally filter by name.',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Discounts retrieved successfully',
+    type: DiscountListResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.UNAUTHORIZED,
+    description: 'Not authenticated',
+  })
+  @ApiResponse({
+    status: HttpStatus.FORBIDDEN,
+    description: 'Requires permission',
+  })
+  findAll(@Query() query: DiscountListQueryDto) {
+    return this.discountsService.list(query);
+  }
 
   @Post()
   @ApiBearerAuth()
