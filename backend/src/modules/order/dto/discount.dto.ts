@@ -18,6 +18,18 @@ import {
   Max,
 } from 'class-validator';
 
+export class DiscountByCodeResponseDto {
+  @ApiProperty({
+    type: String,
+    example: '1000.00',
+    description: 'The discount amount',
+  })
+  amount: string;
+
+  @ApiProperty({ description: 'Whether the discount is currently active' })
+  isActive: boolean;
+}
+
 export class CreateDiscountResponseDto {
   @ApiProperty()
   id: string;
@@ -251,8 +263,8 @@ export class DiscountListItemDto {
   })
   validTo: string | null;
 
-  @ApiProperty({ enum: ['SCHEDULED', 'ACTIVE'] })
-  status: 'SCHEDULED' | 'ACTIVE';
+  @ApiProperty({ enum: ['SCHEDULED', 'ACTIVE', 'EXPIRED'] })
+  status: 'SCHEDULED' | 'ACTIVE' | 'EXPIRED';
 
   @ApiProperty({ type: Date, format: 'date-time' })
   createdAt: Date;

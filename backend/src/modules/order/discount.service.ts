@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { OrderStatus } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { randomString } from 'src/common/transformers/strings';
@@ -51,6 +51,21 @@ export class DiscountsService {
         },
       })
       .then((result) => ({ ...result, amount: result.amount.toFixed(2) }));
+  }
+
+  async findByCode(code: string) {
+    const discount = await this.prisma.discount.findUnique({
+      where: { code },
+      select: { amount: true, validFrom: true, validTo: true },
+    });
+    if (!discount) throw new NotFoundException('Discount not found');
+    const now = new Date();
+    return {
+      amount: discount.amount.toFixed(2),
+      isActive:
+        discount.validFrom <= now &&
+        (!discount.validTo || discount.validTo >= now),
+    };
   }
 
   async list(query: DiscountListQueryDto) {
@@ -109,7 +124,12 @@ export class DiscountsService {
       validTo: d.validTo?.toISOString().slice(0, 10) ?? null,
       name: d.name,
       limit: d.limit,
-      status: d.validFrom > now ? 'SCHEDULED' : 'ACTIVE',
+      status:
+        d.validFrom > now
+          ? 'SCHEDULED'
+          : d.validTo && d.validTo < now
+            ? 'EXPIRED'
+            : 'ACTIVE',
       createdAt: d.createdAt,
       tickets: d.ticketSlugs
         .map((slug) => ticketBySlug.get(slug))
