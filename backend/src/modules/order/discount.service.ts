@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { randomString } from 'src/common/transformers/strings';
-import { CreateDiscountDto } from './discount.dto';
+import { CreateDiscountDto } from './dto/discount.dto';
 
 @Injectable()
 export class DiscountsService {

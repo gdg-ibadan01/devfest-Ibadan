@@ -28,7 +28,7 @@ import {
   GetOrderReferenceResponseDto,
   OrderListResponseDto,
   OrdersQueryDto,
-} from './create-order.dto';
+} from './dto/order.dto';
 import { PermissionsGuard } from '../admin/guards/permissions.guard';
 import { RequirePermission } from 'src/common/decorators/permissions.decorator';
 import { ServiceError } from '../../common/errors/service-error';

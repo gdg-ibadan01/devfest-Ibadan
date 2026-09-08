@@ -75,13 +75,6 @@ export class TicketListItemDto {
   })
   price: string;
 
-  @ApiProperty({
-    type: String,
-    description: 'Discount in Naira (formatted to 2 decimal places)',
-    example: '500.00',
-  })
-  discount: string;
-
   @ApiProperty({ type: Date, format: 'date-time' })
   saleStartsAt: Date;
 
@@ -159,13 +152,6 @@ export class OnSaleTicketItemDto {
     example: '10000.00',
   })
   price: string;
-
-  @ApiProperty({
-    type: String,
-    description: 'Discount in Naira (formatted to 2 decimal places)',
-    example: '500.00',
-  })
-  discount: string;
 }
 
 export class OnSaleTicketResponseDto {
@@ -210,15 +196,6 @@ export class CreateTicketDto {
   @Min(1)
   price!: number;
 
-  @ApiPropertyOptional({
-    description: 'Ticket discount in Naira',
-    default: 0,
-  })
-  @IsNumber({ maxDecimalPlaces: 2 })
-  @Min(0)
-  @IsOptional()
-  discount: number = 0;
-
   @ApiProperty({
     example: ['2026-08-17', '2026-08-18'],
     description:
@@ -258,10 +235,6 @@ export class CreateTicketDto {
   @IsDateString()
   saleEndsAt: string;
 
-  private priceGreaterThanDiscount(): boolean {
-    return this.price > this.discount;
-  }
-
   private validityDatesMatchEventDates(): boolean {
     return this.validityDates.every((vd) => this.eventDates.includes(vd));
   }
@@ -272,13 +245,6 @@ export class CreateTicketDto {
 
   /** @throws ValidationErr */
   ensureValidInputs() {
-    if (!this.priceGreaterThanDiscount()) {
-      throw new ServiceError(
-        'discount cannot be greater than price',
-        'ValidationErr',
-      );
-    }
-
     if (!this.validityDatesMatchEventDates()) {
       throw new ServiceError(
         'eventDates and validityDates mismatch',
@@ -308,13 +274,6 @@ export class GetTicketBySlugResponseDto {
     example: '10000.00',
   })
   price: string;
-
-  @ApiProperty({
-    type: String,
-    description: 'Discount in Naira (formatted to 2 decimal places)',
-    example: '500.00',
-  })
-  discount: string;
 
   @ApiProperty({ type: [Date], format: 'date-time' })
   eventDates: Date[];
@@ -356,13 +315,6 @@ export class GetTicketResponseDto {
     example: '10000.00',
   })
   price: string;
-
-  @ApiProperty({
-    type: String,
-    description: 'Discount in Naira (formatted to 2 decimal places)',
-    example: '500.00',
-  })
-  discount: string;
 
   @ApiProperty({ type: [String], format: 'date-time' })
   validityDates: Date[];
@@ -407,13 +359,6 @@ export class CreateTicketResponseDto {
     example: '10000.00',
   })
   price: string;
-
-  @ApiProperty({
-    type: String,
-    description: 'Discount in Naira (formatted to 2 decimal places)',
-    example: '500.00',
-  })
-  discount: string;
 
   @ApiProperty({
     format: 'date-time',

@@ -13,6 +13,7 @@ import {
   IsString,
   MinLength,
   Min,
+  IsNumber,
 } from 'class-validator';
 
 export class CreateDiscountResponseDto {
@@ -75,6 +76,7 @@ export class CreateDiscountDto {
   })
   @IsNotEmpty()
   @Min(1)
+  @IsNumber({ maxDecimalPlaces: 2 })
   amount!: number;
 
   @ApiProperty({

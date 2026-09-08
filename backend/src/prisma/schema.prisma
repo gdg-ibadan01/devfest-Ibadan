@@ -74,7 +74,6 @@ model Ticket {
   slug          String     @unique
   eventDates    DateTime[] @map("event_dates")
   price         Decimal
-  discount      Decimal    @default(0)
   validityDates DateTime[] @map("validity_dates")
   capacity      Int
   saleStartsAt  DateTime   @map("sale_starts_at")

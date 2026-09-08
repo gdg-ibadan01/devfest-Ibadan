@@ -65,7 +65,6 @@ export class TicketsService {
           name: payload.name,
           description: payload.description,
           price: Number(payload.price.toFixed(2)),
-          discount: Number(payload.discount.toFixed(2)),
           capacity: payload.capacity,
           eventDates: payload.eventDates
             .map((dateStr) => new Date(dateStr))
@@ -90,7 +89,6 @@ export class TicketsService {
         description: updatedTicket.description,
         slug: updatedTicket.slug,
         price: updatedTicket.price.toFixed(2),
-        discount: updatedTicket.discount.toFixed(2),
         capacity: updatedTicket.capacity,
         eventDates: updatedTicket.eventDates,
         validityDates: updatedTicket.validityDates,
@@ -121,7 +119,6 @@ export class TicketsService {
           slug,
           creatorId,
           price: Number(payload.price.toFixed(2)),
-          discount: Number(payload.discount.toFixed(2)),
           capacity: payload.capacity,
           eventDates: payload.eventDates
             .map((dateStr) => new Date(dateStr))
@@ -146,7 +143,6 @@ export class TicketsService {
         description: ticket.description,
         slug: ticket.slug,
         price: ticket.price.toFixed(2),
-        discount: ticket.discount.toFixed(2),
         capacity: ticket.capacity,
         eventDates: ticket.eventDates,
         validityDates: ticket.validityDates,
@@ -221,7 +217,6 @@ export class TicketsService {
         slug: true,
         eventDates: true,
         price: true,
-        discount: true,
         saleStartsAt: true,
         saleEndsAt: true,
         capacity: true,
@@ -238,7 +233,6 @@ export class TicketsService {
     const mapped = results.map((t) => ({
       ...t,
       price: t.price.toFixed(2),
-      discount: t.discount.toFixed(2),
     }));
 
     if (isForward) {
@@ -285,7 +279,6 @@ export class TicketsService {
         validityDates: true,
         eventDates: true,
         price: true,
-        discount: true,
       },
     });
 
@@ -293,7 +286,6 @@ export class TicketsService {
       data: tickets.map((t) => ({
         ...t,
         price: t.price.toFixed(2),
-        discount: t.discount.toFixed(2),
       })),
     };
   }
@@ -319,7 +311,6 @@ export class TicketsService {
       slug: ticket.slug,
       eventDates: ticket.eventDates,
       price: ticket.price.toFixed(2),
-      discount: ticket.discount.toFixed(2),
       validityDates: ticket.validityDates,
       capacity: ticket.capacity,
       saleStartsAt: ticket.saleStartsAt,
@@ -340,7 +331,6 @@ export class TicketsService {
         name: true,
         description: true,
         price: true,
-        discount: true,
         eventDates: true,
         validityDates: true,
         slug: true,
@@ -355,7 +345,6 @@ export class TicketsService {
       name: ticket.name,
       description: ticket.description,
       price: ticket.price.toFixed(2),
-      discount: ticket.discount.toFixed(2),
       eventDates: ticket.eventDates,
       validityDates: ticket.validityDates,
       slug: ticket.slug,

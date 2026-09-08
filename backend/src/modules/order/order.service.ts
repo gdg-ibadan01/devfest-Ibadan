@@ -14,7 +14,7 @@ import {
   CreateOrderDto,
   CreateOrderResponseDto,
   OrdersQueryDto,
-} from './create-order.dto';
+} from './dto/order.dto';
 import { PDFService } from '../pdf/pdf.service';
 import { UploadService } from '../upload/upload.service';
 import crypto from 'node:crypto';
@@ -68,7 +68,6 @@ interface OrderQueryRawResult {
   attendee_phone_number: null | string;
   gifter_name: null | string;
   gifter_email: null | string;
-  discount: number;
   amount: number;
   currency: string;
   status: string;
@@ -85,7 +84,6 @@ interface TicketQueryRawResult {
   id: string;
   capacity: number;
   price: Prisma.Decimal;
-  discount: Prisma.Decimal;
   sale_starts_at: Date;
   sale_ends_at: Date;
   validity_dates: Date[];
@@ -397,7 +395,7 @@ export class OrdersService {
       );
     }
 
-    const amount = ticket.price.minus(ticket.discount);
+    const amount = ticket.price;
     if (amount.lte(0)) {
       throw new ServiceError(
         'Ticket price configuration is invalid',
