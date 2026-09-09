@@ -4,4 +4,7 @@ export * from './roles.service';
 export * from './tickets.service';
 export * from './attendees.service';
 export * from './order.service';
+export * from './dashboard.service';
+export * from './discounts.service';
 export * from './audit-log.service';
+export * from './discount.service';

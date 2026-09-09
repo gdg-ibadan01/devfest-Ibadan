@@ -21,14 +21,12 @@ const INITIAL_FORM: TicketFormData = {
   },
   pricing: {
     price: '',
-    discount: '',
     earlyBird: false,
   },
   advancedSettings: {
     validity: 'friday',
     fridayValidityDate: '',
     saturdayValidityDate: '',
-    quantityLimit: '',
     capacity: '',
     startDate: '',
     endDate: '',
@@ -53,7 +51,7 @@ export default function CreateTicketPage() {
         description: basicInfo.description.trim(),
         eventDates: buildEventDates(basicInfo),
         price: parseFloat(pricing.price),
-        discount: pricing.discount ? parseFloat(pricing.discount) : 0,
+        // discount removed — no longer part of the ticket creation API.
         validityDates: buildValidityDates(advancedSettings),
         //maximumSaleUnits was removed from schema — only capacity is sent
         capacity: parseInt(advancedSettings.capacity, 10) || 0,

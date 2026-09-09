@@ -5,7 +5,12 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { AnimatePresence, motion } from 'framer-motion';
 import useMediaQueryWatcher from '@/app/_module/config/hooks/useMediaQueryWatcher';
-import { useCreateOrder, useTicketsOnSale } from '@/app/_module/services';
+import {
+  useCreateOrder,
+  useTicketsOnSale,
+  useApplyDiscount,
+} from '@/app/_module/services';
+import { showToast } from '@/app/_module/lib/notify';
 import type { CreateOrderResponseDto } from '@/app/_module/api/types';
 import {
   TicketPackage,
@@ -28,32 +33,104 @@ export default function BuyTicket() {
   } = useTicketsOnSale();
 
   const packages: TicketPackage[] = (onSaleData?.data || []).map((ticket) => {
-    const rawPrice = parseFloat(ticket.price) || 0;
-    const rawDiscount = parseFloat(ticket.discount || '0') || 0;
-    const finalPrice = Math.max(0, rawPrice - rawDiscount);
+    const price = Number.parseFloat(ticket.price) || 0;
     return {
       id: ticket.slug,
       title: ticket.name,
       badge: ticket.description || 'Access Pass',
-      price: finalPrice,
-      formattedPrice: `₦ ${finalPrice.toLocaleString('en-NG', {
+      price,
+      formattedPrice: `₦ ${price.toLocaleString('en-NG', {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
       })}`,
     };
   });
 
+  // ── View state ────────────────────────────────────────────────────────────
   const [view, setView] = useState<'form' | 'summary' | 'success'>('form');
+
+  // ── Buyer fields ──────────────────────────────────────────────────────────
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
+
+  // ── Gift mode ─────────────────────────────────────────────────────────────
+  const [isGift, setIsGift] = useState(false);
+  const [receiverName, setReceiverName] = useState('');
+  const [receiverEmail, setReceiverEmail] = useState('');
+  const [receiverPhone, setReceiverPhone] = useState('');
+
+  // ── Package selection ─────────────────────────────────────────────────────
   const [selectedPackageId, setSelectedPackageId] = useState('');
+
+  // ── Order response ────────────────────────────────────────────────────────
   const [orderData, setOrderData] = useState<CreateOrderResponseDto | null>(
     null
   );
 
-  const { mutate: createOrder, isPending } = useCreateOrder();
+  // ── Discount ──────────────────────────────────────────────────────────────
+  const [discountCode, setDiscountCode] = useState('');
+  const [appliedDiscount, setAppliedDiscount] = useState<{
+    code: string;
+    amount: number;
+  } | null>(null);
+  const [discountError, setDiscountError] = useState('');
 
-  // Sync selected package ID when tickets load
+  // ── Mutations ─────────────────────────────────────────────────────────────
+  const { mutate: createOrder, isPending } = useCreateOrder();
+  const { mutate: applyDiscount, isPending: isApplyingDiscount } =
+    useApplyDiscount();
+
+  // ── Discount handlers ─────────────────────────────────────────────────────
+  const handleApplyDiscount = (codeToApply: string) => {
+    const cleanCode = codeToApply.trim();
+    if (!cleanCode) return;
+
+    setDiscountError('');
+    applyDiscount(cleanCode, {
+      onSuccess: (data) => {
+        if (!data.isActive) {
+          const msg = 'This discount code is no longer active';
+          setDiscountError(msg);
+          showToast.error(msg);
+          setAppliedDiscount(null);
+          return;
+        }
+
+        const amountNum = Number.parseFloat(data.amount) || 0;
+        setAppliedDiscount({
+          code: cleanCode.toUpperCase(),
+          amount: amountNum,
+        });
+        setDiscountError('');
+        showToast.success('Discount applied successfully');
+      },
+      onError: (err: Error) => {
+        const msg = err.message || 'Discount not found';
+        setDiscountError(msg);
+        showToast.error(msg);
+        setAppliedDiscount(null);
+      },
+    });
+  };
+
+  const handleRemoveDiscount = () => {
+    setAppliedDiscount(null);
+    setDiscountCode('');
+    setDiscountError('');
+    showToast.info('Discount removed');
+  };
+
+  // ── When gift mode is toggled off, clear recipient fields ─────────────────
+  const handleSetIsGift = (val: boolean) => {
+    setIsGift(val);
+    if (!val) {
+      setReceiverName('');
+      setReceiverEmail('');
+      setReceiverPhone('');
+    }
+  };
+
+  // ── Auto-select first package when tickets load ───────────────────────────
   useEffect(() => {
     if (packages.length > 0) {
       if (
@@ -68,31 +145,46 @@ export default function BuyTicket() {
   const selectedPackage =
     packages.find((p) => p.id === selectedPackageId) || packages[0];
 
+  // ── Form handlers ─────────────────────────────────────────────────────────
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setView('summary');
   };
 
   const handlePay = () => {
-    createOrder(
-      {
-        slug: selectedPackage.id,
-        attendee: {
-          fullName: fullName.trim(),
-          email: email.trim(),
-        },
+    const orderPayload = isGift
+      ? {
+          slug: selectedPackage.id,
+          attendee: {
+            fullName: receiverName.trim(),
+            email: receiverEmail.trim(),
+            phoneNumber: receiverPhone.trim() || undefined,
+          },
+          gifter: {
+            fullName: fullName.trim(),
+            email: email.trim(),
+          },
+          discountCode: appliedDiscount?.code || '',
+        }
+      : {
+          slug: selectedPackage.id,
+          attendee: {
+            fullName: fullName.trim(),
+            email: email.trim(),
+          },
+          discountCode: appliedDiscount?.code || '',
+        };
+
+    createOrder(orderPayload, {
+      onSuccess: (data) => {
+        setOrderData(data);
+        if (data.checkoutUrl) {
+          window.location.href = data.checkoutUrl;
+        } else {
+          setView('success');
+        }
       },
-      {
-        onSuccess: (data) => {
-          setOrderData(data);
-          if (data.checkoutUrl) {
-            window.location.href = data.checkoutUrl;
-          } else {
-            setView('success');
-          }
-        },
-      }
-    );
+    });
   };
 
   const handleBack = () => {
@@ -104,16 +196,23 @@ export default function BuyTicket() {
   };
 
   const handleDownload = () => {
+    const finalPrice = Math.max(
+      0,
+      selectedPackage.price - (appliedDiscount?.amount ?? 0)
+    );
+    const displayName = isGift ? receiverName : fullName;
+    const displayEmail = isGift ? receiverEmail : email;
     const params = new URLSearchParams({
       ticketId: orderData?.reference || '25A346B',
       package: selectedPackage.title,
-      amount: selectedPackage.price.toString(),
-      name: fullName,
-      email: email,
+      amount: finalPrice.toString(),
+      name: displayName,
+      email: displayEmail,
     });
     router.push(`/tickets/preview?${params.toString()}`);
   };
 
+  // ── Render ─────────────────────────────────────────────────────────────────
   const renderContent = () => {
     if (isLoadingTickets) {
       return <TicketFormSkeleton title="Buy Ticket" />;
@@ -144,11 +243,27 @@ export default function BuyTicket() {
               setFullName={setFullName}
               email={email}
               setEmail={setEmail}
+              isGift={isGift}
+              setIsGift={handleSetIsGift}
+              receiverName={receiverName}
+              setReceiverName={setReceiverName}
+              receiverEmail={receiverEmail}
+              setReceiverEmail={setReceiverEmail}
+              receiverPhone={receiverPhone}
+              setReceiverPhone={setReceiverPhone}
               selectedPackageId={selectedPackageId}
               setSelectedPackageId={setSelectedPackageId}
               packages={packages}
               onSubmit={handleFormSubmit}
               onBack={handleBack}
+              discountCode={discountCode}
+              setDiscountCode={setDiscountCode}
+              appliedDiscount={appliedDiscount}
+              onApplyDiscount={handleApplyDiscount}
+              onRemoveDiscount={handleRemoveDiscount}
+              isApplyingDiscount={isApplyingDiscount}
+              discountError={discountError}
+              setDiscountError={setDiscountError}
             />
           </motion.div>
         )}
@@ -165,7 +280,12 @@ export default function BuyTicket() {
             <TicketSummary
               fullName={fullName}
               email={email}
+              isGift={isGift}
+              receiverName={receiverName}
+              receiverEmail={receiverEmail}
+              receiverPhone={receiverPhone}
               selectedPackage={selectedPackage}
+              appliedDiscount={appliedDiscount}
               onBack={handleBack}
               onPay={handlePay}
               isLoading={isPending}
@@ -203,7 +323,7 @@ export default function BuyTicket() {
     >
       {renderContent()}
 
-      {/* Decorative footer art matching the bg background layer */}
+      {/* Decorative footer art */}
       <Image
         src="/ticket_footer_art.svg"
         alt=""

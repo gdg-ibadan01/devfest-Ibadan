@@ -16,60 +16,66 @@ import Attendees from '../../icons/Attendees';
 import AuditLog from '../../icons/AuditLog';
 import Logout from '../../icons/Logout';
 import { useSidenav } from '@/app/_module/context/SidenavContext';
-import { useMe, useAdminLogout } from '@/app/_module/services';
-import type { PermissionId } from '@/app/_module/api/types';
+import { useMe, useAdminLogout, useRole, useRoles, usePermissions } from '@/app/_module/services';
 import AdminOrders from '../../icons/AdminOrders';
 import Checkins from '../../icons/Checkins';
-// import { hasAnyPermission } from '@/app/_module/lib/permissions';
-
-// NOTE: Permission-based nav gating is temporarily disabled (commented out below).
-// All nav items are shown regardless of the current admin's permissions.
 
 const navItems: {
   label: string;
   href: string;
   icon: typeof Home;
-  /** Permission IDs required to see this item — any one of them grants access. Omit for always-visible items. */
-  permissions?: PermissionId[];
+  /** Terms used to match the API's view permission labels for this module. */
+  moduleTerms?: string[];
 }[] = [
   { label: 'Home', href: '/admin/home', icon: Home },
   {
     label: 'Admins',
     href: '/admin/admins',
     icon: Admins,
-    // permissions: ['admins.list'],
+    moduleTerms: ['admin'],
   },
-  { label: 'Ticket', href: '/admin/ticket', icon: Ticket },
+  {
+    label: 'Ticket',
+    href: '/admin/ticket',
+    icon: Ticket,
+    moduleTerms: ['ticket'],
+  },
   {
     label: 'Orders',
     href: '/admin/orders',
     icon: AdminOrders,
-    // permissions: ['orders.list'],
+    moduleTerms: ['order'],
   },
   {
     label: 'Attendees',
     href: '/admin/attendees',
     icon: Attendees,
-    // permissions: ['orders.list'],
+    moduleTerms: ['attendee'],
   },
   {
     label: 'Checkins',
     href: '/admin/checkins',
     icon: Checkins,
-    // permissions: ['attendees.list'],
+    moduleTerms: ['checkin'],
   },
   {
     label: 'Discount & Referral',
     href: '/admin/discount-referral',
     icon: DiscountReferral,
+    moduleTerms: ['discount'],
   },
   {
     label: 'Roles & Permission',
     href: '/admin/roles-permission',
     icon: RolesAndPermissions,
-    // permissions: ['roles.list'],
+    moduleTerms: ['role', 'permission'],
   },
-  { label: 'Audit Log', href: '/admin/audit-log', icon: AuditLog },
+  {
+    label: 'Audit Log',
+    href: '/admin/audit-log',
+    icon: AuditLog,
+    moduleTerms: ['audit log', 'audit'],
+  },
 ];
 
 const isActivePath = (pathname: string, href: string) => {
@@ -87,27 +93,72 @@ function getInitials(fullName: string): string {
     .join('');
 }
 
+function normalizePermissionId(permission: unknown): string | null {
+  if (typeof permission === 'string') return permission;
+  if (permission && typeof permission === 'object' && 'id' in permission) {
+    const id = (permission as { id?: unknown }).id;
+    return typeof id === 'string' ? id : null;
+  }
+  return null;
+}
+
+function isViewPermission(label: string): boolean {
+  return /\bview\b|\blist\b/i.test(label);
+}
+
+function canViewModule(
+  terms: string[] | undefined,
+  rolePermissionIds: Set<string>,
+  allPermissions: { id: string; label: string }[]
+): boolean {
+  if (!terms) return true;
+
+  return allPermissions.some((permission) => {
+    const label = permission.label.toLowerCase();
+    return (
+      rolePermissionIds.has(permission.id) &&
+      isViewPermission(permission.label) &&
+      terms.some((term) => label.includes(term))
+    );
+  });
+}
+
 /* ------------------------------------------------------------------ */
 /* Nav content — shared between desktop sidebar and mobile drawer       */
 /* ------------------------------------------------------------------ */
 function NavContent({ onLinkClick }: { onLinkClick?: () => void }) {
   const pathname = usePathname();
-  const { data: me } = useMe();
+  const { data: me, isLoading: meLoading } = useMe();
+  const { data: rolesData, isLoading: rolesLoading } = useRoles();
+  const { data: allPermissionsData, isLoading: permissionsLoading } = usePermissions();
   const { mutate: logout, isPending: loggingOut } = useAdminLogout();
+
+  const matchedRole = rolesData?.roles.find(
+    (role) => role.name.toLowerCase() === me?.role?.name?.toLowerCase()
+  );
+  const { data: roleDetails, isLoading: roleLoading } = useRole(matchedRole?.id ?? '');
 
   const fullName = me?.fullName ?? '';
   const roleName = me?.role?.name ?? '';
   const initials = fullName ? getInitials(fullName) : '??';
-  // const permissions = (me?.role?.permissions ?? []) as PermissionId[];
-
-  // Permission-based filtering disabled: all nav items are shown regardless
-  // of the current admin's permissions.
-  // const visibleItems = navItems.filter((item) =>
-  //   !item.permissions
-  //     ? true
-  //     : !meLoading && hasAnyPermission(permissions, item.permissions)
-  // );
-  const visibleItems = navItems;
+  const assignedPermissions =
+    roleDetails?.permissions ??
+    matchedRole?.permissions ??
+    me?.role?.permissions ??
+    [];
+  const rolePermissionIds = new Set(
+    assignedPermissions
+      .map(normalizePermissionId)
+      .filter((id): id is string => Boolean(id))
+  );
+  const allPermissions = allPermissionsData?.permissions ?? [];
+  const permissionsLoadingState =
+    meLoading || rolesLoading || permissionsLoading || roleLoading;
+  const visibleItems = permissionsLoadingState
+    ? navItems.filter((item) => !item.moduleTerms)
+    : navItems.filter((item) =>
+        canViewModule(item.moduleTerms, rolePermissionIds, allPermissions)
+      );
 
   const handleLogout = () => {
     logout();

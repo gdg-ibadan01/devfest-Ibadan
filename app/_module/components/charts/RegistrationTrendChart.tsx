@@ -8,21 +8,26 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
+import type { RegistrationTrendPointDto } from '@/app/_module/api/types';
 
-const RegistrationTrendChart = () => {
-  const registrationData = [
-    { month: 'Jul', registrations: 120 },
-    { month: 'Aug', registrations: 145 },
-    { month: 'Sep', registrations: 175 },
-    { month: 'Oct', registrations: 215 },
-    { month: 'Nov', registrations: 240 },
-    { month: 'Dec', registrations: 320 },
-  ];
+interface RegistrationTrendChartProps {
+  data: RegistrationTrendPointDto[];
+}
+
+const RegistrationTrendChart = ({ data }: RegistrationTrendChartProps) => {
+  if (!data || data.length === 0) {
+    return (
+      <div className="mt-4 flex h-[230px] w-full items-center justify-center">
+        <p className="text-[13px] text-gray-400">No registration data yet.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="mt-4 h-[230px] w-full">
       <ResponsiveContainer width="100%" height="100%">
         <LineChart
-          data={registrationData}
+          data={data}
           margin={{
             top: 10,
             right: 0,
@@ -51,7 +56,7 @@ const RegistrationTrendChart = () => {
           <YAxis hide domain={['dataMin - 20', 'dataMax + 20']} />
           <Line
             type="linear"
-            dataKey="registrations"
+            dataKey="count"
             stroke="#4285F4"
             strokeWidth={4}
             strokeLinecap="round"

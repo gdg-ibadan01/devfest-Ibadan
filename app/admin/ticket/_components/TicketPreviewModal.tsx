@@ -83,13 +83,6 @@ function SkeletonSection({ rows = 2 }: { rows?: number }) {
 //Ticket details content
 
 function TicketDetails({ ticket }: { ticket: GetTicketResponseDto }) {
-  const discountNum = parseFloat(ticket.discount);
-  const priceNum = parseFloat(ticket.price);
-  const discountPct =
-    !isNaN(discountNum) && discountNum > 0 && !isNaN(priceNum) && priceNum > 0
-      ? `${Math.round((discountNum / priceNum) * 100)}%`
-      : '—';
-
   return (
     <Fragment>
       {/* Ticket Info */}
@@ -120,19 +113,7 @@ function TicketDetails({ ticket }: { ticket: GetTicketResponseDto }) {
             }
           />
           <PreviewField label="Price" value={formatAmount(ticket.price)} />
-          <PreviewField
-            label="Discount"
-            value={
-              parseFloat(ticket.discount) > 0
-                ? formatAmount(ticket.discount)
-                : '—'
-            }
-          />
-          <PreviewField label="Discount %" value={discountPct} />
-          <PreviewField
-            label="Early Bird Discount"
-            value={ticket?.discount ? 'Yes' : 'No'}
-          />
+          {/* Discount fields removed — field no longer part of the API. */}
         </div>
       </PreviewSection>
 

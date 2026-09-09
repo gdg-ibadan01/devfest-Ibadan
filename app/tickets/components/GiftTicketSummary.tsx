@@ -2,6 +2,7 @@ import React from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { formatAmount } from '@/utils/formatAmount';
 import { TicketPackage } from './TicketPackageRow';
+import type { AppliedDiscount } from '@/app/_module/services/discount.service';
 
 interface GiftTicketSummaryProps {
   senderName: string;
@@ -9,6 +10,7 @@ interface GiftTicketSummaryProps {
   receiverEmail: string;
   receiverPhone: string;
   selectedPackage: TicketPackage;
+  appliedDiscount?: AppliedDiscount | null;
   onBack: () => void;
   onPay: () => void;
   isLoading: boolean;
@@ -20,12 +22,13 @@ export default function GiftTicketSummary({
   receiverEmail,
   receiverPhone,
   selectedPackage,
+  appliedDiscount,
   onBack,
   onPay,
   isLoading,
 }: Readonly<GiftTicketSummaryProps>) {
-  const vat = 50;
-  const total = selectedPackage.price + vat;
+  const discountAmount = appliedDiscount?.amount ?? 0;
+  const total = Math.max(0, selectedPackage.price - discountAmount);
 
   return (
     <div className="w-full md:max-w-[732px] md:bg-white md:rounded-[20px] md:shadow-lg md:border border-gray-100 overflow-hidden">
@@ -84,6 +87,17 @@ export default function GiftTicketSummary({
             </span>
           </div>
 
+          {appliedDiscount && (
+            <div className="flex justify-between items-center text-emerald-600 text-[14px] md:text-[16px] select-none">
+              <span className="font-normal font-sans flex items-center gap-1.5">
+                Discount ({appliedDiscount.code})
+              </span>
+              <span className="font-bold text-emerald-600">
+                - {formatAmount(appliedDiscount.amount)}
+              </span>
+            </div>
+          )}
+
           <div className="flex justify-between items-center text-[#515151] text-[14px] md:text-[16px] select-none">
             <span className="font-normal text-gray-500 font-sans">
               Date paid for
@@ -92,14 +106,12 @@ export default function GiftTicketSummary({
               {selectedPackage.title}
             </span>
           </div>
-
-          <div className="flex justify-between items-center text-[#515151] text-[14px] md:text-[16px] select-none">
-            <span className="font-normal text-gray-500 font-sans">Charges</span>
-            <span className="font-bold text-[#1E1E1E]">
-              {formatAmount(vat)}
-            </span>
-          </div>
         </div>
+        {appliedDiscount && (
+          <div className="p-2 rounded-md border border-green-400 bg-green-50/40">
+            <p className="text-blue"></p>
+          </div>
+        )}
 
         {/* Total Amount Box */}
         <div className="flex justify-between items-center bg-[#F0F4FF] border border-[#D0E0FF] rounded-[8px] p-4 md:p-5 select-none">
@@ -122,7 +134,7 @@ export default function GiftTicketSummary({
             {isLoading ? (
               <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
             ) : (
-              'Pay Ticket'
+              'Make Payment'
             )}
           </button>
         </div>
