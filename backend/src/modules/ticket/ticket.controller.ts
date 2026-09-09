@@ -96,7 +96,8 @@ export class TicketsController {
 
   @Get()
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
+  @RequirePermission('tickets.list')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
   @ApiOperation({ summary: 'List tickets' })
   @ApiResponse({
     status: 200,

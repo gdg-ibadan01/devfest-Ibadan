@@ -1,5 +1,6 @@
 export const PERMISSIONS = [
   { id: 'tickets.create', label: 'Create tickets' },
+  { id: 'tickets.list', label: 'View tickets list' },
   { id: 'tickets.edit', label: 'Edit tickets' },
   { id: 'tickets.disable', label: 'Disable tickets' },
   { id: 'attendees.create', label: 'Add new attendee' },
@@ -23,6 +24,8 @@ export const PERMISSIONS = [
   { id: 'orders.list', label: 'View orders list' },
   { id: 'audit-logs.view-list', label: 'View audit logs list' },
   { id: 'audit-logs.view', label: 'View audit log detail' },
+  { id: 'dashboard.view', label: 'View dashboard' },
+  { id: 'check_ins.list', label: 'View check-in list' },
 ] as const;
 
 export type PERMISSION_ID = (typeof PERMISSIONS)[number]['id'];
