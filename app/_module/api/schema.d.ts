@@ -313,6 +313,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/audit-logs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List audit logs (filterable, paginated) */
+        get: operations["AuditLogController_findAll"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/audit-logs/actions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List distinct action names present in the audit log */
+        get: operations["AuditLogController_findDistinctActions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/audit-logs/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get full detail (including metadata) for a single audit log entry */
+        get: operations["AuditLogController_findOne"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/payments/initialize": {
         parameters: {
             query?: never;
@@ -389,6 +440,145 @@ export interface paths {
         };
         /** Get payment by ID */
         get: operations["PaymentsController_findOne"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/dashboard/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Home screen: stats, registration trend, ticket breakdown, recent attendees */
+        get: operations["DashboardController_overview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/dashboard/attendees": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Attendees screen: filterable paginated registrations list with live summary cards
+         * @description Returns four live summary counts (total, checkedIn, pending, cancelled)
+         *     plus a cursor-paginated table of registrations.
+         *
+         *     **status** filter accepts:
+         *     - `ALL` — all statuses (default)
+         *     - `CHECKED_IN` — paid orders with at least one check-in
+         *     - `REGISTERED` — paid orders that have not yet checked in
+         *     - `PENDING` / `AWAITING_PAYMENT` — orders awaiting payment
+         *     - `CANCELLED` — cancelled orders
+         *     - `REFUNDED` / `AWAITING_REFUND` — refunded orders
+         */
+        get: operations["DashboardController_attendees"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List orders
+         * @description Cursor-paginated list of orders. By default returns earlier-dated orders first.
+         */
+        get: operations["OrdersController_findAll"];
+        put?: never;
+        /** Create a ticket order */
+        post: operations["OrdersController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orders/reference/{reference}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get order by payment reference */
+        get: operations["OrdersController_findByReference"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orders/attendees": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Admin creates an order on behalf of an attendee */
+        post: operations["OrdersController_createForAttendee"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/discounts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List discounts
+         * @description Cursor-paginated list of discounts. Optionally filter by name.
+         */
+        get: operations["DiscountsController_findAll"];
+        put?: never;
+        /** Create a discount */
+        post: operations["DiscountsController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/discounts/code/{discountCode}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get discount amount */
+        get: operations["DiscountsController_findByCode"];
         put?: never;
         post?: never;
         delete?: never;
@@ -476,44 +666,6 @@ export interface paths {
         };
         /** Download a ticket PDF */
         get: operations["TicketsController_download"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/orders": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List orders
-         * @description Cursor-paginated list of orders. By default returns earlier-dated orders first.
-         */
-        get: operations["OrdersController_findAll"];
-        put?: never;
-        /** Create a ticket order */
-        post: operations["OrdersController_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/orders/reference/{reference}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get order by payment reference */
-        get: operations["OrdersController_findByReference"];
         put?: never;
         post?: never;
         delete?: never;
@@ -656,7 +808,7 @@ export interface components {
              *       "attendees.list"
              *     ]
              */
-            permissions: ("tickets.create" | "tickets.edit" | "tickets.disable" | "attendees.check_in" | "attendees.list" | "admins.create" | "admins.list" | "admins.invite" | "admins.update" | "admins.profile" | "admins.deactivate" | "roles.create" | "roles.edit" | "roles.assign" | "roles.list" | "roles.deactivate" | "permissions.assign" | "payment_reports.export" | "orders.list")[];
+            permissions: ("tickets.create" | "tickets.edit" | "tickets.disable" | "attendees.create" | "attendees.check_in" | "attendees.list" | "admins.create" | "admins.list" | "admins.invite" | "admins.update" | "admins.profile" | "admins.deactivate" | "roles.create" | "roles.edit" | "roles.assign" | "roles.list" | "roles.deactivate" | "permissions.assign" | "payment_reports.export" | "discounts.create" | "discounts.list" | "orders.list" | "audit-logs.view-list" | "audit-logs.view")[];
         };
         FindOneAdminResponseDto: {
             id: string;
@@ -756,14 +908,14 @@ export interface components {
             /** @description Description of the role */
             description: string;
             /** @description Permissions for this role */
-            permissions: ("tickets.create" | "tickets.edit" | "tickets.disable" | "attendees.check_in" | "attendees.list" | "admins.create" | "admins.list" | "admins.invite" | "admins.update" | "admins.profile" | "admins.deactivate" | "roles.create" | "roles.edit" | "roles.assign" | "roles.list" | "roles.deactivate" | "permissions.assign" | "payment_reports.export" | "orders.list")[];
+            permissions: ("tickets.create" | "tickets.edit" | "tickets.disable" | "attendees.create" | "attendees.check_in" | "attendees.list" | "admins.create" | "admins.list" | "admins.invite" | "admins.update" | "admins.profile" | "admins.deactivate" | "roles.create" | "roles.edit" | "roles.assign" | "roles.list" | "roles.deactivate" | "permissions.assign" | "payment_reports.export" | "discounts.create" | "discounts.list" | "orders.list" | "audit-logs.view-list" | "audit-logs.view")[];
             isActive: boolean;
         };
         PermissionDto: {
             /** @enum {string} */
-            readonly id: "tickets.create" | "tickets.edit" | "tickets.disable" | "attendees.check_in" | "attendees.list" | "admins.create" | "admins.list" | "admins.invite" | "admins.update" | "admins.profile" | "admins.deactivate" | "roles.create" | "roles.edit" | "roles.assign" | "roles.list" | "roles.deactivate" | "permissions.assign" | "payment_reports.export" | "orders.list";
+            readonly id: "tickets.create" | "tickets.edit" | "tickets.disable" | "attendees.create" | "attendees.check_in" | "attendees.list" | "admins.create" | "admins.list" | "admins.invite" | "admins.update" | "admins.profile" | "admins.deactivate" | "roles.create" | "roles.edit" | "roles.assign" | "roles.list" | "roles.deactivate" | "permissions.assign" | "payment_reports.export" | "discounts.create" | "discounts.list" | "orders.list" | "audit-logs.view-list" | "audit-logs.view";
             /** @enum {string} */
-            readonly label: "Create tickets" | "Edit tickets" | "Disable tickets" | "Check-in attendees" | "View attendee list" | "Create admin" | "View admin list" | "Invite admin" | "Update admin" | "View admin profile" | "Deactivate admin" | "Create role" | "Edit role" | "Assign role" | "View roles list" | "Deactivate role" | "Assign permissions" | "Export payment report" | "View orders list";
+            readonly label: "Create tickets" | "Edit tickets" | "Disable tickets" | "Add new attendee" | "Check-in attendees" | "View attendee list" | "Create admin" | "View admin list" | "Invite admin" | "Update admin" | "View admin profile" | "Deactivate admin" | "Create role" | "Edit role" | "Assign role" | "View roles list" | "Deactivate role" | "Assign permissions" | "Export payment report" | "Create discount" | "View discounts list" | "View orders list" | "View audit logs list" | "View audit log detail";
         };
         CreateRoleResponseDto: {
             readonly id: string;
@@ -797,7 +949,7 @@ export interface components {
             /** @description Description of the role */
             description?: string;
             /** @description Permissions for this role */
-            permissions?: ("tickets.create" | "tickets.edit" | "tickets.disable" | "attendees.check_in" | "attendees.list" | "admins.create" | "admins.list" | "admins.invite" | "admins.update" | "admins.profile" | "admins.deactivate" | "roles.create" | "roles.edit" | "roles.assign" | "roles.list" | "roles.deactivate" | "permissions.assign" | "payment_reports.export" | "orders.list")[];
+            permissions?: ("tickets.create" | "tickets.edit" | "tickets.disable" | "attendees.create" | "attendees.check_in" | "attendees.list" | "admins.create" | "admins.list" | "admins.invite" | "admins.update" | "admins.profile" | "admins.deactivate" | "roles.create" | "roles.edit" | "roles.assign" | "roles.list" | "roles.deactivate" | "permissions.assign" | "payment_reports.export" | "discounts.create" | "discounts.list" | "orders.list" | "audit-logs.view-list" | "audit-logs.view")[];
             isActive?: boolean;
         };
         RoleResponseDto: {
@@ -850,6 +1002,91 @@ export interface components {
             /** Format: date-time */
             readonly createdAt: string;
         };
+        AuditLogRoleDto: {
+            /** @example 01912f2c-5678-7000-8000-000000000001 */
+            id: string;
+            /** @example SUPERADMIN */
+            name: string;
+        };
+        AuditLogAdminDto: {
+            /** @example 01912f2c-1234-7000-8000-000000000001 */
+            id: string;
+            /** @example Mary Esivue */
+            fullName: string;
+            /** @example mary@devfestibadan.com */
+            email: string;
+            role?: components["schemas"]["AuditLogRoleDto"] | null;
+        };
+        AuditLogResponseDto: {
+            /** @example 01912f2c-abcd-7000-8000-000000000001 */
+            id: string;
+            /** @example INVITE_ADMIN */
+            action: string;
+            admin: components["schemas"]["AuditLogAdminDto"];
+            role?: components["schemas"]["AuditLogRoleDto"] | null;
+            /**
+             * Format: date-time
+             * @example 2025-03-15T10:24:28.000Z
+             */
+            createdAt: string;
+        };
+        PaginationMetaDto: {
+            /**
+             * @description Total number of records
+             * @example 50
+             */
+            total: number;
+            /**
+             * @description Current page number
+             * @example 1
+             */
+            page: number;
+            /**
+             * @description Number of records per page
+             * @example 10
+             */
+            limit: number;
+            /**
+             * @description Total number of pages
+             * @example 5
+             */
+            totalPages: number;
+            /**
+             * @description Whether there is a next page
+             * @example true
+             */
+            hasNextPage: boolean;
+            /**
+             * @description Whether there is a previous page
+             * @example false
+             */
+            hasPrevPage: boolean;
+        };
+        PaginatedAuditLogResponseDto: {
+            data: components["schemas"]["AuditLogResponseDto"][];
+            meta: components["schemas"]["PaginationMetaDto"];
+        };
+        AuditLogDetailResponseDto: {
+            /** @example 01912f2c-abcd-7000-8000-000000000001 */
+            id: string;
+            /** @example INVITE_ADMIN */
+            action: string;
+            admin: components["schemas"]["AuditLogAdminDto"];
+            role?: components["schemas"]["AuditLogRoleDto"] | null;
+            /**
+             * Format: date-time
+             * @example 2025-03-15T10:24:28.000Z
+             */
+            createdAt: string;
+            /**
+             * @example {
+             *       "invitedEmail": "newadmin@example.com"
+             *     }
+             */
+            metadata?: {
+                [key: string]: unknown;
+            } | null;
+        };
         InitiatePaymentDto: {
             /**
              * @description Unique identifier of the attendee making the payment
@@ -874,6 +1111,413 @@ export interface components {
              */
             reference: string;
         };
+        DashboardStatsDto: {
+            /** @example 1247 */
+            totalAttendees: number;
+            /** @example 892 */
+            ticketsSold: number;
+            /** @example 4250000 */
+            revenue: number;
+            /** @example 15 */
+            daysToEvent: Record<string, never> | null;
+            /**
+             * @description Distinct paid attendees who have checked in at least once, across all event days
+             * @example 640
+             */
+            totalCheckedIn: number;
+            /**
+             * @description Distinct paid attendees who checked in specifically today
+             * @example 128
+             */
+            checkedInToday: number;
+        };
+        RegistrationTrendPointDto: {
+            /** @example Jul */
+            month: string;
+            /** @example 140 */
+            count: number;
+        };
+        TicketBreakdownSliceDto: {
+            /** @example Early Bird */
+            ticketName: string;
+            /** @example 45 */
+            percentage: number;
+        };
+        RecentAttendeeDto: {
+            /** @example 01918a2b-3c4d-7e8f-9012-3456789abcde */
+            id: string;
+            /** @example #WKS-18820 */
+            reference: string;
+            /**
+             * Format: date-time
+             * @example 2026-07-25T00:00:00.000Z
+             */
+            date: string;
+            /** @example Adetunji Oluwapeyibomi */
+            fullName: string;
+            /** @example maryesivue@gmail.com */
+            email: string;
+            /** @example +234 803 123 4567 */
+            phone: Record<string, never> | null;
+            /** @example VIP */
+            ticketType: string;
+            /** @example 8000 */
+            amount: number;
+            /**
+             * @example PAID
+             * @enum {string}
+             */
+            status: "AWAITING_PAYMENT" | "PAID" | "CANCELLED" | "AWAITING_REFUND" | "REFUNDED";
+        };
+        DashboardOverviewResponseDto: {
+            stats: components["schemas"]["DashboardStatsDto"];
+            registrationTrend: components["schemas"]["RegistrationTrendPointDto"][];
+            ticketBreakdown: components["schemas"]["TicketBreakdownSliceDto"][];
+            recentAttendees: components["schemas"]["RecentAttendeeDto"][];
+        };
+        AttendeeListSummaryDto: {
+            /**
+             * @description Total registrations across all statuses
+             * @example 1247
+             */
+            total: number;
+            /**
+             * @description Attendees with at least one check-in
+             * @example 643
+             */
+            checkedIn: number;
+            /**
+             * @description Orders in AWAITING_PAYMENT status
+             * @example 412
+             */
+            pending: number;
+            /**
+             * @description Orders in CANCELLED status
+             * @example 192
+             */
+            cancelled: number;
+        };
+        AttendeeListItemDto: {
+            /** @example 01918a2b-3c4d-7e8f-9012-3456789abcde */
+            id: string;
+            /** @example #WKS-18820 */
+            reference: string;
+            /** @example Tunde Olanrewaju */
+            name: string;
+            /** @example t.olanrewaju@gmail.com */
+            email: string;
+            /** @example +234 803 123 4567 */
+            phone: Record<string, never> | null;
+            /** @example VIP */
+            ticketType: string;
+            /**
+             * Format: date-time
+             * @example 2024-12-12T00:00:00.000Z
+             */
+            regDate: string;
+            /** @example 15000 */
+            amountPaid: number;
+            /**
+             * @example PAID
+             * @enum {string}
+             */
+            status: "AWAITING_PAYMENT" | "PAID" | "CANCELLED" | "AWAITING_REFUND" | "REFUNDED";
+            /**
+             * @description Human-readable status for UI badge: Checked-in, Registered, Pending, Cancelled, etc.
+             * @example Checked-in
+             */
+            displayStatus: string;
+            /**
+             * @description True if attendee has checked in at least once
+             * @example true
+             */
+            isCheckedIn: boolean;
+            /**
+             * @example [
+             *       "2026-09-06T15:00:00.000Z"
+             *     ]
+             */
+            checkIns: string[];
+        };
+        AttendeeListPaginationMetaDto: {
+            /** @example some-uuid */
+            nextCursor: Record<string, never> | null;
+            /** @example some-uuid */
+            prevCursor: Record<string, never> | null;
+            /** @example 20 */
+            limit: number;
+            /** @example true */
+            hasMore: boolean;
+        };
+        AttendeeListResponseDto: {
+            summary: components["schemas"]["AttendeeListSummaryDto"];
+            data: components["schemas"]["AttendeeListItemDto"][];
+            meta: components["schemas"]["AttendeeListPaginationMetaDto"];
+        };
+        OrderAttendeeDto: {
+            /** @example Ada Obi */
+            fullName: string;
+            /** @example ada@example.com */
+            email: string;
+            /** @example 08012345678 */
+            phoneNumber?: string;
+        };
+        OrderGifterDto: {
+            /** @example Tunde Bello */
+            fullName: string;
+            /**
+             * @description Used as the payment customer email on the payment gateway
+             * @example tunde@example.com
+             */
+            email: string;
+        };
+        CreateOrderDto: {
+            /**
+             * @description Slug of the ticket to purchase
+             * @example google-devfest-2026
+             */
+            slug: string;
+            attendee: components["schemas"]["OrderAttendeeDto"];
+            /** @description Presence indicates the ticket is a gift */
+            gifter?: components["schemas"]["OrderGifterDto"];
+            discountCode: string;
+        };
+        OrderedTicketDto: {
+            name: string;
+            slug: string;
+        };
+        CreateOrderResponseDto: {
+            id: string;
+            reference: string;
+            /** @enum {string} */
+            status: "AWAITING_PAYMENT";
+            /**
+             * @description Total amount payable in Naira (2 decimal places)
+             * @example 9500.00
+             */
+            amount: string;
+            /**
+             * @description 7.5% VAT plus payment gateway service charge
+             * @example 500.00
+             */
+            vatAndCharges: string;
+            currency: string;
+            /** @description Payment checkout URL to redirect the payer to */
+            checkoutUrl: string | null;
+            /** Format: date-time */
+            expiresAt: string;
+            ticket: components["schemas"]["OrderedTicketDto"];
+            /** @description Admin ID who created this order on behalf of the attendee */
+            createdById?: string | null;
+        };
+        OrderListItemDto: {
+            id: string;
+            /** Format: date-time */
+            paidAt: string | null;
+            /**
+             * @description Amount paid in Naira (2 decimal places)
+             * @example 9500.00
+             */
+            amount: string;
+            /** @enum {string} */
+            status: "AWAITING_PAYMENT" | "PAID" | "CANCELLED" | "AWAITING_REFUND" | "REFUNDED";
+            attendeeFullName: string;
+            attendeeEmail: string;
+            checkIns: string[];
+            ticket: {
+                id?: string;
+                /** @example Google DevFest 2026 */
+                name?: string;
+                /** @example ABC123 */
+                code?: string;
+                /** @example Fri + Sat */
+                validity?: string;
+            };
+        };
+        OrdersPaginationMetaDto: {
+            /** @description Cursor to fetch the next page */
+            nextCursor: string | null;
+            /** @description Cursor to fetch the previous page */
+            prevCursor: string | null;
+            /** @description Number of results per page */
+            limit: number;
+            /** @description Whether more items exist in the direction of travel */
+            hasMore: boolean;
+        };
+        OrderListResponseDto: {
+            data: components["schemas"]["OrderListItemDto"][];
+            meta: components["schemas"]["OrdersPaginationMetaDto"];
+        };
+        GetOrderReferenceResponseDto: {
+            ticket: {
+                /** @example Google DevFest 2026 */
+                name?: string;
+                /** @example https://example.com/download/ticket.pdf */
+                url?: string;
+                /**
+                 * @example [
+                 *       "2026-09-20T00:00:00.000Z",
+                 *       "2026-09-21T00:00:00.000Z"
+                 *     ]
+                 */
+                validityDates?: string[];
+            };
+            /**
+             * @description Amount paid in Naira (2 decimal places)
+             * @example 9500.00
+             */
+            amount: string;
+            /** @enum {string} */
+            status: "AWAITING_PAYMENT" | "PAID" | "CANCELLED" | "AWAITING_REFUND" | "REFUNDED";
+            /**
+             * @description Ticket code
+             * @example ABC123
+             */
+            code: string;
+        };
+        AdminCreateOrderDto: {
+            /**
+             * @description Slug of the ticket to purchase
+             * @example google-devfest-2026
+             */
+            slug: string;
+            attendee: components["schemas"]["OrderAttendeeDto"];
+            /** @description Presence indicates the ticket is a gift */
+            gifter?: components["schemas"]["OrderGifterDto"];
+            discountCode: string;
+            /**
+             * @description Bypass the sale-window date check for admin-created orders
+             * @example false
+             */
+            skipSaleWindowCheck?: boolean;
+        };
+        DiscountListTicketDto: {
+            id: string;
+            name: string;
+        };
+        DiscountListItemDto: {
+            id: string;
+            /** @enum {string} */
+            type: "SINGLE" | "BULK";
+            /**
+             * @description Discount amount (2 decimal places)
+             * @example 1000.00
+             */
+            amount: string;
+            /** @description Number of paid orders linked to this discount */
+            usage: number;
+            /**
+             * @description Valid from date in YYYY-MM-DD format
+             * @example 2026-01-01
+             */
+            validFrom: string;
+            name: string;
+            code: string;
+            limit: number;
+            /** @description End date in YYYY-MM-DD format */
+            validTo: string | null;
+            /** @enum {string} */
+            status: "SCHEDULED" | "ACTIVE" | "EXPIRED";
+            /** Format: date-time */
+            createdAt: string;
+            /** @description Tickets this discount applies to */
+            tickets: components["schemas"]["DiscountListTicketDto"][];
+        };
+        DiscountPaginationMetaDto: {
+            /** @description Cursor to fetch the next page */
+            nextCursor: string | null;
+            /** @description Cursor to fetch the previous page */
+            prevCursor: string | null;
+            /** @description Number of results per page */
+            limit: number;
+            /** @description Whether more items exist in the direction of travel */
+            hasMore: boolean;
+        };
+        DiscountListResponseDto: {
+            data: components["schemas"]["DiscountListItemDto"][];
+            meta: components["schemas"]["DiscountPaginationMetaDto"];
+        };
+        DiscountByCodeResponseDto: {
+            /**
+             * @description The discount amount
+             * @example 1000.00
+             */
+            amount: string;
+            /** @description Whether the discount is currently active */
+            isActive: boolean;
+        };
+        CreateDiscountDto: {
+            /** @example DevFest2026 Early Bird */
+            name: string;
+            /**
+             * @example SINGLE
+             * @enum {string}
+             */
+            type: "SINGLE" | "BULK";
+            /**
+             * @description Discount amount with 2 decimal places
+             * @example 1000
+             */
+            amount: number;
+            /**
+             * @description Array of ticket slugs this discount applies to
+             * @example [
+             *       "devfest2026-gdsc-discount",
+             *       "devfest2026-student-discount"
+             *     ]
+             */
+            ticketSlugs: string[];
+            /**
+             * @description Maximum number of times this discount can be used. Required for BULK discounts.
+             * @example 100
+             */
+            limit: number;
+            /**
+             * @description Date string in YYYY-MM-DD format
+             * @example 2026-01-01
+             */
+            validFrom: string;
+            /**
+             * @description End date in YYYY-MM-DD format. Discount expires at end of day.
+             * @example 2026-12-31
+             */
+            validTo: string;
+            /**
+             * @default false
+             * @example false
+             */
+            forFirstTimersOnly: boolean;
+            /**
+             * @description Required for BULK discounts. Array length cannot exceed limit.
+             * @example [
+             *       "user1@example.com",
+             *       "user2@example.com"
+             *     ]
+             */
+            recipientEmails?: string[];
+        };
+        CreateDiscountResponseDto: {
+            id: string;
+            name: string;
+            code: string;
+            /** @enum {string} */
+            type: "SINGLE" | "BULK";
+            /**
+             * @description Discount amount (2 decimal places)
+             * @example 1000.00
+             */
+            amount: string;
+            ticketSlugs: string[];
+            limit: number;
+            /** Format: date-time */
+            validFrom: string;
+            /** Format: date-time */
+            validTo: string | null;
+            forFirstTimersOnly: boolean;
+            recipientEmails: string[];
+            /** Format: date-time */
+            createdAt: string;
+        };
         CreateTicketDto: {
             name: string;
             description: string;
@@ -887,11 +1531,6 @@ export interface components {
             eventDates: string[];
             /** @description Price of ticket in Naira */
             price: number;
-            /**
-             * @description Ticket discount in Naira
-             * @default 0
-             */
-            discount: number;
             /**
              * @description Validity dates in YYYY-MM-DD format. Each date must be present in `eventDates`
              * @example [
@@ -924,11 +1563,6 @@ export interface components {
              * @example 10000.00
              */
             price: string;
-            /**
-             * @description Discount in Naira (formatted to 2 decimal places)
-             * @example 500.00
-             */
-            discount: string;
             validityDates: string[];
             capacity: number;
             /** Format: date-time */
@@ -947,11 +1581,6 @@ export interface components {
              * @example 10000.00
              */
             price: string;
-            /**
-             * @description Discount in Naira (formatted to 2 decimal places)
-             * @example 500.00
-             */
-            discount: string;
             /** Format: date-time */
             saleStartsAt: string;
             /** Format: date-time */
@@ -984,11 +1613,6 @@ export interface components {
              * @example 10000.00
              */
             price: string;
-            /**
-             * @description Discount in Naira (formatted to 2 decimal places)
-             * @example 500.00
-             */
-            discount: string;
         };
         OnSaleTicketResponseDto: {
             data: components["schemas"]["OnSaleTicketItemDto"][];
@@ -1001,11 +1625,6 @@ export interface components {
              * @example 10000.00
              */
             price: string;
-            /**
-             * @description Discount in Naira (formatted to 2 decimal places)
-             * @example 500.00
-             */
-            discount: string;
             eventDates: string[];
             validityDates: string[];
             slug: string;
@@ -1025,11 +1644,6 @@ export interface components {
              * @example 10000.00
              */
             price: string;
-            /**
-             * @description Discount in Naira (formatted to 2 decimal places)
-             * @example 500.00
-             */
-            discount: string;
             validityDates: string[];
             capacity: number;
             /** Format: date-time */
@@ -1039,129 +1653,6 @@ export interface components {
             /** Format: date-time */
             createdAt: string;
             creator: components["schemas"]["TicketCreatorDto"];
-        };
-        OrderAttendeeDto: {
-            /** @example Ada Obi */
-            fullName: string;
-            /** @example ada@example.com */
-            email: string;
-            /** @example 08012345678 */
-            phoneNumber?: string;
-        };
-        OrderGifterDto: {
-            /** @example Tunde Bello */
-            fullName: string;
-            /**
-             * @description Used as the payment customer email on the payment gateway
-             * @example tunde@example.com
-             */
-            email: string;
-        };
-        CreateOrderDto: {
-            /**
-             * @description Slug of the ticket to purchase
-             * @example early-bird-2026-08-17
-             */
-            slug: string;
-            attendee: components["schemas"]["OrderAttendeeDto"];
-            /** @description Presence indicates the ticket is a gift */
-            gifter?: components["schemas"]["OrderGifterDto"];
-        };
-        OrderedTicketDto: {
-            name: string;
-            slug: string;
-        };
-        CreateOrderResponseDto: {
-            id: string;
-            reference: string;
-            /** @enum {string} */
-            status: "AWAITING_PAYMENT";
-            /**
-             * @description Total amount payable in Naira (2 decimal places)
-             * @example 9500.00
-             */
-            amount: string;
-            /**
-             * @description Discount applied in Naira (2 decimal places)
-             * @example 500.00
-             */
-            discount: string;
-            /**
-             * @description 7.5% VAT plus payment gateway service charge
-             * @example 500.00
-             */
-            vatAndCharges: string;
-            currency: string;
-            /** @description Payment checkout URL to redirect the payer to */
-            checkoutUrl: string | null;
-            /** Format: date-time */
-            expiresAt: string;
-            ticket: components["schemas"]["OrderedTicketDto"];
-        };
-        OrderListItemDto: {
-            id: string;
-            /** Format: date-time */
-            paidAt: string | null;
-            /**
-             * @description Amount paid in Naira (2 decimal places)
-             * @example 9500.00
-             */
-            amount: string;
-            /** @enum {string} */
-            status: "AWAITING_PAYMENT" | "PAID" | "CANCELLED" | "AWAITING_REFUND" | "REFUNDED";
-            attendeeFullName: string;
-            attendeeEmail: string;
-            checkIns: string[];
-            ticket: {
-                id?: string;
-                /** @example Early Bird */
-                name?: string;
-                /** @example ABC123 */
-                code?: string;
-                /** @example Fri + Sat */
-                validity?: string;
-            };
-        };
-        OrdersPaginationMetaDto: {
-            /** @description Cursor to fetch the next page */
-            nextCursor: string | null;
-            /** @description Cursor to fetch the previous page */
-            prevCursor: string | null;
-            /** @description Number of results per page */
-            limit: number;
-            /** @description Whether more items exist in the direction of travel */
-            hasMore: boolean;
-        };
-        OrderListResponseDto: {
-            data: components["schemas"]["OrderListItemDto"][];
-            meta: components["schemas"]["OrdersPaginationMetaDto"];
-        };
-        GetOrderReferenceResponseDto: {
-            ticket: {
-                /** @example Early Bird */
-                name?: string;
-                /** @example https://example.com/download/ticket.pdf */
-                url?: string;
-                /**
-                 * @example [
-                 *       "2026-09-20T00:00:00.000Z",
-                 *       "2026-09-21T00:00:00.000Z"
-                 *     ]
-                 */
-                validityDates?: string[];
-            };
-            /**
-             * @description Amount paid in Naira (2 decimal places)
-             * @example 9500.00
-             */
-            amount: string;
-            /** @enum {string} */
-            status: "AWAITING_PAYMENT" | "PAID" | "CANCELLED" | "AWAITING_REFUND" | "REFUNDED";
-            /**
-             * @description Ticket code
-             * @example ABC123
-             */
-            code: string;
         };
     };
     responses: never;
@@ -1192,22 +1683,13 @@ export interface operations {
     AttendeeController_checkedIn: {
         parameters: {
             query: {
-                /**
-                 * @description Event dates to match check-ins against (YYYY-MM-DD)
-                 * @example [
-                 *       "2026-09-20",
-                 *       "2026-09-21"
-                 *     ]
-                 */
-                eventDates: string[];
+                /** @description Event dates to match check-ins against (YYYY-MM-DD) */
+                eventDates: unknown[][];
                 /** @description Pagination direction. `next` returns earlier-created attendees, `previous` returns more recent attendees. */
                 direction?: "next" | "previous";
                 /** @description Cursor for pagination. Pass the ID of the last item from the previous page. */
                 cursor?: string;
-                /**
-                 * @description Number of results to return per page
-                 * @example 20
-                 */
+                /** @description Number of results to return per page */
                 limit?: number;
             };
             header?: never;
@@ -1744,6 +2226,95 @@ export interface operations {
             };
         };
     };
+    AuditLogController_findAll: {
+        parameters: {
+            query?: {
+                /** @description Page number */
+                page?: number;
+                /** @description Items per page */
+                limit?: number;
+                /** @description Search term across action, admin name, or admin email */
+                search?: string;
+                /** @description Filter by specific action identifier */
+                action?: string;
+                /** @description Filter by admin ID who performed the action */
+                adminId?: string;
+                /** @description Filter by associated role ID */
+                roleId?: string;
+                /** @description Filter logs created on or after this ISO date */
+                startDate?: string;
+                /** @description Filter logs created on or before this ISO date */
+                endDate?: string;
+                /** @description Alias for startDate */
+                from?: string;
+                /** @description Alias for endDate */
+                to?: string;
+                /** @description Sort direction for createdAt timestamp */
+                sortOrder?: "asc" | "desc";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedAuditLogResponseDto"];
+                };
+            };
+        };
+    };
+    AuditLogController_findDistinctActions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string[];
+                };
+            };
+        };
+    };
+    AuditLogController_findOne: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuditLogDetailResponseDto"];
+                };
+            };
+            /** @description Audit log not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     PaymentsController_initiatePayment: {
         parameters: {
             query?: never;
@@ -1841,6 +2412,348 @@ export interface operations {
         responses: {
             /** @description Payment retrieved successfully */
             200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    DashboardController_overview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DashboardOverviewResponseDto"];
+                };
+            };
+        };
+    };
+    DashboardController_attendees: {
+        parameters: {
+            query?: {
+                /** @description Search by name, email, phone or reference */
+                search?: string;
+                /** @description Filter by status. Accepts ALL, CHECKED_IN (paid with >= 1 check-in), REGISTERED (paid with no check-in), PENDING / AWAITING_PAYMENT, CANCELLED, etc. */
+                status?: "ALL" | "CHECKED_IN" | "REGISTERED" | "PENDING" | "AWAITING_PAYMENT" | "PAID" | "CANCELLED" | "AWAITING_REFUND" | "REFUNDED";
+                /** @description Filter by ticket ID */
+                ticketId?: string;
+                /** @description Inclusive start date (ISO 8601) */
+                dateFrom?: string;
+                /** @description Inclusive end date (ISO 8601) */
+                dateTo?: string;
+                /** @description Cursor for next-page pagination (order ID) */
+                cursor?: string;
+                /** @description Pagination direction */
+                direction?: "next" | "previous";
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttendeeListResponseDto"];
+                };
+            };
+        };
+    };
+    OrdersController_findAll: {
+        parameters: {
+            query?: {
+                /** @description Search orders by attendee email, attendee full name, or reference (case-insensitive) */
+                search?: string;
+                /** @description Filter orders by status. When omitted, orders of all statuses are returned. */
+                status?: "AWAITING_PAYMENT" | "PAID" | "CANCELLED" | "AWAITING_REFUND" | "REFUNDED";
+                /** @description Pagination direction. `next` returns earlier-dated orders, `previous` returns more recent orders. */
+                direction?: "next" | "previous";
+                /** @description Cursor for pagination. Pass the ID of the last item from the previous page. */
+                cursor?: string;
+                /** @description Number of results to return per page */
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Orders retrieved successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderListResponseDto"];
+                };
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Requires permission */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    OrdersController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateOrderDto"];
+            };
+        };
+        responses: {
+            /** @description Order created and payment initialized */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreateOrderResponseDto"];
+                };
+            };
+            /** @description Ticket not on sale or invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Ticket not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Ticket sold out, all remaining units reserved, or duplicate order */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Payment initialization failed */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    OrdersController_findByReference: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reference: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Order found */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GetOrderReferenceResponseDto"];
+                };
+            };
+            /** @description Order not found for reference */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    OrdersController_createForAttendee: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdminCreateOrderDto"];
+            };
+        };
+        responses: {
+            /** @description Order successfully created for the attendee */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreateOrderResponseDto"];
+                };
+            };
+            /** @description Ticket not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Ticket sold out, all remaining units reserved, or duplicate order for attendee */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Payment initialization failed */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    DiscountsController_findAll: {
+        parameters: {
+            query?: {
+                /** @description Filter discounts by name (case-insensitive) */
+                name?: string;
+                /** @description Pagination direction. `next` returns earlier-created discounts, `previous` returns more recent discounts. */
+                direction?: "next" | "previous";
+                /** @description Cursor for pagination. Pass the ID of the last item from the previous page. */
+                cursor?: string;
+                /** @description Number of results to return per page */
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Discounts retrieved successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DiscountListResponseDto"];
+                };
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Requires permission */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    DiscountsController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateDiscountDto"];
+            };
+        };
+        responses: {
+            /** @description Discount created successfully */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreateDiscountResponseDto"];
+                };
+            };
+            /** @description Validation error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Requires permission */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    DiscountsController_findByCode: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                discountCode: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Discount found */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DiscountByCodeResponseDto"];
+                };
+            };
+            /** @description Discount not found */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -2018,132 +2931,6 @@ export interface operations {
                 content?: never;
             };
             /** @description Invalid token or ticket not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    OrdersController_findAll: {
-        parameters: {
-            query?: {
-                /** @description Search orders by attendee email, attendee full name, or reference (case-insensitive) */
-                search?: string;
-                /** @description Filter by order status. When omitted, orders of all statuses are returned. */
-                status?: "AWAITING_PAYMENT" | "PAID" | "CANCELLED" | "AWAITING_REFUND" | "REFUNDED";
-                /** @description Pagination direction. `next` returns earlier-dated orders, `previous` returns more recent orders. */
-                direction?: "next" | "previous";
-                /** @description Cursor for pagination. Pass the ID of the last item from the previous page. */
-                cursor?: string;
-                /** @description Number of results per page (default 20, max 50) */
-                limit?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Orders retrieved successfully */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["OrderListResponseDto"];
-                };
-            };
-            /** @description Not authenticated */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Requires permission */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    OrdersController_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateOrderDto"];
-            };
-        };
-        responses: {
-            /** @description Order created and payment initialized */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CreateOrderResponseDto"];
-                };
-            };
-            /** @description Ticket not on sale or invalid request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Ticket not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Ticket sold out, all remaining units reserved, or duplicate order for attendee */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Payment initialization failed */
-            502: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    OrdersController_findByReference: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                reference: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Order found */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GetOrderReferenceResponseDto"];
-                };
-            };
-            /** @description Order not found for reference */
             404: {
                 headers: {
                     [name: string]: unknown;

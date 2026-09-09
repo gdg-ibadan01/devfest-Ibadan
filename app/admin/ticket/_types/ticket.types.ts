@@ -11,7 +11,7 @@ export interface TicketBasicInfo {
 
 export interface TicketPricing {
   price: string;
-  discount: string;
+  // discount removed — no longer part of the ticket creation API.
   earlyBird: boolean;
 }
 
@@ -20,7 +20,6 @@ export interface TicketAdvancedSettings {
   /** Actual ISO date strings for validity — maps to API validityDates[] */
   fridayValidityDate: string;
   saturdayValidityDate: string;
-  quantityLimit: string;
   capacity: string;
   startDate: string;
   endDate: string;
@@ -39,7 +38,6 @@ export interface TicketRecord {
   name: string;
   declarationDates: { label: string; day: 'fri' | 'sat' }[];
   price: string;
-  discount: string;
   startDate: string;
   endDate: string;
   quantity: number;
@@ -58,4 +56,3 @@ export function buildValidityDates(settings: TicketAdvancedSettings): string[] {
   if (settings.validity === 'saturday') return [settings.saturdayValidityDate].filter(Boolean);
   return [settings.fridayValidityDate, settings.saturdayValidityDate].filter(Boolean);
 }
-

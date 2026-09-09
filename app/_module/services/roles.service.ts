@@ -9,8 +9,15 @@ import type {
   CreateRoleResponseDto,
   UpdateRoleDto,
   ListPermissionsResponse,
+  PermissionDto,
   AdminActionResponseDto,
 } from '@/app/_module/api/types';
+
+function isPermissionDto(value: unknown): value is PermissionDto {
+  if (!value || typeof value !== 'object') return false;
+  const permission = value as Partial<PermissionDto>;
+  return typeof permission.id === 'string' && typeof permission.label === 'string';
+}
 
 // ---- List roles ---------------------------------------------
 
@@ -45,7 +52,12 @@ export function useRole(id: string) {
 
 async function getPermissions(): Promise<ListPermissionsResponse> {
   const { data } = await apiClient.get<ListPermissionsResponse>('/roles/permissions');
-  return data;
+  return {
+    ...data,
+    permissions: Array.isArray(data?.permissions)
+      ? data.permissions.filter(isPermissionDto)
+      : [],
+  };
 }
 
 export function usePermissions() {

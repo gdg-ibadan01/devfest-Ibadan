@@ -29,8 +29,7 @@ export default function BuyTicket() {
 
   const packages: TicketPackage[] = (onSaleData?.data || []).map((ticket) => {
     const rawPrice = parseFloat(ticket.price) || 0;
-    const rawDiscount = parseFloat(ticket.discount || '0') || 0;
-    const finalPrice = Math.max(0, rawPrice - rawDiscount);
+    const finalPrice = rawPrice;
     return {
       id: ticket.slug,
       title: ticket.name,
@@ -81,6 +80,7 @@ export default function BuyTicket() {
           fullName: fullName.trim(),
           email: email.trim(),
         },
+        discountCode: '',
       },
       {
         onSuccess: (data) => {

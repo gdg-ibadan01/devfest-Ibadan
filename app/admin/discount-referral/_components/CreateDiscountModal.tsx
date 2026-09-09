@@ -1,59 +1,66 @@
 'use client';
 
-import { useState } from 'react';
-import { X, Check, ChevronDown, Calendar, ShieldCheck, XCircle } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Check, ShieldCheck, XCircle } from 'lucide-react';
 import { cn } from '@/app/_module/lib/utils';
-import type {
-  CreateDiscountForm,
-  DiscountType,
-  AppliesTo,
-  UsageLimitType,
-} from '../_types/discount.types';
-
-const DECLARATION_DATE_OPTIONS = [
-  { value: 'friday', label: 'Friday Pass' },
-  { value: 'saturday', label: 'Saturday Pass' },
-  { value: 'vip', label: 'VIP' },
-  { value: 'full', label: 'Full Access' },
-];
+import { useTickets } from '@/app/_module/services';
+import { useCreateDiscount } from '@/app/_module/services/discounts.service';
+import { DatePickerInput } from '@/app/_module/components/ui/DatePicker';
+import type { CreateDiscountForm, DiscountKind } from '../_types/discount.types';
+import type { CreateDiscountDto } from '@/app/_module/api/types';
 
 const INITIAL_FORM: CreateDiscountForm = {
   name: '',
-  code: '',
-  discountType: 'percentage',
-  value: '',
-  appliesTo: 'all',
-  declarationDates: [],
-  usageLimit: 'unlimited',
-  users: '',
-  startDate: '',
-  endDate: '',
-  firstTimeOnly: true,
+  type: 'SINGLE',
+  amount: '',
+  ticketSlugs: [],
+  limit: '',
+  validFrom: '',
+  validTo: '',
+  forFirstTimersOnly: false,
+  recipientEmails: '',
 };
 
-function FieldLabel({ children }: { children: React.ReactNode }) {
+function FieldLabel({ children, required }: { children: React.ReactNode; required?: boolean }) {
   return (
-    <p className="text-[13px] font-medium text-gray-800 mb-2">{children}</p>
+    <p className="text-[13px] font-medium text-gray-800 mb-2">
+      {children}
+      {required && <span style={{ color: '#E61530' }} className="ml-1">*</span>}
+    </p>
   );
+}
+
+function FieldError({ message }: { message?: string }) {
+  if (!message) return null;
+  return <p className="mt-1 text-[12px]" style={{ color: '#E61530' }}>{message}</p>;
 }
 
 function TextInput({
   placeholder,
   value,
   onChange,
+  error,
 }: {
   placeholder: string;
   value: string;
   onChange: (v: string) => void;
+  error?: string;
 }) {
   return (
-    <input
-      type="text"
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      placeholder={placeholder}
-      className="w-full border rounded-md px-4 py-3 border-gray-200 text-[13px] text-gray-800 placeholder:text-gray-300 focus:outline-none focus:border-gray-400 transition-colors bg-transparent"
-    />
+    <div>
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className={cn(
+          'w-full border rounded-md px-4 py-3 text-[13px] text-gray-800 placeholder:text-gray-300 focus:outline-none transition-colors bg-transparent',
+          error ? '' : 'border-gray-200 focus:border-gray-400'
+        )}
+        style={error ? { borderColor: '#E61530' } : undefined}
+      />
+      <FieldError message={error} />
+    </div>
   );
 }
 
@@ -90,7 +97,7 @@ function RadioToggle({
   );
 }
 
-/* Multi-select chip (Declaration Date) */
+/* Multi-select chip (Ticket selection) */
 function MultiChip({
   label,
   selected,
@@ -123,112 +130,53 @@ function MultiChip({
   );
 }
 
-/* Split value input (prefix + number) */
-function ValueInput({
-  prefix,
-  value,
-  onChange,
-}: {
-  prefix: string;
-  value: string;
-  onChange: (v: string) => void;
-}) {
-  return (
-    <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden focus-within:border-gray-400 transition-colors bg-white">
-      <span className="px-4 py-3 text-[13px] text-gray-500 border-r border-gray-200 bg-gray-50 whitespace-nowrap select-none">
-        {prefix}
-      </span>
-      <input
-        type="number"
-        min="0"
-        step="0.01"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder="0.00"
-        className="flex-1 px-4 py-3 text-[13px] text-gray-800 placeholder:text-gray-300 focus:outline-none bg-transparent"
-      />
-    </div>
-  );
+/* Naira amount input with proper thousands-separator formatting */
+function formatAmountDisplay(raw: string): string {
+  if (!raw) return '';
+  const parts = raw.split('.');
+  const intPart = parts[0].replace(/\D/g, '');
+  const formattedInt = intPart ? parseInt(intPart, 10).toLocaleString('en-NG') : '';
+  if (parts.length > 1) return `${formattedInt}.${parts[1]}`;
+  return formattedInt;
 }
 
-/* Date input with calendar icon */
-function DateInput({
+function AmountInput({
   value,
   onChange,
+  error,
 }: {
   value: string;
   onChange: (v: string) => void;
+  error?: string;
 }) {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value.replace(/,/g, '');
+    if (raw === '' || /^\d*\.?\d*$/.test(raw)) {
+      onChange(raw);
+    }
+  };
   return (
-    <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden focus-within:border-gray-400 transition-colors bg-white">
-      <input
-        type="text"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder="DD/MM/YYYY"
-        className="flex-1 px-4 py-3 text-[13px] text-gray-800 placeholder:text-gray-300 focus:outline-none bg-transparent"
-      />
-      <span className="pr-4 text-gray-400">
-        <Calendar size={16} />
-      </span>
-    </div>
-  );
-}
-
-/* Usage Limit dropdown */
-function UsageLimitSelect({
-  value,
-  onChange,
-}: {
-  value: UsageLimitType;
-  onChange: (v: UsageLimitType) => void;
-}) {
-  const [open, setOpen] = useState(false);
-  const options: { value: UsageLimitType; label: string }[] = [
-    { value: 'unlimited', label: 'Unlimited' },
-    { value: 'limited', label: 'Limited' },
-  ];
-
-  return (
-    <div className="relative">
-      <button
-        type="button"
-        onClick={() => setOpen((o) => !o)}
-        className="w-full flex items-center justify-between border border-gray-200 rounded-lg px-4 py-3 text-[13px] text-gray-600 bg-white hover:border-gray-300 transition-colors focus:outline-none"
+    <div>
+      <div
+        className={cn(
+          'flex items-center border rounded-lg overflow-hidden transition-colors bg-white focus-within:ring-2 focus-within:ring-black/10',
+          error ? '' : 'border-gray-200 focus-within:border-gray-400'
+        )}
+        style={error ? { borderColor: '#E61530' } : undefined}
       >
-        <span className={value ? 'text-gray-800' : 'text-gray-300'}>
-          {options.find((o) => o.value === value)?.label ?? 'Select'}
+        <span className="px-4 py-3 text-[13px] text-gray-500 border-r border-gray-200 bg-gray-50 whitespace-nowrap select-none">
+          NGN (Naira)
         </span>
-        <ChevronDown
-          size={16}
-          className={cn(
-            'text-gray-400 transition-transform',
-            open && 'rotate-180'
-          )}
+        <input
+          type="text"
+          inputMode="decimal"
+          value={formatAmountDisplay(value)}
+          onChange={handleChange}
+          placeholder="0.00"
+          className="flex-1 px-4 py-3 text-[13px] text-gray-800 placeholder:text-gray-400 focus:outline-none bg-transparent"
         />
-      </button>
-      {open && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 overflow-hidden">
-          {options.map((opt) => (
-            <button
-              key={opt.value}
-              type="button"
-              onClick={() => {
-                onChange(opt.value);
-                setOpen(false);
-              }}
-              className={cn(
-                'w-full text-left px-4 py-3 text-[13px] hover:bg-gray-50 transition-colors',
-                value === opt.value
-                  ? 'text-gray-900 font-medium'
-                  : 'text-gray-600'
-              )}
-            >
-              {opt.label}
-            </button>
-          ))}
-        </div>
-      )}
+      </div>
+      <FieldError message={error} />
     </div>
   );
 }
@@ -262,51 +210,134 @@ function ToggleSwitch({
   );
 }
 
-
+interface Errors {
+  name?: string;
+  amount?: string;
+  ticketSlugs?: string;
+  limit?: string;
+  validFrom?: string;
+  validTo?: string;
+  recipientEmails?: string;
+}
 
 interface CreateDiscountModalProps {
   open: boolean;
   onClose: () => void;
-  onSubmit: (data: CreateDiscountForm) => void;
+  onCreated?: () => void;
 }
 
 export default function CreateDiscountModal({
   open,
   onClose,
-  onSubmit,
+  onCreated,
 }: CreateDiscountModalProps) {
   const [form, setForm] = useState<CreateDiscountForm>(INITIAL_FORM);
+  const [errors, setErrors] = useState<Errors>({});
+
+  const { data: ticketsData } = useTickets({ limit: 50 });
+  const tickets = ticketsData?.data ?? [];
+
+  const { mutate: createDiscount, isPending } = useCreateDiscount();
+
+  useEffect(() => {
+    if (!open) {
+      setForm(INITIAL_FORM);
+      setErrors({});
+    }
+  }, [open]);
 
   const patch = <K extends keyof CreateDiscountForm>(
     key: K,
     value: CreateDiscountForm[K]
-  ) => setForm((f) => ({ ...f, [key]: value }));
+  ) => {
+    setForm((f) => ({ ...f, [key]: value }));
+    setErrors((prev) => ({ ...prev, [key]: undefined }));
+  };
 
-  const toggleDeclarationDate = (value: string) => {
+  const toggleTicket = (slug: string) => {
     setForm((f) => ({
       ...f,
-      declarationDates: f.declarationDates.includes(value)
-        ? f.declarationDates.filter((d) => d !== value)
-        : [...f.declarationDates, value],
+      ticketSlugs: f.ticketSlugs.includes(slug)
+        ? f.ticketSlugs.filter((s) => s !== slug)
+        : [...f.ticketSlugs, slug],
     }));
+    setErrors((prev) => ({ ...prev, ticketSlugs: undefined }));
   };
 
   const handleClose = () => {
     setForm(INITIAL_FORM);
+    setErrors({});
     onClose();
   };
 
+  const validate = (): boolean => {
+    const e: Errors = {};
+    if (!form.name.trim()) e.name = 'Discount name is required.';
+
+    const amount = parseFloat(form.amount);
+    if (!form.amount || isNaN(amount) || amount < 1) {
+      e.amount = 'Amount must be at least ₦1.';
+    }
+
+    if (form.ticketSlugs.length === 0) {
+      e.ticketSlugs = 'Select at least one ticket.';
+    }
+
+    if (!form.validFrom) e.validFrom = 'Valid from date is required.';
+    if (!form.validTo) e.validTo = 'Valid to date is required.';
+
+    const limit = parseInt(form.limit, 10);
+    if (!form.limit || isNaN(limit) || limit < 1) {
+      e.limit = 'Limit must be at least 1.';
+    }
+
+    if (form.type === 'BULK') {
+      const emails = form.recipientEmails
+        .split(/[\n,]/)
+        .map((s) => s.trim())
+        .filter(Boolean);
+      if (emails.length === 0) {
+        e.recipientEmails = 'At least one recipient email is required for bulk discounts.';
+      } else if (!isNaN(limit) && emails.length > limit) {
+        e.recipientEmails = `Cannot exceed the limit of ${limit} recipient(s).`;
+      }
+    }
+
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  };
+
   const handleSubmit = () => {
-    onSubmit(form);
-    handleClose();
+    if (!validate()) return;
+
+    const payload: CreateDiscountDto = {
+      name: form.name.trim(),
+      type: form.type,
+      amount: parseFloat(form.amount),
+      ticketSlugs: form.ticketSlugs,
+      limit: parseInt(form.limit, 10),
+      validFrom: form.validFrom,
+      validTo: form.validTo,
+      forFirstTimersOnly: form.forFirstTimersOnly,
+      ...(form.type === 'BULK'
+        ? {
+            recipientEmails: form.recipientEmails
+              .split(/[\n,]/)
+              .map((s) => s.trim())
+              .filter(Boolean),
+          }
+        : {}),
+    };
+
+    createDiscount(payload, {
+      onSuccess: () => {
+        onCreated?.();
+        handleClose();
+      },
+    });
   };
 
   if (!open) return null;
-
-  const valuePrefix =
-    form.discountType === 'percentage' ? 'Percentage (%)' : 'NGN (Naira)';
-  const valueSectionLabel =
-    form.discountType === 'percentage' ? 'Percentage' : 'Value';
 
   return (
     <div className="fixed inset-0 z-50 flex">
@@ -333,125 +364,122 @@ export default function CreateDiscountModal({
         <div className="min-h-0 flex-1 overflow-auto px-[30px] py-6 space-y-6">
           {/* Discount Name */}
           <div>
-            <FieldLabel>Discount Name</FieldLabel>
+            <FieldLabel required>Discount Name</FieldLabel>
             <TextInput
               placeholder="Input Discount Name"
               value={form.name}
               onChange={(v) => patch('name', v)}
-            />
-          </div>
-
-          {/* Discount Code */}
-          <div>
-            <FieldLabel>Discount Code</FieldLabel>
-            <TextInput
-              placeholder="Input Discount Code"
-              value={form.code}
-              onChange={(v) => patch('code', v)}
+              error={errors.name}
             />
           </div>
 
           {/* Discount Type */}
           <div>
-            <FieldLabel>Discount Type</FieldLabel>
+            <FieldLabel required>Discount Type</FieldLabel>
             <div className="flex gap-3">
               <RadioToggle
-                label="Percentage (%)"
-                selected={form.discountType === 'percentage'}
-                onSelect={() => patch('discountType', 'percentage')}
+                label="Single Use"
+                selected={form.type === 'SINGLE'}
+                onSelect={() => patch('type', 'SINGLE' as DiscountKind)}
               />
               <RadioToggle
-                label="Fixed Amount (₦)"
-                selected={form.discountType === 'fixed'}
-                onSelect={() => patch('discountType', 'fixed')}
+                label="Bulk (multiple recipients)"
+                selected={form.type === 'BULK'}
+                onSelect={() => patch('type', 'BULK' as DiscountKind)}
               />
             </div>
           </div>
 
-          {/* Value */}
+          {/* Amount */}
           <div>
-            <FieldLabel>{valueSectionLabel}</FieldLabel>
-            <ValueInput
-              prefix={valuePrefix}
-              value={form.value}
-              onChange={(v) => patch('value', v)}
+            <FieldLabel required>Discount Amount</FieldLabel>
+            <AmountInput
+              value={form.amount}
+              onChange={(v) => patch('amount', v)}
+              error={errors.amount}
             />
           </div>
 
-          {/* Does it Apply to */}
+          {/* Applicable tickets */}
           <div>
-            <FieldLabel>Does it Apply to</FieldLabel>
-            <div className="flex gap-3">
-              <RadioToggle
-                label="All Ticket"
-                selected={form.appliesTo === 'all'}
-                onSelect={() => patch('appliesTo', 'all')}
-              />
-              <RadioToggle
-                label="Selected Ticket"
-                selected={form.appliesTo === 'selected'}
-                onSelect={() => patch('appliesTo', 'selected')}
-              />
-            </div>
-          </div>
-
-          {/* Declaration Date — only when Selected Ticket */}
-          {form.appliesTo === 'selected' && (
-            <div>
-              <FieldLabel>Declaration Date</FieldLabel>
-              <div className="flex gap-3 flex-wrap">
-                {DECLARATION_DATE_OPTIONS.map((opt) => (
+            <FieldLabel required>Applicable Tickets</FieldLabel>
+            <div className="flex gap-3 flex-wrap">
+              {tickets.length === 0 ? (
+                <p className="text-[12px] text-gray-400">No tickets available.</p>
+              ) : (
+                tickets.map((t) => (
                   <MultiChip
-                    key={opt.value}
-                    label={opt.label}
-                    selected={form.declarationDates.includes(opt.value)}
-                    onToggle={() => toggleDeclarationDate(opt.value)}
+                    key={t.slug}
+                    label={`${t.name} (₦${parseFloat(t.price).toLocaleString('en-NG')})`}
+                    selected={form.ticketSlugs.includes(t.slug)}
+                    onToggle={() => toggleTicket(t.slug)}
                   />
-                ))}
+                ))
+              )}
+            </div>
+            <FieldError message={errors.ticketSlugs} />
+          </div>
+
+          {/* Limit is required for every discount type in the current schema. */}
+          <div>
+            <FieldLabel required>Limit</FieldLabel>
+            <input
+              type="number"
+              min="1"
+              value={form.limit}
+              onChange={(e) => patch('limit', e.target.value)}
+              placeholder="Maximum number of times this discount can be used"
+              className={cn(
+                'w-full border rounded-lg px-4 py-3 text-[13px] text-gray-800 placeholder:text-gray-300 focus:outline-none transition-colors bg-white',
+                errors.limit ? '' : 'border-gray-200 focus:border-gray-400'
+              )}
+              style={errors.limit ? { borderColor: '#E61530' } : undefined}
+            />
+            <FieldError message={errors.limit} />
+          </div>
+
+          {/* Bulk-only recipient list */}
+          {form.type === 'BULK' && (
+            <>
+              <div>
+                <FieldLabel required>Recipient Emails</FieldLabel>
+                <textarea
+                  value={form.recipientEmails}
+                  onChange={(e) => patch('recipientEmails', e.target.value)}
+                  placeholder="Enter emails separated by commas or new lines"
+                  rows={4}
+                  className={cn(
+                    'w-full border rounded-lg px-4 py-3 text-[13px] text-gray-800 placeholder:text-gray-300 focus:outline-none transition-colors bg-white resize-none',
+                    errors.recipientEmails ? '' : 'border-gray-200 focus:border-gray-400'
+                  )}
+                  style={errors.recipientEmails ? { borderColor: '#E61530' } : undefined}
+                />
+                <FieldError message={errors.recipientEmails} />
               </div>
-            </div>
+            </>
           )}
 
-          {/* Usage Limit */}
+          {/* Valid From */}
           <div>
-            <FieldLabel>Usage Limit</FieldLabel>
-            <UsageLimitSelect
-              value={form.usageLimit}
-              onChange={(v) => patch('usageLimit', v)}
+            <FieldLabel required>Valid From</FieldLabel>
+            <DatePickerInput
+              value={form.validFrom}
+              onChange={(v) => patch('validFrom', v)}
+              placeholder="Select start date"
             />
+            <FieldError message={errors.validFrom} />
           </div>
 
-          {/* Users — only when Limited */}
-          {form.usageLimit === 'limited' && (
-            <div>
-              <FieldLabel>Users</FieldLabel>
-              <input
-                type="number"
-                min="1"
-                value={form.users}
-                onChange={(e) => patch('users', e.target.value)}
-                placeholder="How many users"
-                className="w-full border border-gray-200 rounded-lg px-4 py-3 text-[13px] text-gray-800 placeholder:text-gray-300 focus:outline-none focus:border-gray-400 transition-colors bg-white"
-              />
-            </div>
-          )}
-
-          {/* Validity Start Date */}
+          {/* Valid To */}
           <div>
-            <FieldLabel>Validity Start Date</FieldLabel>
-            <DateInput
-              value={form.startDate}
-              onChange={(v) => patch('startDate', v)}
+            <FieldLabel required>Valid To</FieldLabel>
+            <DatePickerInput
+              value={form.validTo}
+              onChange={(v) => patch('validTo', v)}
+              placeholder="Select end date"
+              fromDate={form.validFrom ? new Date(form.validFrom) : undefined}
             />
-          </div>
-
-          {/* Validity End Date */}
-          <div>
-            <FieldLabel>Validity End Date</FieldLabel>
-            <DateInput
-              value={form.endDate}
-              onChange={(v) => patch('endDate', v)}
-            />
+            <FieldError message={errors.validTo} />
           </div>
 
           {/* Advanced Settings */}
@@ -479,8 +507,8 @@ export default function CreateDiscountModal({
                 </div>
               </div>
               <ToggleSwitch
-                checked={form.firstTimeOnly}
-                onChange={(v) => patch('firstTimeOnly', v)}
+                checked={form.forFirstTimersOnly}
+                onChange={(v) => patch('forFirstTimersOnly', v)}
               />
             </div>
           </div>
@@ -491,16 +519,18 @@ export default function CreateDiscountModal({
           <button
             type="button"
             onClick={handleClose}
-            className="px-6 py-[10px] rounded-lg border border-gray-200 text-[13px] font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+            disabled={isPending}
+            className="px-6 py-[10px] rounded-lg border border-gray-200 text-[13px] font-medium text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
           >
             Cancel
           </button>
           <button
             type="button"
             onClick={handleSubmit}
-            className="px-6 py-[10px] rounded-lg bg-gray-900 text-white text-[13px] font-medium hover:bg-black transition-colors"
+            disabled={isPending}
+            className="px-6 py-[10px] rounded-lg bg-gray-900 text-white text-[13px] font-medium hover:bg-black transition-colors disabled:opacity-50"
           >
-            Create Discount
+            {isPending ? 'Creating…' : 'Create Discount'}
           </button>
         </div>
       </div>

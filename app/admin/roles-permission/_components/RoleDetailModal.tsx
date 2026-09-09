@@ -36,7 +36,13 @@ export default function RoleDetailModal({
       permissions: (Array.isArray(role.permissions)
         ? role.permissions
         : []
-      ).map((p: any) => (typeof p === 'string' ? { id: p, label: p } : p)),
+      )
+        .filter((permission) => Boolean(permission))
+        .map((permission) =>
+          typeof permission === 'string'
+            ? { id: permission, label: permission }
+            : permission
+        ),
       createdAt: (role as any).createdAt ?? '',
       declarationDate: '',
       isActive: (role as any).isActive ?? false,
@@ -126,7 +132,7 @@ export default function RoleDetailModal({
                         className="px-3 py-[5px] border border-gray-200 rounded-md text-[12px] text-gray-700 bg-white w-24 h-6 animate-pulse"
                       />
                     ))
-                  : roleData.permissions.map((perm: any) => (
+                  : roleData.permissions.filter(Boolean).map((perm: any) => (
                       <span
                         key={perm?.id || perm}
                         className="px-3 py-[5px] border border-gray-200 rounded-md text-[12px] text-gray-700 bg-white"

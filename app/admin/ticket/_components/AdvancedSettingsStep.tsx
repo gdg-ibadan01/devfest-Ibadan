@@ -30,7 +30,6 @@ const VALIDITY_OPTIONS = [
 interface Errors {
   fridayValidityDate?: string;
   saturdayValidityDate?: string;
-  quantityLimit?: string;
   capacity?: string;
   startDate?: string;
   endDate?: string;
@@ -77,10 +76,6 @@ export default function AdvancedSettingsStep({
       e.saturdayValidityDate = 'Saturday validity date is required.';
     } else if (needsSaturday && eventDates?.saturdayDate && data.saturdayValidityDate !== eventDates.saturdayDate) {
       e.saturdayValidityDate = `Validity date must match the event date (${formatDateForError(eventDates.saturdayDate)}).`;
-    }
-    if (data.quantityLimit) {
-      const qty = parseInt(data.quantityLimit, 10);
-      if (isNaN(qty) || qty <= 0) e.quantityLimit = 'Quantity must be a positive number.';
     }
     if (data.capacity) {
       const cap = parseInt(data.capacity, 10);
@@ -172,15 +167,6 @@ export default function AdvancedSettingsStep({
             <FieldError message={errors.saturdayValidityDate} />
           </div>
         )}
-
-        <NumberInput
-          label="Quantity Limit"
-          id="quantityLimit"
-          value={data.quantityLimit}
-          onChange={(raw) => set('quantityLimit', raw)}
-          placeholder="e.g. 300 (leave blank for unlimited)"
-          error={errors.quantityLimit}
-        />
 
         <NumberInput
           label="Capacity"
