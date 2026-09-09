@@ -1,74 +1,30 @@
 import React from 'react';
+import { format, isValid, parseISO } from 'date-fns';
 import { cn } from '../../lib/utils';
 import DashboardCard from '../cards/DashboardCard';
+import type { RecentAttendeeDto } from '@/app/_module/api/types';
 
-const recentAttendees = [
-  {
-    ticketId: '#DF82481',
-    date: 'July 25, 2025',
-    fullName: 'Adetunji Oluwapeyibomi',
-    email: 'maryesivue@gmail.com',
-    amount: '₦8000',
-    status: 'Successful',
-  },
-  {
-    ticketId: '#DF82481',
-    date: 'July 25, 2025',
-    fullName: 'Mary Esivue',
-    email: 'maryesivue@gmail.com',
-    amount: '₦4000',
-    status: 'Successful',
-  },
-  {
-    ticketId: '#DF82481',
-    date: 'July 25, 2025',
-    fullName: 'Adetunji Oluwapeyibomi',
-    email: 'maryesivue@gmail.com',
-    amount: '₦4000',
-    status: 'Failed',
-  },
-  {
-    ticketId: '#DF82481',
-    date: 'July 25, 2025',
-    fullName: 'Adetunji Oluwapeyibomi',
-    email: 'maryesivue@gmail.com',
-    amount: '₦4000',
-    status: 'Pending',
-  },
-  {
-    ticketId: '#DF82481',
-    date: 'July 25, 2025',
-    fullName: 'Adetunji Oluwapeyibomi',
-    email: 'maryesivue@gmail.com',
-    amount: '₦4000',
-    status: 'Successful',
-  },
-  {
-    ticketId: '#DF82481',
-    date: 'July 25, 2025',
-    fullName: 'Adetunji Oluwapeyibomi',
-    email: 'maryesivue@gmail.com',
-    amount: '₦4000',
-    status: 'Successful',
-  },
-] as const;
+type AttendeeStatus = RecentAttendeeDto['status'];
 
-type AttendeeStatus = (typeof recentAttendees)[number]['status'];
-const statusStyles: Record<
-  AttendeeStatus,
-  { bg: string; text: string; dot: string }
-> = {
-  Successful: {
-    bg: 'bg-[#E5F6F0]',
-    text: 'text-[#087A55]',
-    dot: 'bg-[#087A55]',
-  },
-  Failed: { bg: 'bg-[#FDEBEB]', text: 'text-[#EA4335]', dot: 'bg-[#EA4335]' },
-  Pending: { bg: 'bg-[#FFF4DD]', text: 'text-[#D58A00]', dot: 'bg-[#D58A00]' },
+const STATUS_LABELS: Record<AttendeeStatus, string> = {
+  PAID: 'Paid',
+  AWAITING_PAYMENT: 'Awaiting Payment',
+  CANCELLED: 'Cancelled',
+  AWAITING_REFUND: 'Awaiting Refund',
+  REFUNDED: 'Refunded',
+};
+
+// Matches the status badge palette used across Orders/Attendees tables.
+const STATUS_CONFIG: Record<AttendeeStatus, { bg: string; text: string; dot: string }> = {
+  PAID: { bg: 'bg-[#E8F5E9]', text: 'text-[#1B873B]', dot: 'bg-[#34A853]' },
+  AWAITING_PAYMENT: { bg: 'bg-[#FEF3C7]', text: 'text-[#92400E]', dot: 'bg-[#F59E0B]' },
+  CANCELLED: { bg: 'bg-[#FDECEA]', text: 'text-[#C5221F]', dot: 'bg-[#EA4335]' },
+  AWAITING_REFUND: { bg: 'bg-[#FEF3C7]', text: 'text-[#92400E]', dot: 'bg-[#F59E0B]' },
+  REFUNDED: { bg: 'bg-[#F1F3F4]', text: 'text-[#5F6368]', dot: 'bg-[#9AA0A6]' },
 };
 
 function StatusBadge({ status }: { status: AttendeeStatus }) {
-  const styles = statusStyles[status];
+  const styles = STATUS_CONFIG[status] ?? STATUS_CONFIG.AWAITING_PAYMENT;
   return (
     <span
       className={cn(
@@ -78,12 +34,26 @@ function StatusBadge({ status }: { status: AttendeeStatus }) {
       )}
     >
       <span className={cn('w-[7px] h-[7px] rounded-[2px]', styles.dot)} />
-      <span>{status}</span>
+      <span>{STATUS_LABELS[status] ?? status}</span>
     </span>
   );
 }
 
-const RecentAttendeesTable = () => {
+function formatDate(iso: string): string {
+  if (!iso) return '—';
+  const d = parseISO(iso);
+  return isValid(d) ? format(d, 'MMMM d, yyyy') : iso;
+}
+
+function formatAmount(amount: number): string {
+  return `₦${amount.toLocaleString('en-NG')}`;
+}
+
+interface RecentAttendeesTableProps {
+  attendees: RecentAttendeeDto[];
+}
+
+const RecentAttendeesTable = ({ attendees }: RecentAttendeesTableProps) => {
   return (
     <DashboardCard className="mt-8 p-8 lg:p-[20px]">
       <h2 className="text-[16px] font-bold leading-7 text-[#252525]">
@@ -112,31 +82,36 @@ const RecentAttendeesTable = () => {
             </tr>
           </thead>
           <tbody>
-            {recentAttendees.map((attendee, index) => (
-              <tr
-                key={`${attendee.ticketId}-${index}`}
-                className="border-b border-[#eeeeee]"
-              >
-                <td className="px-4 py-5 text-[12px] text-[#111111]">
-                  {attendee.ticketId}
-                </td>
-                <td className="px-4 py-5 text-[12px] text-[#111111]">
-                  {attendee.date}
-                </td>
-                <td className="px-4 py-5 text-[12px] text-[#111111]">
-                  {attendee.fullName}
-                </td>
-                <td className="px-4 py-5 text-[12px] text-[#111111]">
-                  {attendee.email}
-                </td>
-                <td className="px-4 py-5 text-[12px] text-[#111111]">
-                  {attendee.amount}
-                </td>
-                <td className="text-[12px]">
-                  <StatusBadge status={attendee.status} />
+            {attendees.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="px-4 py-10 text-center text-[13px] text-gray-400">
+                  No recent attendees yet.
                 </td>
               </tr>
-            ))}
+            ) : (
+              attendees.map((attendee) => (
+                <tr key={attendee.id} className="border-b border-[#eeeeee]">
+                  <td className="px-4 py-5 text-[12px] text-[#111111]">
+                    {attendee.reference}
+                  </td>
+                  <td className="px-4 py-5 text-[12px] text-[#111111]">
+                    {formatDate(attendee.date)}
+                  </td>
+                  <td className="px-4 py-5 text-[12px] text-[#111111]">
+                    {attendee.fullName}
+                  </td>
+                  <td className="px-4 py-5 text-[12px] text-[#111111]">
+                    {attendee.email}
+                  </td>
+                  <td className="px-4 py-5 text-[12px] text-[#111111]">
+                    {formatAmount(attendee.amount)}
+                  </td>
+                  <td className="text-[12px]">
+                    <StatusBadge status={attendee.status} />
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>

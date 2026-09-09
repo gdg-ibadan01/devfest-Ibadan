@@ -7,7 +7,7 @@ import type { CreateOrderForm } from '../_types/order.types';
 import type { CreateOrderResponseDto } from '@/app/_module/api/types';
 import Image from 'next/image';
 import Success from '../../../_module/components/icons/success.svg';
-import { useCreateOrder } from '@/app/_module/services/order.service';
+import { useCreateOrderForAttendee } from '@/app/_module/services/order.service';
 import { useTickets } from '@/app/_module/services';
 
 const INITIAL_FORM: CreateOrderForm = {
@@ -46,7 +46,7 @@ export default function CreateOrderModal({
   });
   const tickets = ticketsData?.data ?? [];
 
-  const { mutate: createOrder, isPending } = useCreateOrder();
+  const { mutate: createOrder, isPending } = useCreateOrderForAttendee();
 
   useEffect(() => {
     if (open) {
@@ -101,6 +101,9 @@ export default function CreateOrderModal({
             ? { phoneNumber: form.phoneNumber.trim() }
             : {}),
         },
+        // `discountCode` is a required field on the API's DTO — send an
+        // empty string when the admin isn't applying a discount code.
+        discountCode: '',
       },
       {
         onSuccess: (res) => {

@@ -22,7 +22,6 @@ const COLUMNS = [
   'Ticket Name',
   'Event Dates',
   'Price',
-  'Discount',
   'Sale Start',
   'Sale End',
   'Capacity',
@@ -247,11 +246,7 @@ export default function TicketTable() {
                     <td className="px-5 py-4 text-[13px] text-gray-700">
                       {formatAmount(ticket.price)}
                     </td>
-                    <td className="px-5 py-4 text-[13px] text-gray-700">
-                      {parseFloat(ticket.discount) > 0
-                        ? formatAmount(ticket.discount)
-                        : '—'}
-                    </td>
+                    {/* Discount column removed — field no longer part of the API. */}
                     <td className="px-5 py-4 text-[13px] text-gray-600">
                       {formatDate(ticket.saleStartsAt)}
                     </td>

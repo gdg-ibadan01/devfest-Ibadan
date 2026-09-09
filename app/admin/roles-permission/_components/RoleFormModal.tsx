@@ -15,6 +15,13 @@ import type { PermissionDto } from '@/app/_module/api/types';
 
 type PermissionId = PermissionDto['id'];
 
+function getPermissionId(value: unknown): PermissionId | null {
+  if (typeof value === 'string') return value as PermissionId;
+  if (!value || typeof value !== 'object') return null;
+  const id = (value as { id?: unknown }).id;
+  return typeof id === 'string' ? (id as PermissionId) : null;
+}
+
 // ── Checkbox ──────────────────────────────────────────────────────────────────
 
 function PermissionCheckbox({ label, checked, onChange }: { label: string; checked: boolean; onChange: () => void }) {
@@ -86,7 +93,12 @@ export default function RoleFormModal({
   const { data: roleDetail, isLoading: roleLoading } = useRole(roleId ?? '');
 
   const isPending = creating || updating;
-  const allPermissions: PermissionDto[] = permsData?.permissions ?? [];
+  const allPermissions: PermissionDto[] = (permsData?.permissions ?? []).filter(
+    (permission): permission is PermissionDto =>
+      Boolean(permission) &&
+      typeof permission.id === 'string' &&
+      typeof permission.label === 'string'
+  );
   // Only block on the role-detail fetch when actually editing an existing role.
   const showFieldsSkeleton = mode === 'edit' && roleLoading;
 
@@ -97,7 +109,9 @@ export default function RoleFormModal({
       setForm({
         name: roleDetail.name || initialData?.name || '',
         description: roleDetail?.description || initialData?.description || '',
-        permissions: (roleDetail?.permissions || [])?.map((p: any) => p?.id as PermissionId),
+        permissions: (roleDetail?.permissions ?? [])
+          .map(getPermissionId)
+          .filter((permission): permission is PermissionId => permission !== null),
       });
       setErrors({});
       return;
