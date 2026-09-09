@@ -33,15 +33,13 @@ export default function BuyTicket() {
   } = useTicketsOnSale();
 
   const packages: TicketPackage[] = (onSaleData?.data || []).map((ticket) => {
-    const rawPrice = Number.parseFloat(ticket.price) || 0;
-    const rawDiscount = Number.parseFloat(ticket.discount || '0') || 0;
-    const finalPrice = Math.max(0, rawPrice - rawDiscount);
+    const price = Number.parseFloat(ticket.price) || 0;
     return {
       id: ticket.slug,
       title: ticket.name,
       badge: ticket.description || 'Access Pass',
-      price: finalPrice,
-      formattedPrice: `₦ ${finalPrice.toLocaleString('en-NG', {
+      price,
+      formattedPrice: `₦ ${price.toLocaleString('en-NG', {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
       })}`,
