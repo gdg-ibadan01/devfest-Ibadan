@@ -38,7 +38,7 @@ const columnThreeLinks: FooterLink[] = [
   },
   {
     label: 'Contact Us',
-    href: 'mailto:ibadangdg@gmail.com',
+    href: 'mailto:info@gdgibadan.com',
     isExternal: true,
   },
 ];
