@@ -5,3 +5,4 @@ export * from './tickets.service';
 export * from './attendees.service';
 export * from './order.service';
 export * from './audit-log.service';
+export * from './discount.service';

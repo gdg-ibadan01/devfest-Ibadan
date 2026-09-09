@@ -32,8 +32,7 @@ const statsData = [
     stat: '2-DAY',
     color: '#34A853', // Green
     label: '21 NOVEMBER 2026',
-    description:
-      'Expert talks, code labs, and pure technical vibes.',
+    description: 'Expert talks, code labs, and pure technical vibes.',
   },
   {
     stat: '4+ TRACKS',

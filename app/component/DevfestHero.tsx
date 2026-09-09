@@ -85,7 +85,10 @@ const DevfestHero: FC = () => {
                 transition={{ duration: 0.6, delay: 0.1, ease: 'easeOut' }}
                 className="mt-6 text-base sm:text-lg text-[#4B5563] max-w-xl leading-[160%] font-normal font-inter"
               >
-                The biggest developer gathering in Oyo State Nigeria is back. 3 weekends of PreDevFest Series (Oct–Nov), a Virtual Event on Friday Nov 20th, and the main Physical Event on Saturday Nov 21st.
+                The biggest developer gathering in Oyo State Nigeria is back. 3
+                weekends of PreDevFest Series (Oct–Nov), a Virtual Event on
+                Friday Nov 20th, and the main Physical Event on Saturday Nov
+                21st.
               </motion.p>
 
               <motion.div
@@ -106,14 +109,14 @@ const DevfestHero: FC = () => {
                   </span>
                 </Link>
                 <Link
-                  href="/tickets/gift"
+                  href="https://selar.co/m/gdg-ibadan1"
                   className="group relative inline-flex p-[2px] rounded-[100px] overflow-hidden transition-all duration-300 hover:scale-105 active:scale-95 shadow-md hover:shadow-lg"
                 >
                   {/* Google Multi-Color Gradient Ring */}
                   <span className="absolute inset-0 bg-gradient-to-r from-[#34A853] via-[#FBBC04] to-[#4285F4] rounded-[100px] transition-opacity group-hover:opacity-90" />
                   {/* Inner Button */}
                   <span className="relative px-[20px] lg:px-10 py-3 sm:py-3.5 rounded-[100px] bg-[#18181b] group-hover:bg-[#232326] text-white text-sm sm:text-base font-semibold tracking-wide transition-colors flex items-center justify-center">
-                    Gift Ticket
+                    Buy Merch
                   </span>
                 </Link>
               </motion.div>

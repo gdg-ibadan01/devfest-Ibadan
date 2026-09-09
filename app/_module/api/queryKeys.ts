@@ -49,4 +49,9 @@ export const queryKeys = {
     all: (params?: Record<string, unknown>) => ['auditLogs', params] as const,
     detail: (id: string) => ['auditLogs', id] as const,
   },
+
+  // Discounts
+  discounts: {
+    byCode: (code: string) => ['discounts', 'code', code] as const,
+  },
 } as const;
