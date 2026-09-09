@@ -60,4 +60,9 @@ export const queryKeys = {
     detail: (id: string) => ['audit-logs', id] as const,
     actions: () => ['audit-logs', 'actions'] as const,
   },
+
+  // Discounts
+  discounts: {
+    byCode: (code: string) => ['discounts', 'code', code] as const,
+  },
 } as const;

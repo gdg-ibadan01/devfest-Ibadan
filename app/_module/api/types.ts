@@ -58,7 +58,9 @@ export type InitiatePaymentDto = Schemas['InitiatePaymentDto'];
 export type VerifyPaymentDto = Schemas['VerifyPaymentDto'];
 
 // ---- Orders ------------------------------------------------
-export type CreateOrderDto = Schemas['CreateOrderDto'];
+export type CreateOrderDto = Schemas['CreateOrderDto'] & {
+  discountCode?: string;
+};
 export type CreateOrderResponseDto = Schemas['CreateOrderResponseDto'];
 export type OrderAttendeeDto = Schemas['OrderAttendeeDto'];
 export type OrderGifterDto = Schemas['OrderGifterDto'];
@@ -94,6 +96,12 @@ export type AuditLogResponseDto = Schemas['AuditLogResponseDto'];
 export type PaginationMetaDto = Schemas['PaginationMetaDto'];
 export type PaginatedAuditLogResponseDto = Schemas['PaginatedAuditLogResponseDto'];
 export type AuditLogDetailResponseDto = Schemas['AuditLogDetailResponseDto'];
+
+// ---- Discounts ---------------------------------------------
+export interface DiscountByCodeResponseDto {
+  amount: string;
+  isActive: boolean;
+}
 
 // ---- Query param helpers -----------------------------------
 export interface OrderListParams {

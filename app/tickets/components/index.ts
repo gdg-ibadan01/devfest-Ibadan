@@ -7,8 +7,5 @@ export type { TicketPackage } from './TicketPackageRow';
 export { default as BuyTicketForm } from './BuyTicketForm';
 export { default as TicketSummary } from './TicketSummary';
 export { default as PaymentSuccess } from './PaymentSuccess';
-export { default as GiftTicketForm } from './GiftTicketForm';
-export { default as GiftTicketSummary } from './GiftTicketSummary';
 export { default as EmptyTicketState } from './EmptyTicketState';
 export { default as TicketFormSkeleton } from './TicketFormSkeleton';
-

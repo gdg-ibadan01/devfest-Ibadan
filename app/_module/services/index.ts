@@ -7,4 +7,4 @@ export * from './order.service';
 export * from './dashboard.service';
 export * from './discounts.service';
 export * from './audit-log.service';
-
+export * from './discount.service';

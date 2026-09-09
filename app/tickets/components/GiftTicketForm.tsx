@@ -1,6 +1,14 @@
 import React from 'react';
-import { ArrowLeft, ArrowUpRight } from 'lucide-react';
+import {
+  ArrowLeft,
+  ArrowUpRight,
+  Tag,
+  CheckCircle2,
+  AlertCircle,
+  X,
+} from 'lucide-react';
 import TicketPackageRow, { TicketPackage } from './TicketPackageRow';
+import type { AppliedDiscount } from '@/app/_module/services/discount.service';
 
 interface GiftTicketFormProps {
   senderName: string;
@@ -16,6 +24,14 @@ interface GiftTicketFormProps {
   packages: TicketPackage[];
   onSubmit: (e: React.FormEvent) => void;
   onBack: () => void;
+  discountCode?: string;
+  setDiscountCode?: (val: string) => void;
+  appliedDiscount?: AppliedDiscount | null;
+  onApplyDiscount?: (code: string) => void;
+  onRemoveDiscount?: () => void;
+  isApplyingDiscount?: boolean;
+  discountError?: string;
+  setDiscountError?: (err: string) => void;
 }
 
 export default function GiftTicketForm({
@@ -32,6 +48,14 @@ export default function GiftTicketForm({
   packages,
   onSubmit,
   onBack,
+  discountCode = '',
+  setDiscountCode,
+  appliedDiscount = null,
+  onApplyDiscount,
+  onRemoveDiscount,
+  isApplyingDiscount = false,
+  discountError = '',
+  setDiscountError,
 }: Readonly<GiftTicketFormProps>) {
   const isFormInvalid =
     !senderName.trim() ||
@@ -158,6 +182,125 @@ export default function GiftTicketForm({
                 />
               ))}
             </div>
+          </div>
+
+          {/* Discount Code Section */}
+          <div className="flex flex-col gap-1.5 mt-1">
+            <label
+              htmlFor="discountCode"
+              className="text-[#1E1E1E] text-[14px] md:text-[16px] font-medium font-sans flex items-center justify-between"
+            >
+              <span className="flex items-center gap-1.5">
+                <Tag className="w-4 h-4 text-[#515151]" />
+                Discount Code
+              </span>
+              {appliedDiscount && (
+                <span className="text-[12px] text-emerald-600 font-semibold bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-xl">
+                  Applied
+                </span>
+              )}
+            </label>
+
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <input
+                  type="text"
+                  id="discountCode"
+                  placeholder="Enter discount code"
+                  value={discountCode}
+                  onChange={(e) => {
+                    setDiscountCode?.(e.target.value.toUpperCase());
+                    if (discountError && setDiscountError) setDiscountError('');
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      if (
+                        !appliedDiscount &&
+                        discountCode?.trim() &&
+                        !isApplyingDiscount &&
+                        onApplyDiscount
+                      ) {
+                        onApplyDiscount(discountCode.trim());
+                      }
+                    }
+                  }}
+                  disabled={Boolean(appliedDiscount) || isApplyingDiscount}
+                  className={`w-full border rounded-[8px] px-4 py-3 md:py-3.5 text-[14px] md:text-[16px] placeholder-gray-400 outline-none transition-colors uppercase disabled:bg-gray-50 disabled:text-gray-600 tracking-wider font-mono text-[14px] ${
+                    discountError && !appliedDiscount
+                      ? 'border-red-500 focus:border-red-500'
+                      : 'border-gray-200 focus:border-[#4285F4]'
+                  }`}
+                />
+                {appliedDiscount && (
+                  <CheckCircle2 className="w-5 h-5 text-emerald-600 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                )}
+              </div>
+
+              {appliedDiscount ? (
+                <button
+                  type="button"
+                  onClick={onRemoveDiscount}
+                  className="px-4 py-2 text-[13px] md:text-[14px] font-semibold text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100/80 border border-red-200 rounded-[8px] transition-colors shrink-0 flex items-center gap-1.5 cursor-pointer font-sans"
+                >
+                  <X className="w-4 h-4" />
+                  Remove
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() =>
+                    onApplyDiscount &&
+                    discountCode?.trim() &&
+                    onApplyDiscount(discountCode.trim())
+                  }
+                  disabled={!discountCode?.trim() || isApplyingDiscount}
+                  className="px-5 py-2 text-[14px] md:text-[15px] font-semibold text-white bg-[#1E1E1E] hover:bg-core-blue disabled:bg-gray-300 disabled:cursor-not-allowed rounded-[8px] transition-colors shrink-0 flex items-center gap-2 cursor-pointer disabled:hover:bg-gray-300 font-sans"
+                >
+                  {isApplyingDiscount ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <span>Applying...</span>
+                    </>
+                  ) : (
+                    'Apply'
+                  )}
+                </button>
+              )}
+            </div>
+
+            {/* Applied Discount Feedback */}
+            {appliedDiscount && (
+              <div className="flex items-center justify-between bg-emerald-50 border border-emerald-200 rounded-[8px] px-3.5 py-2 text-emerald-800 text-[13px] md:text-[14px] mt-0.5">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>
+                    Discount applied:{' '}
+                    <strong className="font-bold">
+                      ₦
+                      {appliedDiscount.amount.toLocaleString('en-NG', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}{' '}
+                      off
+                    </strong>
+                  </span>
+                </div>
+                <span className="font-mono text-[11px] md:text-[12px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold">
+                  {appliedDiscount.code}
+                </span>
+              </div>
+            )}
+
+            {/* Error Message (displayed in red on the UI) */}
+            {discountError && !appliedDiscount && (
+              <div className="flex items-center gap-1.5 text-red-600 text-[13px] md:text-[14px] font-medium mt-1 font-sans">
+                <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+                <span className="text-red-600 font-medium">
+                  {discountError}
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Submit Button */}

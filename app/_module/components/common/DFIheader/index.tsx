@@ -4,9 +4,6 @@ import { menuItems } from '@/app/_module/config/constants/globals';
 import useMediaQueryWatcher from '@/app/_module/config/hooks/useMediaQueryWatcher';
 import Link from 'next/link';
 import { ReactNode, useEffect, useState } from 'react';
-// import { DevfestLogo } from '../../icons';
-// import Cancel from '../../icons/Cancel';
-// import Hamburger from '../../icons/Hamburger';
 import Cancel from '../../icons/Cancel.svg';
 import DevfestLogo from '../../icons/DevfestLogo.svg';
 import Hamburger from '../../icons/Hamburger.svg';
@@ -57,11 +54,8 @@ const DFIHeader = (): ReactNode => {
                   <MenuLink key={slur} label={label} slur={slur} />
                 </div>
               ))}
-              {/* <Link href="https://dev2024-game.vercel.app/" target="_blank">
-                <Button className={styles.btn}>Play Puzzle Game</Button>
-              </Link> */}
               <Link
-                href="/tickets"
+                href="/tickets/buy"
                 className="group relative inline-flex p-[2px] rounded-[100px] overflow-hidden transition-all duration-300 hover:scale-105 active:scale-95 shadow-md hover:shadow-lg"
               >
                 <span className="absolute inset-0 bg-gradient-to-r from-[#34A853] via-[#FBBC04] to-[#4285F4] rounded-[100px] transition-opacity group-hover:opacity-90" />
@@ -80,11 +74,8 @@ const DFIHeader = (): ReactNode => {
                   <MenuLink key={slur} label={label} slur={slur} />
                 </div>
               ))}
-              {/* <Link href="https://dev2024-game.vercel.app/" target="_blank">
-                <Button className={styles.btn}>Play Puzzle Game</Button>
-              </Link> */}
               <Link
-                href="/tickets"
+                href="/tickets/buy"
                 className="group relative inline-flex p-[2px] rounded-[100px] overflow-hidden transition-all duration-300 hover:scale-105 active:scale-95 shadow-md hover:shadow-lg"
               >
                 <span className="absolute inset-0 bg-gradient-to-r from-[#34A853] via-[#FBBC04] to-[#4285F4] rounded-[100px] transition-opacity group-hover:opacity-90" />
