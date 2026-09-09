@@ -570,6 +570,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/discounts/code/{discountCode}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get discount amount */
+        get: operations["DiscountsController_findByCode"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/tickets": {
         parameters: {
             query?: never;
@@ -1395,9 +1412,12 @@ export interface components {
              */
             validFrom: string;
             name: string;
-            limit: number | null;
+            code: string;
+            limit: number;
+            /** @description End date in YYYY-MM-DD format */
+            validTo: string | null;
             /** @enum {string} */
-            status: "SCHEDULED" | "ACTIVE";
+            status: "SCHEDULED" | "ACTIVE" | "EXPIRED";
             /** Format: date-time */
             createdAt: string;
             /** @description Tickets this discount applies to */
@@ -1416,6 +1436,15 @@ export interface components {
         DiscountListResponseDto: {
             data: components["schemas"]["DiscountListItemDto"][];
             meta: components["schemas"]["DiscountPaginationMetaDto"];
+        };
+        DiscountByCodeResponseDto: {
+            /**
+             * @description The discount amount
+             * @example 1000.00
+             */
+            amount: string;
+            /** @description Whether the discount is currently active */
+            isActive: boolean;
         };
         CreateDiscountDto: {
             /** @example DevFest2026 Early Bird */
@@ -1439,15 +1468,20 @@ export interface components {
              */
             ticketSlugs: string[];
             /**
-             * @description Maximum number of times this discount can be used. Required for BULK discounts. Set to null for unlimited.
+             * @description Maximum number of times this discount can be used. Required for BULK discounts.
              * @example 100
              */
-            limit?: Record<string, never>;
+            limit: number;
             /**
              * @description Date string in YYYY-MM-DD format
              * @example 2026-01-01
              */
             validFrom: string;
+            /**
+             * @description End date in YYYY-MM-DD format. Discount expires at end of day.
+             * @example 2026-12-31
+             */
+            validTo: string;
             /**
              * @default false
              * @example false
@@ -1474,9 +1508,11 @@ export interface components {
              */
             amount: string;
             ticketSlugs: string[];
-            limit: number | null;
+            limit: number;
             /** Format: date-time */
             validFrom: string;
+            /** Format: date-time */
+            validTo: string | null;
             forFirstTimersOnly: boolean;
             recipientEmails: string[];
             /** Format: date-time */
@@ -2689,6 +2725,35 @@ export interface operations {
             };
             /** @description Requires permission */
             403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    DiscountsController_findByCode: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                discountCode: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Discount found */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DiscountByCodeResponseDto"];
+                };
+            };
+            /** @description Discount not found */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

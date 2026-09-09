@@ -27,7 +27,6 @@ const INITIAL_FORM: TicketFormData = {
     validity: 'friday',
     fridayValidityDate: '',
     saturdayValidityDate: '',
-    quantityLimit: '',
     capacity: '',
     startDate: '',
     endDate: '',

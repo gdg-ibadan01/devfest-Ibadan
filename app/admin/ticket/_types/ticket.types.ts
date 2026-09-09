@@ -20,7 +20,6 @@ export interface TicketAdvancedSettings {
   /** Actual ISO date strings for validity — maps to API validityDates[] */
   fridayValidityDate: string;
   saturdayValidityDate: string;
-  quantityLimit: string;
   capacity: string;
   startDate: string;
   endDate: string;
@@ -57,4 +56,3 @@ export function buildValidityDates(settings: TicketAdvancedSettings): string[] {
   if (settings.validity === 'saturday') return [settings.saturdayValidityDate].filter(Boolean);
   return [settings.fridayValidityDate, settings.saturdayValidityDate].filter(Boolean);
 }
-

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { Search, Plus, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { Search, Plus, ChevronLeft, ChevronRight, X, Copy, Check } from 'lucide-react';
 import { format, isValid, parseISO } from 'date-fns';
 import { cn } from '@/app/_module/lib/utils';
 import { useDiscounts } from '@/app/_module/services/discounts.service';
@@ -14,10 +14,12 @@ const STATUS_CONFIG: Record<
 > = {
   ACTIVE: { dot: 'bg-[#34A853]', text: 'text-[#1B873B]', bg: 'bg-[#E8F5E9]', label: 'Active' },
   SCHEDULED: { dot: 'bg-[#F59E0B]', text: 'text-[#92400E]', bg: 'bg-[#FEF3C7]', label: 'Scheduled' },
+  EXPIRED: { dot: 'bg-[#9AA0A6]', text: 'text-[#5F6368]', bg: 'bg-[#F1F3F4]', label: 'Expired' },
 };
 
 const COLUMNS = [
   'Discount Name',
+  'Code',
   'Type',
   'Amount',
   'Tickets',
@@ -60,6 +62,7 @@ export default function DiscountTable({ onCreateClick }: DiscountTableProps) {
   const [cursor, setCursor] = useState<string | undefined>(undefined);
   const [direction, setDirection] = useState<'next' | 'previous' | undefined>(undefined);
   const [cursorStack, setCursorStack] = useState<string[]>([]);
+  const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
   const { data, isLoading, isError, isFetching } = useDiscounts({
     name: searchQuery || undefined,
@@ -101,6 +104,12 @@ export default function DiscountTable({ onCreateClick }: DiscountTableProps) {
 
   const hasData = discounts.length > 0;
   const showLoading = isLoading || isFetching;
+
+  const copyCode = async (code: string) => {
+    await navigator.clipboard.writeText(code);
+    setCopiedCode(code);
+    window.setTimeout(() => setCopiedCode(null), 1500);
+  };
 
   return (
     <>
@@ -184,6 +193,23 @@ export default function DiscountTable({ onCreateClick }: DiscountTableProps) {
                     >
                       <td className="px-5 py-4 text-[13px] text-gray-800 font-medium">
                         {discount.name}
+                      </td>
+                      <td className="px-5 py-4 text-[13px] text-gray-600">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono">{discount.code}</span>
+                          <button
+                            type="button"
+                            onClick={() => copyCode(discount.code)}
+                            aria-label={`Copy discount code ${discount.code}`}
+                            className="rounded p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700"
+                          >
+                            {copiedCode === discount.code ? (
+                              <Check size={14} className="text-green-600" />
+                            ) : (
+                              <Copy size={14} />
+                            )}
+                          </button>
+                        </div>
                       </td>
                       <td className="px-5 py-4 text-[13px] text-gray-600">
                         {discount.type === 'SINGLE' ? 'Single Use' : 'Bulk'}

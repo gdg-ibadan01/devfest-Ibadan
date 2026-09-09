@@ -80,9 +80,7 @@ export type DashboardOverviewResponseDto = Schemas['DashboardOverviewResponseDto
 // The generated schema describes `limit` as an object because the upstream
 // OpenAPI document marks a nullable numeric field with `type: object`.
 // Keep the API's actual contract explicit for callers.
-export type CreateDiscountDto = Omit<Schemas['CreateDiscountDto'], 'limit'> & {
-  limit?: number | null;
-};
+export type CreateDiscountDto = Schemas['CreateDiscountDto'];
 export type CreateDiscountResponseDto = Schemas['CreateDiscountResponseDto'];
 export type DiscountListTicketDto = Schemas['DiscountListTicketDto'];
 export type DiscountListItemDto = Schemas['DiscountListItemDto'];

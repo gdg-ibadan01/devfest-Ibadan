@@ -16,7 +16,7 @@ const INITIAL_FORM: CreateDiscountForm = {
   ticketSlugs: [],
   limit: '',
   validFrom: '',
-  endDate: '',
+  validTo: '',
   forFirstTimersOnly: false,
   recipientEmails: '',
 };
@@ -216,6 +216,7 @@ interface Errors {
   ticketSlugs?: string;
   limit?: string;
   validFrom?: string;
+  validTo?: string;
   recipientEmails?: string;
 }
 
@@ -283,12 +284,14 @@ export default function CreateDiscountModal({
     }
 
     if (!form.validFrom) e.validFrom = 'Valid from date is required.';
+    if (!form.validTo) e.validTo = 'Valid to date is required.';
+
+    const limit = parseInt(form.limit, 10);
+    if (!form.limit || isNaN(limit) || limit < 1) {
+      e.limit = 'Limit must be at least 1.';
+    }
 
     if (form.type === 'BULK') {
-      const limit = parseInt(form.limit, 10);
-      if (!form.limit || isNaN(limit) || limit < 1) {
-        e.limit = 'Limit is required for bulk discounts.';
-      }
       const emails = form.recipientEmails
         .split(/[\n,]/)
         .map((s) => s.trim())
@@ -312,11 +315,12 @@ export default function CreateDiscountModal({
       type: form.type,
       amount: parseFloat(form.amount),
       ticketSlugs: form.ticketSlugs,
+      limit: parseInt(form.limit, 10),
       validFrom: form.validFrom,
+      validTo: form.validTo,
       forFirstTimersOnly: form.forFirstTimersOnly,
       ...(form.type === 'BULK'
         ? {
-            limit: parseInt(form.limit, 10),
             recipientEmails: form.recipientEmails
               .split(/[\n,]/)
               .map((s) => s.trim())
@@ -388,7 +392,7 @@ export default function CreateDiscountModal({
 
           {/* Amount */}
           <div>
-            <FieldLabel required>Amount</FieldLabel>
+            <FieldLabel required>Discount Amount</FieldLabel>
             <AmountInput
               value={form.amount}
               onChange={(v) => patch('amount', v)}
@@ -416,26 +420,27 @@ export default function CreateDiscountModal({
             <FieldError message={errors.ticketSlugs} />
           </div>
 
-          {/* Bulk-only fields */}
+          {/* Limit is required for every discount type in the current schema. */}
+          <div>
+            <FieldLabel required>Limit</FieldLabel>
+            <input
+              type="number"
+              min="1"
+              value={form.limit}
+              onChange={(e) => patch('limit', e.target.value)}
+              placeholder="Maximum number of times this discount can be used"
+              className={cn(
+                'w-full border rounded-lg px-4 py-3 text-[13px] text-gray-800 placeholder:text-gray-300 focus:outline-none transition-colors bg-white',
+                errors.limit ? '' : 'border-gray-200 focus:border-gray-400'
+              )}
+              style={errors.limit ? { borderColor: '#E61530' } : undefined}
+            />
+            <FieldError message={errors.limit} />
+          </div>
+
+          {/* Bulk-only recipient list */}
           {form.type === 'BULK' && (
             <>
-              <div>
-                <FieldLabel required>Usage Limit</FieldLabel>
-                <input
-                  type="number"
-                  min="1"
-                  value={form.limit}
-                  onChange={(e) => patch('limit', e.target.value)}
-                  placeholder="Maximum number of times this can be used"
-                  className={cn(
-                    'w-full border rounded-lg px-4 py-3 text-[13px] text-gray-800 placeholder:text-gray-300 focus:outline-none transition-colors bg-white',
-                    errors.limit ? '' : 'border-gray-200 focus:border-gray-400'
-                  )}
-                  style={errors.limit ? { borderColor: '#E61530' } : undefined}
-                />
-                <FieldError message={errors.limit} />
-              </div>
-
               <div>
                 <FieldLabel required>Recipient Emails</FieldLabel>
                 <textarea
@@ -465,15 +470,16 @@ export default function CreateDiscountModal({
             <FieldError message={errors.validFrom} />
           </div>
 
-          {/* End Date — reference only, not sent to the API (no such field exists on the backend) */}
+          {/* Valid To */}
           <div>
-            <FieldLabel>End Date <span className="font-normal text-gray-400">(reference only — not enforced by the API)</span></FieldLabel>
+            <FieldLabel required>Valid To</FieldLabel>
             <DatePickerInput
-              value={form.endDate}
-              onChange={(v) => patch('endDate', v)}
+              value={form.validTo}
+              onChange={(v) => patch('validTo', v)}
               placeholder="Select end date"
               fromDate={form.validFrom ? new Date(form.validFrom) : undefined}
             />
+            <FieldError message={errors.validTo} />
           </div>
 
           {/* Advanced Settings */}
