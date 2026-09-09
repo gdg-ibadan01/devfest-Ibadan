@@ -66,7 +66,7 @@ export const SwagTicketCard: FC<SwagTicketCardProps> = ({
   buttonHref,
   isExternal = false,
   eventTag = 'DEVFEST IBADAN 2026.',
-  dateTag = '26 NOV 2026',
+  dateTag = '21 NOV 2026',
   colorScheme = 'green',
   delay = 0,
   className = '',

@@ -109,103 +109,103 @@ export const DFIFooterV2: FC = () => {
     <footer className="w-full bg-[#0A0A0A] text-white">
       <div className="w-full md:max-w-[1500px] mx-auto">
         <div className="container mx-auto px-6 sm:px-10 lg:px-24 py-56 space-y-[40px] md:gap-0">
-        {/* Top Section */}
-        <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-[48px] lg:gap-16">
-          {/* Left: Logos + Enquiry */}
-          <div className="flex flex-col gap-8 shrink-0">
-            <div className="flex flex-wrap items-center gap-4 sm:gap-6">
-              <Link
-                href="/"
-                className="inline-block transition-opacity hover:opacity-90"
-              >
-                <Image
-                  src="/devfest_logo.svg"
-                  alt="DevFest Ibadan 2026"
-                  width={269}
-                  height={77}
-                  className="h-10 sm:h-12 md:h-14 w-auto object-contain"
-                  priority
-                />
-              </Link>
-              <a
-                href="https://gdg.community.dev/gdg-ibadan/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-block transition-opacity hover:opacity-90"
-              >
-                <Image
-                  src="/gdg_logo.svg"
-                  alt="Google Developer Groups"
-                  width={239}
-                  height={78}
-                  className="h-10 sm:h-12 md:h-14 w-auto object-contain"
-                  priority
-                />
-              </a>
+          {/* Top Section */}
+          <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-[48px] lg:gap-16">
+            {/* Left: Logos + Enquiry */}
+            <div className="flex flex-col gap-8 shrink-0">
+              <div className="flex flex-wrap items-center gap-4 sm:gap-6">
+                <Link
+                  href="/"
+                  className="inline-block transition-opacity hover:opacity-90"
+                >
+                  <Image
+                    src="/devfest_logo.svg"
+                    alt="DevFest Ibadan 2026"
+                    width={269}
+                    height={77}
+                    className="h-10 sm:h-12 md:h-14 w-auto object-contain"
+                    priority
+                  />
+                </Link>
+                <a
+                  href="https://gdg.community.dev/gdg-ibadan/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-block transition-opacity hover:opacity-90"
+                >
+                  <Image
+                    src="/gdg_logo.svg"
+                    alt="Google Developer Groups"
+                    width={239}
+                    height={78}
+                    className="h-10 sm:h-12 md:h-14 w-auto object-contain"
+                    priority
+                  />
+                </a>
+              </div>
+
+              {/* Enquiry Contact */}
+              <div className='mt-14'>
+                <p className="font-mono font-bold text-xs uppercase tracking-wider text-gray-400 mb-4">
+                  REACH OUT FOR ENQUIRY:
+                </p>
+                <div className="flex flex-wrap items-center gap-8">
+                  <a
+                    href="mailto:info@gdgibadan.com"
+                    className="text-[#FBBC04] underline underline-offset-4 text-sm sm:text-base font-medium transition-opacity hover:opacity-80"
+                  >
+                    info@gdgibadan.com
+                  </a>
+                </div>
+              </div>
             </div>
 
-            {/* Enquiry Contact */}
-            <div className='mt-14'>
-              <p className="font-mono font-bold text-xs uppercase tracking-wider text-gray-400 mb-4">
-                REACH OUT FOR ENQUIRY:
-              </p>
-              <div className="flex flex-wrap items-center gap-8">
-                <a
-                  href="mailto:info@gdgibadan.com"
-                  className="text-[#FBBC04] underline underline-offset-4 text-sm sm:text-base font-medium transition-opacity hover:opacity-80"
-                >
-                  info@gdgibadan.com
-                </a>
+            {/* Right: Navigation Columns */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-8 sm:gap-12 md:gap-16 lg:gap-20">
+              <div className="flex flex-col space-y-4">
+                {columnOneLinks.map(renderLink)}
+              </div>
+              <div className="flex flex-col space-y-4">
+                {columnTwoLinks.map(renderLink)}
+              </div>
+              <div className="flex flex-col space-y-4 col-span-2 sm:col-span-1">
+                {columnThreeLinks.map(renderLink)}
               </div>
             </div>
           </div>
 
-          {/* Right: Navigation Columns */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-8 sm:gap-12 md:gap-16 lg:gap-20">
-            <div className="flex flex-col space-y-4">
-              {columnOneLinks.map(renderLink)}
+          {/* Bottom Section */}
+          <div className="mt-16 sm:mt-24 lg:mt-32 flex flex-col sm:flex-row items-start sm:items-end justify-between gap-6">
+            {/* Social Links */}
+            <div>
+              <p className="font-mono text-[11px] font-bold tracking-widest text-[#71717A] uppercase mb-2">
+                FOLLOW US ON:
+              </p>
+              <div className="flex flex-wrap items-center gap-6 sm:gap-8 lg:gap-24 font-mono text-xs sm:text-sm font-medium">
+                {socialLinks.map((social) => (
+                  <a
+                    key={social.label}
+                    href={social.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`${social.colorClass} underline underline-offset-4 hover:opacity-80 transition-opacity`}
+                  >
+                    {social.label}
+                  </a>
+                ))}
+              </div>
             </div>
-            <div className="flex flex-col space-y-4">
-              {columnTwoLinks.map(renderLink)}
-            </div>
-            <div className="flex flex-col space-y-4 col-span-2 sm:col-span-1">
-              {columnThreeLinks.map(renderLink)}
-            </div>
-          </div>
-        </div>
 
-        {/* Bottom Section */}
-        <div className="mt-16 sm:mt-24 lg:mt-32 flex flex-col sm:flex-row items-start sm:items-end justify-between gap-6">
-          {/* Social Links */}
-          <div>
-            <p className="font-mono text-[11px] font-bold tracking-widest text-[#71717A] uppercase mb-2">
-              FOLLOW US ON:
-            </p>
-            <div className="flex flex-wrap items-center gap-6 sm:gap-8 lg:gap-24 font-mono text-xs sm:text-sm font-medium">
-              {socialLinks.map((social) => (
-                <a
-                  key={social.label}
-                  href={social.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`${social.colorClass} underline underline-offset-4 hover:opacity-80 transition-opacity`}
-                >
-                  {social.label}
-                </a>
-              ))}
+            {/* Copyright */}
+            <div>
+              <p className="font-mono text-xs sm:text-sm text-[#71717A]">
+                © {new Date().getFullYear()} Google Developer Group Ibadan.
+              </p>
+              <p className="font-mono text-[10px] sm:text-xs text-[#4A4A57] mt-1">
+                DevFest Ibadan 2026, POWERED BY ABIT TECHNOLOGY HUB
+              </p>
             </div>
           </div>
-
-          {/* Copyright */}
-          <div>
-            <p className="font-mono text-xs sm:text-sm text-[#71717A]">
-              © {new Date().getFullYear()} Google Developer Group Ibadan.
-            </p>
-            <p className="font-mono text-[10px] sm:text-xs text-[#4A4A57] mt-1">
-              DevFest Ibadan 2026, POWERED BY ABIT TECHNOLOGY HUB
-            </p>
-          </div>
-        </div>
         </div>
       </div>
     </footer>
