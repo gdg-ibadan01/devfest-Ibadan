@@ -22,7 +22,7 @@ export const metadata = {
     description:
       'Join us at DevFest Ibadan 2026 - The largest developer conference in Southwest Nigeria. Connect with tech experts, learn about the latest technologies, and be part of an inclusive tech community.',
     images: [
-      'https://res.cloudinary.com/dh8trnu8w/image/upload/q_auto/v1755685267/email-template-banner.png',
+      'https://res.cloudinary.com/dh8trnu8w/image/upload/v1788938883/og-image_asbrfm.png',
       'https://res.cloudinary.com/dh8trnu8w/image/upload/v1756199854/devfestlogo.jpg',
     ],
     siteName: 'DevFest Ibadan 2026',
@@ -50,7 +50,7 @@ export const metadata = {
     description:
       'Join us at DevFest Ibadan 2026 - The largest developer conference in Southwest Nigeria. Connect with tech experts, learn about the latest technologies, and be part of an inclusive tech community.',
     images: [
-      'https://res.cloudinary.com/dh8trnu8w/image/upload/q_auto/v1755685267/email-template-banner.png',
+      'https://res.cloudinary.com/dh8trnu8w/image/upload/v1788938883/og-image_asbrfm.png,',
       'https://res.cloudinary.com/dh8trnu8w/image/upload/v1756199854/devfestlogo.jpg',
     ],
     type: 'website',
