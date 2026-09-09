@@ -27,14 +27,32 @@ export class RolesService {
     RoleNotFoundErr: `RoleNotFoundErr`,
   } as const;
 
-  async create(payload: CreateRoleDto) {
+  async create(payload: CreateRoleDto, actorId?: string) {
     try {
-      const role = await this.prisma.role.create({
-        data: {
-          name: payload.name.toUpperCase(),
-          description: payload.description,
-          permissions: payload.permissions,
-        },
+      const role = await this.prisma.$transaction(async (tx) => {
+        const created = await tx.role.create({
+          data: {
+            name: payload.name.toUpperCase(),
+            description: payload.description,
+            permissions: payload.permissions,
+          },
+        });
+
+        if (actorId) {
+          await tx.auditLog.create({
+            data: {
+              adminId: actorId,
+              roleId: created.id,
+              action: 'CREATE_ROLE',
+              metadata: {
+                roleName: created.name,
+                permissions: created.permissions,
+              },
+            },
+          });
+        }
+
+        return created;
       });
 
       return {

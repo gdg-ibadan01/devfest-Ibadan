@@ -98,7 +98,8 @@ export type AuditLogDetailResponseDto = Schemas['AuditLogDetailResponseDto'];
 // ---- Query param helpers -----------------------------------
 export interface OrderListParams {
   search?: string;
-  status?: 'AWAITING_PAYMENT' | 'PAID' | 'CANCELLED' | 'AWAITING_REFUND' | 'REFUNDED';
+  status?:
+  'AWAITING_PAYMENT' | 'PAID' | 'CANCELLED' | 'AWAITING_REFUND' | 'REFUNDED';
   direction?: 'next' | 'previous';
   cursor?: string;
   limit?: number;
@@ -122,8 +123,39 @@ export interface TicketListParams {
   name?: string;
 }
 
+// ---- Audit Logs --------------------------------------------
+export interface AuditLogItemDto {
+  id: string;
+  adminId: string;
+  roleId: string | null;
+  action: string;
+  metadata: Record<string, any> | null;
+  createdAt: string;
+  admin: {
+    id: string;
+    fullName: string;
+    email: string;
+    role?: {
+      id: string;
+      name: string;
+    } | null;
+  };
+  role?: {
+    id: string;
+    name: string;
+  } | null;
+}
+
+export interface AuditLogPaginationMetaDto {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+}
+
 export interface CheckedInListParams {
-  /** Event dates (YYYY-MM-DD) to match check-ins against — pass the selected ticket's `eventDates`. */
   eventDates: string[];
   direction?: 'next' | 'previous';
   cursor?: string;
@@ -140,6 +172,16 @@ export interface DiscountListParams {
 export interface AuditLogListParams {
   page?: number;
   limit?: number;
+}
+
+export interface AuditLogListResponseDto {
+  success: boolean;
+  message: string;
+  data: AuditLogItemDto[];
+  meta: AuditLogPaginationMetaDto;
+}
+
+export interface AuditLogListParams extends PaginationParams {
   search?: string;
   action?: string;
   adminId?: string;
@@ -147,4 +189,21 @@ export interface AuditLogListParams {
   startDate?: string;
   endDate?: string;
   sortOrder?: 'asc' | 'desc';
+}
+
+export interface CheckedInListParams {
+  eventDates: string[];
+  direction?: 'next' | 'previous';
+  cursor?: string;
+  limit?: number;
+}
+
+export interface OrderListParams {
+  search?: string;
+  status?:
+  | 'AWAITING_PAYMENT'
+  | 'PAID'
+  | 'CANCELLED'
+  | 'AWAITING_REFUND'
+  | 'REFUNDED';
 }

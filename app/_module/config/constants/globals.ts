@@ -1,20 +1,21 @@
 export const menuItems = [
-  { label: 'Agenda', slur: 'agenda' },
-  { label: 'Speakers', slur: 'speakers' },
-  { label: 'Organizers', slur: 'organizers' },
+  // { label: 'Agenda', slur: 'agenda' },
+  // { label: 'Speakers', slur: 'speakers' },
+  // { label: 'Organizers', slur: 'organizers' },
   { label: 'Merch', slur: 'https://selar.co/m/gdg-ibadan1' },
   // { label: 'Team', slur: 'team' },
-  { label: 'RSVP', slur: '/rsvp' },
-  { label: 'Ticket', slur: '/ticket' },
+  // { label: 'RSVP', slur: '/rsvp' },
+  { label: 'CFP', slur: 'https://tinyurl.com/devfestib2026' },
 ];
 
 export const footerItems = {
   frameOne: [
-    { label: 'Agenda', slur: 'agenda' },
-    { label: 'Organizers', slur: 'organizers' },
-    { label: 'Speakers', slur: 'speakers' },
+    // { label: 'Agenda', slur: 'agenda' },
+    // { label: 'Organizers', slur: 'organizers' },
+    // { label: 'Speakers', slur: 'speakers' },
     { label: 'Merch', slur: 'https://selar.co/m/gdg-ibadan1' },
-    { label: 'Ticket', slur: 'https://gdg.community.dev/e/mrbzpf/' },
+    // { label: 'Ticket', slur: 'https://gdg.community.dev/e/mrbzpf/' },
+    { label: 'Ticket', slur: 'tickets' },
   ],
   frameTwo: [
     {

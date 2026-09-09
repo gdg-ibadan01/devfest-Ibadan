@@ -59,7 +59,6 @@ export class MonnifyService implements PaymentProvider {
     const FEE_RATE = 0.015; // 1.5%
 
     amountInKobo = Math.trunc(amountInKobo);
-    this.logger.debug({ amountInKobo });
     const effectiveFeeRate = FEE_RATE * (1 + VAT_RATE);
     const effectiveCapKobo = Math.round(MONNIFY_CAP_CHARGE * (1 + VAT_RATE));
     const capThresholdKobo = Math.round(MONNIFY_CAP_CHARGE / FEE_RATE);
@@ -134,7 +133,7 @@ export class MonnifyService implements PaymentProvider {
     } catch (err) {
       if (err instanceof ServiceError) throw err;
       this.logger.error(
-        `Monnify initialize failed for ${params.paymentReference}: ${(err as Error).message}`,
+        `Monnify initialize payment failed for ${params.paymentReference}: ${(err as Error).message}`,
       );
       throw new ServiceError(
         'Payment gateway is unreachable',
