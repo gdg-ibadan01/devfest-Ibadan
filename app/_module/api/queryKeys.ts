@@ -52,6 +52,7 @@ export const queryKeys = {
   // Discounts
   discounts: {
     all: (params?: Record<string, unknown>) => ['discounts', params] as const,
+    byCode: (code: string) => ['discounts', 'code', code] as const,
   },
 
   // Audit Logs
@@ -59,10 +60,5 @@ export const queryKeys = {
     all: (params?: Record<string, unknown>) => ['audit-logs', params] as const,
     detail: (id: string) => ['audit-logs', id] as const,
     actions: () => ['audit-logs', 'actions'] as const,
-  },
-
-  // Discounts
-  discounts: {
-    byCode: (code: string) => ['discounts', 'code', code] as const,
   },
 } as const;
