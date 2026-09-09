@@ -24,7 +24,9 @@ export class RolesService {
   static ERRORS = {
     DuplicateRoleErr: `DuplicateRoleErr`,
     AlreadyDeactivatedErr: 'AlreadyDeactivatedErr',
+    AlreadyActiveErr: 'AlreadyActiveErr',
     RoleNotFoundErr: `RoleNotFoundErr`,
+    NotFoundErr: 'NotFoundErr',
   } as const;
 
   async create(payload: CreateRoleDto, actorId?: string) {
@@ -144,7 +146,10 @@ export class RolesService {
   async update(id: string, payload: Partial<CreateRoleDto>, actorId: string) {
     const role = await this.prisma.role.findUnique({ where: { id } });
     if (!role) {
-      throw new ServiceError('Role not found', 'NotFoundErr');
+      throw new ServiceError(
+        'Role not found',
+        RolesService.ERRORS.RoleNotFoundErr,
+      );
     }
 
     const updatedRole = await this.prisma.$transaction(async (tx) => {
@@ -183,13 +188,16 @@ export class RolesService {
   async deactivate(id: string, actorId: string) {
     const role = await this.prisma.role.findUnique({ where: { id } });
     if (!role) {
-      throw new ServiceError('Role not found', 'NotFoundErr');
+      throw new ServiceError(
+        'Role not found',
+        RolesService.ERRORS.RoleNotFoundErr,
+      );
     }
 
     if (!role.isActive) {
       throw new ServiceError(
         'Role is already deactivated',
-        'AlreadyDeactivatedErr',
+        RolesService.ERRORS.AlreadyDeactivatedErr,
       );
     }
 

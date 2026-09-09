@@ -36,6 +36,7 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { IJwtPayload } from './interfaces/admin.interface';
 import { RoleResponseDto } from './dto/role.dto';
+import { AdminActionResponseDto } from './dto/admin-response.dto';
 
 @Controller('roles')
 @ApiTags('Role')
@@ -128,11 +129,23 @@ export class RolesController {
   @RequirePermission('roles.deactivate')
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @ApiOkResponse({
-    type: RoleResponseDto,
+    type: AdminActionResponseDto,
   })
   @ApiResponse({
     status: 401,
     description: 'Unauthorized.',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden.',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Role not found.',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Role is already deactivated.',
   })
   @ApiOperation({ summary: 'Deactivate a role' })
   @HttpCode(HttpStatus.OK)
@@ -142,6 +155,7 @@ export class RolesController {
     } catch (err) {
       switch ((err as Error).name) {
         case RolesService.ERRORS.RoleNotFoundErr:
+        case RolesService.ERRORS.NotFoundErr:
           throw new NotFoundException((err as Error).message);
 
         case RolesService.ERRORS.AlreadyDeactivatedErr:

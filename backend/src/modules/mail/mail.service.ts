@@ -167,7 +167,7 @@ export class MailService implements OnModuleInit {
     });
   }
 
-  async sendInviteEmail(email: string, fullName: string) {
+  async sendInviteEmail(email: string, fullName: string, tempPassword: string) {
     const logoUrl =
       this.configService.get<string>('app.logoUrl') ??
       'https://example.com/default-logo.png';
@@ -176,7 +176,7 @@ export class MailService implements OnModuleInit {
       from: `"GDG Event Manager" <${this.configService.get<string>('cpanel.from.email')}>`,
       to: email,
       subject: 'You are invited as an Admin',
-      html: adminInviteTemplate(fullName, logoUrl),
+      html: adminInviteTemplate(fullName, logoUrl, tempPassword),
     });
   }
 
