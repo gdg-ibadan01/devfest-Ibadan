@@ -67,7 +67,7 @@ const navItems: {
     label: 'Checkins',
     href: '/admin/checkins',
     icon: Checkins,
-    moduleTerms: ['attendee'],
+    moduleTerms: ['attendee', 'check'],
   },
   {
     label: 'Discount & Referral',
