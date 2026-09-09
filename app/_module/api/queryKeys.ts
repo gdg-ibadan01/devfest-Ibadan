@@ -44,12 +44,6 @@ export const queryKeys = {
       ['attendees', 'checked-in', params] as const,
   },
 
-  // Audit Logs
-  auditLogs: {
-    all: (params?: Record<string, unknown>) => ['auditLogs', params] as const,
-    detail: (id: string) => ['auditLogs', id] as const,
-  },
-
   // Dashboard
   dashboard: {
     overview: () => ['dashboard', 'overview'] as const,
