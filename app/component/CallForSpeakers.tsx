@@ -33,12 +33,12 @@ const statsData = [
     color: '#34A853', // Green
     label: '21 NOVEMBER 2026',
     description:
-      'One power-packed day of expert talks, code labs, and pure technical vibes.',
+      'Expert talks, code labs, and pure technical vibes.',
   },
   {
     stat: '4+ TRACKS',
     color: '#EA4335', // Red
-    label: 'WEB · MOBILE · AI · CLOUD',
+    label: 'WEB · MOBILE · AI · E.T.C',
     description:
       'Deep-dive tracks tailored specifically to the domains defining modern global tech.',
   },
@@ -54,7 +54,7 @@ const statsData = [
     color: '#4285F4', // Blue
     label: 'COMMUNITY LEGACY',
     description:
-      'Celebrating10+ years of empowering and connecting South-West devs.',
+      'Celebrating 10+ years of empowering and connecting South-West devs.',
   },
 ];
 

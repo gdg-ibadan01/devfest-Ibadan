@@ -85,7 +85,7 @@ const DevfestHero: FC = () => {
                 transition={{ duration: 0.6, delay: 0.1, ease: 'easeOut' }}
                 className="mt-6 text-base sm:text-lg text-[#4B5563] max-w-xl leading-[160%] font-normal font-inter"
               >
-                The biggest developer gathering in South-West Nigeria is back. 3 weekends of PreDevFest Series (Oct–Nov), a Virtual Event on Friday Nov 20th, and the main Physical Event on Saturday Nov 21st.
+                The biggest developer gathering in Oyo State Nigeria is back. 3 weekends of PreDevFest Series (Oct–Nov), a Virtual Event on Friday Nov 20th, and the main Physical Event on Saturday Nov 21st.
               </motion.p>
 
               <motion.div
