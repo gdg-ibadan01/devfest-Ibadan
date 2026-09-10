@@ -198,6 +198,23 @@ export default function BuyTicket() {
     }
   };
 
+  const handleResetToForm = () => {
+    setFullName('');
+    setEmail('');
+    setReference(null);
+    setIsGift(false);
+    setReceiverName('');
+    setReceiverEmail('');
+    setReceiverPhone('');
+    if (packages.length > 0) {
+      setSelectedPackageId(packages[0].id);
+    }
+    setDiscountCode('');
+    setAppliedDiscount(null);
+    setDiscountError('');
+    setView('form');
+  };
+
   // ── Render ─────────────────────────────────────────────────────────────────
   const renderContent = () => {
     if (isLoadingTickets) {
@@ -288,7 +305,11 @@ export default function BuyTicket() {
             transition={{ duration: 0.25, ease: 'easeOut' }}
             className="w-full flex justify-center z-10"
           >
-            <PaymentSuccess reference={reference!} />
+            <PaymentSuccess
+              reference={reference!}
+              onReset={handleResetToForm}
+              resetButtonLabel="Buy Another Ticket"
+            />
           </motion.div>
         )}
       </AnimatePresence>

@@ -12,12 +12,15 @@ export const apiClient = axios.create({
 // Response interceptor
 apiClient.interceptors.response.use(
   (response) => response,
-  (error: AxiosError<{ message?: string }>) => {
+  (error: AxiosError<{ message?: string | string[]; error?: string }>) => {
     const status = error.response?.status;
-    const message =
-      error.response?.data?.message ??
-      error.message ??
-      'An unexpected error occurred';
+    const rawMessage = error.response?.data?.message;
+    const message = Array.isArray(rawMessage)
+      ? rawMessage.join(', ')
+      : (rawMessage ??
+        error.response?.data?.error ??
+        error.message ??
+        'An unexpected error occurred');
 
     let handled = false;
     if (status === 403) {
