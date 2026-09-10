@@ -133,12 +133,12 @@ export class CreateOrderResponseDto {
   @ApiProperty()
   currency: string;
 
-  @ApiProperty({
-    type: String,
-    nullable: true,
-    description: 'Payment checkout URL to redirect the payer to',
-  })
-  checkoutUrl: string | null;
+  // @ApiProperty({
+  //   type: String,
+  //   nullable: true,
+  //   description: 'Payment checkout URL to redirect the payer to',
+  // })
+  // checkoutUrl: string | null;
 
   @ApiProperty({ type: Date, format: 'date-time' })
   expiresAt: Date;

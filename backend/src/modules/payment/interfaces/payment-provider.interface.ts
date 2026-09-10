@@ -35,4 +35,8 @@ export interface PaymentProvider {
     params: InitializePaymentParams,
   ): Promise<InitializedPayment>;
   requestRefund(params: RefundPaymentParams): Promise<RefundPaymentResult>;
+  calculateAmountWithCharges(amountInKobo: number): {
+    amount: number;
+    vatAndCharges: number;
+  };
 }

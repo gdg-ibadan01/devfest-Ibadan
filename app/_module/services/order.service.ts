@@ -134,15 +134,11 @@ export function useCheckInFilteredOrders({
   });
 }
 
-import {
-  createOrderAction,
-  getOrderByReferenceAction,
-} from '@/app/actions/orders';
-
 // ---- Create order (manual attendee registration) ----------------
 
 async function createOrder(dto: CreateOrderDto): Promise<CreateOrderResponseDto> {
-  return await createOrderAction(dto);
+  const { data } = await apiClient.post<CreateOrderResponseDto>('/orders', dto);
+  return data;
 }
 
 export function useCreateOrder() {
@@ -190,7 +186,10 @@ export function useCreateOrderForAttendee() {
 async function getOrderByReference(
   reference: string
 ): Promise<GetOrderReferenceResponseDto> {
-  return await getOrderByReferenceAction(reference);
+  const { data } = await apiClient.get<GetOrderReferenceResponseDto>(
+    `/orders/reference/${encodeURIComponent(reference)}`
+  );
+  return data;
 }
 
 export function useOrderByReference(reference: string | null) {
