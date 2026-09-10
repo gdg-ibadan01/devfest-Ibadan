@@ -44,6 +44,7 @@
     "lenis": "^1.1.14",
     "lucide-react": "^0.427.0",
     "moment": "^2.30.1",
+    "monnify-ts": "^1.0.6",
     "nest-winston": "^1.10.2",
     "next": "14.2.5",
     "nextjs-toploader": "^3.9.17",

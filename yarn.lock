@@ -4309,6 +4309,11 @@ moment@^2.30.1:
   resolved "https://registry.yarnpkg.com/moment/-/moment-2.30.1.tgz#f8c91c07b7a786e30c59926df530b4eac96974ae"
   integrity sha512-uEmtNhbDOrWPFS+hdjFCBfy9f2YoyzRpwcl+DqpC6taX21FzsTLQVbMV/W7PzNSX6x/bhC1zA3c2UQ5NzH6how==
 
+monnify-ts@^1.0.6:
+  version "1.0.6"
+  resolved "https://registry.yarnpkg.com/monnify-ts/-/monnify-ts-1.0.6.tgz#b6a92692a05b85f83b897d9ed8f45f0c0edcd720"
+  integrity sha512-B95MGKd+Z6Z/wpFBgyzzBxCBQXtTEYnSLQ/vZDLUj/P+vzHQKFkWC4Ten7vmiyGGBZI0L+RqnDvbs9Jfs3amyQ==
+
 motion-dom@^11.18.1:
   version "11.18.1"
   resolved "https://registry.yarnpkg.com/motion-dom/-/motion-dom-11.18.1.tgz#e7fed7b7dc6ae1223ef1cce29ee54bec826dc3f2"

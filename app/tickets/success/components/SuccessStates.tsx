@@ -60,9 +60,13 @@ export function SuccessLoadingState() {
 export function SuccessErrorState({
   message,
   reference,
+  onReset,
+  resetButtonLabel = 'Back to Ticket Form',
 }: Readonly<{
   message: string;
   reference?: string | null;
+  onReset?: () => void;
+  resetButtonLabel?: string;
 }>) {
   return (
     <div className="w-full md:max-w-[560px] md:bg-white md:rounded-[24px] md:shadow-xl md:border border-gray-100 overflow-hidden p-8 md:p-12 flex flex-col items-center gap-5">
@@ -77,6 +81,15 @@ export function SuccessErrorState({
         <p className="text-[12px] text-gray-400 font-mono bg-gray-50 px-3 py-1.5 rounded-lg">
           Ref: {reference}
         </p>
+      )}
+      {onReset && (
+        <button
+          type="button"
+          onClick={onReset}
+          className="w-full mt-2 flex items-center justify-center gap-2 bg-[#1E1E1E] hover:bg-core-blue text-white py-3.5 rounded-[100px] font-bold transition-all text-[15px] md:text-[16px] font-sans shadow-md hover:shadow-lg cursor-pointer focus:outline-none"
+        >
+          <span>{resetButtonLabel}</span>
+        </button>
       )}
     </div>
   );

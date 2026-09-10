@@ -21,12 +21,16 @@ interface SuccessOrderCardProps {
   order: GetOrderReferenceResponseDto;
   reference: string | null;
   onDownload: () => void;
+  onReset?: () => void;
+  resetButtonLabel?: string;
 }
 
 export default function SuccessOrderCard({
   order,
   reference,
   onDownload,
+  onReset,
+  resetButtonLabel,
 }: Readonly<SuccessOrderCardProps>) {
   const isPaid = order.status === 'PAID';
 
@@ -149,24 +153,45 @@ export default function SuccessOrderCard({
           </motion.p>
         )}
 
-        {/* Download Button */}
-        <AnimatePresence>
-          {isPaid && (
+        {/* Action Buttons */}
+        <div className="flex flex-col gap-3">
+          <AnimatePresence>
+            {isPaid && (
+              <motion.button
+                key="download-btn"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.6, duration: 0.3 }}
+                type="button"
+                id="download-ticket-btn"
+                onClick={onDownload}
+                className="w-full flex items-center justify-center gap-2.5 bg-[#1E1E1E] hover:bg-core-blue disabled:bg-gray-400 text-white py-4 rounded-[100px] font-bold transition-all text-[15px] md:text-[16px] font-sans shadow-md hover:shadow-lg disabled:cursor-not-allowed cursor-pointer focus:outline-none"
+              >
+                <Download className="w-4 h-4" />
+                <span>Download Ticket</span>
+              </motion.button>
+            )}
+          </AnimatePresence>
+
+          {onReset && (
             <motion.button
-              key="download-btn"
+              key="reset-btn"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6, duration: 0.3 }}
+              transition={{ delay: isPaid ? 0.65 : 0.45, duration: 0.3 }}
               type="button"
-              id="download-ticket-btn"
-              onClick={onDownload}
-              className="w-full flex items-center justify-center gap-2.5 bg-[#1E1E1E] hover:bg-core-blue disabled:bg-gray-400 text-white py-4 rounded-[100px] font-bold transition-all text-[15px] md:text-[16px] font-sans shadow-md hover:shadow-lg disabled:cursor-not-allowed cursor-pointer focus:outline-none"
+              id="buy-another-ticket-btn"
+              onClick={onReset}
+              className={`w-full flex items-center justify-center gap-2 py-3.5 rounded-[100px] font-bold transition-all text-[15px] md:text-[16px] font-sans cursor-pointer focus:outline-none ${
+                isPaid
+                  ? 'border-2 border-[#1E1E1E] hover:bg-black/5 text-[#1E1E1E]'
+                  : 'bg-[#1E1E1E] hover:bg-core-blue text-white shadow-md'
+              }`}
             >
-              <Download className="w-4 h-4" />
-              <span>Download Ticket</span>
+              <span>{resetButtonLabel ?? 'Buy Another Ticket'}</span>
             </motion.button>
           )}
-        </AnimatePresence>
+        </div>
       </motion.div>
     </motion.div>
   );
