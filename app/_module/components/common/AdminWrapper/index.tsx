@@ -30,7 +30,7 @@ const AdminWrapper = ({ children, title }: AdminHeaderWrapperProps) => {
         {/* MOBILE header */}
         <div className="flex lg:hidden items-center w-full gap-3">
           {/* Logo */}
-          <Link href="/admin/home" className="flex-shrink-0 w-[90px]">
+          <Link href="/core/home" className="flex-shrink-0 w-[90px]">
             <Image src={DevfestLogo} alt="DevFest Ibadan" priority />
           </Link>
 

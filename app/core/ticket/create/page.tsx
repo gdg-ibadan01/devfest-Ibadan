@@ -40,7 +40,7 @@ export default function CreateTicketPage() {
 
   const { mutate: createTicket, isPending } = useCreateTicket();
 
-  const handleCancel = () => router.push('/admin/ticket');
+  const handleCancel = () => router.push('/core/ticket');
 
   const handleSubmit = () => {
     const { basicInfo, pricing, advancedSettings } = form;
@@ -59,7 +59,7 @@ export default function CreateTicketPage() {
         saleEndsAt: advancedSettings.endDate,
       },
       {
-        onSuccess: () => router.push('/admin/ticket'),
+        onSuccess: () => router.push('/core/ticket'),
       }
     );
   };

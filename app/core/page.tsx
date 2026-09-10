@@ -21,7 +21,7 @@ export default async function AdminSignInPage() {
   // a special NEXT_REDIRECT error internally, which a surrounding catch
   // would otherwise swallow and silently prevent the navigation.
   if (authenticated) {
-    redirect('/admin/home');
+    redirect('/core/home');
   }
 
   return <AdminSignInClient />;

@@ -81,10 +81,10 @@ export default function TicketTable() {
   // Client-side date filter on saleStartsAt
   const filtered = filterDate
     ? tickets.filter((t) => {
-        const d = parseISO(t.saleStartsAt);
-        const f = parseISO(filterDate);
-        return isValid(d) && isValid(f) && (isAfter(d, f) || isEqual(d, f));
-      })
+      const d = parseISO(t.saleStartsAt);
+      const f = parseISO(filterDate);
+      return isValid(d) && isValid(f) && (isAfter(d, f) || isEqual(d, f));
+    })
     : tickets;
 
   const handleSearch = useCallback(() => {
@@ -162,7 +162,7 @@ export default function TicketTable() {
         </button>
 
         <div className="sm:ml-auto flex items-center gap-3 w-full sm:w-auto flex-wrap">
-          <Link href="/admin/ticket/create" className="flex-1 sm:flex-none">
+          <Link href="/core/ticket/create" className="flex-1 sm:flex-none">
             <button className="w-full sm:w-auto px-5 py-[11px] border border-gray-200 text-[13px] font-medium text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center gap-2">
               <Plus size={18} /> Create Ticket
             </button>
@@ -265,8 +265,8 @@ export default function TicketTable() {
                           setPreviewTicketId(ticket.id);
                           setPreviewOpen(true);
                         }}
-                        onEdit={() => {}}
-                        onDelete={() => {}}
+                        onEdit={() => { }}
+                        onDelete={() => { }}
                       />
                     </td>
                   </tr>

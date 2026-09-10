@@ -24,7 +24,7 @@ export function useAdminLogin() {
     mutationFn: loginAdmin,
     onSuccess: () => {
       showToast.success('Successful sign in');
-      router.replace('/admin/home');
+      router.replace('/core/home');
     },
     onError: (error: Error) => {
       notifyApiError(error, 'Incorrect email or password');
@@ -43,7 +43,7 @@ export function useAdminLogout() {
     },
     onSuccess: () => {
       showToast.success('Signed out successfully');
-      router.replace('/admin');
+      router.replace('/core');
     },
   });
 }

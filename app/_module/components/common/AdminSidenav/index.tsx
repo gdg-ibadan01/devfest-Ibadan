@@ -33,64 +33,64 @@ const navItems: {
   /** Terms used to match the API's view permission labels for this module. */
   moduleTerms?: string[];
 }[] = [
-  {
-    label: 'Home',
-    href: '/admin/home',
-    icon: Home,
-    moduleTerms: ['dashboard'],
-  },
-  {
-    label: 'Admins',
-    href: '/admin/admins',
-    icon: Admins,
-    moduleTerms: ['admin'],
-  },
-  {
-    label: 'Ticket',
-    href: '/admin/ticket',
-    icon: Ticket,
-    moduleTerms: ['ticket'],
-  },
-  {
-    label: 'Orders',
-    href: '/admin/orders',
-    icon: AdminOrders,
-    moduleTerms: ['order'],
-  },
-  {
-    label: 'Attendees',
-    href: '/admin/attendees',
-    icon: Attendees,
-    moduleTerms: ['attendee'],
-  },
-  {
-    label: 'Checkins',
-    href: '/admin/checkins',
-    icon: Checkins,
-    moduleTerms: ['attendee', 'check'],
-  },
-  {
-    label: 'Discount & Referral',
-    href: '/admin/discount-referral',
-    icon: DiscountReferral,
-    moduleTerms: ['discount'],
-  },
-  {
-    label: 'Roles & Permission',
-    href: '/admin/roles-permission',
-    icon: RolesAndPermissions,
-    moduleTerms: ['role', 'permission'],
-  },
-  {
-    label: 'Audit Log',
-    href: '/admin/audit-log',
-    icon: AuditLog,
-    moduleTerms: ['audit log', 'audit'],
-  },
-];
+    {
+      label: 'Home',
+      href: '/core/home',
+      icon: Home,
+      moduleTerms: ['dashboard'],
+    },
+    {
+      label: 'Admins',
+      href: '/core/admins',
+      icon: Admins,
+      moduleTerms: ['admin'],
+    },
+    {
+      label: 'Ticket',
+      href: '/core/ticket',
+      icon: Ticket,
+      moduleTerms: ['ticket'],
+    },
+    {
+      label: 'Orders',
+      href: '/core/orders',
+      icon: AdminOrders,
+      moduleTerms: ['order'],
+    },
+    {
+      label: 'Attendees',
+      href: '/core/attendees',
+      icon: Attendees,
+      moduleTerms: ['attendee'],
+    },
+    {
+      label: 'Checkins',
+      href: '/core/checkins',
+      icon: Checkins,
+      moduleTerms: ['attendee', 'check'],
+    },
+    {
+      label: 'Discount & Referral',
+      href: '/core/discount-referral',
+      icon: DiscountReferral,
+      moduleTerms: ['discount'],
+    },
+    {
+      label: 'Roles & Permission',
+      href: '/core/roles-permission',
+      icon: RolesAndPermissions,
+      moduleTerms: ['role', 'permission'],
+    },
+    {
+      label: 'Audit Log',
+      href: '/core/audit-log',
+      icon: AuditLog,
+      moduleTerms: ['audit log', 'audit'],
+    },
+  ];
 
 const isActivePath = (pathname: string, href: string) => {
-  if (href === '/admin/home') return pathname === '/admin' || pathname === href;
+  if (href === '/core/home') return pathname === '/core' || pathname === href;
   return pathname === href || pathname.startsWith(`${href}/`);
 };
 
@@ -171,8 +171,8 @@ function NavContent({ onLinkClick }: { onLinkClick?: () => void }) {
   const visibleItems = permissionsLoadingState
     ? navItems.filter((item) => !item.moduleTerms)
     : navItems.filter((item) =>
-        canViewModule(item.moduleTerms, rolePermissionIds, allPermissions)
-      );
+      canViewModule(item.moduleTerms, rolePermissionIds, allPermissions)
+    );
 
   const handleLogout = () => {
     logout();
@@ -247,7 +247,7 @@ const AdminSidenav = () => {
         {/* Logo */}
         <div className="flex h-[80px] items-center justify-center bg-white px-8 flex-shrink-0">
           <Link
-            href="/admin/home"
+            href="/core/home"
             className="flex w-[120px] items-center justify-center"
           >
             <Image src={DevfestLogo} alt="DevFest Ibadan" priority />
@@ -280,7 +280,7 @@ const AdminSidenav = () => {
         {/* Drawer header: logo + close button */}
         <div className="flex h-[80px] items-center justify-between bg-white px-5 flex-shrink-0">
           <Link
-            href="/admin/home"
+            href="/core/home"
             onClick={close}
             className="flex w-[90px] items-center"
           >

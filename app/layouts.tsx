@@ -127,11 +127,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   // Define the layout to be displayed based on the current route
-  const adminRoute = '/admin';
+  const adminRoute = '/core';
   const pathname = usePathname();
 
   // Auth pages (/admin sign-in *) use HomeLayout — no sidenav
-  const isAdminSignIn = pathname === '/admin';
+  const isAdminSignIn = pathname === '/core';
   const isAdminDashboard = pathname.startsWith(adminRoute) && !isAdminSignIn;
 
   return (
