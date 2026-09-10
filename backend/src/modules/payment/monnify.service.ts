@@ -155,8 +155,7 @@ export class MonnifyService implements PaymentProvider {
     params: RefundPaymentParams,
   ): Promise<RefundPaymentResult> {
     const tooLowToRefund =
-      params.amount - MonnifyService.MONNIFY_MINIMUM_REFUND <
-      MonnifyService.MONNIFY_MINIMUM_REFUND;
+      params.amount < MonnifyService.MONNIFY_MINIMUM_REFUND;
     if (tooLowToRefund) {
       throw new ServiceError(
         `Refund amount ${params.amount} below Monnify minimum ${MonnifyService.MONNIFY_MINIMUM_REFUND}`,
