@@ -53,7 +53,7 @@ export class MonnifyService implements PaymentProvider {
     private readonly mnfyCfg: ConfigType<typeof monnifyConfig>,
   ) {}
 
-  private withCharges(amountInKobo: number) {
+  calculateAmountWithCharges(amountInKobo: number) {
     const MONNIFY_CAP_CHARGE = 200000; // ₦2,000 in kobo
     const VAT_RATE = 0.075; // 7.5%
     const FEE_RATE = 0.015; // 1.5%
@@ -89,7 +89,9 @@ export class MonnifyService implements PaymentProvider {
     params: InitializePaymentParams,
   ): Promise<InitializedPayment> {
     try {
-      const { amount, vatAndCharges } = this.withCharges(params.amount * 100);
+      const { amount, vatAndCharges } = this.calculateAmountWithCharges(
+        params.amount * 100,
+      );
 
       const payload = {
         amount,
