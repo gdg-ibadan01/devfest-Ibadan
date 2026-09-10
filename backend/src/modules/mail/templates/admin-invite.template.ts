@@ -1,4 +1,8 @@
-export function adminInviteTemplate(fullName: string, logoUrl: string): string {
+export function adminInviteTemplate(
+  fullName: string,
+  logoUrl: string,
+  tempPassword?: string,
+): string {
   const optimizedLogoUrl = logoUrl.includes('cloudinary')
     ? logoUrl.replace('/upload/', '/upload/w_200,h_80,c_fit/')
     : logoUrl;
@@ -38,8 +42,20 @@ export function adminInviteTemplate(fullName: string, logoUrl: string): string {
 
               <p>
                 Your admin account has been created successfully.
-                Please use the password reset process to create your password.
               </p>
+
+              ${
+                tempPassword
+                  ? `<p>
+                Your temporary password is: <strong style="font-family: monospace; font-size: 16px; color: #007BFF; background-color: #f1f3f4; padding: 4px 8px; border-radius: 4px;">${tempPassword}</strong>
+              </p>
+              <p>
+                Please log in with this temporary password and change it after logging in.
+              </p>`
+                  : `<p>
+                Please use the password reset process to create your password.
+              </p>`
+              }
 
               <p style="margin-top: 20px;">
                 <a href="https://devfest-ibadan.netlify.app/admin"
@@ -51,7 +67,7 @@ export function adminInviteTemplate(fullName: string, logoUrl: string): string {
                          display: inline-block;
                          font-weight: bold;
                          letter-spacing: 0.5px;">
-                  Reset Password
+                  Log In to Admin Portal
                 </a>
               </p>
 
