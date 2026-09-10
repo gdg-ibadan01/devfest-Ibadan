@@ -263,17 +263,12 @@ export class OrdersService {
     let pdfBuffer: Buffer<ArrayBuffer> | undefined;
     if (!order.ticketUrl) {
       pdfBuffer = await this.pdfService.generateDevFest2026Ticket({
-        amount: new Intl.NumberFormat('en-NG', {
-          style: 'currency',
-          currency: 'NGN',
-        })
-          .format(order.amount.toNumber())
-          .replace('₦', 'NGN '),
+        amount: order.amount.toNumber(),
         ticketCode: order.reference.slice(-6),
         downloadUrl: this.generateSignedDownloadUrl(order.reference),
-        validity: order.ticket.validityDates
-          .map((d) => d.toLocaleDateString('en-US', { weekday: 'long' }))
-          .join(' & '),
+        validity: order.ticket.validityDates.map((d) =>
+          d.toLocaleDateString('en-US', { weekday: 'long' }),
+        ),
       });
     }
 
@@ -776,17 +771,12 @@ Initiating refund for order ${order.id}`,
     if (txResult.ticket && txResult.order) {
       try {
         const pdfBuffer = await this.pdfService.generateDevFest2026Ticket({
-          amount: new Intl.NumberFormat('en-NG', {
-            style: 'currency',
-            currency: 'NGN',
-          })
-            .format(Number(txResult.order.amount))
-            .replace('₦', 'NGN '),
+          amount: txResult.order.amount,
           ticketCode: txResult.order.reference.slice(-6),
           downloadUrl: this.generateSignedDownloadUrl(txResult.order.reference),
-          validity: txResult.ticket.validity_dates
-            .map((d) => d.toLocaleDateString('en-US', { weekday: 'long' }))
-            .join(' & '),
+          validity: txResult.ticket.validity_dates.map((d) =>
+            d.toLocaleDateString('en-US', { weekday: 'long' }),
+          ),
         });
 
         if (!pdfBuffer) return;
@@ -806,10 +796,28 @@ Initiating refund for order ${order.id}`,
       }
     }
 
-    // TODO: send confirmation email
-    console.log(
-      `[TODO] Send confirmation email for order ${txResult.order?.id}`,
-    );
+    if (txResult.order) {
+      await this.mailService
+        .sendTicketConfirmationEmail({
+          eventDate: new Date('2026-11-21'),
+          fullName: txResult.order.attendee_full_name,
+          ticketCode: txResult.order.reference.slice(-6),
+          ticketDownloadUrl: `${this.appConfig.checkoutRedirectUrl}?paymentReference=${txResult.order.reference}`,
+          email: txResult.order.attendee_email,
+        })
+        .then(() => {
+          this.logger.log(
+            `Ticket confirmation email sent for order ${txResult.order?.id}`,
+          );
+        })
+        .catch((err) => {
+          this.logger.error(
+            `Failed to send payment link email for order ${txResult.order?.id} to ${txResult.order?.attendee_email}: ${
+              err instanceof Error ? err.message : err
+            }`,
+          );
+        });
+    }
   }
 
   private async recordRefund(
