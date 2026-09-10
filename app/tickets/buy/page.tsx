@@ -11,19 +11,20 @@ import {
   useApplyDiscount,
 } from '@/app/_module/services';
 import { showToast } from '@/app/_module/lib/notify';
-import type { CreateOrderResponseDto } from '@/app/_module/api/types';
 import {
   TicketPackage,
   BuyTicketForm,
   TicketSummary,
-  PaymentSuccess,
   EmptyTicketState,
   TicketFormSkeleton,
+  PaymentSuccess,
 } from '../components';
+import { useMakePayment } from '@/hooks/useMakePayment';
 
 export default function BuyTicket() {
   const router = useRouter();
   const isTablet = useMediaQueryWatcher('(min-width: 768px)');
+  const { makePayment } = useMakePayment();
 
   const {
     data: onSaleData,
@@ -52,6 +53,7 @@ export default function BuyTicket() {
   // ── Buyer fields ──────────────────────────────────────────────────────────
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
+  const [reference, setReference] = useState<string | null>(null);
 
   // ── Gift mode ─────────────────────────────────────────────────────────────
   const [isGift, setIsGift] = useState(false);
@@ -61,11 +63,6 @@ export default function BuyTicket() {
 
   // ── Package selection ─────────────────────────────────────────────────────
   const [selectedPackageId, setSelectedPackageId] = useState('');
-
-  // ── Order response ────────────────────────────────────────────────────────
-  const [orderData, setOrderData] = useState<CreateOrderResponseDto | null>(
-    null
-  );
 
   // ── Discount ──────────────────────────────────────────────────────────────
   const [discountCode, setDiscountCode] = useState('');
@@ -177,12 +174,18 @@ export default function BuyTicket() {
 
     createOrder(orderPayload, {
       onSuccess: (data) => {
-        setOrderData(data);
-        if (data.checkoutUrl) {
-          window.location.href = data.checkoutUrl;
-        } else {
-          setView('success');
-        }
+        setReference(data.reference);
+        makePayment({
+          amount: Number(data.amount) * 100,
+          orderId: data.id,
+          reference: data.reference,
+          customerEmail: isGift ? receiverEmail.trim() : email.trim(),
+          customerFullName: isGift ? receiverName.trim() : fullName.trim(),
+          paymentDescription: `Paymemnt for the Purchase of ${selectedPackage.title} ticket.`,
+          onComplete: () => {
+            setView('success');
+          },
+        });
       },
     });
   };
@@ -193,23 +196,6 @@ export default function BuyTicket() {
     } else {
       router.back();
     }
-  };
-
-  const handleDownload = () => {
-    const finalPrice = Math.max(
-      0,
-      selectedPackage.price - (appliedDiscount?.amount ?? 0)
-    );
-    const displayName = isGift ? receiverName : fullName;
-    const displayEmail = isGift ? receiverEmail : email;
-    const params = new URLSearchParams({
-      ticketId: orderData?.reference || '25A346B',
-      package: selectedPackage.title,
-      amount: finalPrice.toString(),
-      name: displayName,
-      email: displayEmail,
-    });
-    router.push(`/tickets/preview?${params.toString()}`);
   };
 
   // ── Render ─────────────────────────────────────────────────────────────────
@@ -296,13 +282,13 @@ export default function BuyTicket() {
         {view === 'success' && (
           <motion.div
             key="success"
-            initial={{ opacity: 0, scale: 0.96, y: 15 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -15 }}
-            transition={{ duration: 0.3, ease: 'easeOut' }}
+            transition={{ duration: 0.25, ease: 'easeOut' }}
             className="w-full flex justify-center z-10"
           >
-            <PaymentSuccess onDownload={handleDownload} />
+            <PaymentSuccess reference={reference!} />
           </motion.div>
         )}
       </AnimatePresence>
