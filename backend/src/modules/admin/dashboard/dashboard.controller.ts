@@ -12,15 +12,19 @@ import {
   DashboardOverviewResponseDto,
 } from './dto/dashboard-response.dto';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
+import { RequirePermission } from 'src/common/decorators/permissions.decorator';
+import { PermissionsGuard } from '../guards/permissions.guard';
 
 @ApiTags('Dashboard')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
 @Controller('dashboard')
 export class DashboardController {
   constructor(private readonly dashboardService: DashboardService) {}
 
   @Get('overview')
+  @ApiBearerAuth()
+  @RequirePermission('dashboard.view')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
   @ApiOperation({
     summary:
       'Home screen: stats, registration trend, ticket breakdown, recent attendees',
@@ -31,6 +35,9 @@ export class DashboardController {
   }
 
   @Get('attendees')
+  @ApiBearerAuth()
+  @RequirePermission('dashboard.view')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
   @ApiOperation({
     summary:
       'Attendees screen: filterable paginated registrations list with live summary cards',

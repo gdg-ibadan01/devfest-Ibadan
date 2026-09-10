@@ -139,6 +139,102 @@ export class OrdersService {
     private appConfig: ConfigType<typeof AppConfig>,
   ) {}
 
+  async generateOrderReference(
+    payload: CreateOrderDto,
+    options?: {
+      createdById?: string | null;
+      skipSaleWindowCheck?: boolean;
+    },
+  ): Promise<CreateOrderResponseDto> {
+    const attendeeEmail = payload.attendee.email.trim().toLowerCase();
+    const gifterEmail = payload.gifter?.email.trim().toLowerCase();
+    const createdById = options?.createdById ?? payload.createdById ?? null;
+    const skipSaleWindowCheck =
+      options?.skipSaleWindowCheck ?? payload.skipSaleWindowCheck ?? false;
+
+    let record!: CreatedOrderRecord;
+    for (let attempt = 1; attempt <= TX_MAX_ATTEMPTS; attempt++) {
+      try {
+        record = await this.prisma.$transaction(
+          (tx) =>
+            this.createOrderRecord(tx, {
+              slug: payload.slug,
+              attendeeFullName: payload.attendee.fullName.trim(),
+              attendeeEmail,
+              attendeePhoneNumber: payload.attendee.phoneNumber?.trim() || null,
+              gifterName: payload.gifter?.fullName.trim() ?? null,
+              gifterEmail: gifterEmail ?? null,
+              createdById: createdById ?? null,
+              skipSaleWindowCheck,
+              discountCode: payload.discountCode,
+            }),
+          { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+        );
+        break;
+      } catch (err) {
+        const isRetryable =
+          (err as { code?: string }).code === 'P2034' ||
+          (err as { code?: string }).code ===
+            PrismaErrors.UNIQUE_CONSTRAINT_VIOLATION;
+        if (isRetryable && attempt < TX_MAX_ATTEMPTS) continue;
+        if (err instanceof ServiceError || err instanceof NotFoundException) {
+          throw err;
+        }
+        this.logger.error(err);
+        throw new ServiceError(
+          'Unable to create order. Retry in a few minutes',
+          OrdersService.ERRORS.RetryLaterErr,
+        );
+      }
+    }
+
+    if (createdById) {
+      this.prisma.auditLog
+        .create({
+          data: {
+            adminId: createdById,
+            action: 'CREATE_ATTENDEE',
+            metadata: {
+              orderId: record.order.id,
+              reference: record.order.reference,
+              attendeeFullName: record.order.attendeeFullName,
+              attendeeEmail: record.order.attendeeEmail,
+              attendeePhoneNumber: record.order.attendeePhoneNumber,
+              gifterName: record.order.gifterName,
+              gifterEmail: record.order.gifterEmail,
+              ticketSlug: record.ticketSlug,
+              ticketName: record.ticketName,
+              amount: record.order.amount.toFixed(2),
+            },
+          },
+        })
+        .catch((err: Error) =>
+          this.logger.error(
+            `Failed to write audit log for order ${record.order.id}: ${err.message}`,
+          ),
+        );
+    }
+
+    const { amount, vatAndCharges } =
+      this.paymentProvider.calculateAmountWithCharges(
+        record.order.amount.toNumber(),
+      );
+
+    return {
+      amount: amount.toFixed(2),
+      vatAndCharges: vatAndCharges.toFixed(2),
+      currency: 'NGN',
+      expiresAt: record.order.expiresAt,
+      id: record.order.id,
+      reference: record.order.reference,
+      status: record.order.status,
+      ticket: {
+        name: record.ticketName,
+        slug: record.ticketSlug,
+      },
+    };
+  }
+
   async create(
     payload: CreateOrderDto,
     options?: {
@@ -220,30 +316,30 @@ export class OrdersService {
     };
     const response = await this.initializeCheckout(record, payer);
 
-    if (createdById && response.checkoutUrl) {
-      this.logger.log(
-        `Sending payment link email to ${payer.email} for order ${response.id}`,
-      );
-      await this.mailService
-        .sendPaymentLinkEmail(
-          payer.email,
-          payer.fullName,
-          response.checkoutUrl,
-          Number(response.amount),
-        )
-        .then(() => {
-          this.logger.log(
-            `Payment link email successfully sent to ${payer.email}`,
-          );
-        })
-        .catch((err) => {
-          this.logger.error(
-            `Failed to send payment link email for order ${response.id} to ${payer.email}: ${
-              err instanceof Error ? err.message : err
-            }`,
-          );
-        });
-    }
+    // if (createdById && response.checkoutUrl) {
+    //   this.logger.log(
+    //     `Sending payment link email to ${payer.email} for order ${response.id}`,
+    //   );
+    //   await this.mailService
+    //     .sendPaymentLinkEmail(
+    //       payer.email,
+    //       payer.fullName,
+    //       response.checkoutUrl,
+    //       Number(response.amount),
+    //     )
+    //     .then(() => {
+    //       this.logger.log(
+    //         `Payment link email successfully sent to ${payer.email}`,
+    //       );
+    //     })
+    //     .catch((err) => {
+    //       this.logger.error(
+    //         `Failed to send payment link email for order ${response.id} to ${payer.email}: ${
+    //           err instanceof Error ? err.message : err
+    //         }`,
+    //       );
+    //     });
+    // }
 
     return response;
   }
@@ -600,7 +696,7 @@ export class OrdersService {
       amount: order.amount.toFixed(2),
       vatAndCharges: vatAndCharges.toFixed(2),
       currency: order.currency,
-      checkoutUrl: order.checkoutUrl,
+      // checkoutUrl: order.checkoutUrl,
       expiresAt: order.expiresAt,
       ticket,
       createdById: createdById ?? null,
@@ -771,7 +867,7 @@ Initiating refund for order ${order.id}`,
     if (txResult.ticket && txResult.order) {
       try {
         const pdfBuffer = await this.pdfService.generateDevFest2026Ticket({
-          amount: Number(txResult.order.amount),
+          amount: txResult.order.amount,
           ticketCode: txResult.order.reference.slice(-6),
           downloadUrl: this.generateSignedDownloadUrl(txResult.order.reference),
           validity: txResult.ticket.validity_dates.map((d) =>
@@ -796,10 +892,28 @@ Initiating refund for order ${order.id}`,
       }
     }
 
-    // TODO: send confirmation email
-    console.log(
-      `[TODO] Send confirmation email for order ${txResult.order?.id}`,
-    );
+    if (txResult.order) {
+      await this.mailService
+        .sendTicketConfirmationEmail({
+          eventDate: new Date('2026-11-21'),
+          fullName: txResult.order.attendee_full_name,
+          ticketCode: txResult.order.reference.slice(-6),
+          ticketDownloadUrl: `${this.appConfig.checkoutRedirectUrl}?paymentReference=${txResult.order.reference}`,
+          email: txResult.order.attendee_email,
+        })
+        .then(() => {
+          this.logger.log(
+            `Ticket confirmation email sent for order ${txResult.order?.id}`,
+          );
+        })
+        .catch((err) => {
+          this.logger.error(
+            `Failed to send payment link email for order ${txResult.order?.id} to ${txResult.order?.attendee_email}: ${
+              err instanceof Error ? err.message : err
+            }`,
+          );
+        });
+    }
   }
 
   private async recordRefund(

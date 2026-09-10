@@ -356,7 +356,7 @@ export class AdminService {
       return admin;
     });
 
-    await this.mailService.sendInviteEmail(email, fullName);
+    await this.mailService.sendInviteEmail(email, fullName, tempPassword);
 
     return {
       message:
@@ -401,6 +401,40 @@ export class AdminService {
     });
 
     return { message: 'Admin deactivated successfully' };
+  }
+
+  async activateAdmin(
+    adminId: string,
+    activatedBy: string,
+  ): Promise<{ message: string }> {
+    const target = await this.prisma.admin.findUnique({
+      where: { id: adminId },
+    });
+
+    if (!target) {
+      throw new NotFoundException('Admin not found');
+    }
+
+    if (target.isActive) {
+      throw new BadRequestException('Admin account is already active');
+    }
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.admin.update({
+        where: { id: adminId },
+        data: { isActive: true },
+      });
+
+      await tx.auditLog.create({
+        data: {
+          adminId: activatedBy,
+          action: 'ACTIVATE_ADMIN',
+          metadata: { targetAdminId: adminId },
+        },
+      });
+    });
+
+    return { message: 'Admin activated successfully' };
   }
 
   async findAll(query: AdminQueryDto) {

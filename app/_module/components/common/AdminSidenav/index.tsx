@@ -16,7 +16,13 @@ import Attendees from '../../icons/Attendees';
 import AuditLog from '../../icons/AuditLog';
 import Logout from '../../icons/Logout';
 import { useSidenav } from '@/app/_module/context/SidenavContext';
-import { useMe, useAdminLogout, useRole, useRoles, usePermissions } from '@/app/_module/services';
+import {
+  useMe,
+  useAdminLogout,
+  useRole,
+  useRoles,
+  usePermissions,
+} from '@/app/_module/services';
 import AdminOrders from '../../icons/AdminOrders';
 import Checkins from '../../icons/Checkins';
 
@@ -27,7 +33,12 @@ const navItems: {
   /** Terms used to match the API's view permission labels for this module. */
   moduleTerms?: string[];
 }[] = [
-  { label: 'Home', href: '/admin/home', icon: Home },
+  {
+    label: 'Home',
+    href: '/admin/home',
+    icon: Home,
+    moduleTerms: ['dashboard'],
+  },
   {
     label: 'Admins',
     href: '/admin/admins',
@@ -56,7 +67,7 @@ const navItems: {
     label: 'Checkins',
     href: '/admin/checkins',
     icon: Checkins,
-    moduleTerms: ['checkin'],
+    moduleTerms: ['attendee', 'check'],
   },
   {
     label: 'Discount & Referral',
@@ -130,13 +141,16 @@ function NavContent({ onLinkClick }: { onLinkClick?: () => void }) {
   const pathname = usePathname();
   const { data: me, isLoading: meLoading } = useMe();
   const { data: rolesData, isLoading: rolesLoading } = useRoles();
-  const { data: allPermissionsData, isLoading: permissionsLoading } = usePermissions();
+  const { data: allPermissionsData, isLoading: permissionsLoading } =
+    usePermissions();
   const { mutate: logout, isPending: loggingOut } = useAdminLogout();
 
   const matchedRole = rolesData?.roles.find(
     (role) => role.name.toLowerCase() === me?.role?.name?.toLowerCase()
   );
-  const { data: roleDetails, isLoading: roleLoading } = useRole(matchedRole?.id ?? '');
+  const { data: roleDetails, isLoading: roleLoading } = useRole(
+    matchedRole?.id ?? ''
+  );
 
   const fullName = me?.fullName ?? '';
   const roleName = me?.role?.name ?? '';

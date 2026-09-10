@@ -68,7 +68,7 @@ export class OrdersController {
     @Body() payload: CreateOrderDto,
   ): Promise<CreateOrderResponseDto> {
     try {
-      return await this.ordersService.create(payload);
+      return await this.ordersService.generateOrderReference(payload);
     } catch (err) {
       if (err instanceof HttpException) throw err;
 

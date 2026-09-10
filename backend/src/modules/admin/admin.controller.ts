@@ -203,6 +203,39 @@ export class AdminController {
     return this.adminService.inviteAdmin(inviteDto, user.sub);
   }
 
+  @Patch('activate/:id')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermission('admins.activate')
+  @ApiOperation({ summary: 'Activate an admin account (Super Admin only)' })
+  @ApiOkResponse({
+    description: 'Admin activated successfully',
+    type: AdminActionResponseDto,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized.',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Only SUPER_ADMIN can activate other admins.',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Admin not found.',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Admin account is already active.',
+  })
+  @HttpCode(HttpStatus.OK)
+  async activateAdmin(
+    @Param('id') adminId: string,
+    @CurrentUser() user: IJwtPayload,
+  ) {
+    return this.adminService.activateAdmin(adminId, user.sub);
+  }
+
   @Patch('deactivate/:id')
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, PermissionsGuard)
