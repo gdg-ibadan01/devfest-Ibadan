@@ -796,10 +796,28 @@ Initiating refund for order ${order.id}`,
       }
     }
 
-    // TODO: send confirmation email
-    console.log(
-      `[TODO] Send confirmation email for order ${txResult.order?.id}`,
-    );
+    if (txResult.order) {
+      await this.mailService
+        .sendTicketConfirmationEmail({
+          eventDate: new Date('2026-11-21'),
+          fullName: txResult.order.attendee_full_name,
+          ticketCode: txResult.order.reference.slice(-6),
+          ticketDownloadUrl: `${this.appConfig.checkoutRedirectUrl}?paymentReference=${txResult.order.reference}`,
+          email: txResult.order.attendee_email,
+        })
+        .then(() => {
+          this.logger.log(
+            `Ticket confirmation email sent for order ${txResult.order?.id}`,
+          );
+        })
+        .catch((err) => {
+          this.logger.error(
+            `Failed to send payment link email for order ${txResult.order?.id} to ${txResult.order?.attendee_email}: ${
+              err instanceof Error ? err.message : err
+            }`,
+          );
+        });
+    }
   }
 
   private async recordRefund(

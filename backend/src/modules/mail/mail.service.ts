@@ -4,7 +4,10 @@ import { ConfigService } from '@nestjs/config';
 import { adminInviteTemplate } from './templates/admin-invite.template';
 import { eventReminderTemplate } from './templates/event-reminder.template';
 import { paymentFailedTemplate } from './templates/payment-failure.templare';
-import { ticketConfirmationTemplate } from './templates/ticket-confirmation.template';
+import {
+  TicketConfirmationEmailTemplatePayload,
+  ticketConfirmationTemplate,
+} from './templates/ticket-confirmation.template';
 import { paymentSuccessTemplate } from './templates/payment-success.template';
 import { paymentLinkTemplate } from './templates/payment-link.template';
 import { passwordResetTemplate } from './templates/password-reset.template';
@@ -46,12 +49,10 @@ export class MailService implements OnModuleInit {
   }
 
   async sendTicketConfirmationEmail(
-    email: string,
-    fullName: string,
-    ticketType: string,
-    transactionId: string,
-    ticketNumber: string,
-    isCheckedIn: boolean,
+    payload: Omit<
+      TicketConfirmationEmailTemplatePayload,
+      'logoUrl' | 'supportEmail'
+    >,
   ) {
     const logoUrl =
       this.configService.get<string>('app.logoUrl') ??
@@ -61,20 +62,16 @@ export class MailService implements OnModuleInit {
       this.configService.get<string>('cpanel.from.email') ??
       'noreply@gdgibadan.com';
 
-    const html = ticketConfirmationTemplate(
-      fullName,
-      ticketType,
-      transactionId,
-      ticketNumber,
-      isCheckedIn,
+    const html = ticketConfirmationTemplate({
+      ...payload,
       supportEmail,
       logoUrl,
-    );
+    });
 
-    return this.transporter.sendMail({
-      from: `"GDG Event Manager" <${supportEmail}>`,
-      to: email,
-      subject: 'Ticket Confirmed - DevFest Ibadan 2025',
+    return await this.transporter.sendMail({
+      from: `"GDG Ibadan" <${supportEmail}>`,
+      to: payload.email,
+      subject: 'Ticket Confirmed - DevFest Ibadan 2026',
       html,
     });
   }
