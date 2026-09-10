@@ -12,6 +12,7 @@ export const PERMISSIONS = [
   { id: 'admins.update', label: 'Update admin' },
   { id: 'admins.profile', label: 'View admin profile' },
   { id: 'admins.deactivate', label: 'Deactivate admin' },
+  { id: 'admins.activate', label: 'Activate admin' },
   { id: 'roles.create', label: 'Create role' },
   { id: 'roles.edit', label: 'Edit role' },
   { id: 'roles.assign', label: 'Assign role' },
@@ -25,7 +26,6 @@ export const PERMISSIONS = [
   { id: 'audit-logs.view-list', label: 'View audit logs list' },
   { id: 'audit-logs.view', label: 'View audit log detail' },
   { id: 'dashboard.view', label: 'View dashboard' },
-  { id: 'check_ins.list', label: 'View check-in list' },
 ] as const;
 
 export type PERMISSION_ID = (typeof PERMISSIONS)[number]['id'];
