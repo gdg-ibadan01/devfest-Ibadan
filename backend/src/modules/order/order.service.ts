@@ -263,17 +263,12 @@ export class OrdersService {
     let pdfBuffer: Buffer<ArrayBuffer> | undefined;
     if (!order.ticketUrl) {
       pdfBuffer = await this.pdfService.generateDevFest2026Ticket({
-        amount: new Intl.NumberFormat('en-NG', {
-          style: 'currency',
-          currency: 'NGN',
-        })
-          .format(order.amount.toNumber())
-          .replace('₦', 'NGN '),
+        amount: order.amount.toNumber(),
         ticketCode: order.reference.slice(-6),
         downloadUrl: this.generateSignedDownloadUrl(order.reference),
-        validity: order.ticket.validityDates
-          .map((d) => d.toLocaleDateString('en-US', { weekday: 'long' }))
-          .join(' & '),
+        validity: order.ticket.validityDates.map((d) =>
+          d.toLocaleDateString('en-US', { weekday: 'long' }),
+        ),
       });
     }
 
@@ -776,17 +771,12 @@ Initiating refund for order ${order.id}`,
     if (txResult.ticket && txResult.order) {
       try {
         const pdfBuffer = await this.pdfService.generateDevFest2026Ticket({
-          amount: new Intl.NumberFormat('en-NG', {
-            style: 'currency',
-            currency: 'NGN',
-          })
-            .format(Number(txResult.order.amount))
-            .replace('₦', 'NGN '),
+          amount: txResult.order.amount,
           ticketCode: txResult.order.reference.slice(-6),
           downloadUrl: this.generateSignedDownloadUrl(txResult.order.reference),
-          validity: txResult.ticket.validity_dates
-            .map((d) => d.toLocaleDateString('en-US', { weekday: 'long' }))
-            .join(' & '),
+          validity: txResult.ticket.validity_dates.map((d) =>
+            d.toLocaleDateString('en-US', { weekday: 'long' }),
+          ),
         });
 
         if (!pdfBuffer) return;
