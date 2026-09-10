@@ -13,6 +13,7 @@
     "outDir": "./dist",
     "baseUrl": "./",
     // "rootDir": "src",
+    "jsx": "react-jsx",
     "incremental": true,
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
@@ -23,6 +24,6 @@
     "noFallthroughCasesInSwitch": false,
     "typeRoots": ["./node_modules/@types"]
   },
-  "include": ["src/**/*", "test"],
+  "include": ["src/**/*", "test", "*.ttf"],
   "exclude": ["node_modules", "dist", ".eslintrc.js"]
 }

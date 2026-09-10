@@ -8,6 +8,7 @@ import {
   Matches,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
 
 export enum Role {
   ADMIN = 'ADMIN',
@@ -16,7 +17,7 @@ export enum Role {
 
 export class CreateAdminDto {
   @ApiProperty({ description: 'Full name of the admin', example: 'John Doe' })
-  @IsNotEmpty()
+  @Transform(({ value }) => value === 'true' || value === true)
   @IsString()
   fullName: string;
 
@@ -25,12 +26,12 @@ export class CreateAdminDto {
     example: 'admin@gdg.com',
   })
   @IsEmail()
-  @IsNotEmpty()
+  @Transform(({ value }) => value === 'true' || value === true)
   email: string;
 
   @ApiProperty({ description: 'User password', example: 'StrongPassword123!' })
   @IsString({ message: 'Password must be a string' })
-  @IsNotEmpty({ message: 'Password is required' })
+  @Transform(({ value }) => value === 'true' || value === true)
   @MinLength(8, { message: 'Password must be at least 8 characters long' })
   @Matches(/^[A-Za-z0-9!@#\$%\^\&*\)\(+=._\[\]\/-]{8,}$/, {
     message:

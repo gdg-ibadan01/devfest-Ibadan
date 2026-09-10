@@ -46,17 +46,23 @@ const Pills: FC<iPills> = ({
   return (
     <div
       id={text}
-      className={`${Styles.container} ${isVisible ? Styles.fallIn : ''} mb-[2rem] md:mb-[0rem]`}
+      className={`${Styles.animationWrapper} ${isVisible ? Styles.fallIn : ''} mb-[2rem] md:mb-[0rem]`}
       style={
         {
-          background: bgColor,
-          padding: padding,
           '--rotate-angle': `${randomAngle}deg`,
         } as CSSProperties & Record<string, any>
       }
-      onClick={handleRoute}
     >
-      <p>{text || 'NFT ARTIST'}</p>
+      <div
+        className={Styles.pillContainer}
+        style={{
+          background: bgColor,
+          padding: padding,
+        }}
+        onClick={handleRoute}
+      >
+        <p>{text || 'NFT ARTIST'}</p>
+      </div>
     </div>
   );
 };

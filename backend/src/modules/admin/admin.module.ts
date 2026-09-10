@@ -12,12 +12,16 @@ import { RolesController } from './roles.controller';
 import { RolesService } from './roles.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { SuperadminSeedService } from './superadmin-seed.service';
+import { AuditLogModule } from './audit-log/audit-log.module';
+import { DashboardModule } from './dashboard/dashboard.module';
 
 @Module({
   imports: [
+    AuditLogModule,
     AttendeeModule,
     ConfigModule,
     PaymentsModule,
+    DashboardModule,
     MailModule,
     PassportModule,
     JwtModule.registerAsync({
@@ -46,6 +50,6 @@ import { SuperadminSeedService } from './superadmin-seed.service';
     PrismaService,
     SuperadminSeedService,
   ],
-  exports: [AdminService],
+  exports: [AdminService, AuditLogModule],
 })
 export class AdminModule {}

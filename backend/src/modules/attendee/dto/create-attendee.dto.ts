@@ -1,67 +1,65 @@
-import {
-  IsString,
-  IsNotEmpty,
-  IsEmail,
-  IsOptional,
-  IsNumber,
-  IsPositive,
-  Length,
-  Matches,
-} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-// import { IsValidPhoneNumber } from '../../../common/validators/phone.validator';
+import { Transform } from 'class-transformer';
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  Length,
+  MaxLength,
+} from 'class-validator';
 
 export class CreateAttendeeDto {
+  @IsString()
+  @IsNotEmpty()
+  @Length(2, 100)
+  @Transform(({ value }) => value?.trim())
+  @ApiProperty({
+    description: 'Attendee full name',
+    example: 'Adetunji Oluwapeyibomi',
+  })
+  fullName!: string;
+
+  @IsEmail()
+  @Transform(({ value }) => value?.trim().toLowerCase())
   @ApiProperty({
     description: 'Attendee email address',
-    example: 'john.doe@example.com',
+    example: 'maryesivue@gmail.com',
   })
-  @IsEmail()
-  @IsNotEmpty()
-  email: string;
+  email!: string;
 
-  @ApiProperty({
-    description: 'Full name of the attendee',
-    example: 'John Doe',
-  })
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  @Length(2, 50)
-  fullName: string;
-
+  @MaxLength(20)
   @ApiPropertyOptional({
     description: 'Attendee phone number',
-    example: '08012345678',
+    example: '08103030303',
   })
-  // @IsValidPhoneNumber()
-  @IsOptional({ message: 'Phone number must be a string' })
-  @IsString()
-  phoneNumber?: string;
+  phone?: string;
 
-  @ApiPropertyOptional({
-    description: 'Name of the company',
-    example: 'Flutterwave Nigeria LTD',
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty({
+    description: 'Slug of the selected ticket package',
+    example: 'friday-workshop-2025',
   })
+  ticketSlug!: string;
+
   @IsOptional()
   @IsString()
   @Length(2, 100)
-  company?: string;
-
+  @Transform(({ value }) => value?.trim())
   @ApiPropertyOptional({
-    description: 'Job title of the attendee',
-    example: 'Software Engineer',
+    description: 'Name of the person paying, if this ticket is being gifted',
+    example: 'Akinlolu Peter',
   })
-  @IsOptional()
-  @IsString()
-  @Length(2, 100)
-  jobTitle?: string;
+  gifterName?: string;
 
-  @ApiPropertyOptional({
-    description: 'Amount paid by the attendee',
-    example: 5000,
-  })
   @IsOptional()
-  @IsNumber()
-  @IsPositive()
-  amount?: number;
+  @IsEmail()
+  @Transform(({ value }) => value?.trim().toLowerCase())
+  @ApiPropertyOptional({
+    description: "Gifter's email, if this ticket is being gifted",
+  })
+  gifterEmail?: string;
 }

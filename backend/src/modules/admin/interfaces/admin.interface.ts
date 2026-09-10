@@ -10,23 +10,30 @@ export interface IAdmin {
   updatedAt: Date;
 }
 
+export interface IAdminRole {
+  id: string;
+  name: string;
+}
+
+export interface IAdminInvitedBy {
+  id: string;
+  name: string;
+}
+
 export interface IAdminResponse {
   id: string;
   fullName: string;
   email: string;
-  role: string;
+  role: IAdminRole;
   isActive: boolean;
+  invitedBy: IAdminInvitedBy | null;
   createdAt: Date;
   updatedAt: Date;
 }
 
 export interface IJwtPayload {
   sub: string;
-  email: string;
-  role: {
-    name: string;
-    permissions: PERMISSION_ID[];
-  };
+  roleId: string;
   iat?: number;
   exp?: number;
 }
@@ -41,4 +48,13 @@ export interface IDashboardStats {
   completedEvents: number;
   recentRegistrations: any[];
   eventStats: any[];
+}
+
+export interface IUpdateProfileResponse {
+  id: string;
+  fullName: string;
+  email: string;
+  role: string;
+  isActive: boolean;
+  updatedAt: Date;
 }

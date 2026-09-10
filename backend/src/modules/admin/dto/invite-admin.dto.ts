@@ -1,14 +1,11 @@
-import { IsEmail, IsNotEmpty, IsString, IsEnum } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString, IsUUID } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-
-export enum Role {
-  ADMIN = 'ADMIN',
-  SUPER_ADMIN = 'SUPER_ADMIN',
-}
+import { Transform } from 'class-transformer';
 
 export class InviteAdminDto {
   @ApiProperty({ description: 'Full name of the admin', example: 'John Doe' })
   @IsNotEmpty()
+  @Transform(({ value }) => value?.trim())
   @IsString()
   fullName: string;
 
@@ -16,15 +13,16 @@ export class InviteAdminDto {
     description: 'Email address of the admin',
     example: 'admin@gdg.com',
   })
-  @IsEmail()
   @IsNotEmpty()
+  @Transform(({ value }) => value?.trim())
+  @IsEmail()
   email: string;
 
   @ApiProperty({
-    description: 'Role of the admin',
-    example: Role.ADMIN,
-    enum: Role,
+    description: 'ID of the role to assign to the admin',
   })
-  @IsEnum(['ADMIN'], { message: 'Only ADMIN role can be invited' })
-  role: 'ADMIN';
+  @IsNotEmpty()
+  @Transform(({ value }) => value?.trim())
+  @IsUUID()
+  roleId: string;
 }

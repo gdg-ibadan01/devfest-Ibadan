@@ -35,7 +35,7 @@ export function paymentFailedTemplate(
           <tr>
             <td style="padding: 30px; color: #333333; font-size: 16px; line-height: 1.6;">
               <p>Hi <strong>${fullName}</strong>,</p>
-              <p>Unfortunately, your payment for <strong>DevFest Ibadan 2025</strong> was not successful.</p>
+              <p>Unfortunately, your payment for <strong>DevFest Ibadan ${new Date().getFullYear()}</strong> was not successful.</p>
               <p>No worries — you can try again by clicking the button below:</p>
               <p style="margin-top: 20px; text-align: center;">
                 <a href="${retryLink}" 

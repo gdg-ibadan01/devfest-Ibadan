@@ -1,16 +1,22 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import * as nodemailer from 'nodemailer';
 import { ConfigService } from '@nestjs/config';
 import { adminInviteTemplate } from './templates/admin-invite.template';
 import { eventReminderTemplate } from './templates/event-reminder.template';
 import { paymentFailedTemplate } from './templates/payment-failure.templare';
-import { ticketConfirmationTemplate } from './templates/ticket-confirmation.template';
+import {
+  TicketConfirmationEmailTemplatePayload,
+  ticketConfirmationTemplate,
+} from './templates/ticket-confirmation.template';
 import { paymentSuccessTemplate } from './templates/payment-success.template';
 import { paymentLinkTemplate } from './templates/payment-link.template';
+import { passwordResetTemplate } from './templates/password-reset.template';
 
 @Injectable()
-export class MailService {
+export class MailService implements OnModuleInit {
+  private readonly logger = new Logger(MailService.name);
   private transporter: nodemailer.Transporter;
+
   constructor(private readonly configService: ConfigService) {
     this.transporter = nodemailer.createTransport({
       host: this.configService.get<string>('cpanel.host'),
@@ -21,18 +27,32 @@ export class MailService {
         pass: this.configService.get<string>('cpanel.password'),
       },
     });
+    this.transporter
+      .verify()
+      .then(() => {
+        this.logger.log('✅ cPanel SMTP connection successful');
+      })
+      .catch((error) => {
+        this.logger.error('❌ cPanel SMTP connection failed:', error.message);
+      });
+  }
+
+  async onModuleInit() {
+    try {
+      await this.transporter.verify();
+      this.logger.log('✅ cPanel SMTP connection successful');
+    } catch (error) {
+      this.logger.error(
+        `❌ cPanel SMTP connection failed: ${error instanceof Error ? error.message : error}`,
+      );
+    }
   }
 
   async sendTicketConfirmationEmail(
-    email: string,
-    fullName: string,
-    // eventTitle: string,
-    // eventDate: string,
-    // venue: string,
-    ticketType: string,
-    transactionId: string,
-    ticketNumber: string,
-    isCheckedIn: boolean,
+    payload: Omit<
+      TicketConfirmationEmailTemplatePayload,
+      'logoUrl' | 'supportEmail'
+    >,
   ) {
     const logoUrl =
       this.configService.get<string>('app.logoUrl') ??
@@ -42,22 +62,16 @@ export class MailService {
       this.configService.get<string>('cpanel.from.email') ??
       'noreply@gdgibadan.com';
 
-    const html = ticketConfirmationTemplate(
-      fullName,
-      // eventDate,
-      // venue,
-      ticketType,
-      transactionId,
-      ticketNumber,
-      isCheckedIn,
+    const html = ticketConfirmationTemplate({
+      ...payload,
       supportEmail,
       logoUrl,
-    );
+    });
 
-    return this.transporter.sendMail({
-      from: `"GDG Event Manager" <${supportEmail}>`,
-      to: email,
-      subject: 'Ticket Confirmed - DevFest Ibadan 2025',
+    return await this.transporter.sendMail({
+      from: `"GDG Ibadan" <${supportEmail}>`,
+      to: payload.email,
+      subject: 'Ticket Confirmed - DevFest Ibadan 2026',
       html,
     });
   }
@@ -159,7 +173,7 @@ export class MailService {
       from: `"GDG Event Manager" <${this.configService.get<string>('cpanel.from.email')}>`,
       to: email,
       subject: 'You are invited as an Admin',
-      html: adminInviteTemplate(fullName, tempPassword, logoUrl),
+      html: adminInviteTemplate(fullName, logoUrl, tempPassword),
     });
   }
 
@@ -168,6 +182,36 @@ export class MailService {
     fullName: string,
     paymentUrl: string,
     amount: number,
+  ): Promise<void> {
+    const logoUrl =
+      this.configService.get<string>('app.logoUrl') ??
+      'https://example.com/default-logo.png';
+
+    const supportEmail =
+      this.configService.get<string>('cpanel.from.email') ??
+      'noreply@gdgibadan.com';
+
+    const info = await this.transporter.sendMail({
+      from: `"GDG Event Manager" <${supportEmail}>`,
+      to: email,
+      subject: 'Complete Your Payment - DevFest Ibadan 2026',
+      html: paymentLinkTemplate(
+        fullName,
+        paymentUrl,
+        supportEmail,
+        logoUrl,
+        amount,
+      ),
+    });
+
+    this.logger.log(
+      `📨 Payment email accepted by SMTP for ${email}. Message ID: ${info.messageId}`,
+    );
+  }
+  async sendPasswordResetEmail(
+    email: string,
+    fullName: string,
+    resetLink: string,
   ) {
     const logoUrl =
       this.configService.get<string>('app.logoUrl') ??
@@ -180,14 +224,8 @@ export class MailService {
     await this.transporter.sendMail({
       from: `"GDG Event Manager" <${supportEmail}>`,
       to: email,
-      subject: 'Complete Your Payment - DevFest Ibadan 2025',
-      html: paymentLinkTemplate(
-        fullName,
-        paymentUrl,
-        supportEmail,
-        logoUrl,
-        amount,
-      ),
+      subject: 'Password Reset Request - GDG Ibadan Admin',
+      html: passwordResetTemplate(fullName, resetLink, supportEmail, logoUrl),
     });
   }
 }

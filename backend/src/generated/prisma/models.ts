@@ -9,4 +9,5 @@
  */
 export type * from './models/Role';
 export type * from './models/Admin';
+export type * from './models/Ticket';
 export type * from './commonInputTypes';

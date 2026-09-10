@@ -11,7 +11,7 @@ DevFest Ibadan is where over 1,000 Software Engineers, Designers, Tech Professio
 - 📅 **Date:** November 28th and 29th, 2025
 - 🕰️ **Time:** 8:00 AM prompt
 - 📍 **Venue:** Jogor Center, No. 1 Harvester Drive, Liberty Road, New GRA, Ibadann
-- 🎟️ **Registration:** [Get Your Ticket](https://devfestibadan.com/ticket)
+- 🎟️ **Registration:** [Get Your Ticket](https://devfestibadan.com/tickets)
 
 ## ✨ Current Features
 
@@ -30,8 +30,8 @@ This website includes the following sections and features:
 
 ### 📄 **Ticketing System**
 
-- **Ticket form** (`/ticket`) - Where attendees get to fill the registration form
-- **Ticket checkout** (`/ticket`) - Where attendees can purchase tickets
+- **Ticket form** (`/tickets`) - Where attendees get to fill the registration form
+- **Ticket checkout** (`/tickets`) - Where attendees can purchase tickets
 - **Payment success** (`/payment/success`) - Confirmation page after successful payment
 
 ### 📄 **Ticketing Admin System**

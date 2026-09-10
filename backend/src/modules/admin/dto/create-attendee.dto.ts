@@ -9,6 +9,7 @@ import {
   Matches,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
 // import { IsValidPhoneNumber } from '../../../common/validators/phone.validator';
 
 export class AdminCreateAttendeeDto {
@@ -17,7 +18,7 @@ export class AdminCreateAttendeeDto {
     example: 'john.doe@example.com',
   })
   @IsEmail()
-  @IsNotEmpty()
+  @Transform(({ value }) => value === 'true' || value === true)
   email: string;
 
   @ApiProperty({
@@ -25,7 +26,7 @@ export class AdminCreateAttendeeDto {
     example: 'John Doe',
   })
   @IsString()
-  @IsNotEmpty()
+  @Transform(({ value }) => value === 'true' || value === true)
   @Length(2, 50)
   fullName: string;
 

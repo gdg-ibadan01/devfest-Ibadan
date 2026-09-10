@@ -99,8 +99,8 @@ export type AdminCountAggregateInputType = {
 };
 
 export type AdminAggregateArgs<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   /**
    * Filter which Admin to aggregate.
@@ -161,8 +161,8 @@ export type GetAdminAggregateType<T extends AdminAggregateArgs> = {
 };
 
 export type AdminGroupByArgs<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   where?: Prisma.AdminWhereInput;
   orderBy?:
@@ -224,6 +224,7 @@ export type AdminWhereInput = {
     Prisma.AdminWhereInput
   > | null;
   admins?: Prisma.AdminListRelationFilter;
+  tickets?: Prisma.TicketListRelationFilter;
 };
 
 export type AdminOrderByWithRelationInput = {
@@ -239,6 +240,7 @@ export type AdminOrderByWithRelationInput = {
   role?: Prisma.RoleOrderByWithRelationInput;
   invitedBy?: Prisma.AdminOrderByWithRelationInput;
   admins?: Prisma.AdminOrderByRelationAggregateInput;
+  tickets?: Prisma.TicketOrderByRelationAggregateInput;
 };
 
 export type AdminWhereUniqueInput = Prisma.AtLeast<
@@ -261,6 +263,7 @@ export type AdminWhereUniqueInput = Prisma.AtLeast<
       Prisma.AdminWhereInput
     > | null;
     admins?: Prisma.AdminListRelationFilter;
+    tickets?: Prisma.TicketListRelationFilter;
   },
   'id' | 'email'
 >;
@@ -295,7 +298,9 @@ export type AdminScalarWhereWithAggregatesInput = {
   roleId?: Prisma.StringWithAggregatesFilter<'Admin'> | string;
   isActive?: Prisma.BoolWithAggregatesFilter<'Admin'> | boolean;
   invitedById?:
-    Prisma.StringNullableWithAggregatesFilter<'Admin'> | string | null;
+    | Prisma.StringNullableWithAggregatesFilter<'Admin'>
+    | string
+    | null;
   createdAt?: Prisma.DateTimeWithAggregatesFilter<'Admin'> | Date | string;
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<'Admin'> | Date | string;
 };
@@ -311,6 +316,7 @@ export type AdminCreateInput = {
   role: Prisma.RoleCreateNestedOneWithoutAdminsInput;
   invitedBy?: Prisma.AdminCreateNestedOneWithoutAdminsInput;
   admins?: Prisma.AdminCreateNestedManyWithoutInvitedByInput;
+  tickets?: Prisma.TicketCreateNestedManyWithoutCreatorInput;
 };
 
 export type AdminUncheckedCreateInput = {
@@ -324,6 +330,7 @@ export type AdminUncheckedCreateInput = {
   createdAt?: Date | string;
   updatedAt?: Date | string;
   admins?: Prisma.AdminUncheckedCreateNestedManyWithoutInvitedByInput;
+  tickets?: Prisma.TicketUncheckedCreateNestedManyWithoutCreatorInput;
 };
 
 export type AdminUpdateInput = {
@@ -337,6 +344,7 @@ export type AdminUpdateInput = {
   role?: Prisma.RoleUpdateOneRequiredWithoutAdminsNestedInput;
   invitedBy?: Prisma.AdminUpdateOneWithoutAdminsNestedInput;
   admins?: Prisma.AdminUpdateManyWithoutInvitedByNestedInput;
+  tickets?: Prisma.TicketUpdateManyWithoutCreatorNestedInput;
 };
 
 export type AdminUncheckedUpdateInput = {
@@ -350,6 +358,7 @@ export type AdminUncheckedUpdateInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   admins?: Prisma.AdminUncheckedUpdateManyWithoutInvitedByNestedInput;
+  tickets?: Prisma.TicketUncheckedUpdateManyWithoutCreatorNestedInput;
 };
 
 export type AdminCreateManyInput = {
@@ -435,6 +444,11 @@ export type AdminMinOrderByAggregateInput = {
   invitedById?: Prisma.SortOrder;
   createdAt?: Prisma.SortOrder;
   updatedAt?: Prisma.SortOrder;
+};
+
+export type AdminScalarRelationFilter = {
+  is?: Prisma.AdminWhereInput;
+  isNot?: Prisma.AdminWhereInput;
 };
 
 export type AdminCreateNestedManyWithoutRoleInput = {
@@ -641,6 +655,32 @@ export type AdminUncheckedUpdateManyWithoutInvitedByNestedInput = {
   deleteMany?: Prisma.AdminScalarWhereInput | Prisma.AdminScalarWhereInput[];
 };
 
+export type AdminCreateNestedOneWithoutTicketsInput = {
+  create?: Prisma.XOR<
+    Prisma.AdminCreateWithoutTicketsInput,
+    Prisma.AdminUncheckedCreateWithoutTicketsInput
+  >;
+  connectOrCreate?: Prisma.AdminCreateOrConnectWithoutTicketsInput;
+  connect?: Prisma.AdminWhereUniqueInput;
+};
+
+export type AdminUpdateOneRequiredWithoutTicketsNestedInput = {
+  create?: Prisma.XOR<
+    Prisma.AdminCreateWithoutTicketsInput,
+    Prisma.AdminUncheckedCreateWithoutTicketsInput
+  >;
+  connectOrCreate?: Prisma.AdminCreateOrConnectWithoutTicketsInput;
+  upsert?: Prisma.AdminUpsertWithoutTicketsInput;
+  connect?: Prisma.AdminWhereUniqueInput;
+  update?: Prisma.XOR<
+    Prisma.XOR<
+      Prisma.AdminUpdateToOneWithWhereWithoutTicketsInput,
+      Prisma.AdminUpdateWithoutTicketsInput
+    >,
+    Prisma.AdminUncheckedUpdateWithoutTicketsInput
+  >;
+};
+
 export type AdminCreateWithoutRoleInput = {
   id?: string;
   fullName: string;
@@ -651,6 +691,7 @@ export type AdminCreateWithoutRoleInput = {
   updatedAt?: Date | string;
   invitedBy?: Prisma.AdminCreateNestedOneWithoutAdminsInput;
   admins?: Prisma.AdminCreateNestedManyWithoutInvitedByInput;
+  tickets?: Prisma.TicketCreateNestedManyWithoutCreatorInput;
 };
 
 export type AdminUncheckedCreateWithoutRoleInput = {
@@ -663,6 +704,7 @@ export type AdminUncheckedCreateWithoutRoleInput = {
   createdAt?: Date | string;
   updatedAt?: Date | string;
   admins?: Prisma.AdminUncheckedCreateNestedManyWithoutInvitedByInput;
+  tickets?: Prisma.TicketUncheckedCreateNestedManyWithoutCreatorInput;
 };
 
 export type AdminCreateOrConnectWithoutRoleInput = {
@@ -731,6 +773,7 @@ export type AdminCreateWithoutAdminsInput = {
   updatedAt?: Date | string;
   role: Prisma.RoleCreateNestedOneWithoutAdminsInput;
   invitedBy?: Prisma.AdminCreateNestedOneWithoutAdminsInput;
+  tickets?: Prisma.TicketCreateNestedManyWithoutCreatorInput;
 };
 
 export type AdminUncheckedCreateWithoutAdminsInput = {
@@ -743,6 +786,7 @@ export type AdminUncheckedCreateWithoutAdminsInput = {
   invitedById?: string | null;
   createdAt?: Date | string;
   updatedAt?: Date | string;
+  tickets?: Prisma.TicketUncheckedCreateNestedManyWithoutCreatorInput;
 };
 
 export type AdminCreateOrConnectWithoutAdminsInput = {
@@ -763,6 +807,7 @@ export type AdminCreateWithoutInvitedByInput = {
   updatedAt?: Date | string;
   role: Prisma.RoleCreateNestedOneWithoutAdminsInput;
   admins?: Prisma.AdminCreateNestedManyWithoutInvitedByInput;
+  tickets?: Prisma.TicketCreateNestedManyWithoutCreatorInput;
 };
 
 export type AdminUncheckedCreateWithoutInvitedByInput = {
@@ -775,6 +820,7 @@ export type AdminUncheckedCreateWithoutInvitedByInput = {
   createdAt?: Date | string;
   updatedAt?: Date | string;
   admins?: Prisma.AdminUncheckedCreateNestedManyWithoutInvitedByInput;
+  tickets?: Prisma.TicketUncheckedCreateNestedManyWithoutCreatorInput;
 };
 
 export type AdminCreateOrConnectWithoutInvitedByInput = {
@@ -822,6 +868,7 @@ export type AdminUpdateWithoutAdminsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   role?: Prisma.RoleUpdateOneRequiredWithoutAdminsNestedInput;
   invitedBy?: Prisma.AdminUpdateOneWithoutAdminsNestedInput;
+  tickets?: Prisma.TicketUpdateManyWithoutCreatorNestedInput;
 };
 
 export type AdminUncheckedUpdateWithoutAdminsInput = {
@@ -834,6 +881,7 @@ export type AdminUncheckedUpdateWithoutAdminsInput = {
   invitedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  tickets?: Prisma.TicketUncheckedUpdateManyWithoutCreatorNestedInput;
 };
 
 export type AdminUpsertWithWhereUniqueWithoutInvitedByInput = {
@@ -864,6 +912,86 @@ export type AdminUpdateManyWithWhereWithoutInvitedByInput = {
   >;
 };
 
+export type AdminCreateWithoutTicketsInput = {
+  id?: string;
+  fullName: string;
+  email: string;
+  password: string;
+  isActive?: boolean;
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
+  role: Prisma.RoleCreateNestedOneWithoutAdminsInput;
+  invitedBy?: Prisma.AdminCreateNestedOneWithoutAdminsInput;
+  admins?: Prisma.AdminCreateNestedManyWithoutInvitedByInput;
+};
+
+export type AdminUncheckedCreateWithoutTicketsInput = {
+  id?: string;
+  fullName: string;
+  email: string;
+  password: string;
+  roleId: string;
+  isActive?: boolean;
+  invitedById?: string | null;
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
+  admins?: Prisma.AdminUncheckedCreateNestedManyWithoutInvitedByInput;
+};
+
+export type AdminCreateOrConnectWithoutTicketsInput = {
+  where: Prisma.AdminWhereUniqueInput;
+  create: Prisma.XOR<
+    Prisma.AdminCreateWithoutTicketsInput,
+    Prisma.AdminUncheckedCreateWithoutTicketsInput
+  >;
+};
+
+export type AdminUpsertWithoutTicketsInput = {
+  update: Prisma.XOR<
+    Prisma.AdminUpdateWithoutTicketsInput,
+    Prisma.AdminUncheckedUpdateWithoutTicketsInput
+  >;
+  create: Prisma.XOR<
+    Prisma.AdminCreateWithoutTicketsInput,
+    Prisma.AdminUncheckedCreateWithoutTicketsInput
+  >;
+  where?: Prisma.AdminWhereInput;
+};
+
+export type AdminUpdateToOneWithWhereWithoutTicketsInput = {
+  where?: Prisma.AdminWhereInput;
+  data: Prisma.XOR<
+    Prisma.AdminUpdateWithoutTicketsInput,
+    Prisma.AdminUncheckedUpdateWithoutTicketsInput
+  >;
+};
+
+export type AdminUpdateWithoutTicketsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string;
+  fullName?: Prisma.StringFieldUpdateOperationsInput | string;
+  email?: Prisma.StringFieldUpdateOperationsInput | string;
+  password?: Prisma.StringFieldUpdateOperationsInput | string;
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean;
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  role?: Prisma.RoleUpdateOneRequiredWithoutAdminsNestedInput;
+  invitedBy?: Prisma.AdminUpdateOneWithoutAdminsNestedInput;
+  admins?: Prisma.AdminUpdateManyWithoutInvitedByNestedInput;
+};
+
+export type AdminUncheckedUpdateWithoutTicketsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string;
+  fullName?: Prisma.StringFieldUpdateOperationsInput | string;
+  email?: Prisma.StringFieldUpdateOperationsInput | string;
+  password?: Prisma.StringFieldUpdateOperationsInput | string;
+  roleId?: Prisma.StringFieldUpdateOperationsInput | string;
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean;
+  invitedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null;
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
+  admins?: Prisma.AdminUncheckedUpdateManyWithoutInvitedByNestedInput;
+};
+
 export type AdminCreateManyRoleInput = {
   id?: string;
   fullName: string;
@@ -885,6 +1013,7 @@ export type AdminUpdateWithoutRoleInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   invitedBy?: Prisma.AdminUpdateOneWithoutAdminsNestedInput;
   admins?: Prisma.AdminUpdateManyWithoutInvitedByNestedInput;
+  tickets?: Prisma.TicketUpdateManyWithoutCreatorNestedInput;
 };
 
 export type AdminUncheckedUpdateWithoutRoleInput = {
@@ -897,6 +1026,7 @@ export type AdminUncheckedUpdateWithoutRoleInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   admins?: Prisma.AdminUncheckedUpdateManyWithoutInvitedByNestedInput;
+  tickets?: Prisma.TicketUncheckedUpdateManyWithoutCreatorNestedInput;
 };
 
 export type AdminUncheckedUpdateManyWithoutRoleInput = {
@@ -931,6 +1061,7 @@ export type AdminUpdateWithoutInvitedByInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   role?: Prisma.RoleUpdateOneRequiredWithoutAdminsNestedInput;
   admins?: Prisma.AdminUpdateManyWithoutInvitedByNestedInput;
+  tickets?: Prisma.TicketUpdateManyWithoutCreatorNestedInput;
 };
 
 export type AdminUncheckedUpdateWithoutInvitedByInput = {
@@ -943,6 +1074,7 @@ export type AdminUncheckedUpdateWithoutInvitedByInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   admins?: Prisma.AdminUncheckedUpdateManyWithoutInvitedByNestedInput;
+  tickets?: Prisma.TicketUncheckedUpdateManyWithoutCreatorNestedInput;
 };
 
 export type AdminUncheckedUpdateManyWithoutInvitedByInput = {
@@ -962,21 +1094,23 @@ export type AdminUncheckedUpdateManyWithoutInvitedByInput = {
 
 export type AdminCountOutputType = {
   admins: number;
+  tickets: number;
 };
 
 export type AdminCountOutputTypeSelect<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   admins?: boolean | AdminCountOutputTypeCountAdminsArgs;
+  tickets?: boolean | AdminCountOutputTypeCountTicketsArgs;
 };
 
 /**
  * AdminCountOutputType without action
  */
 export type AdminCountOutputTypeDefaultArgs<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   /**
    * Select specific fields to fetch from the AdminCountOutputType
@@ -988,15 +1122,25 @@ export type AdminCountOutputTypeDefaultArgs<
  * AdminCountOutputType without action
  */
 export type AdminCountOutputTypeCountAdminsArgs<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   where?: Prisma.AdminWhereInput;
 };
 
+/**
+ * AdminCountOutputType without action
+ */
+export type AdminCountOutputTypeCountTicketsArgs<
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
+> = {
+  where?: Prisma.TicketWhereInput;
+};
+
 export type AdminSelect<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = runtime.Types.Extensions.GetSelect<
   {
     id?: boolean;
@@ -1011,14 +1155,15 @@ export type AdminSelect<
     role?: boolean | Prisma.RoleDefaultArgs<ExtArgs>;
     invitedBy?: boolean | Prisma.Admin$invitedByArgs<ExtArgs>;
     admins?: boolean | Prisma.Admin$adminsArgs<ExtArgs>;
+    tickets?: boolean | Prisma.Admin$ticketsArgs<ExtArgs>;
     _count?: boolean | Prisma.AdminCountOutputTypeDefaultArgs<ExtArgs>;
   },
   ExtArgs['result']['admin']
 >;
 
 export type AdminSelectCreateManyAndReturn<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = runtime.Types.Extensions.GetSelect<
   {
     id?: boolean;
@@ -1037,8 +1182,8 @@ export type AdminSelectCreateManyAndReturn<
 >;
 
 export type AdminSelectUpdateManyAndReturn<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = runtime.Types.Extensions.GetSelect<
   {
     id?: boolean;
@@ -1069,8 +1214,8 @@ export type AdminSelectScalar = {
 };
 
 export type AdminOmit<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = runtime.Types.Extensions.GetOmit<
   | 'id'
   | 'fullName'
@@ -1084,38 +1229,40 @@ export type AdminOmit<
   ExtArgs['result']['admin']
 >;
 export type AdminInclude<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   role?: boolean | Prisma.RoleDefaultArgs<ExtArgs>;
   invitedBy?: boolean | Prisma.Admin$invitedByArgs<ExtArgs>;
   admins?: boolean | Prisma.Admin$adminsArgs<ExtArgs>;
+  tickets?: boolean | Prisma.Admin$ticketsArgs<ExtArgs>;
   _count?: boolean | Prisma.AdminCountOutputTypeDefaultArgs<ExtArgs>;
 };
 export type AdminIncludeCreateManyAndReturn<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   role?: boolean | Prisma.RoleDefaultArgs<ExtArgs>;
   invitedBy?: boolean | Prisma.Admin$invitedByArgs<ExtArgs>;
 };
 export type AdminIncludeUpdateManyAndReturn<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   role?: boolean | Prisma.RoleDefaultArgs<ExtArgs>;
   invitedBy?: boolean | Prisma.Admin$invitedByArgs<ExtArgs>;
 };
 
 export type $AdminPayload<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   name: 'Admin';
   objects: {
     role: Prisma.$RolePayload<ExtArgs>;
     invitedBy: Prisma.$AdminPayload<ExtArgs> | null;
     admins: Prisma.$AdminPayload<ExtArgs>[];
+    tickets: Prisma.$TicketPayload<ExtArgs>[];
   };
   scalars: runtime.Types.Extensions.GetPayloadResult<
     {
@@ -1139,15 +1286,15 @@ export type AdminGetPayload<
 > = runtime.Types.Result.GetResult<Prisma.$AdminPayload, S>;
 
 export type AdminCountArgs<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = Omit<AdminFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
   select?: AdminCountAggregateInputType | true;
 };
 
 export interface AdminDelegate<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
   GlobalOmitOptions = {},
 > {
   [K: symbol]: {
@@ -1599,9 +1746,9 @@ export interface AdminDelegate<
       Prisma.Extends<'skip', Prisma.Keys<T>>,
       Prisma.Extends<'take', Prisma.Keys<T>>
     >,
-    OrderByArg extends (Prisma.True extends HasSelectOrTake
+    OrderByArg extends Prisma.True extends HasSelectOrTake
       ? { orderBy: AdminGroupByArgs['orderBy'] }
-      : { orderBy?: AdminGroupByArgs['orderBy'] }),
+      : { orderBy?: AdminGroupByArgs['orderBy'] },
     OrderFields extends Prisma.ExcludeUnderscoreKeys<
       Prisma.Keys<Prisma.MaybeTupleToUnion<T['orderBy']>>
     >,
@@ -1609,8 +1756,8 @@ export interface AdminDelegate<
     ByValid extends Prisma.Has<ByFields, OrderFields>,
     HavingFields extends Prisma.GetHavingFields<T['having']>,
     HavingValid extends Prisma.Has<ByFields, HavingFields>,
-    ByEmpty extends (T['by'] extends never[] ? Prisma.True : Prisma.False),
-    InputErrors extends (ByEmpty extends Prisma.True
+    ByEmpty extends T['by'] extends never[] ? Prisma.True : Prisma.False,
+    InputErrors extends ByEmpty extends Prisma.True
       ? `Error: "by" must not be empty.`
       : HavingValid extends Prisma.False
         ? {
@@ -1651,7 +1798,7 @@ export interface AdminDelegate<
                   [P in OrderFields]: P extends ByFields
                     ? never
                     : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`;
-                }[OrderFields]),
+                }[OrderFields],
   >(
     args: Prisma.SubsetIntersection<T, AdminGroupByArgs, OrderByArg> &
       InputErrors,
@@ -1673,8 +1820,8 @@ export interface AdminDelegate<
 export interface Prisma__AdminClient<
   T,
   Null = never,
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
   GlobalOmitOptions = {},
 > extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: 'PrismaPromise';
@@ -1716,6 +1863,17 @@ export interface Prisma__AdminClient<
       >
     | Null
   >;
+  tickets<T extends Prisma.Admin$ticketsArgs<ExtArgs> = {}>(
+    args?: Prisma.Subset<T, Prisma.Admin$ticketsArgs<ExtArgs>>,
+  ): Prisma.PrismaPromise<
+    | runtime.Types.Result.GetResult<
+        Prisma.$TicketPayload<ExtArgs>,
+        T,
+        'findMany',
+        GlobalOmitOptions
+      >
+    | Null
+  >;
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1724,9 +1882,13 @@ export interface Prisma__AdminClient<
    */
   then<TResult1 = T, TResult2 = never>(
     onfulfilled?:
-      ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null,
+      | ((value: T) => TResult1 | PromiseLike<TResult1>)
+      | undefined
+      | null,
     onrejected?:
-      ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null,
+      | ((reason: any) => TResult2 | PromiseLike<TResult2>)
+      | undefined
+      | null,
   ): runtime.Types.Utils.JsPromise<TResult1 | TResult2>;
   /**
    * Attaches a callback for only the rejection of the Promise.
@@ -1735,7 +1897,9 @@ export interface Prisma__AdminClient<
    */
   catch<TResult = never>(
     onrejected?:
-      ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null,
+      | ((reason: any) => TResult | PromiseLike<TResult>)
+      | undefined
+      | null,
   ): runtime.Types.Utils.JsPromise<T | TResult>;
   /**
    * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
@@ -1768,8 +1932,8 @@ export interface AdminFieldRefs {
  * Admin findUnique
  */
 export type AdminFindUniqueArgs<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   /**
    * Select specific fields to fetch from the Admin
@@ -1793,8 +1957,8 @@ export type AdminFindUniqueArgs<
  * Admin findUniqueOrThrow
  */
 export type AdminFindUniqueOrThrowArgs<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   /**
    * Select specific fields to fetch from the Admin
@@ -1818,8 +1982,8 @@ export type AdminFindUniqueOrThrowArgs<
  * Admin findFirst
  */
 export type AdminFindFirstArgs<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   /**
    * Select specific fields to fetch from the Admin
@@ -1875,8 +2039,8 @@ export type AdminFindFirstArgs<
  * Admin findFirstOrThrow
  */
 export type AdminFindFirstOrThrowArgs<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   /**
    * Select specific fields to fetch from the Admin
@@ -1932,8 +2096,8 @@ export type AdminFindFirstOrThrowArgs<
  * Admin findMany
  */
 export type AdminFindManyArgs<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   /**
    * Select specific fields to fetch from the Admin
@@ -1989,8 +2153,8 @@ export type AdminFindManyArgs<
  * Admin create
  */
 export type AdminCreateArgs<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   /**
    * Select specific fields to fetch from the Admin
@@ -2014,8 +2178,8 @@ export type AdminCreateArgs<
  * Admin createMany
  */
 export type AdminCreateManyArgs<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   /**
    * The data used to create many Admins.
@@ -2028,8 +2192,8 @@ export type AdminCreateManyArgs<
  * Admin createManyAndReturn
  */
 export type AdminCreateManyAndReturnArgs<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   /**
    * Select specific fields to fetch from the Admin
@@ -2054,8 +2218,8 @@ export type AdminCreateManyAndReturnArgs<
  * Admin update
  */
 export type AdminUpdateArgs<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   /**
    * Select specific fields to fetch from the Admin
@@ -2083,8 +2247,8 @@ export type AdminUpdateArgs<
  * Admin updateMany
  */
 export type AdminUpdateManyArgs<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   /**
    * The data used to update Admins.
@@ -2107,8 +2271,8 @@ export type AdminUpdateManyArgs<
  * Admin updateManyAndReturn
  */
 export type AdminUpdateManyAndReturnArgs<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   /**
    * Select specific fields to fetch from the Admin
@@ -2143,8 +2307,8 @@ export type AdminUpdateManyAndReturnArgs<
  * Admin upsert
  */
 export type AdminUpsertArgs<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   /**
    * Select specific fields to fetch from the Admin
@@ -2176,8 +2340,8 @@ export type AdminUpsertArgs<
  * Admin delete
  */
 export type AdminDeleteArgs<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   /**
    * Select specific fields to fetch from the Admin
@@ -2201,8 +2365,8 @@ export type AdminDeleteArgs<
  * Admin deleteMany
  */
 export type AdminDeleteManyArgs<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   /**
    * Filter which Admins to delete
@@ -2218,8 +2382,8 @@ export type AdminDeleteManyArgs<
  * Admin.invitedBy
  */
 export type Admin$invitedByArgs<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   /**
    * Select specific fields to fetch from the Admin
@@ -2240,8 +2404,8 @@ export type Admin$invitedByArgs<
  * Admin.admins
  */
 export type Admin$adminsArgs<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   /**
    * Select specific fields to fetch from the Admin
@@ -2266,11 +2430,40 @@ export type Admin$adminsArgs<
 };
 
 /**
+ * Admin.tickets
+ */
+export type Admin$ticketsArgs<
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
+> = {
+  /**
+   * Select specific fields to fetch from the Ticket
+   */
+  select?: Prisma.TicketSelect<ExtArgs> | null;
+  /**
+   * Omit specific fields from the Ticket
+   */
+  omit?: Prisma.TicketOmit<ExtArgs> | null;
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.TicketInclude<ExtArgs> | null;
+  where?: Prisma.TicketWhereInput;
+  orderBy?:
+    | Prisma.TicketOrderByWithRelationInput
+    | Prisma.TicketOrderByWithRelationInput[];
+  cursor?: Prisma.TicketWhereUniqueInput;
+  take?: number;
+  skip?: number;
+  distinct?: Prisma.TicketScalarFieldEnum | Prisma.TicketScalarFieldEnum[];
+};
+
+/**
  * Admin without action
  */
 export type AdminDefaultArgs<
-  ExtArgs extends runtime.Types.Extensions.InternalArgs =
-    runtime.Types.Extensions.DefaultArgs,
+  ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = {
   /**
    * Select specific fields to fetch from the Admin
