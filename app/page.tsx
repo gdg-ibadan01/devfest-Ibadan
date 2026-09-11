@@ -1,4 +1,5 @@
 import CallForSpeakers from './component/CallForSpeakers';
+import CallForPartnership from './component/CallForPartnership';
 import DevfestHero from './component/DevfestHero';
 import HowItGoesDown from './component/HowItGoesDown';
 import SwagsAndTickets from './component/SwagsAndTickets';
@@ -65,6 +66,7 @@ export default function Home() {
       <CallForSpeakers />
       <SwagsAndTickets />
       <HowItGoesDown />
+      <CallForPartnership />
     </>
   );
 }

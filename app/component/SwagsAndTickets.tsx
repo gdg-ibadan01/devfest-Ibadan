@@ -6,37 +6,37 @@ import { SwagTicketCard, SwagTicketCardProps } from './SwagTicketCard';
 
 const swagPerks = [
   'Official DevFest T-Shirt & Lanyard',
-  'Custom Sticker Pack & Notebook',
-  'Access to Sponsor Booth Swags',
-  'Conference Tote Bag & Badge and a lots more...',
+  'Custom DevFest Slingshot & Notepad',
+  'DevFest Bottle',
+  'And More DevFest Goodies..',
 ];
 
 const ticketPerks = [
   'Entry pass to all tracks',
-  'Exclusive DevFest Luncheon & Coffee',
+  'Access to Sponsor Booth Swags',
   'Access to Workshop & Codelabs',
-  'Networking Mixer with Global Speakers',
+  'Networking Opportunities with Speakers & Attendees',
 ];
 
 const cardsData: SwagTicketCardProps[] = [
   {
-    title: 'Get Swags',
+    title: 'Get swags',
     category: 'STANDARD SWAG',
     description: 'Score the official DevFest Ibadan 2026 premium merch pack.',
     perks: swagPerks,
-    buttonText: 'Buy Swags',
+    buttonText: 'Buy swags',
     buttonHref: 'https://selar.co/m/gdg-ibadan1',
     isExternal: true,
     colorScheme: 'green',
     delay: 0,
   },
   {
-    title: 'Get Tickets',
+    title: 'Get tickets',
     category: 'ALL ACCESS PASS',
     description:
       'Reserve your guaranteed spot at the biggest developer experience in Ibadan.',
     perks: ticketPerks,
-    buttonText: 'Get Tickets',
+    buttonText: 'Get tickets',
     buttonHref: '/tickets/buy',
     colorScheme: 'red',
     delay: 0.15,
@@ -54,9 +54,9 @@ const SwagsAndTickets: FC = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
-            className="font-black text-3xl sm:text-4xl md:text-5xl text-black tracking-tight font-grotesk"
+            className="font-black text-3xl sm:text-4xl md:text-5xl text-black tracking-tight leading-[125%] font-grotesk"
           >
-            Swags &amp; Tickets
+            Swags &amp; tickets
           </motion.h2>
 
           <motion.p

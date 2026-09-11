@@ -4,6 +4,7 @@ import React, { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { useOrderByReference } from '@/app/_module/services';
+import { showToast } from '@/app/_module/lib/notify';
 import {
   SuccessOrderCard,
   SuccessLoadingState,
@@ -20,6 +21,8 @@ function SuccessContent() {
     isLoading,
     isError,
     error,
+    refetch,
+    isRefetching,
   } = useOrderByReference(reference);
 
   const handleDownload = () => {
@@ -28,7 +31,20 @@ function SuccessContent() {
     }
   };
 
-  if (isLoading) {
+  const handleRefetch = async () => {
+    try {
+      const res = await refetch();
+      if (res.data?.status === 'PAID') {
+        showToast.success('Payment confirmed! Ticket is ready.');
+      } else {
+        showToast.info('Payment still awaiting confirmation.');
+      }
+    } catch {
+      showToast.error('Failed to check payment status.');
+    }
+  };
+
+  if (isLoading || isRefetching) {
     return <SuccessLoadingState />;
   }
 
@@ -44,6 +60,8 @@ function SuccessContent() {
       order={order}
       reference={reference}
       onDownload={handleDownload}
+      onRefetch={handleRefetch}
+      isRefetching={isRefetching}
     />
   );
 }
@@ -51,7 +69,7 @@ function SuccessContent() {
 export default function TicketSuccessPage() {
   return (
     <section
-      className="min-h-screen w-full flex md:items-center justify-center pt-[100px] md:py-[180px] px-5 relative bg-[#E6F5F9]"
+      className="min-h-screen w-full flex md:items-center justify-center pt-[100px] pb-20 md:py-[180px] px-5 relative bg-[#E6F5F9]"
       style={{
         backgroundImage: "url('/ticket_bg.png')",
         backgroundRepeat: 'no-repeat',
