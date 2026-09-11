@@ -1,4 +1,5 @@
 import { useOrderByReference } from '@/app/_module/services';
+import { showToast } from '@/app/_module/lib/notify';
 import {
   SuccessErrorState,
   SuccessLoadingState,
@@ -21,6 +22,8 @@ function SuccessContent({
     isLoading,
     isError,
     error,
+    refetch,
+    isRefetching,
   } = useOrderByReference(reference);
 
   const handleDownload = () => {
@@ -29,7 +32,20 @@ function SuccessContent({
     }
   };
 
-  if (isLoading) {
+  const handleRefetch = async () => {
+    try {
+      const res = await refetch();
+      if (res.data?.status === 'PAID') {
+        showToast.success('Payment confirmed! Ticket is ready.');
+      } else {
+        showToast.info('Payment still awaiting confirmation.');
+      }
+    } catch {
+      showToast.error('Failed to check payment status.');
+    }
+  };
+
+  if (isLoading || isRefetching) {
     return <SuccessLoadingState />;
   }
 
@@ -54,6 +70,8 @@ function SuccessContent({
       onDownload={handleDownload}
       onReset={onReset}
       resetButtonLabel={resetButtonLabel}
+      onRefetch={handleRefetch}
+      isRefetching={isRefetching}
     />
   );
 }

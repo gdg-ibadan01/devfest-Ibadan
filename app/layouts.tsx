@@ -93,7 +93,6 @@ const HomeLayout = ({
   ];
   const shouldHideFooter = hideFooterRoutes.includes(pathname);
 
-
   return (
     <html lang="en">
       <ReactLenis root>
@@ -108,9 +107,7 @@ const HomeLayout = ({
               <Suspense fallback={<PageLoader />}>
                 {!shouldHideHeader && <DFIHeader />}
                 {children}
-                {!shouldHideHeader &&
-                  !shouldHideFooter &&
-                  <DFIFooterV2 />}
+                {!shouldHideHeader && !shouldHideFooter && <DFIFooterV2 />}
                 <Toaster position="top-center" duration={4000} />
               </Suspense>
             </ErrorBoundary>

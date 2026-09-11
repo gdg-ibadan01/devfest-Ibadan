@@ -3,7 +3,7 @@
 import React from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Download, AlertCircle, Calendar, Tag, Hash } from 'lucide-react';
+import { Download, AlertCircle, Calendar, Tag, Hash, RefreshCw } from 'lucide-react';
 import type { GetOrderReferenceResponseDto } from '@/app/_module/api/types';
 import StatusBadge from './StatusBadge';
 import DetailRow from './DetailRow';
@@ -23,6 +23,8 @@ interface SuccessOrderCardProps {
   onDownload: () => void;
   onReset?: () => void;
   resetButtonLabel?: string;
+  onRefetch?: () => void;
+  isRefetching?: boolean;
 }
 
 export default function SuccessOrderCard({
@@ -31,6 +33,8 @@ export default function SuccessOrderCard({
   onDownload,
   onReset,
   resetButtonLabel,
+  onRefetch,
+  isRefetching,
 }: Readonly<SuccessOrderCardProps>) {
   const isPaid = order.status === 'PAID';
 
@@ -39,7 +43,7 @@ export default function SuccessOrderCard({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: 'easeOut' }}
-      className="w-full md:max-w-[560px] md:bg-white md:rounded-[24px] md:shadow-xl md:border border-gray-100 overflow-hidden"
+      className="w-full md:max-w-[560px] md:bg-white md:rounded-[24px] md:shadow-xl md:border border-gray-100 overflow-hidden mb-6 md:mb-10"
     >
       {/* Header */}
       <div className="px-6 pt-8 pb-6 md:px-10 md:pt-10 flex flex-col items-center gap-4">
@@ -87,7 +91,7 @@ export default function SuccessOrderCard({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.4, duration: 0.3 }}
-        className="px-6 md:px-10 pb-8"
+        className="px-6 md:px-10 pb-10 md:pb-12"
       >
         <div className="bg-[#FAF8F5] rounded-[16px] px-5 py-2 mb-6">
           {order.ticket?.name && (
@@ -141,7 +145,7 @@ export default function SuccessOrderCard({
           )}
         </div>
 
-        {isPaid && (
+        {isPaid ? (
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -151,7 +155,16 @@ export default function SuccessOrderCard({
             Present your downloaded ticket at the registration stand on event
             day. A copy has also been sent to your email.
           </motion.p>
-        )}
+        ) : order.status === 'AWAITING_PAYMENT' ? (
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.55, duration: 0.3 }}
+            className="text-[13px] text-[#515151] font-sans text-center mb-6 leading-relaxed"
+          >
+            We are confirming your payment with the gateway. If you have completed payment, click below to refresh the status.
+          </motion.p>
+        ) : null}
 
         {/* Action Buttons */}
         <div className="flex flex-col gap-3">
@@ -173,17 +186,37 @@ export default function SuccessOrderCard({
             )}
           </AnimatePresence>
 
+          {/* Refetch / Refresh Button when AWAITING_PAYMENT */}
+          {order.status === 'AWAITING_PAYMENT' && onRefetch && (
+            <motion.button
+              key="refetch-btn"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6, duration: 0.3 }}
+              type="button"
+              id="refresh-order-status-btn"
+              onClick={onRefetch}
+              disabled={isRefetching}
+              className="w-full flex items-center justify-center gap-2.5 bg-[#1E1E1E] hover:bg-core-blue disabled:bg-gray-400 text-white py-4 rounded-[100px] font-bold transition-all text-[15px] md:text-[16px] font-sans shadow-md hover:shadow-lg disabled:cursor-not-allowed cursor-pointer focus:outline-none"
+            >
+              <RefreshCw
+                className={`w-4 h-4 ${isRefetching ? 'animate-spin' : ''}`}
+              />
+              <span>{isRefetching ? 'Checking Status...' : 'Refresh Status'}</span>
+            </motion.button>
+          )}
+
           {onReset && (
             <motion.button
               key="reset-btn"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: isPaid ? 0.65 : 0.45, duration: 0.3 }}
+              transition={{ delay: isPaid || order.status === 'AWAITING_PAYMENT' ? 0.65 : 0.45, duration: 0.3 }}
               type="button"
               id="buy-another-ticket-btn"
               onClick={onReset}
               className={`w-full flex items-center justify-center gap-2 py-3.5 rounded-[100px] font-bold transition-all text-[15px] md:text-[16px] font-sans cursor-pointer focus:outline-none ${
-                isPaid
+                isPaid || order.status === 'AWAITING_PAYMENT'
                   ? 'border-2 border-[#1E1E1E] hover:bg-black/5 text-[#1E1E1E]'
                   : 'bg-[#1E1E1E] hover:bg-core-blue text-white shadow-md'
               }`}
