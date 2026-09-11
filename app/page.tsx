@@ -23,7 +23,7 @@ export const metadata = {
     description:
       'Join DevFest Ibadan 2026 on 21 November at Kakanfo Inn & Conference Centre for talks, workshops, codelabs and networking.',
     images: [
-      'https://res.cloudinary.com/dh8trnu8w/image/upload/v1788938883/og-image_asbrfm.png',
+      'https://res.cloudinary.com/dh8trnu8w/image/upload/v1789055800/email-image_zgldak.png',
       'https://res.cloudinary.com/dh8trnu8w/image/upload/v1756199854/devfestlogo.jpg',
     ],
     siteName: 'DevFest Ibadan 2026',
@@ -51,7 +51,7 @@ export const metadata = {
     description:
       'Join DevFest Ibadan 2026 on 21 November at Kakanfo Inn & Conference Centre for talks, workshops, codelabs and networking.',
     images: [
-      'https://res.cloudinary.com/dh8trnu8w/image/upload/v1788938883/og-image_asbrfm.png,',
+      'https://res.cloudinary.com/dh8trnu8w/image/upload/v1789055800/email-image_zgldak.png',
       'https://res.cloudinary.com/dh8trnu8w/image/upload/v1756199854/devfestlogo.jpg',
     ],
     type: 'website',
