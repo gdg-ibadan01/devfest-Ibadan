@@ -7,7 +7,7 @@ import SwagsAndTickets from './component/SwagsAndTickets';
 export const metadata = {
   title: 'DevFest Ibadan 2026',
   description:
-    'Join us at DevFest Ibadan 2026 - The largest developer conference in Southwest Nigeria. Connect with tech experts, learn about the latest technologies, and be part of an inclusive tech community.',
+    'Join DevFest Ibadan 2026 on 21 November at Kakanfo Inn & Conference Centre for talks, workshops, codelabs and networking.',
   keywords: [
     'DevFest',
     'GDG Ibadan',
@@ -21,7 +21,7 @@ export const metadata = {
   openGraph: {
     title: 'DevFest Ibadan 2026',
     description:
-      'Join us at DevFest Ibadan 2026 - The largest developer conference in Southwest Nigeria. Connect with tech experts, learn about the latest technologies, and be part of an inclusive tech community.',
+      'Join DevFest Ibadan 2026 on 21 November at Kakanfo Inn & Conference Centre for talks, workshops, codelabs and networking.',
     images: [
       'https://res.cloudinary.com/dh8trnu8w/image/upload/v1788938883/og-image_asbrfm.png',
       'https://res.cloudinary.com/dh8trnu8w/image/upload/v1756199854/devfestlogo.jpg',
@@ -49,7 +49,7 @@ export const metadata = {
     card: 'summary_large_image',
     title: 'DevFest Ibadan 2026',
     description:
-      'Join us at DevFest Ibadan 2026 - The largest developer conference in Southwest Nigeria. Connect with tech experts, learn about the latest technologies, and be part of an inclusive tech community.',
+      'Join DevFest Ibadan 2026 on 21 November at Kakanfo Inn & Conference Centre for talks, workshops, codelabs and networking.',
     images: [
       'https://res.cloudinary.com/dh8trnu8w/image/upload/v1788938883/og-image_asbrfm.png,',
       'https://res.cloudinary.com/dh8trnu8w/image/upload/v1756199854/devfestlogo.jpg',

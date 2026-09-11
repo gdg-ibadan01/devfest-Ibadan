@@ -1,28 +1,19 @@
 'use client';
 
-import { Fragment, useState } from 'react';
-import SpeakerCard, {
-  TspeakerProps,
-} from '../_module/components/cards/SpeakerCard';
-import { SpeakersList } from '../_module/data/speakers-list';
-import { speakersClass as Styles } from './speakers';
-import SpeakerModal from './components/speaker-modal';
-import { StaticImageData } from 'next/image';
-import clsx from 'clsx';
 import ComingSoon from '../_module/components/common/ComingSoon';
 
 export default function Speakers() {
-  const [modal, setModal] = useState(false);
-  const [speakerData, setSpeakerData] = useState<TspeakerProps>({
-    name: '',
-    title: '',
-    src: null as unknown as StaticImageData,
-  });
+  // const [modal, setModal] = useState(false);
+  // const [speakerData, setSpeakerData] = useState<TspeakerProps>({
+  //   name: '',
+  //   title: '',
+  //   src: null as unknown as StaticImageData,
+  // });
 
-  const handleClick = (data: TspeakerProps) => {
-    setModal(true);
-    setSpeakerData(data);
-  };
+  // const handleClick = (data: TspeakerProps) => {
+  //   setModal(true);
+  //   setSpeakerData(data);
+  // };
 
   return (
     <div className="bg-pastel-red min-h-[100vh]">

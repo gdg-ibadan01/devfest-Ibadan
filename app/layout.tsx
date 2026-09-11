@@ -5,7 +5,8 @@ import { Toaster } from 'sonner';
 
 export const metadata: Metadata = {
   title: 'Devfest Ibadan 2026',
-  description: 'The Biggest GDG Event in Ibadan',
+  description:
+    'Join DevFest Ibadan 2026 on 21 November at Kakanfo Inn & Conference Centre for talks, workshops, codelabs and networking.',
 };
 
 export default function AppLayout({

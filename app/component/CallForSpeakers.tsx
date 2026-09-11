@@ -37,7 +37,7 @@ const statsData = [
   {
     stat: 'All TRACKS',
     color: '#EA4335', // Red
-    label: 'WEB · MOBILE · AI · E.T.C',
+    label: 'WEB · MOBILE · AI · ETC.',
     description:
       'Deep-dive tracks tailored specifically to the domains defining modern global tech.',
   },

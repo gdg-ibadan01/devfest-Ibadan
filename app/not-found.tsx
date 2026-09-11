@@ -26,43 +26,42 @@ export default function NotFound() {
 
   const quickLinks = [
     {
-      title: 'Get Ticket & RSVP',
-      description:
-        'Secure your spot for DevFest Ibadan 2025 on Nov 28th & 29th',
-      href: '/rsvp',
+      title: 'Get Ticket',
+      description: 'Secure your spot for DevFest Ibadan 2026 on Nov. 21st',
+      href: '/tickets/buy',
       icon: Ticket,
       bgColor: 'bg-[#F8D8D8]',
       accentColor: 'text-[#EA4335]',
       badge: 'Registration Open',
     },
-    {
-      title: 'Promised Agenda',
-      description: 'Explore sessions, keynotes, and workshops schedule',
-      href: '/agenda',
-      icon: Calendar,
-      bgColor: 'bg-[#CCF6C5]',
-      accentColor: 'text-[#0F9D58]',
-      badge: 'Nov 28 & 29',
-    },
-    {
-      title: 'Event Speakers',
-      description: 'Discover the tech leaders and experts presenting live',
-      href: '/speakers',
-      icon: Users,
-      bgColor: 'bg-[#FFE7A5]',
-      accentColor: 'text-[#FBBC04]',
-      badge: 'Lineup',
-    },
-    {
-      title: 'Our Sponsors',
-      description:
-        'Meet the organizations driving the tech ecosystem in Ibadan',
-      href: '/sponsors',
-      icon: Award,
-      bgColor: 'bg-[#C3ECF6]',
-      accentColor: 'text-[#4285F4]',
-      badge: 'Partners',
-    },
+    // {
+    //   title: 'Promised Agenda',
+    //   description: 'Explore sessions, keynotes, and workshops schedule',
+    //   href: '/agenda',
+    //   icon: Calendar,
+    //   bgColor: 'bg-[#CCF6C5]',
+    //   accentColor: 'text-[#0F9D58]',
+    //   badge: 'Nov 21st',
+    // },
+    // {
+    //   title: 'Event Speakers',
+    //   description: 'Discover the tech leaders and experts presenting live',
+    //   href: '/speakers',
+    //   icon: Users,
+    //   bgColor: 'bg-[#FFE7A5]',
+    //   accentColor: 'text-[#FBBC04]',
+    //   badge: 'Lineup',
+    // },
+    // {
+    //   title: 'Our Sponsors',
+    //   description:
+    //     'Meet the organizations driving the tech ecosystem in Ibadan',
+    //   href: '/sponsors',
+    //   icon: Award,
+    //   bgColor: 'bg-[#C3ECF6]',
+    //   accentColor: 'text-[#4285F4]',
+    //   badge: 'Partners',
+    // },
     {
       title: 'DevFest Mainstage',
       description: 'Return to the home page hero and event highlights',
@@ -98,7 +97,7 @@ export default function NotFound() {
           <span className="w-2.5 h-2.5 rounded-full bg-[#EA4335] animate-ping" />
           <span className="flex items-center gap-1.5">
             <Sparkles className="w-4 h-4 text-[#4285F4]" />
-            DEVFEST IBADAN &apos;25 • PAGE NOT FOUND
+            DEVFEST IBADAN &apos;26 • PAGE NOT FOUND
           </span>
         </motion.div>
 
@@ -176,7 +175,7 @@ export default function NotFound() {
             </p>
             <p className="text-gray-400 flex items-center gap-1.5">
               <MapPin className="w-3.5 h-3.5 text-[#ffd427]" />
-              <span>Location: DevFest Ibadan 2025 (Oyo State, Nigeria)</span>
+              <span>Location: DevFest Ibadan 2026 (Oyo State, Nigeria)</span>
             </p>
             <p className="text-[#57caff]">
               • Tip: Select a destination below or search for the page you need:
