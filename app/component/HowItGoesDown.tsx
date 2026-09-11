@@ -39,7 +39,7 @@ const eventCards: EventCard[] = [
   {
     eventTag: 'DEVFEST IBADAN 2026.',
     dateTag: 'OCT-NOV 2026',
-    title: 'PreDevFest Series',
+    title: 'PreDevFest series',
     label: 'LEAD-IN EXPERIENCE',
     description:
       '3 weekends of workshops, talks, and community sessions leading up to the main event (1 week gap between each).',
@@ -51,7 +51,7 @@ const eventCards: EventCard[] = [
   {
     eventTag: 'DEVFEST IBADAN 2026.',
     dateTag: '20 NOV 2026',
-    title: 'Virtual Event',
+    title: 'Virtual event',
     label: 'REMOTE ACCESS',
     description:
       'Join us online the Friday before D-Day. Keynotes, panels, and networking — from anywhere in the world.',
@@ -63,7 +63,7 @@ const eventCards: EventCard[] = [
   {
     eventTag: 'DEVFEST IBADAN 2026.',
     dateTag: '21 NOV 2026',
-    title: 'Physical Event',
+    title: 'Physical event',
     label: 'MAIN EVENT',
     description:
       'The main event! A full day of talks across all tracks, workshops, codelabs, sponsor booths, networking, and swag — live at Kakanfo Inn, Ibadan.',
@@ -86,9 +86,9 @@ const HowItGoesDown: FC = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5 }}
-              className="font-black text-3xl sm:text-4xl md:text-5xl text-black tracking-tight font-grotesk"
+              className="font-black text-3xl sm:text-4xl md:text-5xl text-black tracking-tight leading-[125%] font-grotesk"
             >
-              How It All Goes Down
+              How it all goes down
             </motion.h2>
 
             <motion.p

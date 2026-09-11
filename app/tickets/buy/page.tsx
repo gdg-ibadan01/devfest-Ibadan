@@ -303,7 +303,7 @@ export default function BuyTicket() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -15 }}
             transition={{ duration: 0.25, ease: 'easeOut' }}
-            className="w-full flex justify-center z-10"
+            className="w-full flex justify-center z-10 pb-6 md:pb-10"
           >
             <PaymentSuccess
               reference={reference!}
@@ -318,7 +318,7 @@ export default function BuyTicket() {
 
   return (
     <section
-      className="min-h-screen w-full flex md:items-center justify-center pt-[100px] md:py-[180px] px-5 relative bg-[#E6F5F9]"
+      className="min-h-screen w-full flex md:items-center justify-center pt-[100px] pb-20 md:py-[180px] px-5 relative bg-[#E6F5F9]"
       style={{
         backgroundImage: isTablet
           ? "url('/ticket_bg.png')"

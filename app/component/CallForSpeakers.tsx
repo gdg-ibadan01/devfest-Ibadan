@@ -6,22 +6,22 @@ import { motion } from 'framer-motion';
 
 const submissionSteps = [
   {
-    title: 'Applications Open',
+    title: 'Applications open',
     description: 'Submit your topic and abstract',
     dotColor: '#34A853', // Green
   },
   {
-    title: 'Review Period',
+    title: 'Review period',
     description: 'Our team reviews all submissions',
     dotColor: '#FBBC04', // Yellow
   },
   {
-    title: 'Speakers Announced',
+    title: 'Speakers announced',
     description: 'Selected speakers notified via email',
     dotColor: '#EA4335', // Red
   },
   {
-    title: 'Event Day — 21st Nov 2026',
+    title: 'Event day — 21st Nov 2026',
     description: 'Take the stage at DevFest Ibadan',
     dotColor: '#4285F4', // Blue
   },
@@ -35,7 +35,7 @@ const statsData = [
     description: 'Expert talks, code labs, and pure technical vibes.',
   },
   {
-    stat: '4+ TRACKS',
+    stat: 'All TRACKS',
     color: '#EA4335', // Red
     label: 'WEB · MOBILE · AI · E.T.C',
     description:
@@ -53,7 +53,7 @@ const statsData = [
     color: '#4285F4', // Blue
     label: 'COMMUNITY LEGACY',
     description:
-      'Celebrating 10+ years of empowering and connecting South-West devs.',
+      'Celebrating 10+ years of empowering and connecting tech lovers and enthusiast',
   },
 ];
 
@@ -73,7 +73,7 @@ const CallForSpeakers: FC = () => {
           >
             <div className="border border-black rounded-3xl p-6 sm:p-8 md:p-[32px] bg-white shadow-sm">
               <h3 className="text-xs sm:text-sm font-mono font-bold tracking-widest text-black uppercase mb-7">
-                SUBMISSION DETAILS
+                SUBMISSION PROCESS
               </h3>
 
               <div className="space-y-6 sm:space-y-7">
@@ -108,8 +108,8 @@ const CallForSpeakers: FC = () => {
             transition={{ duration: 0.5, delay: 0.1 }}
             className="flex flex-col items-start"
           >
-            <h2 className="font-semibold text-4xl lg:text-[40px] xl:text-[48px] tracking-[0%] leading-[105%] text-[#111111] font-grotesk">
-              Got Something Worth Sharing? Take the Stage.
+            <h2 className="font-semibold text-4xl lg:text-[40px] xl:text-[48px] tracking-[0%] leading-[130%] sm:leading-[120%] text-[#111111] font-grotesk">
+              Got something worth sharing? Take the stage.
             </h2>
 
             <p className="mt-[10px] sm:mt-[20px] text-base sm:text-lg text-[#4B5563] leading-relaxed max-w-xl">

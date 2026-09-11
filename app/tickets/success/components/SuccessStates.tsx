@@ -11,7 +11,7 @@ export function SuccessLoadingState() {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -15 }}
       transition={{ duration: 0.25, ease: 'easeOut' }}
-      className="w-full md:max-w-[560px] md:bg-white md:rounded-[24px] md:shadow-xl md:border border-gray-100 overflow-hidden"
+      className="w-full md:max-w-[560px] md:bg-white md:rounded-[24px] md:shadow-xl md:border border-gray-100 overflow-hidden mb-6 md:mb-10"
     >
       {/* Header Skeleton */}
       <div className="px-6 pt-8 pb-6 md:px-10 md:pt-10 flex flex-col items-center gap-4">
