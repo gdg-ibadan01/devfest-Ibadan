@@ -356,26 +356,37 @@ export class OrdersService {
         OrdersService.ERRORS.OrderNotFoundErr,
       );
     }
-    let pdfBuffer: Buffer<ArrayBuffer> | undefined;
+    let pdfBuffer: Buffer<ArrayBuffer> | undefined | void;
     if (!order.ticketUrl) {
-      pdfBuffer = await this.pdfService.generateDevFest2026Ticket({
-        amount: order.amount.toNumber(),
-        ticketCode: order.reference.slice(-6),
-        downloadUrl: this.generateSignedDownloadUrl(order.reference),
-        validity: order.ticket.validityDates.map((d) =>
-          d.toLocaleDateString('en-US', { weekday: 'long' }),
-        ),
-      });
+      pdfBuffer = await this.pdfService
+        .generateDevFest2026Ticket({
+          amount: order.amount.toNumber(),
+          ticketCode: order.reference.slice(-6),
+          downloadUrl: this.generateSignedDownloadUrl(order.reference),
+          validity: order.ticket.validityDates.map((d) =>
+            d.toLocaleDateString('en-US', { weekday: 'long' }),
+          ),
+        })
+        .catch((err) => this.logger.error(err))
+        .then((res) => {
+          this.logger.debug('pdfBuffer generated successfully');
+          return res;
+        });
     }
 
     let ticketUrl: string | undefined;
     if (pdfBuffer) {
-      const upload = await this.uploadService.uploadFile(pdfBuffer);
-      ticketUrl = upload?.secure_url;
-      await this.prisma.order.update({
-        where: { id: order.id },
-        data: { ticketUrl },
-      });
+      await this.uploadService
+        .uploadFile(pdfBuffer)
+        .then(async (upload) => {
+          ticketUrl = upload?.secure_url;
+          await this.prisma.order.update({
+            where: { id: order.id },
+            data: { ticketUrl },
+          });
+          return upload;
+        })
+        .catch((err) => this.logger.error(err));
     }
 
     return {
