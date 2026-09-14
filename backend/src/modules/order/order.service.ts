@@ -856,7 +856,11 @@ Initiating refund for order ${order.id}`,
             if (shouldIssueTicket) {
               await tx.order.update({
                 where: { id: order.id },
-                data: { status: OrderStatus.PAID, paidAt: now },
+                data: {
+                  status: OrderStatus.PAID,
+                  paidAt: now,
+                  providerTransactionRef: event.transactionReference,
+                },
               });
 
               await this.setEventAsProcessed(tx, event.webhookEventId);
