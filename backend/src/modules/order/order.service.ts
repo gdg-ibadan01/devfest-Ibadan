@@ -1,4 +1,10 @@
-import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import {
   Discount,
   DiscountType,
@@ -367,7 +373,10 @@ export class OrdersService {
             d.toLocaleDateString('en-US', { weekday: 'long' }),
           ),
         })
-        .catch((err) => this.logger.error(err))
+        .catch((err) => {
+          this.logger.error(err);
+          throw new InternalServerErrorException('Unable to generate PDF');
+        })
         .then((res) => {
           this.logger.debug('pdfBuffer generated successfully');
           return res;
@@ -386,7 +395,12 @@ export class OrdersService {
           });
           return upload;
         })
-        .catch((err) => this.logger.error(err));
+        .catch((err) => {
+          this.logger.error(err);
+          throw new InternalServerErrorException(
+            'Unable to generate ticket URL',
+          );
+        });
     }
 
     return {
