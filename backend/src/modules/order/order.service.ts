@@ -1,4 +1,10 @@
-import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import {
   Discount,
   DiscountType,
@@ -356,6 +362,14 @@ export class OrdersService {
         OrdersService.ERRORS.OrderNotFoundErr,
       );
     }
+
+    if (order.status !== OrderStatus.PAID) {
+      throw new ServiceError(
+        'Order payment not confirmed yet',
+        OrdersService.ERRORS.ValidationErr,
+      );
+    }
+
     let pdfBuffer: Buffer<ArrayBuffer> | undefined | void;
     if (!order.ticketUrl) {
       pdfBuffer = await this.pdfService
@@ -367,7 +381,10 @@ export class OrdersService {
             d.toLocaleDateString('en-US', { weekday: 'long' }),
           ),
         })
-        .catch((err) => this.logger.error(err))
+        .catch((err) => {
+          this.logger.error(err);
+          throw new InternalServerErrorException('Unable to generate PDF');
+        })
         .then((res) => {
           this.logger.debug('pdfBuffer generated successfully');
           return res;
@@ -386,7 +403,12 @@ export class OrdersService {
           });
           return upload;
         })
-        .catch((err) => this.logger.error(err));
+        .catch((err) => {
+          this.logger.error(err);
+          throw new InternalServerErrorException(
+            'Unable to generate ticket URL',
+          );
+        });
     }
 
     return {
@@ -834,7 +856,11 @@ Initiating refund for order ${order.id}`,
             if (shouldIssueTicket) {
               await tx.order.update({
                 where: { id: order.id },
-                data: { status: OrderStatus.PAID, paidAt: now },
+                data: {
+                  status: OrderStatus.PAID,
+                  paidAt: now,
+                  providerTransactionRef: event.transactionReference,
+                },
               });
 
               await this.setEventAsProcessed(tx, event.webhookEventId);
