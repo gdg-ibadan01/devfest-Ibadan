@@ -362,6 +362,14 @@ export class OrdersService {
         OrdersService.ERRORS.OrderNotFoundErr,
       );
     }
+
+    if (order.status !== OrderStatus.PAID) {
+      throw new ServiceError(
+        'Order payment not confirmed yet',
+        OrdersService.ERRORS.ValidationErr,
+      );
+    }
+
     let pdfBuffer: Buffer<ArrayBuffer> | undefined | void;
     if (!order.ticketUrl) {
       pdfBuffer = await this.pdfService
