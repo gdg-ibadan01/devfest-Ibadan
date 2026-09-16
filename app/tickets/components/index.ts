@@ -9,3 +9,4 @@ export { default as TicketSummary } from './TicketSummary';
 export { default as PaymentSuccess } from './PaymentSuccess';
 export { default as EmptyTicketState } from './EmptyTicketState';
 export { default as TicketFormSkeleton } from './TicketFormSkeleton';
+export { default as TicketStepContainer } from './TicketStepContainer';
