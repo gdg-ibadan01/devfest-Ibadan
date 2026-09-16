@@ -7,10 +7,16 @@ import {
   AlertCircle,
   X,
   Gift,
+  Info,
+  Link2,
+  Loader2,
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import TicketPackageRow, { TicketPackage } from './TicketPackageRow';
-import type { AppliedDiscount } from '@/app/_module/services/discount.service';
+import {
+  isValidDiscountCode,
+  type AppliedDiscount,
+} from '@/app/_module/services/discount.service';
 
 interface BuyTicketFormProps {
   // Buyer / attendee (self)
@@ -47,6 +53,7 @@ interface BuyTicketFormProps {
   isApplyingDiscount?: boolean;
   discountError?: string;
   setDiscountError?: (err: string) => void;
+  isDiscountFromUrl?: boolean;
 }
 
 export default function BuyTicketForm({
@@ -75,12 +82,26 @@ export default function BuyTicketForm({
   isApplyingDiscount = false,
   discountError = '',
   setDiscountError,
+  isDiscountFromUrl = false,
 }: Readonly<BuyTicketFormProps>) {
   const baseInvalid = !fullName.trim() || !email.trim() || !selectedPackageId;
   const giftInvalid = isGift
     ? !receiverName.trim() || !receiverEmail.trim() || !receiverPhone.trim()
     : false;
   const isFormInvalid = baseInvalid || giftInvalid;
+
+  const trimmedDiscountCode = (discountCode || '').trim();
+  const isDiscountFormatValid = isValidDiscountCode(trimmedDiscountCode);
+  const showFormatHint =
+    !appliedDiscount &&
+    trimmedDiscountCode.length > 0 &&
+    !isDiscountFormatValid &&
+    !discountError;
+  const showFormatSuccess =
+    !appliedDiscount &&
+    trimmedDiscountCode.length > 0 &&
+    isDiscountFormatValid &&
+    !discountError;
 
   return (
     <div className="w-full md:max-w-[732px] md:bg-white md:rounded-[20px] md:shadow-lg md:border border-gray-100 overflow-hidden">
@@ -291,11 +312,17 @@ export default function BuyTicketForm({
                 <Tag className="w-4 h-4 text-[#515151]" />
                 Discount Code
               </span>
-              {appliedDiscount && (
-                <span className="text-[12px] text-emerald-600 font-semibold bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-xl">
-                  Applied
+              {appliedDiscount ? (
+                <span className="text-[12px] text-emerald-700 font-semibold bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full flex items-center gap-1">
+                  {isDiscountFromUrl && <Link2 className="w-3 h-3 text-emerald-600" />}
+                  {isDiscountFromUrl ? 'Applied from Link' : 'Applied'}
                 </span>
-              )}
+              ) : isApplyingDiscount && isDiscountFromUrl ? (
+                <span className="text-[12px] text-blue-700 font-semibold bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full flex items-center gap-1 animate-pulse">
+                  <Loader2 className="w-3 h-3 animate-spin text-blue-600" />
+                  Applying from link...
+                </span>
+              ) : null}
             </label>
 
             <div className="flex gap-2">
@@ -303,7 +330,8 @@ export default function BuyTicketForm({
                 <input
                   type="text"
                   id="discountCode"
-                  placeholder="Enter discount code"
+                  placeholder="e.g. DEV-A1B2C3"
+                  maxLength={10}
                   value={discountCode}
                   onChange={(e) => {
                     setDiscountCode?.(e.target.value.toUpperCase());
@@ -314,11 +342,19 @@ export default function BuyTicketForm({
                       e.preventDefault();
                       if (
                         !appliedDiscount &&
-                        discountCode?.trim() &&
+                        isDiscountFormatValid &&
                         !isApplyingDiscount &&
                         onApplyDiscount
                       ) {
-                        onApplyDiscount(discountCode.trim());
+                        onApplyDiscount(trimmedDiscountCode);
+                      } else if (
+                        trimmedDiscountCode &&
+                        !isDiscountFormatValid &&
+                        setDiscountError
+                      ) {
+                        setDiscountError(
+                          'Please enter a valid discount code (format: XXX-XXXXXX, e.g. DEV-A1B2C3)'
+                        );
                       }
                     }
                   }}
@@ -326,11 +362,16 @@ export default function BuyTicketForm({
                   className={`w-full border rounded-[8px] px-4 py-3 md:py-3.5 text-[14px] md:text-[16px] placeholder-gray-400 outline-none transition-colors uppercase disabled:bg-gray-50 disabled:text-gray-600 tracking-wider font-mono text-[14px] ${
                     discountError && !appliedDiscount
                       ? 'border-red-500 focus:border-red-500'
+                      : isDiscountFormatValid && !appliedDiscount
+                      ? 'border-emerald-400 focus:border-emerald-500'
                       : 'border-gray-200 focus:border-[#4285F4]'
                   }`}
                 />
                 {appliedDiscount && (
                   <CheckCircle2 className="w-5 h-5 text-emerald-600 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                )}
+                {!appliedDiscount && isDiscountFormatValid && !isApplyingDiscount && !discountError && (
+                  <CheckCircle2 className="w-5 h-5 text-emerald-500 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 )}
               </div>
 
@@ -348,15 +389,22 @@ export default function BuyTicketForm({
                   type="button"
                   onClick={() =>
                     onApplyDiscount &&
-                    discountCode?.trim() &&
-                    onApplyDiscount(discountCode.trim())
+                    isDiscountFormatValid &&
+                    onApplyDiscount(trimmedDiscountCode)
                   }
-                  disabled={!discountCode?.trim() || isApplyingDiscount}
-                  className="px-5 py-2 text-[14px] md:text-[15px] font-semibold text-white bg-[#1E1E1E] hover:bg-core-blue disabled:bg-gray-300 disabled:cursor-not-allowed rounded-[8px] transition-colors shrink-0 flex items-center gap-2 cursor-pointer disabled:hover:bg-gray-300"
+                  disabled={!isDiscountFormatValid || isApplyingDiscount}
+                  title={
+                    !trimmedDiscountCode
+                      ? 'Enter a discount code'
+                      : !isDiscountFormatValid
+                      ? 'Discount code must match format XXX-XXXXXX (e.g. DEV-A1B2C3)'
+                      : 'Click to apply discount'
+                  }
+                  className="px-5 py-2 text-[14px] md:text-[15px] font-semibold text-white bg-[#1E1E1E] hover:bg-core-blue disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed rounded-[8px] transition-all shrink-0 flex items-center gap-2 cursor-pointer disabled:hover:bg-gray-200"
                 >
                   {isApplyingDiscount ? (
                     <>
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <Loader2 className="w-4 h-4 animate-spin" />
                       <span>Applying...</span>
                     </>
                   ) : (
@@ -366,13 +414,34 @@ export default function BuyTicketForm({
               )}
             </div>
 
+            {/* Format hint while user is typing and format is not yet valid */}
+            {showFormatHint && (
+              <div className="flex items-center justify-between text-[12px] text-amber-700 bg-amber-50 border border-amber-200/80 rounded-[8px] px-3 py-1.5 mt-1">
+                <span className="flex items-center gap-1.5">
+                  <Info className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                  Format must match: <span className="font-mono font-bold text-amber-900">XXX-XXXXXX</span> (e.g. DEV-A1B2C3)
+                </span>
+                <span className="font-mono text-[11px] text-amber-700 font-semibold bg-amber-100 px-1.5 py-0.5 rounded">
+                  {trimmedDiscountCode.length}/10
+                </span>
+              </div>
+            )}
+
+            {/* Format valid confirmation indicator before clicking Apply */}
+            {showFormatSuccess && (
+              <div className="flex items-center gap-1.5 text-[12px] text-emerald-700 bg-emerald-50 border border-emerald-200/80 rounded-[8px] px-3 py-1.5 mt-1 font-medium">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                <span>Code format valid. Click <strong>Apply</strong> to verify.</span>
+              </div>
+            )}
+
             {/* Applied Discount Feedback */}
             {appliedDiscount && (
               <div className="flex items-center justify-between bg-emerald-50 border border-emerald-200 rounded-[8px] px-3.5 py-2 text-emerald-800 text-[13px] md:text-[14px] mt-0.5">
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
                   <span>
-                    Discount applied:{' '}
+                    Discount applied{isDiscountFromUrl ? ' from link' : ''}:{' '}
                     <strong className="font-bold">
                       ₦
                       {appliedDiscount.amount.toLocaleString('en-NG', {
@@ -383,7 +452,8 @@ export default function BuyTicketForm({
                     </strong>
                   </span>
                 </div>
-                <span className="font-mono text-[11px] md:text-[12px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold">
+                <span className="font-mono text-[11px] md:text-[12px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold flex items-center gap-1">
+                  {isDiscountFromUrl && <Link2 className="w-3 h-3 text-emerald-700" />}
                   {appliedDiscount.code}
                 </span>
               </div>

@@ -58,7 +58,7 @@ const DevfestHero: FC = () => {
       <div className="w-full md:max-w-[1500px] mx-auto ">
         <div className="container mx-auto px-4 sm:px-6 lg:px-24">
           {/* Top Content Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-start">
             {/* Left Column: Heading, Description, CTA */}
             <div className="lg:col-span-7 z-10">
               <motion.h1
@@ -95,7 +95,7 @@ const DevfestHero: FC = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.2, ease: 'easeOut' }}
-                className="mt-[20px] sm:mt-10 flex flex-wrap items-center gap-4"
+                className="mt-[20px] sm:mt-10 flex flex-wrap items-center gap-4 lg:gap-[40px]"
               >
                 <Link
                   href="/tickets/buy"
@@ -111,12 +111,13 @@ const DevfestHero: FC = () => {
                 <Link
                   href="https://selar.co/m/gdg-ibadan1"
                   className="group relative inline-flex p-[2px] rounded-[100px] overflow-hidden transition-all duration-300 hover:scale-105 active:scale-95 shadow-md hover:shadow-lg"
+                  target="_blank"
                 >
                   {/* Google Multi-Color Gradient Ring */}
                   <span className="absolute inset-0 bg-gradient-to-r from-[#34A853] via-[#FBBC04] to-[#4285F4] rounded-[100px] transition-opacity group-hover:opacity-90" />
                   {/* Inner Button */}
-                  <span className="relative px-[20px] lg:px-10 py-3 sm:py-3.5 rounded-[100px] bg-[#18181b] group-hover:bg-[#232326] text-white text-sm sm:text-base font-semibold tracking-wide transition-colors flex items-center justify-center">
-                    Buy Merch
+                  <span className="relative px-[20px] lg:px-10 py-3 sm:py-3.5 rounded-[100px] bg-white group-hover:bg-[#d9d7d7] text-black text-sm sm:text-base font-semibold tracking-wide transition-colors flex items-center justify-center">
+                    Buy Swags
                   </span>
                 </Link>
               </motion.div>
@@ -194,13 +195,12 @@ const DevfestHero: FC = () => {
               </motion.div>
             </div>
           </div>
-
           {/* Attendees Illustration: Bottom 50% hangs outside the blue hero section */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.35, ease: 'easeOut' }}
-            className="relative w-full flex justify-center lg:justify-end mt-8 lg:-mt-4 xl:-mt-8 z-10"
+            className="relative w-full flex justify-center lg:justify-end mt-8 lg:-mt-[200px]"
           >
             <div className="w-full max-w-[500px] sm:max-w-[560px] md:max-w-[620px] lg:max-w-[680px] xl:max-w-[740px] -mb-[36%] md:-mb-[21%]">
               <Image

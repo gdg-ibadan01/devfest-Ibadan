@@ -7,12 +7,36 @@ export interface AppliedDiscount {
   amount: number;
 }
 
+/**
+ * DevFest backend generates discount codes as:
+ * `${payload.name.slice(0, 3).toUpperCase()}-${randomString(6)}`
+ * (3 alphanumeric characters, hyphen '-', and 6 alphanumeric characters).
+ * Total length: 10 characters.
+ * Example: DEV-A1B2C3
+ */
+export const DISCOUNT_CODE_REGEX = /^[A-Z0-9]{3}-[A-Z0-9]{6}$/;
+
+export function isValidDiscountCode(code?: string | null): boolean {
+  if (!code) return false;
+  return DISCOUNT_CODE_REGEX.test(code.trim().toUpperCase());
+}
+
 export async function getDiscountByCode(
   discountCode: string
 ): Promise<DiscountByCodeResponseDto> {
   const cleanCode = discountCode.trim();
   if (!cleanCode) {
-    throw new Error('Please enter a discount code');
+    const err = new Error('Please enter a discount code') as Error & { status?: number };
+    err.status = 400;
+    throw err;
+  }
+
+  if (!isValidDiscountCode(cleanCode)) {
+    const err = new Error(
+      'Invalid discount code format (expected format: XXX-XXXXXX)'
+    ) as Error & { status?: number };
+    err.status = 400;
+    throw err;
   }
 
   const res = await fetch(
@@ -23,13 +47,29 @@ export async function getDiscountByCode(
     }
   );
 
-  const data = await res.json();
+  let data: any = null;
+  try {
+    data = await res.json();
+  } catch {
+    data = null;
+  }
 
   if (!res.ok) {
-    const errorMsg =
-      data?.message ||
-      (Array.isArray(data?.message) ? data.message.join(', ') : 'Discount not found');
-    throw new Error(errorMsg);
+    let errorMsg = 'Discount not found';
+    if (data?.message) {
+      errorMsg = Array.isArray(data.message) ? data.message.join(', ') : data.message;
+    } else if (data?.error) {
+      errorMsg = typeof data.error === 'string' ? data.error : 'Discount not found';
+    } else if (res.status === 404) {
+      errorMsg = 'Discount not found';
+    } else if (res.status >= 500) {
+      errorMsg = 'Unable to verify discount code. Please try again.';
+    }
+
+    const error = new Error(errorMsg) as Error & { status?: number; data?: unknown };
+    error.status = res.status;
+    error.data = data;
+    throw error;
   }
 
   return data as DiscountByCodeResponseDto;
