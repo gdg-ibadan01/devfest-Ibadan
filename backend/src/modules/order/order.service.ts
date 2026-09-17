@@ -35,7 +35,7 @@ import AppConfig from 'src/config/app.config';
 import { ConfigType } from '@nestjs/config';
 import { MailService } from '../mail/mail.service';
 
-const ORDER_TTL_MINUTES = 30;
+const ORDER_TTL_MINUTES = 5;
 const TX_MAX_ATTEMPTS = 3;
 const CANCEL_MAX_ATTEMPTS = 3;
 
