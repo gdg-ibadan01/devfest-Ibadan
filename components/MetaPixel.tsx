@@ -6,13 +6,60 @@ import Script from 'next/script';
 
 export const FB_PIXEL_ID = process.env.NEXT_PUBLIC_FACEBOOK_PIXEL_ID;
 
-export const fbqTrack = (event: string, options?: Record<string, unknown>) => {
-  if (typeof window !== 'undefined' && typeof window.fbq === 'function') {
-    if (options) {
-      window.fbq('track', event, options);
-    } else {
-      window.fbq('track', event);
+const trackedPurchases = new Set<string>();
+
+export const fbqTrack = (
+  event: string,
+  options?: Record<string, unknown>,
+  extraConfig?: Record<string, unknown>
+) => {
+  if (typeof window === 'undefined') return;
+
+  if (typeof window.fbq !== 'function') {
+    const n: any =
+      window.fbq ??
+      function (...args: unknown[]) {
+        n.callMethod ? n.callMethod(...args) : n.queue.push(args);
+      };
+    if (!n.queue) n.queue = [];
+    window.fbq = n;
+  }
+
+  if (extraConfig && options) {
+    window.fbq?.('track', event, options, extraConfig);
+  } else if (options) {
+    window.fbq?.('track', event, options);
+  } else {
+    window.fbq?.('track', event);
+  }
+};
+
+export const trackPurchase = (price: number, orderIdOrRef?: string | null) => {
+  if (typeof window === 'undefined') return;
+
+  const cleanRef = orderIdOrRef?.trim();
+  const key = cleanRef ? `fb_purchase_${cleanRef}` : null;
+
+  if (key) {
+    if (trackedPurchases.has(key)) {
+      return; // Already tracked in memory
     }
+    if (window.sessionStorage !== undefined) {
+      if (sessionStorage.getItem(key)) {
+        return; // Already tracked in session
+      }
+      sessionStorage.setItem(key, 'true');
+    }
+    trackedPurchases.add(key);
+  }
+
+  const value = Number(Number(price).toFixed(2)) || 0;
+  const options = { value, currency: 'NGN' };
+
+  if (cleanRef) {
+    fbqTrack('Purchase', options, { eventID: cleanRef });
+  } else {
+    fbqTrack('Purchase', options);
   }
 };
 

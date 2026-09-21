@@ -25,7 +25,7 @@ const columnTwoLinks: FooterLink[] = [
   },
   {
     label: 'Apply to be a Sponsor',
-    href: "https://wa.me/2348136023230?text=I'm%20ready%20to%20power%20the%20future%20of%20tech%20at%20DevFest%20Ibadan%202025.%20I%20would%20like%20to%20inquire%20about%20sponsorship%20opportunities%21%20Let's%20connect%20to%20build%20something%20great.",
+    href: "https://wa.me/2348136023230?text=I'm%20ready%20to%20power%20the%20future%20of%20tech%20at%20DevFest%20Ibadan%202026.%20I%20would%20like%20to%20inquire%20about%20sponsorship%20opportunities%21%20Let's%20connect%20to%20build%20something%20great.",
     isExternal: true,
   },
 ];
@@ -75,10 +75,11 @@ export const DFIFooterV2: FC = () => {
 
     const content = (
       <span
-        className={`text-sm sm:text-[15px] font-normal transition-colors ${isActive
-          ? 'text-[#4285F4] underline decoration-[#4285F4] underline-offset-4'
-          : 'text-[#9CA3AF] hover:text-white hover:underline hover:decoration-[#4285F4]/70 hover:underline-offset-4'
-          }`}
+        className={`text-sm sm:text-[15px] font-normal transition-colors ${
+          isActive
+            ? 'text-[#4285F4] underline decoration-[#4285F4] underline-offset-4'
+            : 'text-[#9CA3AF] hover:text-white hover:underline hover:decoration-[#4285F4]/70 hover:underline-offset-4'
+        }`}
       >
         {item.label}
       </span>
@@ -145,7 +146,7 @@ export const DFIFooterV2: FC = () => {
               </div>
 
               {/* Enquiry Contact */}
-              <div className='mt-14'>
+              <div className="mt-14">
                 <p className="font-mono font-bold text-xs uppercase tracking-wider text-gray-400 mb-4">
                   REACH OUT FOR ENQUIRY:
                 </p>
