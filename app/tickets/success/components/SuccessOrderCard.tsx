@@ -1,10 +1,11 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Download, AlertCircle, Calendar, Tag, Hash, RefreshCw } from 'lucide-react';
 import type { GetOrderReferenceResponseDto } from '@/app/_module/api/types';
+import { trackPurchase } from '@/components/MetaPixel';
 import StatusBadge from './StatusBadge';
 import DetailRow from './DetailRow';
 
@@ -37,6 +38,13 @@ export default function SuccessOrderCard({
   isRefetching,
 }: Readonly<SuccessOrderCardProps>) {
   const isPaid = order.status === 'PAID';
+
+  useEffect(() => {
+    if (order.status === 'PAID') {
+      const price = Number(order.amount) || 0;
+      trackPurchase(price, reference || order.code);
+    }
+  }, [order.status, order.amount, reference, order.code]);
 
   return (
     <motion.div
