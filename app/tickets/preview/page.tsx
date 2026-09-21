@@ -74,7 +74,7 @@ function TicketPreviewContent() {
               </span>
             </div>
             <span className="font-bold text-[#1D4ED8] text-[18px] md:text-[22px]">
-              2025
+              2026
             </span>
           </div>
 

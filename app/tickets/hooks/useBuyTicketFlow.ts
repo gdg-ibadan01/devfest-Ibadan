@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCreateOrder } from '@/app/_module/services';
 import { useMakePayment } from '@/hooks/useMakePayment';
+import { trackPurchase } from '@/components/MetaPixel';
 import type { TicketPackage } from '../components';
 import type { AppliedDiscount } from '@/app/_module/services/discount.service';
 
@@ -101,6 +102,8 @@ export function useBuyTicketFlow({
           customerFullName: isGift ? receiverName.trim() : fullName.trim(),
           paymentDescription: `Payment for the Purchase of ${selectedPackage.title} ticket.`,
           onComplete: () => {
+            const ticketPrice = Number(data.amount) || 0;
+            trackPurchase(ticketPrice, data.reference);
             setView('success');
           },
         });

@@ -1,8 +1,11 @@
 'use client';
 
 import { footerItems } from '@/app/_module/config/constants/globals';
+import XIcon from '@/public/X_icon.svg';
 import { motion, useAnimation, useInView } from 'framer-motion';
+import Image from 'next/image';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { FC, Fragment, useEffect, useRef } from 'react';
 import {
   Colon,
@@ -16,11 +19,7 @@ import {
   SplittedTag,
 } from '../../icons';
 import MenuLink from '../../menulink';
-import { Button } from '../../ui/button';
 import { footerClass as styles } from './DFIfooter.classes';
-import XIcon from '@/public/X_icon.svg';
-import Image from 'next/image';
-import { usePathname } from 'next/navigation';
 
 export const DFIFooterV1: FC = () => {
   const { frameOne, frameTwo, frameThree } = footerItems;
