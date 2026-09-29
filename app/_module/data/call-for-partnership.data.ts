@@ -1,4 +1,8 @@
-import { PartnerContact, PartnershipBenefit, PartnershipStat } from './types';
+import {
+  PartnerContact,
+  PartnershipBenefit,
+  PartnershipStat,
+} from '@/app/component/partnership/types';
 
 export const PARTNERSHIP_CONTACTS: PartnerContact[] = [
   {

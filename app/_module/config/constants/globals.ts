@@ -2,10 +2,10 @@ export const menuItems = [
   // { label: 'Agenda', slur: 'agenda' },
   // { label: 'Speakers', slur: 'speakers' },
   // { label: 'Organizers', slur: 'organizers' },
-  { label: 'Merch', slur: 'https://selar.co/m/gdg-ibadan1' },
+  // { label: 'Merch', slur: 'https://selar.co/m/gdg-ibadan1' },
   // { label: 'Team', slur: 'team' },
   // { label: 'RSVP', slur: '/rsvp' },
-  { label: 'CFP', slur: 'https://tinyurl.com/devfestib2026' },
+  // { label: 'CFP', slur: 'https://tinyurl.com/devfestib2026' },
 ];
 
 export const footerItems = {

@@ -2,7 +2,7 @@
 
 import { FC } from 'react';
 import { motion } from 'framer-motion';
-import { PARTNERSHIP_STATS } from './data';
+import { PARTNERSHIP_STATS } from '@/app/_module/data';
 
 export const PartnershipStats: FC = () => {
   return (

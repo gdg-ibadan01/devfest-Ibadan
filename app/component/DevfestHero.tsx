@@ -4,8 +4,8 @@ import { FC, useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-
-const TARGET_DATE = new Date('2026-11-20T08:00:00+01:00').getTime();
+import { useSmoothScroll } from '@/utils/scroll';
+import { TARGET_DATE } from '@/app/_module/data/devfest-hero.data';
 
 interface TimeLeft {
   days: number;
@@ -15,6 +15,7 @@ interface TimeLeft {
 }
 
 const DevfestHero: FC = () => {
+  const { handleScrollTo } = useSmoothScroll();
   const [timeLeft, setTimeLeft] = useState<TimeLeft>({
     days: 0,
     hours: 0,
@@ -54,18 +55,28 @@ const DevfestHero: FC = () => {
   };
 
   return (
-    <section className="relative w-full bg-[#EEF6FC] pt-[150px] lg:pt-[210px] overflow-hidden">
-      <div className="w-full md:max-w-[1500px] mx-auto ">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-24">
-          {/* Top Content Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-start">
-            {/* Left Column: Heading, Description, CTA */}
-            <div className="lg:col-span-7 z-10">
+    <section className="relative w-full bg-[#EDF5FB] pt-[130px] sm:pt-[150px] lg:pt-[175px] overflow-hidden">
+      <div className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-16 xl:px-24">
+        {/* Top Pills Row - Aligned right */}
+        <div className="flex flex-wrap items-center justify-start lg:justify-end gap-2.5 sm:gap-3 mb-6 sm:mb-8">
+          <span className="inline-flex items-center px-4 py-1.5 rounded-[100px] border border-black text-[11px] sm:text-xs font-mono font-bold tracking-wider text-black bg-white/90 uppercase">
+            KAKANFO INN &amp; CONFERENCE CENTRE
+          </span>
+          <span className="inline-flex items-center px-4 py-1.5 rounded-[100px] border border-black text-[11px] sm:text-xs font-mono font-bold tracking-wider text-black bg-white/90 uppercase">
+            21ST NOV 2026
+          </span>
+        </div>
+
+        {/* 2-Column Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-start">
+          {/* Left Column: Heading, Subtitle, CTAs & Bottom Illustration */}
+          <div className="lg:col-span-7 flex flex-col justify-between">
+            <div>
               <motion.h1
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 18 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, ease: 'easeOut' }}
-                className="font-black font-grotesk text-5xl sm:text-6xl md:text-7xl lg:text-[90px] xl:text-[88px] leading-[95%] tracking-tight text-black"
+                transition={{ duration: 0.5, ease: 'easeOut' }}
+                className="font-black font-grotesk text-5xl sm:text-6xl md:text-7xl lg:text-[76px] xl:text-[84px] leading-[95%] tracking-tight text-black"
               >
                 DEVFEST
                 <br />
@@ -80,129 +91,56 @@ const DevfestHero: FC = () => {
               </motion.h1>
 
               <motion.p
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 18 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.1, ease: 'easeOut' }}
-                className="mt-6 text-base sm:text-lg text-[#4B5563] max-w-xl leading-[160%] font-normal font-inter"
+                transition={{ duration: 0.5, delay: 0.1, ease: 'easeOut' }}
+                className="my-5 sm:my-6 text-sm sm:text-base md:text-lg text-[#4B5563] max-w-lg leading-relaxed font-sans"
               >
-                The biggest developer gathering in Oyo State Nigeria is back. 3
-                weekends of PreDevFest Series (Oct–Nov), a Virtual Event on
-                Friday Nov 20th, and the main Physical Event on Saturday Nov
-                21st.
+                Ibadan Nigeria&apos;s biggest developer conference. Early bird
+                tickets from ₦5,000.
               </motion.p>
 
+              {/* Action Buttons */}
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 18 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.2, ease: 'easeOut' }}
-                className="mt-[20px] sm:mt-10 flex flex-wrap items-center gap-4 lg:gap-[40px]"
+                transition={{ duration: 0.5, delay: 0.2, ease: 'easeOut' }}
+                className="mt-6 sm:mt-8 flex flex-wrap items-center gap-4 sm:gap-5"
               >
+                {/* View ticket tiers */}
                 <Link
-                  href="/tickets/buy"
-                  className="group relative inline-flex p-[2px] rounded-[100px] overflow-hidden transition-all duration-300 hover:scale-105 active:scale-95 shadow-md hover:shadow-lg"
+                  href="#tickets"
+                  onClick={handleScrollTo('#tickets')}
+                  className="group relative inline-flex p-[2px] rounded-[100px] overflow-hidden transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] shadow-sm"
                 >
-                  {/* Google Multi-Color Gradient Ring */}
                   <span className="absolute inset-0 bg-gradient-to-r from-[#34A853] via-[#FBBC04] to-[#4285F4] rounded-[100px] transition-opacity group-hover:opacity-90" />
-                  {/* Inner Button */}
                   <span className="relative px-[20px] lg:px-10 py-3 sm:py-3.5 rounded-[100px] bg-[#18181b] group-hover:bg-[#232326] text-white text-sm sm:text-base font-semibold tracking-wide transition-colors flex items-center justify-center">
-                    Get Ticket
+                    View ticket tiers
                   </span>
                 </Link>
+
+                {/* Buy swags */}
                 <Link
                   href="https://selar.co/m/gdg-ibadan1"
-                  className="group relative inline-flex p-[2px] rounded-[100px] overflow-hidden transition-all duration-300 hover:scale-105 active:scale-95 shadow-md hover:shadow-lg"
                   target="_blank"
+                  rel="noopener noreferrer"
+                  className="group relative inline-flex p-[2px] rounded-[100px] overflow-hidden transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] shadow-sm"
                 >
-                  {/* Google Multi-Color Gradient Ring */}
                   <span className="absolute inset-0 bg-gradient-to-r from-[#34A853] via-[#FBBC04] to-[#4285F4] rounded-[100px] transition-opacity group-hover:opacity-90" />
-                  {/* Inner Button */}
-                  <span className="relative px-[20px] lg:px-10 py-3 sm:py-3.5 rounded-[100px] bg-white group-hover:bg-[#d9d7d7] text-black text-sm sm:text-base font-semibold tracking-wide transition-colors flex items-center justify-center">
-                    Buy Swags
+                  <span className="relative px-[20px] lg:px-10 py-3 sm:py-3.5 rounded-[100px] bg-white group-hover:bg-neutral-50 text-black text-sm sm:text-base font-semibold tracking-wide transition-colors flex items-center justify-center">
+                    Buy swags
                   </span>
                 </Link>
               </motion.div>
             </div>
 
-            {/* Right Column: Location & Date Badges + Countdown Box */}
-            <div className="lg:col-span-5 flex flex-col items-start lg:items-end w-full z-10 mt-[40px] md:mt-0">
-              {/* Meta Pills */}
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.15 }}
-                className="flex flex-wrap gap-2 sm:gap-3 items-center justify-start lg:justify-end mb-4 sm:mb-5 w-full"
-              >
-                <span className="inline-flex items-center px-3.5 py-1.5 rounded-[100px] border border-black text-[11px] sm:text-xs font-mono font-bold tracking-wider text-black bg-white/70 backdrop-blur-xs uppercase">
-                  KAKANFO INN &amp; CONFERENCE CENTRE
-                </span>
-                <span className="inline-flex items-center px-3.5 py-1.5 rounded-[100px] border border-black text-[11px] sm:text-xs font-mono font-bold tracking-wider text-black bg-white/70 backdrop-blur-xs uppercase">
-                  21 NOV 2026
-                </span>
-              </motion.div>
-
-              {/* Countdown Box */}
-              <motion.div
-                initial={{ opacity: 0, scale: 0.96 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.5, delay: 0.25 }}
-                className="w-full max-w-md border border-black rounded-2xl p-4 sm:p-5 bg-white shadow-sm"
-              >
-                <h2 className="text-[10px] sm:text-xs font-mono font-bold tracking-widest text-black uppercase mb-3 text-left">
-                  COUNTDOWN TO DEVFEST IBADAN
-                </h2>
-
-                <div className="grid grid-cols-4 gap-2 sm:gap-3">
-                  {/* Days */}
-                  <div className="border border-black rounded-xl py-2 sm:py-3 px-1.5 text-center bg-white flex flex-col items-center justify-center">
-                    <span className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-black font-mono tabular-nums leading-none">
-                      {formatUnit(timeLeft.days)}
-                    </span>
-                    <span className="text-[9px] sm:text-[10px] font-bold tracking-wider text-gray-500 uppercase mt-1.5">
-                      DAYS
-                    </span>
-                  </div>
-
-                  {/* Hours */}
-                  <div className="border border-black rounded-xl py-2 sm:py-3 px-1.5 text-center bg-white flex flex-col items-center justify-center">
-                    <span className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-black font-mono tabular-nums leading-none">
-                      {formatUnit(timeLeft.hours)}
-                    </span>
-                    <span className="text-[9px] sm:text-[10px] font-bold tracking-wider text-gray-500 uppercase mt-1.5">
-                      HOURS
-                    </span>
-                  </div>
-
-                  {/* Mins */}
-                  <div className="border border-black rounded-xl py-2 sm:py-3 px-1.5 text-center bg-white flex flex-col items-center justify-center">
-                    <span className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-black font-mono tabular-nums leading-none">
-                      {formatUnit(timeLeft.minutes)}
-                    </span>
-                    <span className="text-[9px] sm:text-[10px] font-bold tracking-wider text-gray-500 uppercase mt-1.5">
-                      MINS
-                    </span>
-                  </div>
-
-                  {/* Secs */}
-                  <div className="border border-black rounded-xl py-2 sm:py-3 px-1.5 text-center bg-white flex flex-col items-center justify-center">
-                    <span className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-black font-mono tabular-nums leading-none">
-                      {formatUnit(timeLeft.seconds)}
-                    </span>
-                    <span className="text-[9px] sm:text-[10px] font-bold tracking-wider text-gray-500 uppercase mt-1.5">
-                      SECS
-                    </span>
-                  </div>
-                </div>
-              </motion.div>
-            </div>
-          </div>
-          {/* Attendees Illustration: Bottom 50% hangs outside the blue hero section */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.35, ease: 'easeOut' }}
-            className="relative w-full flex justify-center lg:justify-end mt-8 lg:-mt-[200px]"
-          >
-            <div className="w-full max-w-[500px] sm:max-w-[560px] md:max-w-[620px] lg:max-w-[680px] xl:max-w-[740px] -mb-[36%] md:-mb-[21%]">
+            {/* Attendees Illustration anchored at the bottom */}
+            <motion.div
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.3, ease: 'easeOut' }}
+              className="mt-8 lg:-mt-[80px] w-full max-w-[500px] sm:max-w-[560px] md:max-w-[620px] lg:max-w-[680px] xl:max-w-[740px] -mb-[36%] md:-mb-[21%] lg:-mb-[38%]"
+            >
               <Image
                 src="/hero_attendees.png"
                 alt="DevFest Ibadan Attendees"
@@ -211,8 +149,91 @@ const DevfestHero: FC = () => {
                 priority
                 className="w-full h-auto object-contain select-none pointer-events-none drop-shadow-sm"
               />
-            </div>
-          </motion.div>
+            </motion.div>
+          </div>
+
+          {/* Right Column: Peach Countdown Box */}
+          <div className="lg:col-span-5 flex flex-col items-start lg:items-end w-full">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.97 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="w-full max-w-[460px] border border-black rounded-[24px] p-5 sm:p-6 bg-[#FCD5CE] shadow-sm"
+            >
+              {/* Header: Title + BEST VALUE badge */}
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="text-xl sm:text-2xl font-black text-black font-grotesk tracking-tight">
+                  Early Bird Active
+                </h2>
+                <span className="bg-[#EA4335] text-white text-[10px] sm:text-[11px] font-bold px-3 py-1 rounded-[100px] uppercase tracking-wider shrink-0">
+                  BEST VALUE
+                </span>
+              </div>
+
+              {/* Subtext */}
+              <p className="mt-2 text-xs sm:text-[13px] text-[#4B5563] leading-relaxed">
+                Secure your ticket at ₦5,000 - first 300 only. Closes October 4,
+                2026.
+              </p>
+
+              {/* White Countdown Box */}
+              <div className="mt-4 sm:mt-5 border border-black rounded-[18px] bg-white p-4 sm:p-5">
+                <h3 className="text-[10px] sm:text-[11px] font-mono font-bold tracking-widest text-black uppercase mb-3">
+                  COUNTDOWN TO DEVFEST IBADAN
+                </h3>
+
+                <div className="grid grid-cols-4 gap-2 sm:gap-2.5">
+                  {/* Days */}
+                  <div className="border border-black rounded-xl py-3 px-1 text-center bg-white flex flex-col items-center justify-center">
+                    <span className="text-2xl sm:text-3xl font-black text-black font-grotesk tabular-nums leading-none">
+                      {formatUnit(timeLeft.days)}
+                    </span>
+                    <span className="text-[9px] sm:text-[10px] font-mono font-bold tracking-wider text-[#6B7280] uppercase mt-1.5">
+                      DAYS
+                    </span>
+                  </div>
+
+                  {/* Hours */}
+                  <div className="border border-black rounded-xl py-3 px-1 text-center bg-white flex flex-col items-center justify-center">
+                    <span className="text-2xl sm:text-3xl font-black text-black font-grotesk tabular-nums leading-none">
+                      {formatUnit(timeLeft.hours)}
+                    </span>
+                    <span className="text-[9px] sm:text-[10px] font-mono font-bold tracking-wider text-[#6B7280] uppercase mt-1.5">
+                      HOURS
+                    </span>
+                  </div>
+
+                  {/* Mins */}
+                  <div className="border border-black rounded-xl py-3 px-1 text-center bg-white flex flex-col items-center justify-center">
+                    <span className="text-2xl sm:text-3xl font-black text-black font-grotesk tabular-nums leading-none">
+                      {formatUnit(timeLeft.minutes)}
+                    </span>
+                    <span className="text-[9px] sm:text-[10px] font-mono font-bold tracking-wider text-[#6B7280] uppercase mt-1.5">
+                      MINS
+                    </span>
+                  </div>
+
+                  {/* Secs */}
+                  <div className="border border-black rounded-xl py-3 px-1 text-center bg-white flex flex-col items-center justify-center">
+                    <span className="text-2xl sm:text-3xl font-black text-black font-grotesk tabular-nums leading-none">
+                      {formatUnit(timeLeft.seconds)}
+                    </span>
+                    <span className="text-[9px] sm:text-[10px] font-mono font-bold tracking-wider text-[#6B7280] uppercase mt-1.5">
+                      SECS
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* BUY NOW Button */}
+              <Link
+                href="/tickets/buy"
+                className="mt-4 w-full py-3.5 px-4 rounded-[100px] border border-black bg-white hover:bg-neutral-50 text-black font-mono font-bold text-xs sm:text-sm uppercase tracking-widest text-center transition-colors flex items-center justify-center shadow-xs active:scale-[0.99]"
+              >
+                BUY NOW
+              </Link>
+            </motion.div>
+          </div>
         </div>
       </div>
     </section>
