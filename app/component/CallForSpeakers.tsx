@@ -3,59 +3,11 @@
 import { FC } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-
-const submissionSteps = [
-  {
-    title: 'Applications open',
-    description: 'Submit your topic and abstract',
-    dotColor: '#34A853', // Green
-  },
-  {
-    title: 'Review period',
-    description: 'Our team reviews all submissions',
-    dotColor: '#FBBC04', // Yellow
-  },
-  {
-    title: 'Speakers announced',
-    description: 'Selected speakers notified via email',
-    dotColor: '#EA4335', // Red
-  },
-  {
-    title: 'Event day — 21st Nov 2026',
-    description: 'Take the stage at DevFest Ibadan',
-    dotColor: '#4285F4', // Blue
-  },
-];
-
-const statsData = [
-  {
-    stat: '2-DAY',
-    color: '#34A853', // Green
-    label: '21 NOVEMBER 2026',
-    description: 'Expert talks, code labs, and pure technical vibes.',
-  },
-  {
-    stat: 'All TRACKS',
-    color: '#EA4335', // Red
-    label: 'WEB · MOBILE · AI · ETC.',
-    description:
-      'Deep-dive tracks tailored specifically to the domains defining modern global tech.',
-  },
-  {
-    stat: '30+ SPEAKERS',
-    color: '#FBBC04', // Yellow
-    label: 'INDUSTRY LEADERS',
-    description:
-      'Learn design, scale, and performance patterns from engineering giants.',
-  },
-  {
-    stat: '10+ YEARS',
-    color: '#4285F4', // Blue
-    label: 'COMMUNITY LEGACY',
-    description:
-      'Celebrating 10+ years of empowering and connecting tech lovers and enthusiast',
-  },
-];
+import { StatCard } from './StatCard';
+import {
+  submissionSteps,
+  statsData,
+} from '@/app/_module/data/call-for-speakers.data';
 
 const CallForSpeakers: FC = () => {
   return (
@@ -142,31 +94,14 @@ const CallForSpeakers: FC = () => {
         <div className="w-full md:max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-24 py-32 lg:py-64">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
             {statsData.map((item, index) => (
-              <motion.div
+              <StatCard
                 key={item.stat}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: index * 0.08 }}
-                className="border border-black rounded-2xl p-6 sm:p-7 bg-white flex flex-col justify-between hover:shadow-md transition-shadow"
-              >
-                <div>
-                  <h3
-                    className="text-4xl sm:text-[38px] font-black tracking-tight leading-none font-grotesk"
-                    style={{ color: item.color }}
-                  >
-                    {item.stat}
-                  </h3>
-
-                  <h4 className="font-mono font-bold text-xs sm:text-[11px] tracking-wider text-black uppercase mt-6 mb-2">
-                    {item.label}
-                  </h4>
-
-                  <p className="text-xs sm:text-sm text-[#4B5563] leading-relaxed font-sans">
-                    {item.description}
-                  </p>
-                </div>
-              </motion.div>
+                stat={item.stat}
+                color={item.color}
+                label={item.label}
+                description={item.description}
+                delay={index * 0.08}
+              />
             ))}
           </div>
         </div>
