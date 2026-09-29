@@ -2,46 +2,8 @@
 
 import { FC } from 'react';
 import { motion } from 'framer-motion';
-import { SwagTicketCard, SwagTicketCardProps } from './SwagTicketCard';
-
-const swagPerks = [
-  'Official DevFest T-Shirt & Lanyard',
-  'Custom DevFest Slingshot & Notepad',
-  'DevFest Bottle',
-  'And More DevFest Goodies..',
-];
-
-const ticketPerks = [
-  'Entry pass to all tracks',
-  'Access to Sponsor Booth Swags',
-  'Access to Workshop & Codelabs',
-  'Networking Opportunities with Speakers & Attendees',
-];
-
-const cardsData: SwagTicketCardProps[] = [
-  {
-    title: 'Get swags',
-    category: 'STANDARD SWAG',
-    description: 'Score the official DevFest Ibadan 2026 premium merch pack.',
-    perks: swagPerks,
-    buttonText: 'Buy swags',
-    buttonHref: 'https://selar.co/m/gdg-ibadan1',
-    isExternal: true,
-    colorScheme: 'green',
-    delay: 0,
-  },
-  {
-    title: 'Get tickets',
-    category: 'ALL ACCESS PASS',
-    description:
-      'Reserve your guaranteed spot at the biggest developer experience in Ibadan.',
-    perks: ticketPerks,
-    buttonText: 'Get tickets',
-    buttonHref: '/tickets/buy',
-    colorScheme: 'red',
-    delay: 0.15,
-  },
-];
+import { SwagTicketCard } from './SwagTicketCard';
+import { cardsData } from '@/app/_module/data/swags-and-tickets.data';
 
 const SwagsAndTickets: FC = () => {
   return (

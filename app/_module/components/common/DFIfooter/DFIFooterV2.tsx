@@ -150,12 +150,18 @@ export const DFIFooterV2: FC = () => {
                 <p className="font-mono font-bold text-xs uppercase tracking-wider text-gray-400 mb-4">
                   REACH OUT FOR ENQUIRY:
                 </p>
-                <div className="flex flex-wrap items-center gap-8">
+                <div className="flex flex-wrap items-center gap-6 sm:gap-8 lg:gap-24">
                   <a
-                    href="mailto:info@gdgibadan.com"
+                    href="mailto:abidemi@gdgibadan.com"
+                    className="text-[#4285F4] underline underline-offset-4 text-sm sm:text-base font-medium transition-opacity hover:opacity-80"
+                  >
+                    abidemi@gdgibadan.com
+                  </a>
+                  <a
+                    href="mailto:josh@gdgibadan.com"
                     className="text-[#FBBC04] underline underline-offset-4 text-sm sm:text-base font-medium transition-opacity hover:opacity-80"
                   >
-                    info@gdgibadan.com
+                    josh@gdgibadan.com
                   </a>
                 </div>
               </div>

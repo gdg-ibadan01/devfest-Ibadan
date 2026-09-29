@@ -11,7 +11,7 @@ import {
   PARTNERSHIP_CONTACTS,
   PARTNERSHIP_MAILTO_ALL,
   PARTNERSHIP_WHATSAPP_LINK,
-} from './data';
+} from '@/app/_module/data';
 
 export const PartnershipContactSection: FC = () => {
   const [copiedEmail, setCopiedEmail] = useState<string | null>(null);
