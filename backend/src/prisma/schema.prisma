@@ -76,6 +76,7 @@ model Ticket {
   price         Decimal
   validityDates DateTime[] @map("validity_dates")
   capacity      Int
+  seatsPerUnit  Int        @default(1) @map("seats_per_unit")
   saleStartsAt  DateTime   @map("sale_starts_at")
   saleEndsAt    DateTime   @map("sale_ends_at")
   creatorId     String     @map("creator_id")

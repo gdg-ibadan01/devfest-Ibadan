@@ -96,6 +96,7 @@ interface OrderQueryRawResult {
 interface TicketQueryRawResult {
   id: string;
   capacity: number;
+  seats_per_unit: number;
   price: Prisma.Decimal;
   sale_starts_at: Date;
   sale_ends_at: Date;

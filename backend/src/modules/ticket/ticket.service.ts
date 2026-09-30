@@ -66,6 +66,7 @@ export class TicketsService {
           description: payload.description,
           price: Number(payload.price.toFixed(2)),
           capacity: payload.capacity,
+          seatsPerUnit: payload.seatsPerUnit,
           eventDates: payload.eventDates
             .map((dateStr) => new Date(dateStr))
             .sort((da, db) => da.getTime() - db.getTime())
@@ -90,6 +91,7 @@ export class TicketsService {
         slug: updatedTicket.slug,
         price: updatedTicket.price.toFixed(2),
         capacity: updatedTicket.capacity,
+        seatsPerUnit: updatedTicket.seatsPerUnit,
         eventDates: updatedTicket.eventDates,
         validityDates: updatedTicket.validityDates,
         saleStartsAt: updatedTicket.saleStartsAt,
@@ -120,6 +122,7 @@ export class TicketsService {
           creatorId,
           price: Number(payload.price.toFixed(2)),
           capacity: payload.capacity,
+          seatsPerUnit: payload.seatsPerUnit,
           eventDates: payload.eventDates
             .map((dateStr) => new Date(dateStr))
             .sort((da, db) => da.getTime() - db.getTime())
@@ -144,6 +147,7 @@ export class TicketsService {
         slug: ticket.slug,
         price: ticket.price.toFixed(2),
         capacity: ticket.capacity,
+        seatsPerUnit: ticket.seatsPerUnit,
         eventDates: ticket.eventDates,
         validityDates: ticket.validityDates,
         saleStartsAt: ticket.saleStartsAt,
@@ -220,6 +224,7 @@ export class TicketsService {
         saleStartsAt: true,
         saleEndsAt: true,
         capacity: true,
+        seatsPerUnit: true,
       },
     });
 
@@ -279,6 +284,7 @@ export class TicketsService {
         validityDates: true,
         eventDates: true,
         price: true,
+        seatsPerUnit: true,
       },
     });
 
@@ -313,6 +319,7 @@ export class TicketsService {
       price: ticket.price.toFixed(2),
       validityDates: ticket.validityDates,
       capacity: ticket.capacity,
+      seatsPerUnit: ticket.seatsPerUnit,
       saleStartsAt: ticket.saleStartsAt,
       saleEndsAt: ticket.saleEndsAt,
       createdAt: ticket.createdAt,
@@ -334,6 +341,7 @@ export class TicketsService {
         eventDates: true,
         validityDates: true,
         slug: true,
+        seatsPerUnit: true,
       },
     });
 
@@ -348,6 +356,7 @@ export class TicketsService {
       eventDates: ticket.eventDates,
       validityDates: ticket.validityDates,
       slug: ticket.slug,
+      seatsPerUnit: ticket.seatsPerUnit,
     };
   }
 

@@ -85,6 +85,9 @@ export class TicketListItemDto {
   capacity: number;
 
   @ApiProperty()
+  seatsPerUnit: number;
+
+  @ApiProperty()
   slug: string;
 }
 
@@ -152,6 +155,9 @@ export class OnSaleTicketItemDto {
     example: '10000.00',
   })
   price: string;
+
+  @ApiProperty()
+  seatsPerUnit: number;
 }
 
 export class OnSaleTicketResponseDto {
@@ -221,6 +227,16 @@ export class CreateTicketDto {
   @Min(1)
   capacity: number;
 
+  @ApiPropertyOptional({
+    description: 'Seats per unit of this ticket',
+    default: 1,
+    minimum: 1,
+  })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  seatsPerUnit: number = 1;
+
   @ApiProperty({
     type: Date,
     description: 'Sales will start at the beginning of this day',
@@ -283,6 +299,9 @@ export class GetTicketBySlugResponseDto {
 
   @ApiProperty()
   slug: string;
+
+  @ApiProperty()
+  seatsPerUnit: number;
 }
 
 export class TicketCreatorDto {
@@ -321,6 +340,9 @@ export class GetTicketResponseDto {
 
   @ApiProperty()
   capacity: number;
+
+  @ApiProperty()
+  seatsPerUnit: number;
 
   @ApiProperty({ type: Date, format: 'date-time' })
   saleStartsAt: Date;
@@ -367,6 +389,9 @@ export class CreateTicketResponseDto {
 
   @ApiProperty()
   capacity: number;
+
+  @ApiProperty()
+  seatsPerUnit: number;
 
   @ApiProperty()
   saleStartsAt: Date;
