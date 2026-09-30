@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useTicketsOnSale } from '@/app/_module/services';
 import type { TicketPackage } from '../components';
@@ -17,39 +17,76 @@ export function useTicketPackages() {
   } = useTicketsOnSale();
 
   const packages: TicketPackage[] = useMemo(() => {
-    return (onSaleData?.data || []).map((ticket) => {
+    // return (onSaleData?.data || []).map((ticket) => {
+    return [
+      {
+        name: 'Early Bird',
+        description: '',
+        slug: 'devfest-ibadan-early-bird-2026',
+        validityDates: ['2026-11-21T00:00:00.000Z'],
+        eventDates: ['2026-11-21T00:00:00.000Z'],
+        price: '5000.00',
+      },
+      {
+        name: 'Group Ticket',
+        description: '',
+        slug: 'devfest-ibadan-group-ticket-2026',
+        validityDates: ['2026-11-21T00:00:00.000Z'],
+        eventDates: ['2026-11-21T00:00:00.000Z'],
+        price: '5000.00',
+      },
+      {
+        name: 'Late Ticket',
+        description: '',
+        slug: 'devfest-ibadan-late-ticket-2026',
+        validityDates: ['2026-11-21T00:00:00.000Z'],
+        eventDates: ['2026-11-21T00:00:00.000Z'],
+        price: '6000.00',
+      },
+    ].map((ticket) => {
       const price = Number.parseFloat(ticket.price) || 0;
       return {
         id: ticket.slug,
         title: ticket.name,
         badge: ticket.description || 'Access Pass',
         price,
-        formattedPrice: `₦ ${price.toLocaleString('en-NG', {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        })}`,
+        formattedPrice: ticket.slug.includes('group')
+          ? `₦ ${price.toLocaleString('en-NG', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })} / person`
+          : `₦ ${price.toLocaleString('en-NG', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}`,
       };
     });
   }, [onSaleData]);
 
-  // ── Auto-select package from URL parameter or default to first package ────
-  useEffect(() => {
-    if (packages.length > 0) {
-      const packageParam =
-        searchParams.get('package') ||
-        searchParams.get('ticket') ||
-        searchParams.get('slug');
+  const packageParam =
+    searchParams.get('package') ||
+    searchParams.get('ticket') ||
+    searchParams.get('slug');
+  const appliedPackageParam = useRef<string | null | undefined>(undefined);
 
-      if (packageParam && packages.some((p) => p.id === packageParam)) {
-        setSelectedPackageId(packageParam);
-      } else if (
-        !selectedPackageId ||
-        !packages.some((p) => p.id === selectedPackageId)
+  // Apply a URL choice once, then preserve valid manual selections.
+  useEffect(() => {
+    if (!packages.length) return;
+    const urlChanged = appliedPackageParam.current !== packageParam;
+    appliedPackageParam.current = packageParam;
+    setSelectedPackageId((currentId) => {
+      if (
+        urlChanged &&
+        packageParam &&
+        packages.some((p) => p.id === packageParam)
       ) {
-        setSelectedPackageId(packages[0].id);
+        return packageParam;
       }
-    }
-  }, [packages, selectedPackageId, searchParams]);
+      return packages.some((p) => p.id === currentId)
+        ? currentId
+        : packages[0].id;
+    });
+  }, [packages, packageParam]);
 
   const selectedPackage = useMemo(() => {
     return packages.find((p) => p.id === selectedPackageId) || packages[0];
