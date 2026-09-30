@@ -6,6 +6,7 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  NotImplementedException,
   Param,
   Post,
   Query,
@@ -27,6 +28,10 @@ import {
   OrderListResponseDto,
   OrdersQueryDto,
 } from './dto/order.dto';
+import {
+  CreateGroupBuyOrderDto,
+  CreateGroupBuyOrderResponseDto,
+} from './dto/group-buy-order.dto';
 import { PermissionsGuard } from '../admin/guards/permissions.guard';
 import { RequirePermission } from 'src/common/decorators/permissions.decorator';
 import { ServiceError } from '../../common/errors/service-error';
@@ -78,6 +83,7 @@ export class OrdersController {
         case OrdersService.ERRORS.BulkDiscountRecipientMismatchErr:
         case OrdersService.ERRORS.InvalidDiscountCodeErr:
         case OrdersService.ERRORS.TicketDiscountCodeMismatchErr:
+        case OrdersService.ERRORS.TicketGroupCapacityExceededErr:
           throw new HttpException(
             (err as Error).message,
             HttpStatus.BAD_REQUEST,
@@ -227,4 +233,35 @@ export class OrdersController {
       );
     }
   }
+
+  @Post('group-buys')
+  @ApiOperation({
+    summary: 'Create a group ticket order',
+  })
+  @ApiResponse({
+    status: HttpStatus.CREATED,
+    description: 'Group order created',
+    type: CreateGroupBuyOrderResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description:
+      'Invalid request, ticket not on sale, or group larger than seatsPerUnit',
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Ticket not found',
+  })
+  @ApiResponse({
+    status: HttpStatus.CONFLICT,
+    description:
+      'Ticket sold out, all remaining units reserved, or a member already has an order',
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_IMPLEMENTED,
+    description: 'Group buy order creation is not implemented yet',
+  })
+  createGroupBuy(
+    @Body() payload: CreateGroupBuyOrderDto,
+  ): Promise<CreateGroupBuyOrderResponseDto> {}
 }

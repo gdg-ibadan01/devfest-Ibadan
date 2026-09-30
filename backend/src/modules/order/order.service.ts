@@ -34,6 +34,7 @@ import crypto from 'node:crypto';
 import AppConfig from 'src/config/app.config';
 import { ConfigType } from '@nestjs/config';
 import { MailService } from '../mail/mail.service';
+import { CreateGroupBuyOrderDto } from './dto/group-buy-order.dto';
 
 const ORDER_TTL_MINUTES = 5;
 const TX_MAX_ATTEMPTS = 3;
@@ -91,6 +92,7 @@ interface OrderQueryRawResult {
   paid_at: any;
   created_at: Date;
   updated_at: Date;
+  group_reference: string | null;
 }
 
 interface TicketQueryRawResult {
@@ -103,6 +105,13 @@ interface TicketQueryRawResult {
   validity_dates: Date[];
   name: string;
   slug: string;
+}
+
+interface GroupPerson {
+  fullName: string;
+  email: string;
+  phoneNumber: string | null;
+  isPayer: boolean;
 }
 
 interface CreateOrderRecordArgs {
@@ -127,6 +136,7 @@ export class OrdersService {
     DuplicateErr: 'DuplicateErr',
     PaymentErr: 'PaymentErr',
     TicketNotFoundErr: 'TicketNotFoundErr',
+    TicketGroupCapacityExceededErr: 'TicketGroupCapacityExceededErr',
     OrderNotFoundErr: 'OrderNotFoundErr',
     MaxedOutDiscountCodeErr: 'MaxedOutDiscountCodeErr',
     BulkDiscountRecipientMismatchErr: 'BulkDiscountRecipientMismatchErr',
@@ -538,6 +548,7 @@ export class OrdersService {
       ticketSlug: ticket.slug,
       code: args.discountCode,
       currentDate: now,
+      groupCount: 1,
     });
 
     const amount = ticket.price.minus(discount?.amount ?? 0);
@@ -599,6 +610,211 @@ export class OrdersService {
     };
   }
 
+  async generateGroupOrderReference(payload: CreateGroupBuyOrderDto) {
+    let rec: CreatedOrderRecord | null = null;
+    for (let attempt = 1; attempt <= TX_MAX_ATTEMPTS; attempt++) {
+      try {
+        rec = await this.prisma.$transaction(
+          (tx) => this.createGroupOrderRecords(tx, payload),
+          { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+        );
+        break;
+      } catch (err) {
+        const isRetryable =
+          (err as { code?: string }).code === 'P2034' ||
+          (err as { code?: string }).code ===
+            PrismaErrors.UNIQUE_CONSTRAINT_VIOLATION;
+        if (isRetryable && attempt < TX_MAX_ATTEMPTS) continue;
+        if (err instanceof ServiceError || err instanceof NotFoundException) {
+          throw err;
+        }
+        this.logger.error(err);
+        throw new ServiceError(
+          'Unable to create order. Retry in a few minutes',
+          OrdersService.ERRORS.RetryLaterErr,
+        );
+      }
+    }
+
+    const { amount, vatAndCharges } =
+      this.paymentProvider.calculateAmountWithCharges(
+        rec!.order.amount.toNumber(),
+      );
+
+    return {
+      amount: amount.toFixed(2),
+      vatAndCharges: vatAndCharges.toFixed(2),
+      currency: 'NGN',
+      expiresAt: rec!.order.expiresAt,
+      id: rec!.order.id,
+      reference: rec!.order.reference,
+      status: rec!.order.status,
+      ticket: {
+        name: rec!.ticketName,
+        slug: rec!.ticketSlug,
+      },
+    };
+  }
+
+  private async createGroupOrderRecords(
+    tx: TxClient,
+    payload: CreateGroupBuyOrderDto,
+  ) {
+    const { group, discountCode, slug } = payload;
+    const people = this.groupPeople(payload.group);
+    this.assertUniqueGroupEmails(people);
+
+    const [ticket] = await tx.$queryRaw<TicketQueryRawResult[]>`
+    SELECT *
+    FROM tickets
+    WHERE slug = ${slug}
+    FOR UPDATE;`;
+
+    if (!ticket) {
+      throw new ServiceError(
+        'Ticket not found',
+        OrdersService.ERRORS.TicketNotFoundErr,
+      );
+    }
+
+    if (ticket.seats_per_unit < people.length) {
+      throw new ServiceError(
+        'Group capacity exceeded',
+        OrdersService.ERRORS.TicketGroupCapacityExceededErr,
+      );
+    }
+
+    const now = new Date();
+    if (now < ticket.sale_starts_at || now > ticket.sale_ends_at) {
+      throw new ServiceError(
+        'This ticket is not on sale',
+        OrdersService.ERRORS.NotOnSaleErr,
+      );
+    }
+
+    const activeOrder = await tx.order.findFirst({
+      where: {
+        ticketId: ticket.id,
+        attendeeEmail: { in: people.map((p) => p.email) },
+        OR: [
+          { status: OrderStatus.PAID },
+          {
+            status: OrderStatus.AWAITING_PAYMENT,
+            expiresAt: { gt: now },
+          },
+        ],
+      },
+    });
+
+    if (activeOrder) {
+      throw new ServiceError(
+        'You already have an order for this ticket',
+        OrdersService.ERRORS.DuplicateErr,
+      );
+    }
+
+    const groupCount = people.length;
+    const discount = await this.validateDiscountCode(tx, {
+      attendeeEmail: group.payer.email.toLowerCase(),
+      ticketSlug: ticket.slug,
+      code: discountCode,
+      currentDate: now,
+      groupCount,
+    });
+
+    const amount = ticket.price.minus(discount?.amount ?? 0);
+    if (amount.lte(0)) {
+      throw new ServiceError(
+        'Ticket price configuration is invalid',
+        OrdersService.ERRORS.ValidationErr,
+      );
+    }
+
+    const paidCount = await tx.order.count({
+      where: { ticketId: ticket.id, status: OrderStatus.PAID },
+    });
+    if (paidCount >= ticket.capacity) {
+      throw new ServiceError(
+        'Ticket is sold out',
+        OrdersService.ERRORS.SoldOutErr,
+      );
+    }
+
+    const awaitingCount = await tx.order.count({
+      where: {
+        ticketId: ticket.id,
+        status: OrderStatus.AWAITING_PAYMENT,
+        expiresAt: { gt: now },
+      },
+    });
+
+    if (paidCount + awaitingCount + groupCount > ticket.capacity) {
+      throw new ServiceError(
+        'All remaining tickets are currently reserved. Please retry in a few minutes',
+        OrdersService.ERRORS.RetryLaterErr,
+      );
+    }
+
+    const groupReference = crypto.randomUUID();
+    const bulkOrdersToCreate = people.map((p) => ({
+      reference: this.generateReference(ticket.name),
+      ticketId: ticket.id,
+      groupReference,
+      attendeeFullName: p.fullName,
+      attendeeEmail: p.email,
+      attendeePhoneNumber: p.phoneNumber,
+      amount: p.isPayer ? amount.toFixed(2) : 0,
+      currency: 'NGN',
+      status: OrderStatus.AWAITING_PAYMENT,
+      paymentProvider: this.paymentProvider.name,
+      expiresAt: new Date(now.getTime() + ORDER_TTL_MINUTES * 60_000),
+      discountId: discount && p.isPayer ? discount.id : null,
+    }));
+
+    const orders = await tx.order.createManyAndReturn({
+      data: bulkOrdersToCreate,
+    });
+
+    return {
+      order: orders.find((o) =>
+        o.amount.greaterThan(0),
+      ) as CreatedOrderRecord['order'],
+      ticketName: ticket.name,
+      ticketSlug: ticket.slug,
+    };
+  }
+
+  private groupPeople(group: CreateGroupBuyOrderDto['group']) {
+    return [
+      {
+        fullName: group.payer.fullName,
+        email: group.payer.email.trim().toLowerCase(),
+        phoneNumber: group.payer.phoneNumber ?? null,
+        isPayer: true,
+      },
+      ...group.members.map((m) => ({
+        fullName: m.fullName,
+        email: m.email.trim().toLowerCase(),
+        phoneNumber: null,
+        isPayer: false,
+      })),
+    ];
+  }
+
+  private assertUniqueGroupEmails(people: GroupPerson[]): void {
+    const emails = people.map((p) => p.email);
+    const duplicates = [
+      ...new Set(emails.filter((e, i) => emails.indexOf(e) !== i)),
+    ];
+
+    if (duplicates.length) {
+      throw new ServiceError(
+        `Duplicate email in group: ${duplicates.join(', ')}`,
+        OrdersService.ERRORS.ValidationErr,
+      );
+    }
+  }
+
   private async validateDiscountCode(
     tx: TxClient,
     args: {
@@ -606,6 +822,7 @@ export class OrdersService {
       ticketSlug: string;
       attendeeEmail: string;
       currentDate: Date;
+      groupCount: number;
     },
   ): Promise<Discount | null> {
     if (!args.code) return null;
@@ -647,7 +864,8 @@ export class OrdersService {
     const paidCount = await tx.order.count({
       where: { discountId: discount.id, status: OrderStatus.PAID },
     });
-    if (discount.limit && discount.limit < paidCount) {
+    const groupCount = args.groupCount - 1;
+    if (discount.limit && discount.limit < paidCount + groupCount) {
       throw new ServiceError(
         'Discount code has reached its maximum usage',
         'MaxedOutDiscountCodeErr',
@@ -820,6 +1038,7 @@ Treating only ${OrderStatus.AWAITING_PAYMENT} orders`,
             // Why are we doing this? To lock this row for any other concurrent
             // incoming events for this ticket to avoid other concurrent writes
             // affecting this tx
+            // TODO maybe no need for this. Normal query is fine
             const [ticket] = await tx.$queryRaw<TicketQueryRawResult[]>`
               SELECT *
               FROM tickets
