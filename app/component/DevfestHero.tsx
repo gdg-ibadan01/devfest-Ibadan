@@ -67,16 +67,16 @@ const DevfestHero: FC = () => {
           </span>
         </div>
 
-        {/* 2-Column Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-start">
-          {/* Left Column: Heading, Subtitle, CTAs & Bottom Illustration */}
+        {/* 2-Column Content Grid on Desktop, Stacked on Mobile */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-8 items-start">
+          {/* Left Column: Heading, Subtitle, CTAs & Desktop Illustration */}
           <div className="lg:col-span-7 flex flex-col justify-between">
             <div>
               <motion.h1
                 initial={{ opacity: 0, y: 18 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, ease: 'easeOut' }}
-                className="font-black font-grotesk text-5xl sm:text-6xl md:text-7xl lg:text-[76px] xl:text-[84px] leading-[95%] tracking-tight text-black"
+                className="font-black font-grotesk text-[42px] sm:text-6xl md:text-7xl lg:text-[76px] xl:text-[84px] leading-[95%] tracking-tight text-black"
               >
                 DEVFEST
                 <br />
@@ -134,12 +134,12 @@ const DevfestHero: FC = () => {
               </motion.div>
             </div>
 
-            {/* Attendees Illustration anchored at the bottom */}
+            {/* Attendees Illustration: Desktop only (anchored inside left column) */}
             <motion.div
               initial={{ opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.3, ease: 'easeOut' }}
-              className="mt-8 lg:-mt-[80px] w-full max-w-[500px] sm:max-w-[560px] md:max-w-[620px] lg:max-w-[680px] xl:max-w-[740px] -mb-[36%] md:-mb-[21%] lg:-mb-[38%]"
+              className="hidden lg:block mt-8 lg:-mt-[80px] w-full max-w-[500px] sm:max-w-[560px] md:max-w-[620px] lg:max-w-[680px] xl:max-w-[740px] lg:-mb-[38%]"
             >
               <Image
                 src="/hero_attendees.png"
@@ -153,7 +153,7 @@ const DevfestHero: FC = () => {
           </div>
 
           {/* Right Column: Peach Countdown Box */}
-          <div className="lg:col-span-5 flex flex-col items-start lg:items-end w-full">
+          <div className="lg:col-span-5 flex flex-col items-center lg:items-end w-full">
             <motion.div
               initial={{ opacity: 0, scale: 0.97 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -235,6 +235,23 @@ const DevfestHero: FC = () => {
             </motion.div>
           </div>
         </div>
+
+        {/* Attendees Illustration: Mobile/Tablet only (rendered below countdown card, grounded at bottom of hero section) */}
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.3, ease: 'easeOut' }}
+          className="block lg:hidden w-full max-w-[500px] sm:max-w-[560px] mx-auto mt-8 sm:mt-10 -mb-[26%] sm:-mb-[20%]"
+        >
+          <Image
+            src="/hero_attendees.png"
+            alt="DevFest Ibadan Attendees"
+            width={740}
+            height={538}
+            priority
+            className="w-full h-auto object-contain select-none pointer-events-none drop-shadow-sm"
+          />
+        </motion.div>
       </div>
     </section>
   );
