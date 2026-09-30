@@ -548,7 +548,6 @@ export class OrdersService {
       ticketSlug: ticket.slug,
       code: args.discountCode,
       currentDate: now,
-      groupCount: 1,
     });
 
     const amount = ticket.price.minus(discount?.amount ?? 0);
@@ -719,7 +718,6 @@ export class OrdersService {
       ticketSlug: ticket.slug,
       code: discountCode,
       currentDate: now,
-      groupCount,
     });
 
     const amount = ticket.price.minus(discount?.amount ?? 0);
@@ -822,7 +820,6 @@ export class OrdersService {
       ticketSlug: string;
       attendeeEmail: string;
       currentDate: Date;
-      groupCount: number;
     },
   ): Promise<Discount | null> {
     if (!args.code) return null;
@@ -864,8 +861,8 @@ export class OrdersService {
     const paidCount = await tx.order.count({
       where: { discountId: discount.id, status: OrderStatus.PAID },
     });
-    const groupCount = args.groupCount - 1;
-    if (discount.limit && discount.limit < paidCount + groupCount) {
+
+    if (discount.limit && discount.limit < paidCount) {
       throw new ServiceError(
         'Discount code has reached its maximum usage',
         'MaxedOutDiscountCodeErr',
