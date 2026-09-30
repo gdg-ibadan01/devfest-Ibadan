@@ -6,7 +6,6 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
-  NotImplementedException,
   Param,
   Post,
   Query,
@@ -257,11 +256,43 @@ export class OrdersController {
     description:
       'Ticket sold out, all remaining units reserved, or a member already has an order',
   })
-  @ApiResponse({
-    status: HttpStatus.NOT_IMPLEMENTED,
-    description: 'Group buy order creation is not implemented yet',
-  })
-  createGroupBuy(
+  async createGroupBuy(
     @Body() payload: CreateGroupBuyOrderDto,
-  ): Promise<CreateGroupBuyOrderResponseDto> {}
+  ): Promise<CreateGroupBuyOrderResponseDto> {
+    try {
+      return await this.ordersService.generateGroupOrderReference(payload);
+    } catch (err) {
+      if (err instanceof HttpException) throw err;
+
+      switch ((err as Error).name) {
+        case OrdersService.ERRORS.ValidationErr:
+        case OrdersService.ERRORS.NotOnSaleErr:
+        case OrdersService.ERRORS.BulkDiscountRecipientMismatchErr:
+        case OrdersService.ERRORS.InvalidDiscountCodeErr:
+        case OrdersService.ERRORS.TicketDiscountCodeMismatchErr:
+        case OrdersService.ERRORS.TicketGroupCapacityExceededErr:
+          throw new HttpException(
+            (err as Error).message,
+            HttpStatus.BAD_REQUEST,
+          );
+        case OrdersService.ERRORS.SoldOutErr:
+        case OrdersService.ERRORS.RetryLaterErr:
+        case OrdersService.ERRORS.DuplicateErr:
+        case OrdersService.ERRORS.MaxedOutDiscountCodeErr:
+          throw new HttpException((err as Error).message, HttpStatus.CONFLICT);
+        case OrdersService.ERRORS.PaymentErr:
+          throw new HttpException(
+            (err as Error).message,
+            HttpStatus.BAD_GATEWAY,
+          );
+        case OrdersService.ERRORS.TicketNotFoundErr:
+          throw new HttpException((err as Error).message, HttpStatus.NOT_FOUND);
+        default:
+          throw new HttpException(
+            (err as Error).message,
+            HttpStatus.INTERNAL_SERVER_ERROR,
+          );
+      }
+    }
+  }
 }

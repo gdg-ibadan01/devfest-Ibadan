@@ -234,7 +234,7 @@ export class OrdersService {
 
     const { amount, vatAndCharges } =
       this.paymentProvider.calculateAmountWithCharges(
-        record.order.amount.toNumber(),
+        record.order.amount.toNumber() * 100,
       );
 
     return {
@@ -637,7 +637,7 @@ export class OrdersService {
 
     const { amount, vatAndCharges } =
       this.paymentProvider.calculateAmountWithCharges(
-        rec!.order.amount.toNumber(),
+        rec!.order.amount.toNumber() * 100,
       );
 
     return {
