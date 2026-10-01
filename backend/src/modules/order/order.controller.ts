@@ -27,6 +27,10 @@ import {
   OrderListResponseDto,
   OrdersQueryDto,
 } from './dto/order.dto';
+import {
+  CreateGroupBuyOrderDto,
+  CreateGroupBuyOrderResponseDto,
+} from './dto/group-buy-order.dto';
 import { PermissionsGuard } from '../admin/guards/permissions.guard';
 import { RequirePermission } from 'src/common/decorators/permissions.decorator';
 import { ServiceError } from '../../common/errors/service-error';
@@ -78,6 +82,7 @@ export class OrdersController {
         case OrdersService.ERRORS.BulkDiscountRecipientMismatchErr:
         case OrdersService.ERRORS.InvalidDiscountCodeErr:
         case OrdersService.ERRORS.TicketDiscountCodeMismatchErr:
+        case OrdersService.ERRORS.TicketGroupCapacityExceededErr:
           throw new HttpException(
             (err as Error).message,
             HttpStatus.BAD_REQUEST,
@@ -225,6 +230,71 @@ export class OrdersController {
         'Unable to process order',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
+    }
+  }
+
+  @Post('group-buys')
+  @ApiOperation({
+    summary: 'Create a group ticket order',
+    description:
+      'Creates one order row per person, including the payer, all sharing a single group reference. The ticket price is charged once, on the payer row. A ticket has a capacity of units and a seatsPerUnit of people per unit, so the seats available are capacity times seatsPerUnit. The group size cannot exceed seatsPerUnit, and its seats count against that total.',
+  })
+  @ApiResponse({
+    status: HttpStatus.CREATED,
+    description: 'Group order created',
+    type: CreateGroupBuyOrderResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description:
+      'Invalid request, ticket not on sale, or group larger than seatsPerUnit',
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Ticket not found',
+  })
+  @ApiResponse({
+    status: HttpStatus.CONFLICT,
+    description:
+      'Ticket sold out, all remaining units reserved, or a member already has an order',
+  })
+  async createGroupBuy(
+    @Body() payload: CreateGroupBuyOrderDto,
+  ): Promise<CreateGroupBuyOrderResponseDto> {
+    try {
+      return await this.ordersService.generateGroupOrderReference(payload);
+    } catch (err) {
+      if (err instanceof HttpException) throw err;
+
+      switch ((err as Error).name) {
+        case OrdersService.ERRORS.ValidationErr:
+        case OrdersService.ERRORS.NotOnSaleErr:
+        case OrdersService.ERRORS.BulkDiscountRecipientMismatchErr:
+        case OrdersService.ERRORS.InvalidDiscountCodeErr:
+        case OrdersService.ERRORS.TicketDiscountCodeMismatchErr:
+        case OrdersService.ERRORS.TicketGroupCapacityExceededErr:
+          throw new HttpException(
+            (err as Error).message,
+            HttpStatus.BAD_REQUEST,
+          );
+        case OrdersService.ERRORS.SoldOutErr:
+        case OrdersService.ERRORS.RetryLaterErr:
+        case OrdersService.ERRORS.DuplicateErr:
+        case OrdersService.ERRORS.MaxedOutDiscountCodeErr:
+          throw new HttpException((err as Error).message, HttpStatus.CONFLICT);
+        case OrdersService.ERRORS.PaymentErr:
+          throw new HttpException(
+            (err as Error).message,
+            HttpStatus.BAD_GATEWAY,
+          );
+        case OrdersService.ERRORS.TicketNotFoundErr:
+          throw new HttpException((err as Error).message, HttpStatus.NOT_FOUND);
+        default:
+          throw new HttpException(
+            (err as Error).message,
+            HttpStatus.INTERNAL_SERVER_ERROR,
+          );
+      }
     }
   }
 }
