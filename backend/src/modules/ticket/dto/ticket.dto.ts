@@ -227,15 +227,14 @@ export class CreateTicketDto {
   @Min(1)
   capacity: number;
 
-  @ApiPropertyOptional({
+  @ApiProperty({
     description: 'Seats per unit of this ticket',
-    default: 1,
     minimum: 1,
+    example: 1,
   })
-  @IsOptional()
   @IsInt()
   @Min(1)
-  seatsPerUnit: number = 1;
+  seatsPerUnit: number;
 
   @ApiProperty({
     type: Date,

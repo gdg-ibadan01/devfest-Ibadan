@@ -660,8 +660,8 @@ export class OrdersService {
     payload: CreateGroupBuyOrderDto,
   ) {
     const { group, discountCode, slug } = payload;
-    const people = this.groupPeople(payload.group);
-    this.assertUniqueGroupEmails(people);
+    const members = this.groupPeople(payload.group);
+    this.assertUniqueGroupEmails(members);
 
     const [ticket] = await tx.$queryRaw<TicketQueryRawResult[]>`
     SELECT *
@@ -676,9 +676,9 @@ export class OrdersService {
       );
     }
 
-    if (ticket.seats_per_unit < people.length) {
+    if (ticket.seats_per_unit < members.length) {
       throw new ServiceError(
-        'Group capacity exceeded',
+        `Group of ${members.length} exceeds the ${ticket.seats_per_unit} seats covered by one purchase`,
         OrdersService.ERRORS.TicketGroupCapacityExceededErr,
       );
     }
@@ -694,7 +694,7 @@ export class OrdersService {
     const activeOrder = await tx.order.findFirst({
       where: {
         ticketId: ticket.id,
-        attendeeEmail: { in: people.map((p) => p.email) },
+        attendeeEmail: { in: members.map((p) => p.email) },
         OR: [
           { status: OrderStatus.PAID },
           {
@@ -712,7 +712,6 @@ export class OrdersService {
       );
     }
 
-    const groupCount = people.length;
     const discount = await this.validateDiscountCode(tx, {
       attendeeEmail: group.payer.email.toLowerCase(),
       ticketSlug: ticket.slug,
@@ -731,7 +730,7 @@ export class OrdersService {
     const paidCount = await tx.order.count({
       where: { ticketId: ticket.id, status: OrderStatus.PAID },
     });
-    if (paidCount >= ticket.capacity) {
+    if (paidCount >= ticket.capacity * ticket.seats_per_unit) {
       throw new ServiceError(
         'Ticket is sold out',
         OrdersService.ERRORS.SoldOutErr,
@@ -746,7 +745,10 @@ export class OrdersService {
       },
     });
 
-    if (paidCount + awaitingCount + groupCount > ticket.capacity) {
+    if (
+      paidCount + awaitingCount + members.length >
+      ticket.capacity * ticket.seats_per_unit
+    ) {
       throw new ServiceError(
         'All remaining tickets are currently reserved. Please retry in a few minutes',
         OrdersService.ERRORS.RetryLaterErr,
@@ -754,7 +756,7 @@ export class OrdersService {
     }
 
     const groupReference = crypto.randomUUID();
-    const bulkOrdersToCreate = people.map((p) => ({
+    const bulkOrdersToCreate = members.map((p) => ({
       reference: this.generateReference(ticket.name),
       ticketId: ticket.id,
       groupReference,

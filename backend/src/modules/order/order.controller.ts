@@ -236,6 +236,8 @@ export class OrdersController {
   @Post('group-buys')
   @ApiOperation({
     summary: 'Create a group ticket order',
+    description:
+      'Creates one order row per person, including the payer, all sharing a single group reference. The ticket price is charged once, on the payer row. A ticket has a capacity of units and a seatsPerUnit of people per unit, so the seats available are capacity times seatsPerUnit. The group size cannot exceed seatsPerUnit, and its seats count against that total.',
   })
   @ApiResponse({
     status: HttpStatus.CREATED,
