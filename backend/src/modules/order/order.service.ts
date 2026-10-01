@@ -983,15 +983,34 @@ export class OrdersService {
     return ticket.capacity * ticket.seats_per_unit;
   }
 
+  private async cancelGroupMembers(
+    tx: TxClient,
+    group: OrderQueryRawResult[],
+    payerId: string,
+  ): Promise<void> {
+    const memberIds = group
+      .filter((row) => row.id !== payerId)
+      .map((row) => row.id);
+
+    if (memberIds.length === 0) return;
+
+    await tx.order.updateMany({
+      where: { id: { in: memberIds } },
+      data: { status: OrderStatus.CANCELLED },
+    });
+  }
+
   async handlePaymentSuccess(event: PaymentSuccessPayload): Promise<void> {
     let txResult: {
       refundId: string;
       order: OrderQueryRawResult | null;
       ticket: TicketQueryRawResult | null;
+      group: OrderQueryRawResult[];
     } = {
       refundId: '',
       order: null,
       ticket: null,
+      group: [],
     };
 
     // Retrying because we're using IsolationLevel.Serializable
@@ -1011,29 +1030,37 @@ export class OrdersService {
               return txResult;
             }
 
-            if (order.status !== OrderStatus.AWAITING_PAYMENT) {
+            const group = order.group_reference
+              ? await tx.$queryRaw<OrderQueryRawResult[]>`
+                  SELECT *
+                  FROM orders
+                  WHERE group_reference = ${order.group_reference}
+                  FOR UPDATE;`
+              : [order];
+
+            const isPartlyFulfilled = group.some(
+              (row) => row.status !== OrderStatus.AWAITING_PAYMENT,
+            );
+
+            if (isPartlyFulfilled) {
               this.logger.log(
-                `Order ${order.id} status is ${order.status}, skipping...
-Treating only ${OrderStatus.AWAITING_PAYMENT} orders`,
+                `Order ${order.id} group already has a non-${OrderStatus.AWAITING_PAYMENT} row, treating group as fulfilled. Skipping...`,
               );
               await this.setEventAsProcessed(tx, event.webhookEventId);
               return txResult;
             }
 
-            const transactionRefMismatch =
-              order.provider_transaction_ref &&
-              order.provider_transaction_ref !== event.transactionReference;
-
             // Since we're expecting only one currency now, this is fine
             const amountMismatch = event.amountPaid < Number(order.amount);
 
-            if (transactionRefMismatch || amountMismatch) {
+            if (amountMismatch) {
               this.logger.warn(
                 `Sanity check failed for order ${order.id}: ` +
-                  `txRef mismatch=${transactionRefMismatch}, amount mismatch=${amountMismatch}`,
+                  `amount mismatch=${amountMismatch}`,
               );
               const refund = await this.recordRefund(tx, order, event);
               txResult.refundId = refund.refundId;
+              await this.cancelGroupMembers(tx, group, order.id);
               await this.setEventAsProcessed(tx, event.webhookEventId);
               return txResult;
             }
@@ -1060,6 +1087,7 @@ Initiating refund for order ${order.id}`,
               );
               const refund = await this.recordRefund(tx, order, event);
               txResult.refundId = refund.refundId;
+              await this.cancelGroupMembers(tx, group, order.id);
               await this.setEventAsProcessed(tx, event.webhookEventId);
               return txResult;
             }
@@ -1078,8 +1106,10 @@ Initiating refund for order ${order.id}`,
             const shouldIssueTicket = !orderIsExpired || hasCapacity;
 
             if (shouldIssueTicket) {
-              await tx.order.update({
-                where: { id: order.id },
+              const groupIds = group.map((row) => row.id);
+
+              await tx.order.updateMany({
+                where: { id: { in: groupIds } },
                 data: {
                   status: OrderStatus.PAID,
                   paidAt: now,
@@ -1090,11 +1120,13 @@ Initiating refund for order ${order.id}`,
               await this.setEventAsProcessed(tx, event.webhookEventId);
               txResult.order = order;
               txResult.ticket = ticket;
+              txResult.group = group;
               return txResult;
             }
 
             const refund = await this.recordRefund(tx, order, event);
             txResult.refundId = refund.refundId;
+            await this.cancelGroupMembers(tx, group, order.id);
             await this.setEventAsProcessed(tx, event.webhookEventId);
             return txResult;
           },
@@ -1280,9 +1312,13 @@ Initiating refund for order ${order.id}`,
       return;
     }
 
+    const cancellationFilter = order.groupReference
+      ? { groupReference: order.groupReference }
+      : { id: order.id };
+
     await this.prisma.$transaction(async (tx) => {
-      await tx.order.update({
-        where: { id: order.id },
+      await tx.order.updateMany({
+        where: cancellationFilter,
         data: { status: OrderStatus.CANCELLED },
       });
       await this.setEventAsProcessed(tx, payload.webhookEventId);
