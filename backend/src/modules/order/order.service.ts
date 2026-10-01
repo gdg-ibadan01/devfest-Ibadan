@@ -34,6 +34,7 @@ import crypto from 'node:crypto';
 import AppConfig from 'src/config/app.config';
 import { ConfigType } from '@nestjs/config';
 import { MailService } from '../mail/mail.service';
+import { CreateGroupBuyOrderDto } from './dto/group-buy-order.dto';
 
 const ORDER_TTL_MINUTES = 5;
 const TX_MAX_ATTEMPTS = 3;
@@ -91,17 +92,26 @@ interface OrderQueryRawResult {
   paid_at: any;
   created_at: Date;
   updated_at: Date;
+  group_reference: string | null;
 }
 
 interface TicketQueryRawResult {
   id: string;
   capacity: number;
+  seats_per_unit: number;
   price: Prisma.Decimal;
   sale_starts_at: Date;
   sale_ends_at: Date;
   validity_dates: Date[];
   name: string;
   slug: string;
+}
+
+interface GroupPerson {
+  fullName: string;
+  email: string;
+  phoneNumber: string | null;
+  isPayer: boolean;
 }
 
 interface CreateOrderRecordArgs {
@@ -126,6 +136,7 @@ export class OrdersService {
     DuplicateErr: 'DuplicateErr',
     PaymentErr: 'PaymentErr',
     TicketNotFoundErr: 'TicketNotFoundErr',
+    TicketGroupCapacityExceededErr: 'TicketGroupCapacityExceededErr',
     OrderNotFoundErr: 'OrderNotFoundErr',
     MaxedOutDiscountCodeErr: 'MaxedOutDiscountCodeErr',
     BulkDiscountRecipientMismatchErr: 'BulkDiscountRecipientMismatchErr',
@@ -223,7 +234,7 @@ export class OrdersService {
 
     const { amount, vatAndCharges } =
       this.paymentProvider.calculateAmountWithCharges(
-        record.order.amount.toNumber(),
+        record.order.amount.toNumber() * 100,
       );
 
     return {
@@ -598,6 +609,212 @@ export class OrdersService {
     };
   }
 
+  async generateGroupOrderReference(payload: CreateGroupBuyOrderDto) {
+    let rec: CreatedOrderRecord | null = null;
+    for (let attempt = 1; attempt <= TX_MAX_ATTEMPTS; attempt++) {
+      try {
+        rec = await this.prisma.$transaction(
+          (tx) => this.createGroupOrderRecords(tx, payload),
+          { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+        );
+        break;
+      } catch (err) {
+        const isRetryable =
+          (err as { code?: string }).code === 'P2034' ||
+          (err as { code?: string }).code ===
+            PrismaErrors.UNIQUE_CONSTRAINT_VIOLATION;
+        if (isRetryable && attempt < TX_MAX_ATTEMPTS) continue;
+        if (err instanceof ServiceError || err instanceof NotFoundException) {
+          throw err;
+        }
+        this.logger.error(err);
+        throw new ServiceError(
+          'Unable to create order. Retry in a few minutes',
+          OrdersService.ERRORS.RetryLaterErr,
+        );
+      }
+    }
+
+    const { amount, vatAndCharges } =
+      this.paymentProvider.calculateAmountWithCharges(
+        rec!.order.amount.toNumber() * 100,
+      );
+
+    return {
+      amount: amount.toFixed(2),
+      vatAndCharges: vatAndCharges.toFixed(2),
+      currency: 'NGN',
+      expiresAt: rec!.order.expiresAt,
+      id: rec!.order.id,
+      reference: rec!.order.reference,
+      status: rec!.order.status,
+      ticket: {
+        name: rec!.ticketName,
+        slug: rec!.ticketSlug,
+      },
+    };
+  }
+
+  private async createGroupOrderRecords(
+    tx: TxClient,
+    payload: CreateGroupBuyOrderDto,
+  ) {
+    const { group, discountCode, slug } = payload;
+    const members = this.groupPeople(payload.group);
+    this.assertUniqueGroupEmails(members);
+
+    const [ticket] = await tx.$queryRaw<TicketQueryRawResult[]>`
+    SELECT *
+    FROM tickets
+    WHERE slug = ${slug}
+    FOR UPDATE;`;
+
+    if (!ticket) {
+      throw new ServiceError(
+        'Ticket not found',
+        OrdersService.ERRORS.TicketNotFoundErr,
+      );
+    }
+
+    if (ticket.seats_per_unit < members.length) {
+      throw new ServiceError(
+        `Group of ${members.length} exceeds the ${ticket.seats_per_unit} seats covered by one purchase`,
+        OrdersService.ERRORS.TicketGroupCapacityExceededErr,
+      );
+    }
+
+    const now = new Date();
+    if (now < ticket.sale_starts_at || now > ticket.sale_ends_at) {
+      throw new ServiceError(
+        'This ticket is not on sale',
+        OrdersService.ERRORS.NotOnSaleErr,
+      );
+    }
+
+    const activeOrder = await tx.order.findFirst({
+      where: {
+        ticketId: ticket.id,
+        attendeeEmail: { in: members.map((p) => p.email) },
+        OR: [
+          { status: OrderStatus.PAID },
+          {
+            status: OrderStatus.AWAITING_PAYMENT,
+            expiresAt: { gt: now },
+          },
+        ],
+      },
+    });
+
+    if (activeOrder) {
+      throw new ServiceError(
+        'You already have an order for this ticket',
+        OrdersService.ERRORS.DuplicateErr,
+      );
+    }
+
+    const discount = await this.validateDiscountCode(tx, {
+      attendeeEmail: group.payer.email.toLowerCase(),
+      ticketSlug: ticket.slug,
+      code: discountCode,
+      currentDate: now,
+    });
+
+    const amount = ticket.price.minus(discount?.amount ?? 0);
+    if (amount.lte(0)) {
+      throw new ServiceError(
+        'Ticket price configuration is invalid',
+        OrdersService.ERRORS.ValidationErr,
+      );
+    }
+
+    const paidCount = await tx.order.count({
+      where: { ticketId: ticket.id, status: OrderStatus.PAID },
+    });
+    if (paidCount >= ticket.capacity * ticket.seats_per_unit) {
+      throw new ServiceError(
+        'Ticket is sold out',
+        OrdersService.ERRORS.SoldOutErr,
+      );
+    }
+
+    const awaitingCount = await tx.order.count({
+      where: {
+        ticketId: ticket.id,
+        status: OrderStatus.AWAITING_PAYMENT,
+        expiresAt: { gt: now },
+      },
+    });
+
+    if (
+      paidCount + awaitingCount + members.length >
+      ticket.capacity * ticket.seats_per_unit
+    ) {
+      throw new ServiceError(
+        'All remaining tickets are currently reserved. Please retry in a few minutes',
+        OrdersService.ERRORS.RetryLaterErr,
+      );
+    }
+
+    const groupReference = crypto.randomUUID();
+    const bulkOrdersToCreate = members.map((p) => ({
+      reference: this.generateReference(ticket.name),
+      ticketId: ticket.id,
+      groupReference,
+      attendeeFullName: p.fullName,
+      attendeeEmail: p.email,
+      attendeePhoneNumber: p.phoneNumber,
+      amount: p.isPayer ? amount.toFixed(2) : 0,
+      currency: 'NGN',
+      status: OrderStatus.AWAITING_PAYMENT,
+      paymentProvider: this.paymentProvider.name,
+      expiresAt: new Date(now.getTime() + ORDER_TTL_MINUTES * 60_000),
+      discountId: discount && p.isPayer ? discount.id : null,
+    }));
+
+    const orders = await tx.order.createManyAndReturn({
+      data: bulkOrdersToCreate,
+    });
+
+    return {
+      order: orders.find((o) =>
+        o.amount.greaterThan(0),
+      ) as CreatedOrderRecord['order'],
+      ticketName: ticket.name,
+      ticketSlug: ticket.slug,
+    };
+  }
+
+  private groupPeople(group: CreateGroupBuyOrderDto['group']) {
+    return [
+      {
+        fullName: group.payer.fullName,
+        email: group.payer.email.trim().toLowerCase(),
+        phoneNumber: group.payer.phoneNumber ?? null,
+        isPayer: true,
+      },
+      ...group.members.map((m) => ({
+        fullName: m.fullName,
+        email: m.email.trim().toLowerCase(),
+        phoneNumber: null,
+        isPayer: false,
+      })),
+    ];
+  }
+
+  private assertUniqueGroupEmails(people: GroupPerson[]): void {
+    const emails = people.map((p) => p.email);
+    const duplicates = [
+      ...new Set(emails.filter((e, i) => emails.indexOf(e) !== i)),
+    ];
+
+    if (duplicates.length) {
+      throw new ServiceError(
+        `Duplicate email in group: ${duplicates.join(', ')}`,
+        OrdersService.ERRORS.ValidationErr,
+      );
+    }
+  }
+
   private async validateDiscountCode(
     tx: TxClient,
     args: {
@@ -646,6 +863,7 @@ export class OrdersService {
     const paidCount = await tx.order.count({
       where: { discountId: discount.id, status: OrderStatus.PAID },
     });
+
     if (discount.limit && discount.limit < paidCount) {
       throw new ServiceError(
         'Discount code has reached its maximum usage',
@@ -819,6 +1037,7 @@ Treating only ${OrderStatus.AWAITING_PAYMENT} orders`,
             // Why are we doing this? To lock this row for any other concurrent
             // incoming events for this ticket to avoid other concurrent writes
             // affecting this tx
+            // TODO maybe no need for this. Normal query is fine
             const [ticket] = await tx.$queryRaw<TicketQueryRawResult[]>`
               SELECT *
               FROM tickets
