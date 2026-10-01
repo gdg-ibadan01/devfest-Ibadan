@@ -561,7 +561,7 @@ export class OrdersService {
     const paidCount = await tx.order.count({
       where: { ticketId: ticket.id, status: OrderStatus.PAID },
     });
-    if (paidCount >= ticket.capacity) {
+    if (paidCount >= this.totalSeats(ticket)) {
       throw new ServiceError(
         'Ticket is sold out',
         OrdersService.ERRORS.SoldOutErr,
@@ -575,7 +575,7 @@ export class OrdersService {
         expiresAt: { gt: now },
       },
     });
-    if (paidCount + awaitingCount >= ticket.capacity) {
+    if (paidCount + awaitingCount >= this.totalSeats(ticket)) {
       throw new ServiceError(
         'All remaining tickets are currently reserved. Please retry in a few minutes',
         OrdersService.ERRORS.RetryLaterErr,
@@ -730,7 +730,7 @@ export class OrdersService {
     const paidCount = await tx.order.count({
       where: { ticketId: ticket.id, status: OrderStatus.PAID },
     });
-    if (paidCount >= ticket.capacity * ticket.seats_per_unit) {
+    if (paidCount >= this.totalSeats(ticket)) {
       throw new ServiceError(
         'Ticket is sold out',
         OrdersService.ERRORS.SoldOutErr,
@@ -745,10 +745,7 @@ export class OrdersService {
       },
     });
 
-    if (
-      paidCount + awaitingCount + members.length >
-      ticket.capacity * ticket.seats_per_unit
-    ) {
+    if (paidCount + awaitingCount + members.length > this.totalSeats(ticket)) {
       throw new ServiceError(
         'All remaining tickets are currently reserved. Please retry in a few minutes',
         OrdersService.ERRORS.RetryLaterErr,
@@ -979,6 +976,13 @@ export class OrdersService {
     }
   }
 
+  private totalSeats(ticket: {
+    capacity: number;
+    seats_per_unit: number;
+  }): number {
+    return ticket.capacity * ticket.seats_per_unit;
+  }
+
   async handlePaymentSuccess(event: PaymentSuccessPayload): Promise<void> {
     let txResult: {
       refundId: string;
@@ -1049,7 +1053,7 @@ Treating only ${OrderStatus.AWAITING_PAYMENT} orders`,
               where: { ticketId: ticket.id, status: OrderStatus.PAID },
             });
 
-            if (paidCount >= ticket.capacity) {
+            if (paidCount >= this.totalSeats(ticket)) {
               this.logger.warn(
                 `Ticket ${ticket.id} sold out
 Initiating refund for order ${order.id}`,
@@ -1069,7 +1073,8 @@ Initiating refund for order ${order.id}`,
                 expiresAt: { gt: now },
               },
             });
-            const hasCapacity = paidCount + awaitingCount < ticket.capacity;
+            const hasCapacity =
+              paidCount + awaitingCount < this.totalSeats(ticket);
             const shouldIssueTicket = !orderIsExpired || hasCapacity;
 
             if (shouldIssueTicket) {
