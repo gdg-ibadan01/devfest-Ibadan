@@ -172,7 +172,7 @@ const DevfestHero: FC = () => {
 
               {/* Subtext */}
               <p className="mt-2 text-xs sm:text-[13px] text-[#4B5563] leading-relaxed">
-                Secure your ticket at ₦5,000 - first 300 only. Closes October 4,
+                Secure your ticket at ₦5,000 - first 300 only. Closes October 9,
                 2026.
               </p>
 
