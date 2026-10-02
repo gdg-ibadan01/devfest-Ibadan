@@ -27,7 +27,7 @@ export const ticketTiers: TicketTier[] = [
     name: 'REGULAR',
     price: '₦6,000',
     subtitle: 'Standard admission',
-    buttonText: 'Coming Soon',
+    buttonText: 'Coming soon',
     buttonHref: '/tickets/buy?tier=regular',
     features: [
       'Entry to all tracks',
@@ -43,7 +43,7 @@ export const ticketTiers: TicketTier[] = [
     name: 'GROUP OF 5',
     price: '₦20,000',
     subtitle: '₦4,000/person · Bring your squad',
-    buttonText: 'Coming Soon',
+    buttonText: 'Coming soon',
     buttonHref: '/tickets/buy?tier=group-of-5',
     features: [
       '5 tickets included',
@@ -59,7 +59,7 @@ export const ticketTiers: TicketTier[] = [
     name: 'LATE',
     price: '₦10,000',
     subtitle: 'Last 10 days · Nov 11-21',
-    buttonText: 'Coming Soon',
+    buttonText: 'Coming soon',
     buttonHref: '/tickets/buy?tier=late',
     features: [
       'Entry to all tracks',
