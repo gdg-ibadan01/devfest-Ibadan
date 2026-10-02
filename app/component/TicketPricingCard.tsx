@@ -12,6 +12,7 @@ export interface TicketPricingCardProps {
   subtitle: string;
   badge?: string;
   isPopular?: boolean;
+  isActive?: boolean;
   buttonText: string;
   buttonHref: string;
   features: string[];
@@ -25,12 +26,50 @@ export const TicketPricingCard: FC<TicketPricingCardProps> = ({
   subtitle,
   badge,
   isPopular = false,
+  isActive = false,
   buttonText,
   buttonHref,
   features,
   delay = 0,
   className = '',
 }) => {
+  const renderCtaButton = () => {
+    if (!isActive) {
+      return (
+        <button
+          type="button"
+          disabled
+          className="flex items-center justify-center w-full py-3 px-4 rounded-[100px] bg-gray-100 text-gray-400 text-sm font-medium cursor-not-allowed border border-gray-200"
+        >
+          {buttonText}
+        </button>
+      );
+    }
+
+    if (isPopular) {
+      return (
+        <Link
+          href={buttonHref}
+          className="flex items-center justify-center w-full py-3 px-4 rounded-[100px] bg-[#111111] hover:bg-black text-white text-sm font-medium transition-all duration-200 shadow-sm active:scale-[0.98]"
+        >
+          {buttonText}
+        </Link>
+      );
+    }
+
+    return (
+      <Link
+        href={buttonHref}
+        className="group relative flex w-full p-[2px] rounded-[100px] overflow-hidden transition-all duration-200 hover:opacity-95 active:scale-[0.98]"
+      >
+        <span className="absolute inset-0 bg-gradient-to-r from-[#34A853] via-[#FBBC04] to-[#4285F4] rounded-[100px] transition-opacity group-hover:opacity-90" />
+        <span className="relative flex items-center justify-center w-full py-2.5 px-4 rounded-[100px] bg-white group-hover:bg-neutral-50/90 text-sm font-semibold text-[#111827] transition-colors">
+          {buttonText}
+        </span>
+      </Link>
+    );
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 24 }}
@@ -71,27 +110,7 @@ export const TicketPricingCard: FC<TicketPricingCardProps> = ({
         </p>
 
         {/* CTA Button */}
-        <div className="mt-6">
-          {isPopular ? (
-            <Link
-              href={buttonHref}
-              className="flex items-center justify-center w-full py-3 px-4 rounded-[100px] bg-[#111111] hover:bg-black text-white text-sm font-medium transition-all duration-200 shadow-sm active:scale-[0.98]"
-            >
-              {buttonText}
-            </Link>
-          ) : (
-            <Link
-              href={buttonHref}
-              className="group relative flex w-full p-[2px] rounded-[100px] overflow-hidden transition-all duration-200 hover:opacity-95 active:scale-[0.98]"
-            >
-              {/* <span className="absolute inset-0 bg-gradient-to-r from-[#34A853] via-[#FBBC04] to-[#4285F4] rounded-[100px] transition-opacity group-hover:opacity-90" /> */}
-              <span className="absolute inset-0 bg-gradient-to-r from-[#34A853] via-[#FBBC04] to-[#4285F4] rounded-[100px] transition-opacity group-hover:opacity-90" />
-              <span className="relative flex items-center justify-center w-full py-2.5 px-4 rounded-[100px] bg-white group-hover:bg-neutral-50/90 text-sm font-semibold text-[#111827] transition-colors">
-                {buttonText}
-              </span>
-            </Link>
-          )}
-        </div>
+        <div className="mt-6">{renderCtaButton()}</div>
 
         {/* Divider Line */}
         <div className="w-full border-t border-gray-100 my-6" />

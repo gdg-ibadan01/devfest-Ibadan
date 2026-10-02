@@ -10,6 +10,7 @@ export const ticketTiers: TicketTier[] = [
     subtitle: 'Save before Oct 4',
     badge: 'BEST VALUE',
     isPopular: true,
+    isActive: true,
     buttonText: 'Get Ticket',
     buttonHref: '/tickets/buy?tier=early-bird',
     features: [
