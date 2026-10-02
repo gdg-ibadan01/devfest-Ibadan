@@ -14,11 +14,8 @@ export interface AppliedDiscount {
  * Total length: 10 characters.
  * Example: DEV-A1B2C3
  */
-export const DISCOUNT_CODE_REGEX = /^[A-Z0-9]{3}-[A-Z0-9]{6}$/;
-
 export function isValidDiscountCode(code?: string | null): boolean {
-  if (!code) return false;
-  return DISCOUNT_CODE_REGEX.test(code.trim().toUpperCase());
+  return Boolean(code && code.trim().length > 0);
 }
 
 export async function getDiscountByCode(
@@ -27,14 +24,6 @@ export async function getDiscountByCode(
   const cleanCode = discountCode.trim();
   if (!cleanCode) {
     const err = new Error('Please enter a discount code') as Error & { status?: number };
-    err.status = 400;
-    throw err;
-  }
-
-  if (!isValidDiscountCode(cleanCode)) {
-    const err = new Error(
-      'Invalid discount code format (expected format: XXX-XXXXXX)'
-    ) as Error & { status?: number };
     err.status = 400;
     throw err;
   }
