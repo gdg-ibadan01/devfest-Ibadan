@@ -3,7 +3,7 @@
 import { FC } from 'react';
 import { motion } from 'framer-motion';
 import { Sparkles } from 'lucide-react';
-import { PARTNERSHIP_BENEFITS } from './data';
+import { PARTNERSHIP_BENEFITS } from '@/app/_module/data';
 
 export const PartnershipBenefits: FC = () => {
   return (

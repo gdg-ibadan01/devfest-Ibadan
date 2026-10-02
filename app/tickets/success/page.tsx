@@ -44,7 +44,7 @@ function SuccessContent() {
     }
   };
 
-  if (isLoading || isRefetching) {
+  if (isLoading) {
     return <SuccessLoadingState />;
   }
 

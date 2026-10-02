@@ -10,6 +10,7 @@ interface DevFest2026TicketParams {
   ticketCode: string;
   validity: string[];
   amount: number;
+  memberCount?: number;
 }
 
 @Injectable()
@@ -51,11 +52,15 @@ export class PDFService {
         style: 'currency',
         currency: 'NGN',
       });
+      const memberCount = payload.memberCount ?? 1;
+      const displayAmount =
+        formatter.format(payload.amount).replace('₦', 'NGN ') +
+        (memberCount > 1 ? `/${memberCount}` : '');
 
       const pdf = await render(
         DevFest2026Ticket({
           qrCodeBase64,
-          amount: formatter.format(payload.amount).replace('₦', 'NGN '),
+          amount: displayAmount,
           ticketCode: payload.ticketCode,
           validity: payload.validity.join(' & '),
         }),
