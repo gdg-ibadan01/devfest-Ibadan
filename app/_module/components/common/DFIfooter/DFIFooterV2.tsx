@@ -18,11 +18,11 @@ const columnOneLinks: FooterLink[] = [
 ];
 
 const columnTwoLinks: FooterLink[] = [
-  {
-    label: 'Apply to Speak',
-    href: 'https://tinyurl.com/devfestib2026',
-    isExternal: true,
-  },
+  // {
+  //   label: 'Apply to Speak',
+  //   href: 'https://tinyurl.com/devfestib2026',
+  //   isExternal: true,
+  // },
   {
     label: 'Apply to be a Sponsor',
     href: "https://wa.me/2348136023230?text=I'm%20ready%20to%20power%20the%20future%20of%20tech%20at%20DevFest%20Ibadan%202026.%20I%20would%20like%20to%20inquire%20about%20sponsorship%20opportunities%21%20Let's%20connect%20to%20build%20something%20great.",

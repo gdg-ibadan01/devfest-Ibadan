@@ -65,7 +65,7 @@ export default function Home() {
   return (
     <>
       <DevfestHero />
-      <CallForSpeakers />
+      {/* <CallForSpeakers /> */}
       <SwagsAndTickets />
       <HowItGoesDown />
       <CallForPartnership />
