@@ -1,4 +1,10 @@
-import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import crypto from 'node:crypto';
 import {
@@ -14,10 +20,22 @@ import { randomString } from 'src/common/transformers/strings';
 import { ServiceError } from 'src/common/errors/service-error';
 import { ConfigType } from '@nestjs/config';
 import AppConfig from 'src/config/app.config';
+import { OrderStatus, Prisma } from '@prisma/client';
+import { PDFService } from '../pdf/pdf.service';
+import { UploadService } from '../upload/upload.service';
+import { buildSignedTicketDownloadUrl } from 'src/common/utils/ticket-download-url';
 
 const allowedSlugChars = {};
 for (const c of 'abcdefghijklmnopqrstuvwxyz0123456789-') {
   allowedSlugChars[c] = true;
+}
+
+interface EnsureTicketPdfOrder {
+  id: string;
+  reference: string;
+  amount: Prisma.Decimal | number;
+  groupReference: string | null;
+  ticket: { validityDates: Date[] };
 }
 
 @Injectable()
@@ -33,6 +51,8 @@ export class TicketsService {
     private readonly prisma: PrismaService,
     @Inject(AppConfig.KEY)
     private appConfig: ConfigType<typeof AppConfig>,
+    private readonly pdfService: PDFService,
+    private readonly uploadService: UploadService,
   ) {}
 
   async create(jwtUser: IJwtPayload, payload: CreateTicketDto) {
@@ -415,6 +435,62 @@ export class TicketsService {
   //   };
   // }
 
+  async ensureTicketPdf(
+    order: EnsureTicketPdfOrder,
+  ): Promise<string | undefined> {
+    try {
+      const groupRows = order.groupReference
+        ? await this.prisma.order.findMany({
+            where: { groupReference: order.groupReference },
+            select: { amount: true },
+          })
+        : [{ amount: order.amount }];
+      const memberCount = groupRows.length;
+      const amountPaid = groupRows.reduce(
+        (max, row) =>
+          new Prisma.Decimal(row.amount).greaterThan(max)
+            ? new Prisma.Decimal(row.amount)
+            : max,
+        new Prisma.Decimal(0),
+      );
+
+      const pdfBuffer = await this.pdfService.generateDevFest2026Ticket({
+        amount: amountPaid.toNumber(),
+        memberCount,
+        ticketCode: order.reference.slice(-6),
+        downloadUrl: buildSignedTicketDownloadUrl(
+          order.reference,
+          this.appConfig.ticketJWTSecret,
+          this.appConfig.url,
+        ),
+        validity: order.ticket.validityDates.map((date) =>
+          date.toLocaleDateString('en-US', { weekday: 'long' }),
+        ),
+      });
+
+      if (!pdfBuffer) {
+        this.logger.error(`Unable to generate PDF for order ${order.id}`);
+        return undefined;
+      }
+
+      const upload = await this.uploadService.uploadFile(pdfBuffer);
+      if (!upload?.secure_url) {
+        this.logger.error(`Unable to upload PDF for order ${order.id}`);
+        return undefined;
+      }
+
+      await this.prisma.order.update({
+        where: { id: order.id },
+        data: { ticketUrl: upload.secure_url },
+      });
+
+      return upload.secure_url;
+    } catch (err) {
+      this.logger.error(err);
+      return undefined;
+    }
+  }
+
   verifyQRCodeToken(token: string): string {
     const decoded = Buffer.from(token, 'base64url').toString('utf-8');
     const [reference, signature] = decoded.split(':');
@@ -435,13 +511,27 @@ export class TicketsService {
     const reference = this.verifyQRCodeToken(token);
     const order = await this.prisma.order.findFirst({
       where: { reference },
-      select: { ticketUrl: true },
+      include: { ticket: { select: { validityDates: true } } },
     });
 
-    if (!order?.ticketUrl) {
+    if (!order) {
       throw new NotFoundException('Ticket not found');
     }
 
-    return order.ticketUrl;
+    if (order.ticketUrl) {
+      return order.ticketUrl;
+    }
+
+    if (order.status !== OrderStatus.PAID) {
+      throw new NotFoundException('Ticket not found');
+    }
+
+    const ticketUrl = await this.ensureTicketPdf(order);
+
+    if (!ticketUrl) {
+      throw new InternalServerErrorException('Unable to generate ticket URL');
+    }
+
+    return ticketUrl;
   }
 }

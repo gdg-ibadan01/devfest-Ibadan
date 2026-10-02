@@ -17,6 +17,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { ServiceError } from 'src/common/errors/service-error';
 import { PrismaErrors } from 'src/common/enums/prisma-errors.enum';
 import { randomString } from 'src/common/transformers/strings';
+import { buildSignedTicketDownloadUrl } from 'src/common/utils/ticket-download-url';
 import {
   InitializePaymentParams,
   PAYMENT_PROVIDER,
@@ -28,8 +29,7 @@ import {
   CreateOrderResponseDto,
   OrdersQueryDto,
 } from './dto/order.dto';
-import { PDFService } from '../pdf/pdf.service';
-import { UploadService } from '../upload/upload.service';
+import { TicketsService } from '../ticket/ticket.service';
 import crypto from 'node:crypto';
 import AppConfig from 'src/config/app.config';
 import { ConfigType } from '@nestjs/config';
@@ -150,8 +150,7 @@ export class OrdersService {
     private readonly prisma: PrismaService,
     private readonly mailService: MailService,
     @Inject(PAYMENT_PROVIDER) private readonly paymentProvider: PaymentProvider,
-    private readonly pdfService: PDFService,
-    private readonly uploadService: UploadService,
+    private readonly ticketsService: TicketsService,
     @Inject(AppConfig.KEY)
     private appConfig: ConfigType<typeof AppConfig>,
   ) {}
@@ -381,52 +380,19 @@ export class OrdersService {
       );
     }
 
-    let pdfBuffer: Buffer<ArrayBuffer> | undefined | void;
-    if (!order.ticketUrl) {
-      pdfBuffer = await this.pdfService
-        .generateDevFest2026Ticket({
-          amount: order.amount.toNumber(),
-          ticketCode: order.reference.slice(-6),
-          downloadUrl: this.generateSignedDownloadUrl(order.reference),
-          validity: order.ticket.validityDates.map((d) =>
-            d.toLocaleDateString('en-US', { weekday: 'long' }),
-          ),
-        })
-        .catch((err) => {
-          this.logger.error(err);
-          throw new InternalServerErrorException('Unable to generate PDF');
-        })
-        .then((res) => {
-          this.logger.debug('pdfBuffer generated successfully');
-          return res;
-        });
-    }
+    const ticketUrl = order.ticketUrl
+      ? order.ticketUrl
+      : await this.ticketsService.ensureTicketPdf(order);
 
-    let ticketUrl: string | undefined;
-    if (pdfBuffer) {
-      await this.uploadService
-        .uploadFile(pdfBuffer)
-        .then(async (upload) => {
-          ticketUrl = upload?.secure_url;
-          await this.prisma.order.update({
-            where: { id: order.id },
-            data: { ticketUrl },
-          });
-          return upload;
-        })
-        .catch((err) => {
-          this.logger.error(err);
-          throw new InternalServerErrorException(
-            'Unable to generate ticket URL',
-          );
-        });
+    if (!ticketUrl) {
+      throw new InternalServerErrorException('Unable to generate ticket URL');
     }
 
     return {
       ticket: {
         name: order.ticket.name,
         validityDates: order.ticket.validityDates,
-        url: order.ticketUrl ?? ticketUrl,
+        url: ticketUrl,
       },
       amount: order.amount.toFixed(2),
       status: order.status,
@@ -1157,56 +1123,48 @@ Initiating refund for order ${order.id}`,
       });
     }
 
-    if (txResult.ticket && txResult.order) {
-      try {
-        const pdfBuffer = await this.pdfService.generateDevFest2026Ticket({
-          amount: txResult.order.amount,
-          ticketCode: txResult.order.reference.slice(-6),
-          downloadUrl: this.generateSignedDownloadUrl(txResult.order.reference),
-          validity: txResult.ticket.validity_dates.map((d) =>
-            d.toLocaleDateString('en-US', { weekday: 'long' }),
-          ),
-        });
+    if (txResult.order && txResult.ticket) {
+      const payerTicketUrl = await this.ticketsService.ensureTicketPdf({
+        id: txResult.order.id,
+        reference: txResult.order.reference,
+        amount: txResult.order.amount,
+        groupReference: txResult.order.group_reference,
+        ticket: { validityDates: txResult.ticket.validity_dates },
+      });
 
-        if (!pdfBuffer) return;
-
-        const upload = await this.uploadService.uploadFile(pdfBuffer);
-
-        if (!upload?.secure_url) return;
-
-        await this.prisma.order.update({
-          where: { id: txResult.order.id },
-          data: { ticketUrl: upload.secure_url },
-        });
-      } catch (err) {
+      if (!payerTicketUrl) {
         this.logger.error(
-          `Failed to generate ticket PDF for order ${txResult.order.id}: ${(err as Error).message}`,
+          `Failed to generate ticket PDF for order ${txResult.order.id}`,
         );
       }
     }
 
-    if (txResult.order) {
-      await this.mailService
-        .sendTicketConfirmationEmail({
+    const emailResults = await Promise.allSettled(
+      txResult.group.map((row) =>
+        this.mailService.sendTicketConfirmationEmail({
           eventDate: new Date('2026-11-21'),
-          fullName: txResult.order.attendee_full_name,
-          ticketCode: txResult.order.reference.slice(-6),
-          ticketDownloadUrl: `${this.appConfig.checkoutRedirectUrl}?paymentReference=${txResult.order.reference}`,
-          email: txResult.order.attendee_email,
-        })
-        .then(() => {
-          this.logger.log(
-            `Ticket confirmation email sent for order ${txResult.order?.id}`,
-          );
-        })
-        .catch((err) => {
-          this.logger.error(
-            `Failed to send payment link email for order ${txResult.order?.id} to ${txResult.order?.attendee_email}: ${
-              err instanceof Error ? err.message : err
-            }`,
-          );
-        });
-    }
+          fullName: row.attendee_full_name,
+          ticketCode: row.reference.slice(-6),
+          ticketDownloadUrl: this.generateSignedDownloadUrl(row.reference),
+          email: row.attendee_email,
+        }),
+      ),
+    );
+
+    emailResults.forEach((result, index) => {
+      const row = txResult.group[index];
+      if (result.status === 'rejected') {
+        this.logger.error(
+          `Failed to send ticket confirmation email for order ${row.id} to ${row.attendee_email}: ${
+            result.reason instanceof Error
+              ? result.reason.message
+              : result.reason
+          }`,
+        );
+        return;
+      }
+      this.logger.log(`Ticket confirmation email sent for order ${row.id}`);
+    });
   }
 
   private async recordRefund(
@@ -1339,16 +1297,11 @@ Initiating refund for order ${order.id}`,
   }
 
   generateSignedDownloadUrl(reference: string): string {
-    const signature = crypto
-      .createHmac('sha256', this.appConfig.ticketJWTSecret)
-      .update(reference)
-      .digest('hex');
-
-    const token = Buffer.from(`${reference}:${signature}`).toString(
-      'base64url',
+    return buildSignedTicketDownloadUrl(
+      reference,
+      this.appConfig.ticketJWTSecret,
+      this.appConfig.url,
     );
-
-    return `${this.appConfig.url}/api/v1/tickets/download?token=${token}`;
   }
 
   async count(where: Prisma.OrderWhereInput): Promise<number> {

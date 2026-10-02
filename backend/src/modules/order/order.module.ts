@@ -6,20 +6,12 @@ import { DiscountsService } from './discount.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { MailModule } from '../mail/mail.module';
 import { PaymentsModule } from '../payment/payment.module';
-import { UploadModule } from '../upload/upload.module';
-import { UploadService } from '../upload/upload.service';
-import { PDFService } from '../pdf/pdf.service';
+import { TicketsModule } from '../ticket/ticket.module';
 
 @Module({
-  imports: [MailModule, PaymentsModule, UploadModule],
+  imports: [MailModule, PaymentsModule, TicketsModule],
   controllers: [OrdersController, DiscountsController],
-  providers: [
-    OrdersService,
-    DiscountsService,
-    PrismaService,
-    UploadService,
-    PDFService,
-  ],
+  providers: [OrdersService, DiscountsService, PrismaService],
   exports: [OrdersService, DiscountsService],
 })
 export class OrdersModule {}
