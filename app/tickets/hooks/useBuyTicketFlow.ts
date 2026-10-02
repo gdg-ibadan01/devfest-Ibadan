@@ -24,7 +24,8 @@ export function useBuyTicketFlow({
   const router = useRouter();
   const searchParams = useSearchParams();
   const { makePayment } = useMakePayment();
-  const { mutate: createOrder, isPending: isSubmittingOrder } = useCreateOrder();
+  const { mutate: createOrder, isPending: isSubmittingOrder } =
+    useCreateOrder();
 
   // ── View state ────────────────────────────────────────────────────────────
   const [view, setView] = useState<TicketBuyView>('form');
@@ -95,7 +96,7 @@ export function useBuyTicketFlow({
       onSuccess: (data) => {
         setReference(data.reference);
         makePayment({
-          amount: Number(data.amount) * 100,
+          amount: Number(data.amount),
           orderId: data.id,
           reference: data.reference,
           customerEmail: isGift ? receiverEmail.trim() : email.trim(),
