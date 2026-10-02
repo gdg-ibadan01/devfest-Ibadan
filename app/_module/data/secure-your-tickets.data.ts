@@ -7,7 +7,7 @@ export const ticketTiers: TicketTier[] = [
     id: 'early-bird',
     name: 'EARLY BIRD',
     price: '₦5,000',
-    subtitle: 'Save before Oct 4',
+    subtitle: 'Save before Oct 9',
     badge: 'BEST VALUE',
     isPopular: true,
     isActive: true,
