@@ -2,8 +2,10 @@ import { Module } from '@nestjs/common';
 import { TicketsService } from './ticket.service';
 import { TicketsController } from './ticket.controller';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { PdfModule } from '../pdf/pdf.module';
 
 @Module({
+  imports: [PdfModule],
   controllers: [TicketsController],
   providers: [TicketsService, PrismaService],
   exports: [TicketsService],
