@@ -41,10 +41,18 @@ export class WebhookService {
   async handleMonnifyEvent(
     body: Record<string, unknown>,
     signature: string | undefined,
+    rawBody?: Buffer,
   ): Promise<void> {
-    if (this.mnfyCfg.shouldVerifySignature && signature) {
+    if (this.mnfyCfg.shouldVerifySignature) {
+      if (!signature || !rawBody) {
+        this.logger.warn(
+          'Signature verification on, but signature header or raw body is missing',
+        );
+        return;
+      }
+
       const isValid = this.monnifyService.verifyWebhookSignature(
-        JSON.stringify(body),
+        rawBody.toString('utf8'),
         signature,
       );
       if (!isValid) {

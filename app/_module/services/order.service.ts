@@ -197,6 +197,12 @@ export function useOrderByReference(reference: string | null) {
     queryKey: queryKeys.orders.reference(reference ?? ''),
     queryFn: () => getOrderByReference(reference!),
     enabled: !!reference,
+    // Give the payment webhook time to confirm the order after the popup closes.
+    refetchInterval: (query) =>
+      query.state.data?.status === 'AWAITING_PAYMENT' &&
+      query.state.dataUpdateCount < 20
+        ? 3000
+        : false,
     retry: false,
   });
 }

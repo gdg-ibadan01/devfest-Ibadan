@@ -141,6 +141,7 @@ model Order {
 
   @@unique([reference])
   @@index([ticketId, status])
+  @@index([groupReference])
   @@map("orders")
 }
 
