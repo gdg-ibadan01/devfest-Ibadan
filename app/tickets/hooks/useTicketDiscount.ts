@@ -3,7 +3,6 @@ import { useSearchParams } from 'next/navigation';
 import { showToast } from '@/app/_module/lib/notify';
 import {
   getDiscountByCode,
-  isValidDiscountCode,
   type AppliedDiscount,
 } from '@/app/_module/services/discount.service';
 
@@ -20,14 +19,6 @@ export function useTicketDiscount() {
     async (codeToApply: string, fromUrl: boolean = false) => {
       const cleanCode = codeToApply.trim().toUpperCase();
       if (!cleanCode) return;
-
-      // Ensure we only send a request when discount code aligns with backend format (XXX-XXXXXX)
-      if (!isValidDiscountCode(cleanCode)) {
-        const errorMsg = 'Invalid discount code format (expected: XXX-XXXXXX, e.g. DEV-A1B2C3)';
-        setDiscountError(errorMsg);
-        showToast.error(errorMsg);
-        return;
-      }
 
       setDiscountError('');
       setIsApplyingDiscount(true);
@@ -112,14 +103,6 @@ export function useTicketDiscount() {
       const cleanCode = discountParam.trim().toUpperCase();
       setDiscountCode(cleanCode);
       setIsDiscountFromUrl(true);
-
-      // Only send network request if the code aligns with backend format
-      if (!isValidDiscountCode(cleanCode)) {
-        const formatMsg = `Invalid discount code in link: "${cleanCode}". Expected format: XXX-XXXXXX (e.g. DEV-A1B2C3)`;
-        setDiscountError(formatMsg);
-        showToast.error('Discount code in link has an invalid format');
-        return;
-      }
 
       handleApplyDiscount(cleanCode, true);
     }
