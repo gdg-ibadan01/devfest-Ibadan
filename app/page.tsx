@@ -69,7 +69,7 @@ export default function Home() {
       <SwagsAndTickets />
       <HowItGoesDown />
       <CallForPartnership />
-      <MeetOurSpeakers />
+      {/* <MeetOurSpeakers /> */}
       <SecureYourTickets />
     </>
   );
