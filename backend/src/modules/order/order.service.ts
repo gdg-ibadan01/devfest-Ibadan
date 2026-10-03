@@ -238,7 +238,7 @@ export class OrdersService {
 
     return {
       amount: amount.toFixed(2),
-      vatAndCharges: vatAndCharges.toFixed(2),
+      vatAndCharges: '0.00',
       currency: 'NGN',
       expiresAt: record.order.expiresAt,
       id: record.order.id,
@@ -608,7 +608,7 @@ export class OrdersService {
 
     return {
       amount: amount.toFixed(2),
-      vatAndCharges: vatAndCharges.toFixed(2),
+      vatAndCharges: '0.00',
       currency: 'NGN',
       expiresAt: rec!.order.expiresAt,
       id: rec!.order.id,
@@ -908,7 +908,7 @@ export class OrdersService {
       reference: order.reference,
       status: order.status,
       amount: order.amount.toFixed(2),
-      vatAndCharges: vatAndCharges.toFixed(2),
+      vatAndCharges: '0.00',
       currency: order.currency,
       // checkoutUrl: order.checkoutUrl,
       expiresAt: order.expiresAt,
