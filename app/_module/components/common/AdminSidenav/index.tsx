@@ -61,6 +61,20 @@ function getInitials(fullName: string): string {
     .join('');
 }
 
+function NavLinksSkeleton() {
+  return (
+    <div className="flex flex-1 flex-col" role="status" aria-label="Loading navigation">
+      {navItems.map(({ href }) => (
+        <div key={href} className="flex h-[54px] items-center gap-3 px-7">
+          <span className="h-[18px] w-[18px] rounded bg-white/15 animate-pulse" />
+          <span className="h-3 w-28 rounded bg-white/15 animate-pulse" />
+        </div>
+      ))}
+      <span className="sr-only">Loading navigation links</span>
+    </div>
+  );
+}
+
 /* ------------------------------------------------------------------ */
 /* Nav content — shared between desktop sidebar and mobile drawer       */
 /* ------------------------------------------------------------------ */
@@ -87,23 +101,27 @@ function NavContent({ onLinkClick }: { onLinkClick?: () => void }) {
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
       <div className="flex flex-1 flex-col">
-        {visibleItems.map(({ label, href, icon: Icon }) => {
-          const active = isActivePath(pathname, href);
-          return (
-            <Link
-              key={href}
-              href={href}
-              onClick={onLinkClick}
-              className={cn(
-                'flex h-[54px] items-center gap-3 px-7 text-[14px] font-normal text-white transition-colors hover:bg-white/10',
-                active && 'bg-core-blue hover:bg-core-blue'
-              )}
-            >
-              <Icon />
-              <span>{label}</span>
-            </Link>
-          );
-        })}
+        {meLoading ? (
+          <NavLinksSkeleton />
+        ) : (
+          visibleItems.map(({ label, href, icon: Icon }) => {
+            const active = isActivePath(pathname, href);
+            return (
+              <Link
+                key={href}
+                href={href}
+                onClick={onLinkClick}
+                className={cn(
+                  'flex h-[54px] items-center gap-3 px-7 text-[14px] font-normal text-white transition-colors hover:bg-white/10',
+                  active && 'bg-core-blue hover:bg-core-blue'
+                )}
+              >
+                <Icon />
+                <span>{label}</span>
+              </Link>
+            );
+          })
+        )}
 
         <button
           type="button"
