@@ -193,6 +193,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/activate/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Activate an admin account (Super Admin only) */
+        patch: operations["AdminController_activateAdmin"];
+        trace?: never;
+    };
     "/api/v1/admin/deactivate/{id}": {
         parameters: {
             query?: never;
@@ -549,6 +566,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/orders/group-buys": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create a group ticket order
+         * @description Creates one order row per person, including the payer, all sharing a single group reference. The ticket price is charged once, on the payer row. A ticket has a capacity of units and a seatsPerUnit of people per unit, so the seats available are capacity times seatsPerUnit. The group size cannot exceed seatsPerUnit, and its seats count against that total.
+         */
+        post: operations["OrdersController_createGroupBuy"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/discounts": {
         parameters: {
             query?: never;
@@ -808,7 +845,7 @@ export interface components {
              *       "attendees.list"
              *     ]
              */
-            permissions: ("tickets.create" | "tickets.edit" | "tickets.disable" | "attendees.create" | "attendees.check_in" | "attendees.list" | "admins.create" | "admins.list" | "admins.invite" | "admins.update" | "admins.profile" | "admins.deactivate" | "roles.create" | "roles.edit" | "roles.assign" | "roles.list" | "roles.deactivate" | "permissions.assign" | "payment_reports.export" | "discounts.create" | "discounts.list" | "orders.list" | "audit-logs.view-list" | "audit-logs.view")[];
+            permissions: ("tickets.create" | "tickets.list" | "tickets.edit" | "tickets.disable" | "attendees.create" | "attendees.check_in" | "attendees.list" | "admins.create" | "admins.list" | "admins.invite" | "admins.update" | "admins.profile" | "admins.deactivate" | "admins.activate" | "roles.create" | "roles.edit" | "roles.assign" | "roles.list" | "roles.deactivate" | "permissions.assign" | "payment_reports.export" | "discounts.create" | "discounts.list" | "orders.list" | "audit-logs.view-list" | "audit-logs.view" | "dashboard.view")[];
         };
         FindOneAdminResponseDto: {
             id: string;
@@ -908,14 +945,14 @@ export interface components {
             /** @description Description of the role */
             description: string;
             /** @description Permissions for this role */
-            permissions: ("tickets.create" | "tickets.edit" | "tickets.disable" | "attendees.create" | "attendees.check_in" | "attendees.list" | "admins.create" | "admins.list" | "admins.invite" | "admins.update" | "admins.profile" | "admins.deactivate" | "roles.create" | "roles.edit" | "roles.assign" | "roles.list" | "roles.deactivate" | "permissions.assign" | "payment_reports.export" | "discounts.create" | "discounts.list" | "orders.list" | "audit-logs.view-list" | "audit-logs.view")[];
+            permissions: ("tickets.create" | "tickets.list" | "tickets.edit" | "tickets.disable" | "attendees.create" | "attendees.check_in" | "attendees.list" | "admins.create" | "admins.list" | "admins.invite" | "admins.update" | "admins.profile" | "admins.deactivate" | "admins.activate" | "roles.create" | "roles.edit" | "roles.assign" | "roles.list" | "roles.deactivate" | "permissions.assign" | "payment_reports.export" | "discounts.create" | "discounts.list" | "orders.list" | "audit-logs.view-list" | "audit-logs.view" | "dashboard.view")[];
             isActive: boolean;
         };
         PermissionDto: {
             /** @enum {string} */
-            readonly id: "tickets.create" | "tickets.edit" | "tickets.disable" | "attendees.create" | "attendees.check_in" | "attendees.list" | "admins.create" | "admins.list" | "admins.invite" | "admins.update" | "admins.profile" | "admins.deactivate" | "roles.create" | "roles.edit" | "roles.assign" | "roles.list" | "roles.deactivate" | "permissions.assign" | "payment_reports.export" | "discounts.create" | "discounts.list" | "orders.list" | "audit-logs.view-list" | "audit-logs.view";
+            readonly id: "tickets.create" | "tickets.list" | "tickets.edit" | "tickets.disable" | "attendees.create" | "attendees.check_in" | "attendees.list" | "admins.create" | "admins.list" | "admins.invite" | "admins.update" | "admins.profile" | "admins.deactivate" | "admins.activate" | "roles.create" | "roles.edit" | "roles.assign" | "roles.list" | "roles.deactivate" | "permissions.assign" | "payment_reports.export" | "discounts.create" | "discounts.list" | "orders.list" | "audit-logs.view-list" | "audit-logs.view" | "dashboard.view";
             /** @enum {string} */
-            readonly label: "Create tickets" | "Edit tickets" | "Disable tickets" | "Add new attendee" | "Check-in attendees" | "View attendee list" | "Create admin" | "View admin list" | "Invite admin" | "Update admin" | "View admin profile" | "Deactivate admin" | "Create role" | "Edit role" | "Assign role" | "View roles list" | "Deactivate role" | "Assign permissions" | "Export payment report" | "Create discount" | "View discounts list" | "View orders list" | "View audit logs list" | "View audit log detail";
+            readonly label: "Create tickets" | "View tickets list" | "Edit tickets" | "Disable tickets" | "Add new attendee" | "Check-in attendees" | "View attendee list" | "Create admin" | "View admin list" | "Invite admin" | "Update admin" | "View admin profile" | "Deactivate admin" | "Activate admin" | "Create role" | "Edit role" | "Assign role" | "View roles list" | "Deactivate role" | "Assign permissions" | "Export payment report" | "Create discount" | "View discounts list" | "View orders list" | "View audit logs list" | "View audit log detail" | "View dashboard";
         };
         CreateRoleResponseDto: {
             readonly id: string;
@@ -949,7 +986,7 @@ export interface components {
             /** @description Description of the role */
             description?: string;
             /** @description Permissions for this role */
-            permissions?: ("tickets.create" | "tickets.edit" | "tickets.disable" | "attendees.create" | "attendees.check_in" | "attendees.list" | "admins.create" | "admins.list" | "admins.invite" | "admins.update" | "admins.profile" | "admins.deactivate" | "roles.create" | "roles.edit" | "roles.assign" | "roles.list" | "roles.deactivate" | "permissions.assign" | "payment_reports.export" | "discounts.create" | "discounts.list" | "orders.list" | "audit-logs.view-list" | "audit-logs.view")[];
+            permissions?: ("tickets.create" | "tickets.list" | "tickets.edit" | "tickets.disable" | "attendees.create" | "attendees.check_in" | "attendees.list" | "admins.create" | "admins.list" | "admins.invite" | "admins.update" | "admins.profile" | "admins.deactivate" | "admins.activate" | "roles.create" | "roles.edit" | "roles.assign" | "roles.list" | "roles.deactivate" | "permissions.assign" | "payment_reports.export" | "discounts.create" | "discounts.list" | "orders.list" | "audit-logs.view-list" | "audit-logs.view" | "dashboard.view")[];
             isActive?: boolean;
         };
         RoleResponseDto: {
@@ -1302,8 +1339,6 @@ export interface components {
              */
             vatAndCharges: string;
             currency: string;
-            /** @description Payment checkout URL to redirect the payer to */
-            checkoutUrl: string | null;
             /** Format: date-time */
             expiresAt: string;
             ticket: components["schemas"]["OrderedTicketDto"];
@@ -1390,6 +1425,67 @@ export interface components {
              * @example false
              */
             skipSaleWindowCheck?: boolean;
+        };
+        GroupPayerDto: {
+            /**
+             * @description Full name of the person paying for the group
+             * @example Ada Obi
+             */
+            fullName: string;
+            /**
+             * @description Used as the payment customer email on the payment gateway
+             * @example ada@example.com
+             */
+            email: string;
+            /** @example 08012345678 */
+            phoneNumber?: string;
+        };
+        GroupMemberDto: {
+            /**
+             * @description Full name of a member the ticket is issued to
+             * @example Tunde Bello
+             */
+            fullName: string;
+            /**
+             * @description Receives the ticket for this member
+             * @example tunde@example.com
+             */
+            email: string;
+        };
+        GroupDto: {
+            payer: components["schemas"]["GroupPayerDto"];
+            /** @description Members the tickets are issued to. */
+            members: components["schemas"]["GroupMemberDto"][];
+        };
+        CreateGroupBuyOrderDto: {
+            group: components["schemas"]["GroupDto"];
+            /**
+             * @description Slug of the ticket to purchase
+             * @example google-devfest-2026
+             */
+            slug: string;
+            /** @example GDG-A7K2P9 */
+            discountCode?: string;
+        };
+        CreateGroupBuyOrderResponseDto: {
+            id: string;
+            reference: string;
+            /** @enum {string} */
+            status: "AWAITING_PAYMENT";
+            /**
+             * @description Total amount payable in Naira (2 decimal places)
+             * @example 28500.00
+             */
+            amount: string;
+            /**
+             * @description 7.5% VAT plus payment gateway service charge
+             * @example 2300.00
+             */
+            vatAndCharges: string;
+            currency: string;
+            /** Format: date-time */
+            expiresAt: string;
+            ticket: components["schemas"]["OrderedTicketDto"];
         };
         DiscountListTicketDto: {
             id: string;
@@ -1542,6 +1638,11 @@ export interface components {
             /** @description Maximum units of this ticket available for sale */
             capacity: number;
             /**
+             * @description Seats per unit of this ticket
+             * @example 1
+             */
+            seatsPerUnit: number;
+            /**
              * Format: date-time
              * @description Sales will start at the beginning of this day
              */
@@ -1565,6 +1666,7 @@ export interface components {
             price: string;
             validityDates: string[];
             capacity: number;
+            seatsPerUnit: number;
             /** Format: date-time */
             saleStartsAt: string;
             /** Format: date-time */
@@ -1586,6 +1688,7 @@ export interface components {
             /** Format: date-time */
             saleEndsAt: string;
             capacity: number;
+            seatsPerUnit: number;
             slug: string;
         };
         TicketPaginationMetaDto: {
@@ -1613,6 +1716,7 @@ export interface components {
              * @example 10000.00
              */
             price: string;
+            seatsPerUnit: number;
         };
         OnSaleTicketResponseDto: {
             data: components["schemas"]["OnSaleTicketItemDto"][];
@@ -1628,6 +1732,7 @@ export interface components {
             eventDates: string[];
             validityDates: string[];
             slug: string;
+            seatsPerUnit: number;
         };
         TicketCreatorDto: {
             name: string;
@@ -1646,6 +1751,7 @@ export interface components {
             price: string;
             validityDates: string[];
             capacity: number;
+            seatsPerUnit: number;
             /** Format: date-time */
             saleStartsAt: string;
             /** Format: date-time */
@@ -2017,6 +2123,56 @@ export interface operations {
             };
         };
     };
+    AdminController_activateAdmin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Admin activated successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminActionResponseDto"];
+                };
+            };
+            /** @description Admin account is already active. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Only SUPER_ADMIN can activate other admins. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Admin not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     AdminController_deactivateAdmin: {
         parameters: {
             query?: never;
@@ -2193,11 +2349,32 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["RoleResponseDto"];
+                    "application/json": components["schemas"]["AdminActionResponseDto"];
                 };
+            };
+            /** @description Role is already deactivated. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Unauthorized. */
             401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Forbidden. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Role not found. */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -2637,6 +2814,51 @@ export interface operations {
             };
             /** @description Payment initialization failed */
             502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    OrdersController_createGroupBuy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateGroupBuyOrderDto"];
+            };
+        };
+        responses: {
+            /** @description Group order created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreateGroupBuyOrderResponseDto"];
+                };
+            };
+            /** @description Invalid request, ticket not on sale, or group larger than seatsPerUnit */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Ticket not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Ticket sold out, all remaining units reserved, or a member already has an order */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };
