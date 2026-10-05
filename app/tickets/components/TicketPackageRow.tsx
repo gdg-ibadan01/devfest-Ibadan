@@ -6,6 +6,7 @@ export interface TicketPackage {
   badge: string;
   price: number;
   formattedPrice: string;
+  seatsPerUnit?: number;
 }
 
 interface TicketPackageRowProps {

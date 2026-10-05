@@ -42,14 +42,29 @@ export function useBuyTicketFlow({
   const [reference, setReference] = useState<string | null>(null);
 
   // ── Group members (for group ticket packages) ──────────────────────────────
+  const isGroupTicket = Boolean(
+    (selectedPackage?.seatsPerUnit && selectedPackage.seatsPerUnit > 1) ||
+    selectedPackage?.id.toLowerCase().includes('group')
+  );
+
   const [groupMembers, setGroupMembers] = useState<GroupMember[]>([
     { fullName: '', email: '' },
     { fullName: '', email: '' },
   ]);
 
-  const isGroupTicket = Boolean(
-    selectedPackage?.id.toLowerCase().includes('group')
-  );
+  // Dynamically sync group member slots to (seatsPerUnit - 1), preserving entered data
+  useEffect(() => {
+    if (!isGroupTicket || !selectedPackage) return;
+    const targetCount = Math.max(2, (selectedPackage.seatsPerUnit || 3) - 1);
+    setGroupMembers((prev) => {
+      if (prev.length === targetCount) return prev;
+      const next: GroupMember[] = [];
+      for (let i = 0; i < targetCount; i++) {
+        next.push(prev[i] ?? { fullName: '', email: '' });
+      }
+      return next;
+    });
+  }, [isGroupTicket, selectedPackage]);
 
   // ── Gift mode ─────────────────────────────────────────────────────────────
   const [isGift, setIsGift] = useState(false);

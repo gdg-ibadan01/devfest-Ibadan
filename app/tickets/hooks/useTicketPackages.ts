@@ -19,16 +19,19 @@ export function useTicketPackages() {
   const packages: TicketPackage[] = useMemo(() => {
     return (onSaleData?.data || []).map((ticket) => {
       const price = Number.parseFloat(ticket.price) || 0;
+      const seatsPerUnit = ticket.seatsPerUnit ?? 1;
+      const isGroup = seatsPerUnit > 1 || ticket.slug.includes('group');
       return {
         id: ticket.slug,
         title: ticket.name,
         badge: ticket.description || 'Access Pass',
         price,
-        formattedPrice: ticket.slug.includes('group')
+        seatsPerUnit,
+        formattedPrice: isGroup
           ? `₦ ${price.toLocaleString('en-NG', {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
-            })} / person`
+            })}`
           : `₦ ${price.toLocaleString('en-NG', {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
