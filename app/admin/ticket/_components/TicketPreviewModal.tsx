@@ -58,13 +58,13 @@ function PreviewField({
 
 //Skeleton Loader
 
-function SkeletonBlock({ className }: { className?: string }) {
+function SkeletonBlock({ className }: Readonly<{ className?: string }>) {
   return (
     <div className={`bg-gray-200 rounded animate-pulse ${className ?? ''}`} />
   );
 }
 
-function SkeletonSection({ rows = 2 }: { rows?: number }) {
+function SkeletonSection({ rows = 2 }: Readonly<{ rows?: number }>) {
   return (
     <div className="bg-[#FAFAFA] rounded-xl p-5">
       <SkeletonBlock className="h-4 w-32 mb-5" />
@@ -82,7 +82,7 @@ function SkeletonSection({ rows = 2 }: { rows?: number }) {
 
 //Ticket details content
 
-function TicketDetails({ ticket }: { ticket: GetTicketResponseDto }) {
+function TicketDetails({ ticket }: Readonly<{ ticket: GetTicketResponseDto }>) {
   return (
     <Fragment>
       {/* Ticket Info */}
@@ -131,8 +131,18 @@ function TicketDetails({ ticket }: { ticket: GetTicketResponseDto }) {
             }
           />
           <PreviewField
-            label="Quantity Limit"
+            label="Capacity (Units)"
             value={(ticket.capacity ?? 0).toLocaleString()}
+          />
+          <PreviewField
+            label="Seats Per Unit"
+            value={`${ticket.seatsPerUnit ?? 1} ${Number(ticket.seatsPerUnit) > 1 ? 'attendees (Group)' : 'attendee'}`}
+          />
+          <PreviewField
+            label="Total Available Seats"
+            value={(
+              (ticket.capacity ?? 0) * (ticket.seatsPerUnit ?? 1)
+            ).toLocaleString()}
           />
           <PreviewField
             label="Sale Starts"
@@ -173,7 +183,7 @@ export default function TicketPreviewModal({
   open,
   onClose,
   ticketId,
-}: TicketPreviewModalProps) {
+}: Readonly<TicketPreviewModalProps>) {
   const { data: ticket, isLoading, isError } = useTicket(ticketId);
 
   if (!open) return null;
