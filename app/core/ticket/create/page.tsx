@@ -28,6 +28,7 @@ const INITIAL_FORM: TicketFormData = {
     fridayValidityDate: '',
     saturdayValidityDate: '',
     capacity: '',
+    seatsPerUnit: '1',
     startDate: '',
     endDate: '',
   },
@@ -55,6 +56,7 @@ export default function CreateTicketPage() {
         validityDates: buildValidityDates(advancedSettings),
         //maximumSaleUnits was removed from schema — only capacity is sent
         capacity: parseInt(advancedSettings.capacity, 10) || 0,
+        seatsPerUnit: parseInt(advancedSettings.seatsPerUnit, 10) || 1,
         saleStartsAt: advancedSettings.startDate,
         saleEndsAt: advancedSettings.endDate,
       },
@@ -107,7 +109,9 @@ export default function CreateTicketPage() {
         {step === 'advancedSettings' && (
           <AdvancedSettingsStep
             data={form.advancedSettings}
-            onChange={(advancedSettings) => setForm((prev) => ({ ...prev, advancedSettings }))}
+            onChange={(advancedSettings) =>
+              setForm((prev) => ({ ...prev, advancedSettings }))
+            }
             onCancel={handleCancel}
             onBack={() => setStep('pricing')}
             onSubmit={handleSubmit}
