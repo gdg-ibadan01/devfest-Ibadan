@@ -21,6 +21,7 @@ export interface TicketAdvancedSettings {
   fridayValidityDate: string;
   saturdayValidityDate: string;
   capacity: string;
+  seatsPerUnit: string;
   startDate: string;
   endDate: string;
 }
@@ -45,14 +46,20 @@ export interface TicketRecord {
 
 /** Derive eventDates[] array from form basicInfo */
 export function buildEventDates(info: TicketBasicInfo): string[] {
-  if (info.declarationDate === 'friday') return [info.fridayDate].filter(Boolean);
-  if (info.declarationDate === 'saturday') return [info.saturdayDate].filter(Boolean);
+  if (info.declarationDate === 'friday')
+    return [info.fridayDate].filter(Boolean);
+  if (info.declarationDate === 'saturday')
+    return [info.saturdayDate].filter(Boolean);
   return [info.fridayDate, info.saturdayDate].filter(Boolean);
 }
 
 /** Derive validityDates[] array from advancedSettings */
 export function buildValidityDates(settings: TicketAdvancedSettings): string[] {
-  if (settings.validity === 'friday') return [settings.fridayValidityDate].filter(Boolean);
-  if (settings.validity === 'saturday') return [settings.saturdayValidityDate].filter(Boolean);
-  return [settings.fridayValidityDate, settings.saturdayValidityDate].filter(Boolean);
+  if (settings.validity === 'friday')
+    return [settings.fridayValidityDate].filter(Boolean);
+  if (settings.validity === 'saturday')
+    return [settings.saturdayValidityDate].filter(Boolean);
+  return [settings.fridayValidityDate, settings.saturdayValidityDate].filter(
+    Boolean
+  );
 }

@@ -31,6 +31,7 @@ interface Errors {
   fridayValidityDate?: string;
   saturdayValidityDate?: string;
   capacity?: string;
+  seatsPerUnit?: string;
   startDate?: string;
   endDate?: string;
 }
@@ -57,7 +58,10 @@ export default function AdvancedSettingsStep({
 }: AdvancedSettingsStepProps) {
   const [errors, setErrors] = useState<Errors>({});
 
-  const set = <K extends keyof TicketAdvancedSettings>(key: K, value: TicketAdvancedSettings[K]) => {
+  const set = <K extends keyof TicketAdvancedSettings>(
+    key: K,
+    value: TicketAdvancedSettings[K]
+  ) => {
     onChange({ ...data, [key]: value });
     setErrors((prev) => ({ ...prev, [key]: undefined }));
   };
@@ -65,21 +69,36 @@ export default function AdvancedSettingsStep({
   const validate = (): boolean => {
     const e: Errors = {};
     const needsFriday = data.validity === 'friday' || data.validity === 'both';
-    const needsSaturday = data.validity === 'saturday' || data.validity === 'both';
+    const needsSaturday =
+      data.validity === 'saturday' || data.validity === 'both';
 
     if (needsFriday && !data.fridayValidityDate) {
       e.fridayValidityDate = 'Friday validity date is required.';
-    } else if (needsFriday && eventDates?.fridayDate && data.fridayValidityDate !== eventDates.fridayDate) {
+    } else if (
+      needsFriday &&
+      eventDates?.fridayDate &&
+      data.fridayValidityDate !== eventDates.fridayDate
+    ) {
       e.fridayValidityDate = `Validity date must match the event date (${formatDateForError(eventDates.fridayDate)}).`;
     }
     if (needsSaturday && !data.saturdayValidityDate) {
       e.saturdayValidityDate = 'Saturday validity date is required.';
-    } else if (needsSaturday && eventDates?.saturdayDate && data.saturdayValidityDate !== eventDates.saturdayDate) {
+    } else if (
+      needsSaturday &&
+      eventDates?.saturdayDate &&
+      data.saturdayValidityDate !== eventDates.saturdayDate
+    ) {
       e.saturdayValidityDate = `Validity date must match the event date (${formatDateForError(eventDates.saturdayDate)}).`;
     }
     if (data.capacity) {
       const cap = parseInt(data.capacity, 10);
-      if (isNaN(cap) || cap <= 0) e.capacity = 'Capacity must be a positive number.';
+      if (isNaN(cap) || cap <= 0)
+        e.capacity = 'Capacity must be a positive number.';
+    }
+    if (data.seatsPerUnit) {
+      const spu = parseInt(data.seatsPerUnit, 10);
+      if (isNaN(spu) || spu <= 0)
+        e.seatsPerUnit = 'Seats per unit must be at least 1.';
     }
     if (!data.startDate) {
       e.startDate = 'Sale start date is required.';
@@ -103,11 +122,13 @@ export default function AdvancedSettingsStep({
   };
 
   const needsFriday = data.validity === 'friday' || data.validity === 'both';
-  const needsSaturday = data.validity === 'saturday' || data.validity === 'both';
+  const needsSaturday =
+    data.validity === 'saturday' || data.validity === 'both';
 
-  const startDateObj = data.startDate && isValid(parseISO(data.startDate))
-    ? parseISO(data.startDate)
-    : undefined;
+  const startDateObj =
+    data.startDate && isValid(parseISO(data.startDate))
+      ? parseISO(data.startDate)
+      : undefined;
 
   return (
     <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
@@ -141,7 +162,19 @@ export default function AdvancedSettingsStep({
             />
             {eventDates?.fridayDate && (
               <p className="mt-1 text-[11px] text-gray-400">
-                Must match the event date: <strong>{(() => { try { return format(parseISO(eventDates.fridayDate), 'dd MMM yyyy'); } catch { return eventDates.fridayDate; } })()}</strong>
+                Must match the event date:{' '}
+                <strong>
+                  {(() => {
+                    try {
+                      return format(
+                        parseISO(eventDates.fridayDate),
+                        'dd MMM yyyy'
+                      );
+                    } catch {
+                      return eventDates.fridayDate;
+                    }
+                  })()}
+                </strong>
               </p>
             )}
             <FieldError message={errors.fridayValidityDate} />
@@ -161,28 +194,64 @@ export default function AdvancedSettingsStep({
             />
             {eventDates?.saturdayDate && (
               <p className="mt-1 text-[11px] text-gray-400">
-                Must match the event date: <strong>{(() => { try { return format(parseISO(eventDates.saturdayDate), 'dd MMM yyyy'); } catch { return eventDates.saturdayDate; } })()}</strong>
+                Must match the event date:{' '}
+                <strong>
+                  {(() => {
+                    try {
+                      return format(
+                        parseISO(eventDates.saturdayDate),
+                        'dd MMM yyyy'
+                      );
+                    } catch {
+                      return eventDates.saturdayDate;
+                    }
+                  })()}
+                </strong>
               </p>
             )}
             <FieldError message={errors.saturdayValidityDate} />
           </div>
         )}
 
-        <NumberInput
-          label="Capacity"
-          id="capacity"
-          value={data.capacity}
-          onChange={(raw) => set('capacity', raw)}
-          placeholder="e.g. 500 — total number of tickets available"
-          error={errors.capacity}
-        />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div>
+            <NumberInput
+              label="Capacity (Units)"
+              id="capacity"
+              value={data.capacity}
+              onChange={(raw) => set('capacity', raw)}
+              placeholder="e.g. 500 — total units available"
+              error={errors.capacity}
+            />
+            <p className="mt-1 text-[11px] text-gray-400">
+              Total number of ticket units available for sale.
+            </p>
+          </div>
+
+          <div>
+            <NumberInput
+              label="Seats Per Unit"
+              id="seatsPerUnit"
+              value={data.seatsPerUnit}
+              onChange={(raw) => set('seatsPerUnit', raw)}
+              placeholder="e.g. 1 for standard, 5 for group"
+              error={errors.seatsPerUnit}
+            />
+            <p className="mt-1 text-[11px] text-gray-400">
+              Number of attendees covered per purchase (1 for individual, 5 for
+              group).
+            </p>
+          </div>
+        </div>
 
         {/* Sale Start Date */}
         <div>
           <FieldLabel required>Sale Start Date</FieldLabel>
           <DatePickerInput
             value={data.startDate}
-            onChange={(val) => { set('startDate', val); }}
+            onChange={(val) => {
+              set('startDate', val);
+            }}
             placeholder="Pick sale start date"
           />
           <FieldError message={errors.startDate} />
@@ -193,7 +262,9 @@ export default function AdvancedSettingsStep({
           <FieldLabel required>Sale End Date</FieldLabel>
           <DatePickerInput
             value={data.endDate}
-            onChange={(val) => { set('endDate', val); }}
+            onChange={(val) => {
+              set('endDate', val);
+            }}
             placeholder="Pick sale end date"
             fromDate={startDateObj}
           />

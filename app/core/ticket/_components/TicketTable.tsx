@@ -229,7 +229,14 @@ export default function TicketTable() {
                     }}
                   >
                     <td className="px-5 py-4 text-[13px] text-gray-800 font-medium">
-                      {ticket.name}
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span>{ticket.name}</span>
+                        {ticket.seatsPerUnit > 1 && (
+                          <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-700 border border-blue-200 whitespace-nowrap">
+                            Group of {ticket.seatsPerUnit}
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-5 py-4">
                       <div className="flex gap-2 flex-wrap">
@@ -254,7 +261,17 @@ export default function TicketTable() {
                       {formatDate(ticket.saleEndsAt)}
                     </td>
                     <td className="px-5 py-4 text-[13px] text-gray-700">
-                      {ticket?.capacity?.toLocaleString()}
+                      <div>
+                        <span>{ticket?.capacity?.toLocaleString()}</span>
+                        {ticket.seatsPerUnit > 1 && (
+                          <span className="block text-[11px] text-gray-400">
+                            {(
+                              (ticket.capacity ?? 0) * ticket.seatsPerUnit
+                            ).toLocaleString()}{' '}
+                            seats
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td
                       className="px-5 py-4"
