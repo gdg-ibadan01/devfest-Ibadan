@@ -1,55 +1,29 @@
-import { type AppliedDiscount } from '@/app/_module/services/discount.service';
-import { AnimatePresence, motion } from 'framer-motion';
-import {
-  AlertCircle,
-  ArrowLeft,
-  ArrowUpRight,
-  CheckCircle2,
-  Gift,
-  Link2,
-  Loader2,
-  Tag,
-  X,
-} from 'lucide-react';
-import React from 'react';
-import TicketPackageRow, { TicketPackage } from './TicketPackageRow';
+import React, { useState } from 'react';
+import GroupAttendeeFields, { type GroupMember } from './GroupAttendeeFields';
+import { AlertCircle, ArrowLeft, ArrowUpRight } from 'lucide-react';
+import BuyerDetailsFields, {
+  type BuyerDetailsFieldsProps,
+} from './BuyerDetailsFields';
+import GiftRecipientFields, {
+  type GiftRecipientFieldsProps,
+} from './GiftRecipientFields';
+import TicketPackageSelector, {
+  type TicketPackageSelectorProps,
+} from './TicketPackageSelector';
+import TicketDiscountField, {
+  type TicketDiscountFieldProps,
+} from './TicketDiscountField';
 
-interface BuyTicketFormProps {
-  // Buyer / attendee (self)
-  fullName: string;
-  setFullName: (val: string) => void;
-  email: string;
-  setEmail: (val: string) => void;
-
-  // Gift mode
-  isGift: boolean;
-  setIsGift: (val: boolean) => void;
-  receiverName: string;
-  setReceiverName: (val: string) => void;
-  receiverEmail: string;
-  setReceiverEmail: (val: string) => void;
-  receiverPhone: string;
-  setReceiverPhone: (val: string) => void;
-
-  // Package selection
-  selectedPackageId: string;
-  setSelectedPackageId: (val: string) => void;
-  packages: TicketPackage[];
-
-  // Actions
+interface BuyTicketFormProps
+  extends
+    BuyerDetailsFieldsProps,
+    GiftRecipientFieldsProps,
+    TicketPackageSelectorProps,
+    TicketDiscountFieldProps {
+  groupMembers?: GroupMember[];
+  setGroupMembers?: (members: GroupMember[]) => void;
   onSubmit: (e: React.FormEvent) => void;
   onBack: () => void;
-
-  // Discount
-  discountCode?: string;
-  setDiscountCode?: (val: string) => void;
-  appliedDiscount?: AppliedDiscount | null;
-  onApplyDiscount?: (code: string) => void;
-  onRemoveDiscount?: () => void;
-  isApplyingDiscount?: boolean;
-  discountError?: string;
-  setDiscountError?: (err: string) => void;
-  isDiscountFromUrl?: boolean;
 }
 
 export default function BuyTicketForm({
@@ -68,26 +42,55 @@ export default function BuyTicketForm({
   selectedPackageId,
   setSelectedPackageId,
   packages,
+  groupMembers,
+  setGroupMembers,
   onSubmit,
   onBack,
-  discountCode = '',
+  discountCode,
   setDiscountCode,
-  appliedDiscount = null,
+  appliedDiscount,
   onApplyDiscount,
   onRemoveDiscount,
-  isApplyingDiscount = false,
-  discountError = '',
+  isApplyingDiscount,
+  discountError,
   setDiscountError,
-  isDiscountFromUrl = false,
+  isDiscountFromUrl,
 }: Readonly<BuyTicketFormProps>) {
+  const isGroupTicket = selectedPackageId.toLowerCase().includes('group');
+  const [internalGroupMembers, setInternalGroupMembers] = useState<
+    GroupMember[]
+  >([
+    { fullName: '', email: '' },
+    { fullName: '', email: '' },
+  ]);
+  const members = groupMembers ?? internalGroupMembers;
+  const setMembers = setGroupMembers ?? setInternalGroupMembers;
+
   const baseInvalid = !fullName.trim() || !email.trim() || !selectedPackageId;
   const giftInvalid = isGift
     ? !receiverName.trim() || !receiverEmail.trim() || !receiverPhone.trim()
     : false;
-  const isFormInvalid = baseInvalid || giftInvalid;
 
-  const trimmedDiscountCode = (discountCode || '').trim();
-  const isDiscountValid = Boolean(trimmedDiscountCode);
+  const groupLeadInvalid =
+    fullName.trim().length < 3 || !email.trim() || !email.includes('@');
+  const groupMembersInvalid =
+    members.length < 2 ||
+    members.some(
+      (m) =>
+        m.fullName.trim().length < 3 ||
+        !m.email.trim() ||
+        !m.email.includes('@')
+    );
+  const allGroupEmails = [
+    email.trim().toLowerCase(),
+    ...members.map((m) => m.email.trim().toLowerCase()),
+  ].filter(Boolean);
+  const hasDuplicateEmails =
+    new Set(allGroupEmails).size !== allGroupEmails.length;
+
+  const isFormInvalid = isGroupTicket
+    ? groupLeadInvalid || groupMembersInvalid || hasDuplicateEmails
+    : baseInvalid || giftInvalid;
 
   return (
     <div className="w-full md:max-w-[732px] md:bg-white md:rounded-[20px] md:shadow-lg md:border border-gray-100 overflow-hidden">
@@ -108,326 +111,73 @@ export default function BuyTicketForm({
 
       <div className="w-full md:px-5 md:pb-24">
         <form onSubmit={onSubmit} className="flex flex-col gap-5">
-          {/* Buyer Info */}
-          <div className="flex flex-col gap-1.5">
-            <label
-              htmlFor="fullName"
-              className="text-[#1E1E1E] text-[14px] md:text-[16px] font-medium"
-            >
-              {isGift ? (
-                <>
-                  Your Full Name{' '}
-                  <span className="text-gray-400 font-normal">(Sender)</span>
-                </>
-              ) : (
-                'Full Name'
-              )}
-            </label>
-            <input
-              type="text"
-              id="fullName"
-              placeholder="Enter Full Name"
-              required
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              className="w-full border border-gray-200 rounded-[8px] px-4 py-3 md:py-3.5 text-[14px] md:text-[16px] placeholder-gray-400 outline-none focus:border-[#4285F4] transition-colors"
-            />
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <label
-              htmlFor="email"
-              className="text-[#1E1E1E] text-[14px] md:text-[16px] font-medium"
-            >
-              {isGift ? (
-                <>
-                  Your Email Address{' '}
-                  <span className="text-gray-400 font-normal">(Sender)</span>
-                </>
-              ) : (
-                'Email Address'
-              )}
-            </label>
-            <input
-              type="email"
-              id="email"
-              placeholder="Enter email address"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full border border-gray-200 rounded-[8px] px-4 py-3 md:py-3.5 text-[14px] md:text-[16px] placeholder-gray-400 outline-none focus:border-[#4285F4] transition-colors"
-            />
-          </div>
-
-          {/* Gift Checkbox */}
-          <label
-            htmlFor="isGift"
-            className="flex items-center gap-3 cursor-pointer select-none group w-fit"
-          >
-            <div className="relative w-5 h-5 shrink-0">
-              <input
-                id="isGift"
-                type="checkbox"
-                checked={isGift}
-                onChange={(e) => setIsGift(e.target.checked)}
-                className="peer absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+          {!isGroupTicket && (
+            <>
+              <BuyerDetailsFields
+                fullName={fullName}
+                setFullName={setFullName}
+                email={email}
+                setEmail={setEmail}
+                isGift={isGift}
               />
-              <div className="w-5 h-5 rounded-[5px] border-2 border-gray-300 group-hover:border-[#4285F4] peer-checked:bg-[#1E1E1E] peer-checked:border-[#1E1E1E] transition-all flex items-center justify-center">
-                {isGift && (
-                  <svg
-                    className="w-3 h-3 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth={3}
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
-                )}
-              </div>
-            </div>
-            <span className="text-[14px] md:text-[15px] text-[#1E1E1E] font-medium flex items-center gap-1.5">
-              <Gift className="w-4 h-4 text-[#515151]" />
-              I&apos;m buying this for someone else
-            </span>
-          </label>
 
-          {/* Gift Recipient Fields */}
-          <AnimatePresence initial={false}>
-            {isGift && (
-              <motion.div
-                key="gift-fields"
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.25, ease: 'easeOut' }}
-                className="overflow-hidden"
-              >
-                <div className="flex flex-col gap-5 border border-dashed border-gray-300 rounded-[12px] p-4 bg-gray-50/60">
-                  <p className="text-[13px] text-gray-500 font-medium -mb-1">
-                    Recipient&apos;s Details
-                  </p>
+              <GiftRecipientFields
+                isGift={isGift}
+                setIsGift={setIsGift}
+                receiverName={receiverName}
+                setReceiverName={setReceiverName}
+                receiverEmail={receiverEmail}
+                setReceiverEmail={setReceiverEmail}
+                receiverPhone={receiverPhone}
+                setReceiverPhone={setReceiverPhone}
+              />
+            </>
+          )}
 
-                  <div className="flex flex-col gap-1.5">
-                    <label
-                      htmlFor="receiverName"
-                      className="text-[#1E1E1E] text-[14px] md:text-[16px] font-medium"
-                    >
-                      Recipient&apos;s Full Name
-                    </label>
-                    <input
-                      type="text"
-                      id="receiverName"
-                      placeholder="Enter Full Name"
-                      required={isGift}
-                      value={receiverName}
-                      onChange={(e) => setReceiverName(e.target.value)}
-                      className="w-full border border-gray-200 rounded-[8px] px-4 py-3 md:py-3.5 text-[14px] md:text-[16px] placeholder-gray-400 outline-none focus:border-[#4285F4] transition-colors bg-white"
-                    />
-                  </div>
+          <TicketPackageSelector
+            selectedPackageId={selectedPackageId}
+            setSelectedPackageId={setSelectedPackageId}
+            packages={packages}
+          />
 
-                  <div className="flex flex-col gap-1.5">
-                    <label
-                      htmlFor="receiverEmail"
-                      className="text-[#1E1E1E] text-[14px] md:text-[16px] font-medium"
-                    >
-                      Recipient&apos;s Email Address
-                    </label>
-                    <input
-                      type="email"
-                      id="receiverEmail"
-                      placeholder="Enter Email Address"
-                      required={isGift}
-                      value={receiverEmail}
-                      onChange={(e) => setReceiverEmail(e.target.value)}
-                      className="w-full border border-gray-200 rounded-[8px] px-4 py-3 md:py-3.5 text-[14px] md:text-[16px] placeholder-gray-400 outline-none focus:border-[#4285F4] transition-colors bg-white"
-                    />
-                  </div>
-
-                  <div className="flex flex-col gap-1.5">
-                    <label
-                      htmlFor="receiverPhone"
-                      className="text-[#1E1E1E] text-[14px] md:text-[16px] font-medium"
-                    >
-                      Recipient&apos;s Phone Number
-                    </label>
-                    <input
-                      type="tel"
-                      id="receiverPhone"
-                      placeholder="Enter Phone Number"
-                      required={isGift}
-                      value={receiverPhone}
-                      onChange={(e) => setReceiverPhone(e.target.value)}
-                      className="w-full border border-gray-200 rounded-[8px] px-4 py-3 md:py-3.5 text-[14px] md:text-[16px] placeholder-gray-400 outline-none focus:border-[#4285F4] transition-colors bg-white"
-                    />
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* Ticket Packages Section */}
-          <div className="w-full flex flex-col gap-3 mt-2">
-            <p className="text-[#1E1E1E] text-[14px] md:text-[16px] font-medium">
-              Kindly Select your Ticket Package
-            </p>
-
-            <div className="bg-[#FAF8F5] p-3 md:p-5 rounded-[12px] flex flex-col gap-3">
-              {packages.map((pkg) => (
-                <TicketPackageRow
-                  key={pkg.id}
-                  pkg={pkg}
-                  isSelected={selectedPackageId === pkg.id}
-                  onSelect={setSelectedPackageId}
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* Discount Code Section */}
-          <div className="flex flex-col gap-1.5 mt-1">
-            <label
-              htmlFor="discountCode"
-              className="text-[#1E1E1E] text-[14px] md:text-[16px] font-medium flex items-center justify-between"
-            >
-              <span className="flex items-center gap-1.5">
-                <Tag className="w-4 h-4 text-[#515151]" />
-                Discount Code
-              </span>
-              {appliedDiscount ? (
-                <span className="text-[12px] text-emerald-700 font-semibold bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full flex items-center gap-1">
-                  {isDiscountFromUrl && (
-                    <Link2 className="w-3 h-3 text-emerald-600" />
-                  )}
-                  {isDiscountFromUrl ? 'Applied from Link' : 'Applied'}
-                </span>
-              ) : isApplyingDiscount && isDiscountFromUrl ? (
-                <span className="text-[12px] text-blue-700 font-semibold bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full flex items-center gap-1 animate-pulse">
-                  <Loader2 className="w-3 h-3 animate-spin text-blue-600" />
-                  Applying from link...
-                </span>
-              ) : null}
-            </label>
-
-            <div className="flex gap-2">
-              <div className="relative flex-1">
-                <input
-                  type="text"
-                  id="discountCode"
-                  placeholder="Enter discount code"
-                  value={discountCode}
-                  onChange={(e) => {
-                    setDiscountCode?.(e.target.value.toUpperCase());
-                    if (discountError && setDiscountError) setDiscountError('');
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      if (
-                        !appliedDiscount &&
-                        isDiscountValid &&
-                        !isApplyingDiscount &&
-                        onApplyDiscount
-                      ) {
-                        onApplyDiscount(trimmedDiscountCode);
-                      }
-                    }
-                  }}
-                  disabled={Boolean(appliedDiscount) || isApplyingDiscount}
-                  className={`w-full border rounded-[8px] px-4 py-3 md:py-3.5 text-[14px] md:text-[16px] placeholder-gray-400 outline-none transition-colors uppercase disabled:bg-gray-50 disabled:text-gray-600 tracking-wider font-mono text-[14px] ${
-                    discountError && !appliedDiscount
-                      ? 'border-red-500 focus:border-red-500'
-                      : 'border-gray-200 focus:border-[#4285F4]'
-                  }`}
-                />
-                {appliedDiscount && (
-                  <CheckCircle2 className="w-5 h-5 text-emerald-600 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                )}
-              </div>
-
-              {appliedDiscount ? (
-                <button
-                  type="button"
-                  onClick={onRemoveDiscount}
-                  className="px-4 py-2 text-[13px] md:text-[14px] font-semibold text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100/80 border border-red-200 rounded-[8px] transition-colors shrink-0 flex items-center gap-1.5 cursor-pointer"
-                >
-                  <X className="w-4 h-4" />
-                  Remove
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() =>
-                    onApplyDiscount &&
-                    isDiscountValid &&
-                    onApplyDiscount(trimmedDiscountCode)
-                  }
-                  disabled={!isDiscountValid || isApplyingDiscount}
-                  title={
-                    !trimmedDiscountCode
-                      ? 'Enter a discount code'
-                      : 'Click to apply discount'
-                  }
-                  className="px-5 py-2 text-[14px] md:text-[15px] font-semibold text-white bg-[#1E1E1E] hover:bg-core-blue disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed rounded-[8px] transition-all shrink-0 flex items-center gap-2 cursor-pointer disabled:hover:bg-gray-200"
-                >
-                  {isApplyingDiscount ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Applying...</span>
-                    </>
-                  ) : (
-                    'Apply'
-                  )}
-                </button>
-              )}
-            </div>
-
-            {/* Applied Discount Feedback */}
-            {appliedDiscount && (
-              <div className="flex items-center justify-between bg-emerald-50 border border-emerald-200 rounded-[8px] px-3.5 py-2 text-emerald-800 text-[13px] md:text-[14px] mt-0.5">
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+          {isGroupTicket && (
+            <>
+              <GroupAttendeeFields
+                fullName={fullName}
+                setFullName={setFullName}
+                email={email}
+                setEmail={setEmail}
+                groupMembers={members}
+                onGroupMembersChange={setMembers}
+              />
+              {hasDuplicateEmails && (
+                <div className="flex items-center gap-2 text-red-600 bg-red-50 border border-red-200 rounded-[8px] p-3 text-[13px]">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
                   <span>
-                    Discount applied{isDiscountFromUrl ? ' from link' : ''}:{' '}
-                    <strong className="font-bold">
-                      ₦
-                      {appliedDiscount.amount.toLocaleString('en-NG', {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })}{' '}
-                      off
-                    </strong>
+                    Each attendee in the group must have a unique email address.
                   </span>
                 </div>
-                <span className="font-mono text-[11px] md:text-[12px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold flex items-center gap-1">
-                  {isDiscountFromUrl && (
-                    <Link2 className="w-3 h-3 text-emerald-700" />
-                  )}
-                  {appliedDiscount.code}
-                </span>
-              </div>
-            )}
+              )}
+            </>
+          )}
 
-            {/* Error Message */}
-            {discountError && !appliedDiscount && (
-              <div className="flex items-center gap-1.5 text-red-600 text-[13px] md:text-[14px] font-medium mt-1">
-                <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
-                <span className="text-red-600 font-medium">
-                  {discountError}
-                </span>
-              </div>
-            )}
-          </div>
+          <TicketDiscountField
+            discountCode={discountCode}
+            setDiscountCode={setDiscountCode}
+            appliedDiscount={appliedDiscount}
+            onApplyDiscount={onApplyDiscount}
+            onRemoveDiscount={onRemoveDiscount}
+            isApplyingDiscount={isApplyingDiscount}
+            discountError={discountError}
+            setDiscountError={setDiscountError}
+            isDiscountFromUrl={isDiscountFromUrl}
+          />
 
           {/* Submit Button */}
           <button
             type="submit"
             disabled={isFormInvalid}
-            className="w-full bg-[#1E1E1E] py-4 text-white hover:bg-core-blue rounded-[100px] flex gap-2 justify-center items-center transition-colors duration-500 font-bold my-2 md:my-4 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#1E1E1E]"
+            className="w-full bg-[#1E1E1E] py-4 text-white hover:bg-core-blue rounded-[100px] flex gap-2 justify-center items-center transition-colors duration-500 font-bold my-2 md:my-4 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#1E1E1E] cursor-pointer"
           >
             Proceed to Payment <ArrowUpRight className="w-5 h-5" />
           </button>

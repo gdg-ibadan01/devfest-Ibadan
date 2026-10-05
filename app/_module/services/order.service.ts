@@ -6,6 +6,8 @@ import { queryKeys } from '@/app/_module/api/queryKeys';
 import type {
   CreateOrderDto,
   CreateOrderResponseDto,
+  CreateGroupBuyOrderDto,
+  CreateGroupBuyOrderResponseDto,
   OrderListResponseDto,
   OrderListParams,
   OrderListItemDto,
@@ -15,8 +17,12 @@ import type {
 
 // ---- List orders (replaces the old attendees list) -------------
 
-async function getOrders(params: OrderListParams): Promise<OrderListResponseDto> {
-  const { data } = await apiClient.get<OrderListResponseDto>('/orders', { params });
+async function getOrders(
+  params: OrderListParams
+): Promise<OrderListResponseDto> {
+  const { data } = await apiClient.get<OrderListResponseDto>('/orders', {
+    params,
+  });
   return data;
 }
 
@@ -71,7 +77,11 @@ async function fetchCheckInFilteredPage({
   let sourceHasMore = true;
   let scannedPages = 0;
 
-  while (matches.length < pageSize && sourceHasMore && scannedPages < CHECK_IN_SCAN_MAX_PAGES) {
+  while (
+    matches.length < pageSize &&
+    sourceHasMore &&
+    scannedPages < CHECK_IN_SCAN_MAX_PAGES
+  ) {
     const page = await getOrders({
       limit: CHECK_IN_SCAN_PAGE_LIMIT,
       search,
@@ -90,7 +100,9 @@ async function fetchCheckInFilteredPage({
       // checkIns is populated by the backend as an array of check-in
       // timestamps — an attendee is checked in whenever it's non-empty,
       // regardless of how many times they've been scanned in.
-      const isMatch = checkedIn ? order.checkIns.length > 0 : order.checkIns.length === 0;
+      const isMatch = checkedIn
+        ? order.checkIns.length > 0
+        : order.checkIns.length === 0;
       if (isMatch) {
         matches.push(order);
         if (matches.length === pageSize) break;
@@ -101,7 +113,9 @@ async function fetchCheckInFilteredPage({
   }
 
   const scanLimitReached =
-    scannedPages >= CHECK_IN_SCAN_MAX_PAGES && matches.length < pageSize && sourceHasMore;
+    scannedPages >= CHECK_IN_SCAN_MAX_PAGES &&
+    matches.length < pageSize &&
+    sourceHasMore;
 
   return {
     data: matches,
@@ -127,8 +141,14 @@ export function useCheckInFilteredOrders({
   enabled?: boolean;
 }) {
   return useQuery({
-    queryKey: queryKeys.orders.checkInFiltered({ search, checkedIn, cursor, pageSize }),
-    queryFn: () => fetchCheckInFilteredPage({ search, checkedIn, cursor, pageSize }),
+    queryKey: queryKeys.orders.checkInFiltered({
+      search,
+      checkedIn,
+      cursor,
+      pageSize,
+    }),
+    queryFn: () =>
+      fetchCheckInFilteredPage({ search, checkedIn, cursor, pageSize }),
     placeholderData: (previousData) => previousData,
     enabled,
   });
@@ -136,7 +156,9 @@ export function useCheckInFilteredOrders({
 
 // ---- Create order (manual attendee registration) ----------------
 
-async function createOrder(dto: CreateOrderDto): Promise<CreateOrderResponseDto> {
+async function createOrder(
+  dto: CreateOrderDto
+): Promise<CreateOrderResponseDto> {
   const { data } = await apiClient.post<CreateOrderResponseDto>('/orders', dto);
   return data;
 }
@@ -155,6 +177,32 @@ export function useCreateOrder() {
   });
 }
 
+// ---- Create group buy order --------------------------------------
+
+async function createGroupBuyOrder(
+  dto: CreateGroupBuyOrderDto
+): Promise<CreateGroupBuyOrderResponseDto> {
+  const { data } = await apiClient.post<CreateGroupBuyOrderResponseDto>(
+    '/orders/group-buys',
+    dto
+  );
+  return data;
+}
+
+export function useCreateGroupBuyOrder() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: createGroupBuyOrder,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['orders'], exact: false });
+    },
+    onError: (error: Error) => {
+      notifyApiError(error, 'Failed to create group order');
+    },
+  });
+}
+
 // ---- Create order on behalf of an attendee (admin-only) -----------
 // Distinct from the public `/orders` endpoint above — this is what the
 // admin dashboard's "Create New Order" flow should use, since it also
@@ -163,7 +211,10 @@ export function useCreateOrder() {
 async function createOrderForAttendee(
   dto: AdminCreateOrderDto
 ): Promise<CreateOrderResponseDto> {
-  const { data } = await apiClient.post<CreateOrderResponseDto>('/orders/attendees', dto);
+  const { data } = await apiClient.post<CreateOrderResponseDto>(
+    '/orders/attendees',
+    dto
+  );
   return data;
 }
 

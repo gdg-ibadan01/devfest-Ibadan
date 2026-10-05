@@ -1,12 +1,18 @@
 import { formatAmount } from '@/utils/formatAmount';
-import { ArrowLeft, Gift } from 'lucide-react';
+import { ArrowLeft, Gift, Users } from 'lucide-react';
 import { TicketPackage } from './TicketPackageRow';
 import type { AppliedDiscount } from '@/app/_module/services/discount.service';
+import type { GroupMember } from './GroupAttendeeFields';
+import React from 'react';
 
 interface TicketSummaryProps {
-  // Buyer
+  // Buyer / Lead
   fullName: string;
   email: string;
+
+  // Group mode
+  isGroupTicket?: boolean;
+  groupMembers?: GroupMember[];
 
   // Gift mode
   isGift?: boolean;
@@ -24,6 +30,8 @@ interface TicketSummaryProps {
 export default function TicketSummary({
   fullName,
   email,
+  isGroupTicket = false,
+  groupMembers = [],
   isGift = false,
   receiverName,
   receiverEmail,
@@ -64,25 +72,63 @@ export default function TicketSummary({
             </div>
           )}
 
+          {isGroupTicket && (
+            <div className="flex items-center gap-2 text-[13px] text-[#4285F4] font-medium -mb-1">
+              <Users className="w-4 h-4" />
+              <span>Group Ticket ({1 + groupMembers.length} Attendees)</span>
+            </div>
+          )}
+
           <div
             className={`grid gap-y-4 gap-x-8 ${isGift ? 'md:grid-cols-2' : 'grid-cols-1 md:grid-cols-2'}`}
           >
-            {/* Buyer row */}
+            {/* Buyer / Lead row */}
             <div className="flex flex-col gap-1 select-none font-sans text-[14px] md:text-[16px]">
               <span className="text-gray-400 font-normal">
-                {isGift ? 'Sender Name' : 'Full Name'}
+                {isGroupTicket
+                  ? 'Attendee 1 (Lead)'
+                  : isGift
+                    ? 'Sender Name'
+                    : 'Full Name'}
               </span>
               <span className="font-bold text-[#1E1E1E]">{fullName}</span>
             </div>
 
             <div className="flex flex-col gap-1 select-none font-sans text-[14px] md:text-[16px]">
               <span className="text-gray-400 font-normal">
-                {isGift ? "Sender's Email" : 'Email Address'}
+                {isGroupTicket
+                  ? 'Lead Email'
+                  : isGift
+                    ? "Sender's Email"
+                    : 'Email Address'}
               </span>
               <span className="font-bold text-[#1E1E1E] break-all">
                 {email}
               </span>
             </div>
+
+            {/* Group Members rows */}
+            {isGroupTicket &&
+              groupMembers.map((member, index) => (
+                <React.Fragment key={index}>
+                  <div className="flex flex-col gap-1 select-none font-sans text-[14px] md:text-[16px]">
+                    <span className="text-gray-400 font-normal">
+                      Attendee {index + 2}
+                    </span>
+                    <span className="font-bold text-[#1E1E1E]">
+                      {member.fullName}
+                    </span>
+                  </div>
+                  <div className="flex flex-col gap-1 select-none font-sans text-[14px] md:text-[16px]">
+                    <span className="text-gray-400 font-normal">
+                      Attendee {index + 2} Email
+                    </span>
+                    <span className="font-bold text-[#1E1E1E] break-all">
+                      {member.email}
+                    </span>
+                  </div>
+                </React.Fragment>
+              ))}
 
             {/* Recipient rows (gift only) */}
             {isGift && receiverName && (

@@ -48,6 +48,9 @@ function BuyTicketContent() {
     setFullName,
     email,
     setEmail,
+    groupMembers,
+    setGroupMembers,
+    isGroupTicket,
     reference,
     isGift,
     handleSetIsGift,
@@ -95,6 +98,8 @@ function BuyTicketContent() {
             setFullName={setFullName}
             email={email}
             setEmail={setEmail}
+            groupMembers={groupMembers}
+            setGroupMembers={setGroupMembers}
             isGift={isGift}
             setIsGift={handleSetIsGift}
             receiverName={receiverName}
@@ -126,6 +131,8 @@ function BuyTicketContent() {
           <TicketSummary
             fullName={fullName}
             email={email}
+            isGroupTicket={isGroupTicket}
+            groupMembers={groupMembers}
             isGift={isGift}
             receiverName={receiverName}
             receiverEmail={receiverEmail}

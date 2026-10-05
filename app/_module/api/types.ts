@@ -37,7 +37,12 @@ export type ListPermissionsResponse = Schemas['ListPermissionsResponse'];
 export type GetRoleResponseDto = Schemas['GetRoleResponseDto'];
 
 // ---- Tickets -----------------------------------------------
-export type CreateTicketDto = Schemas['CreateTicketDto'];
+export type CreateTicketDto = Omit<
+  Schemas['CreateTicketDto'],
+  'seatsPerUnit'
+> & {
+  seatsPerUnit?: number;
+};
 export type CreateTicketResponseDto = Schemas['CreateTicketResponseDto'];
 export type TicketListItemDto = Schemas['TicketListItemDto'];
 export type TicketPaginationMetaDto = Schemas['TicketPaginationMetaDto'];
@@ -61,14 +66,23 @@ export type VerifyPaymentDto = Schemas['VerifyPaymentDto'];
 export type CreateOrderDto = Schemas['CreateOrderDto'] & {
   discountCode?: string;
 };
-export type CreateOrderResponseDto = Schemas['CreateOrderResponseDto'];
+export type CreateOrderResponseDto = Schemas['CreateOrderResponseDto'] & {
+  checkoutUrl?: string | null;
+};
+export type CreateGroupBuyOrderDto = Schemas['CreateGroupBuyOrderDto'];
+export type CreateGroupBuyOrderResponseDto =
+  Schemas['CreateGroupBuyOrderResponseDto'];
+export type GroupDto = Schemas['GroupDto'];
+export type GroupPayerDto = Schemas['GroupPayerDto'];
+export type GroupMemberDto = Schemas['GroupMemberDto'];
 export type OrderAttendeeDto = Schemas['OrderAttendeeDto'];
 export type OrderGifterDto = Schemas['OrderGifterDto'];
 export type OrderedTicketDto = Schemas['OrderedTicketDto'];
 export type OrderListItemDto = Schemas['OrderListItemDto'];
 export type OrdersPaginationMetaDto = Schemas['OrdersPaginationMetaDto'];
 export type OrderListResponseDto = Schemas['OrderListResponseDto'];
-export type GetOrderReferenceResponseDto = Schemas['GetOrderReferenceResponseDto'];
+export type GetOrderReferenceResponseDto =
+  Schemas['GetOrderReferenceResponseDto'];
 export type AdminCreateOrderDto = Schemas['AdminCreateOrderDto'];
 
 // ---- Dashboard -----------------------------------------------
@@ -76,7 +90,8 @@ export type DashboardStatsDto = Schemas['DashboardStatsDto'];
 export type RegistrationTrendPointDto = Schemas['RegistrationTrendPointDto'];
 export type TicketBreakdownSliceDto = Schemas['TicketBreakdownSliceDto'];
 export type RecentAttendeeDto = Schemas['RecentAttendeeDto'];
-export type DashboardOverviewResponseDto = Schemas['DashboardOverviewResponseDto'];
+export type DashboardOverviewResponseDto =
+  Schemas['DashboardOverviewResponseDto'];
 
 // ---- Discounts -------------------------------------------------
 // The generated schema describes `limit` as an object because the upstream
@@ -94,7 +109,8 @@ export type AuditLogAdminDto = Schemas['AuditLogAdminDto'];
 export type AuditLogRoleDto = Schemas['AuditLogRoleDto'];
 export type AuditLogResponseDto = Schemas['AuditLogResponseDto'];
 export type PaginationMetaDto = Schemas['PaginationMetaDto'];
-export type PaginatedAuditLogResponseDto = Schemas['PaginatedAuditLogResponseDto'];
+export type PaginatedAuditLogResponseDto =
+  Schemas['PaginatedAuditLogResponseDto'];
 export type AuditLogDetailResponseDto = Schemas['AuditLogDetailResponseDto'];
 
 // ---- Discounts ---------------------------------------------
@@ -107,7 +123,7 @@ export interface DiscountByCodeResponseDto {
 export interface OrderListParams {
   search?: string;
   status?:
-  'AWAITING_PAYMENT' | 'PAID' | 'CANCELLED' | 'AWAITING_REFUND' | 'REFUNDED';
+    'AWAITING_PAYMENT' | 'PAID' | 'CANCELLED' | 'AWAITING_REFUND' | 'REFUNDED';
   direction?: 'next' | 'previous';
   cursor?: string;
   limit?: number;
@@ -209,9 +225,5 @@ export interface CheckedInListParams {
 export interface OrderListParams {
   search?: string;
   status?:
-  | 'AWAITING_PAYMENT'
-  | 'PAID'
-  | 'CANCELLED'
-  | 'AWAITING_REFUND'
-  | 'REFUNDED';
+    'AWAITING_PAYMENT' | 'PAID' | 'CANCELLED' | 'AWAITING_REFUND' | 'REFUNDED';
 }
