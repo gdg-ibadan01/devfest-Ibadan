@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCreateOrder } from '@/app/_module/services';
 import { useMakePayment } from '@/hooks/useMakePayment';
-import { trackPurchase } from '@/components/MetaPixel';
+import { trackInitiateCheckout } from '@/utils/meta-pixel';
 import type { TicketPackage } from '../components';
 import type { AppliedDiscount } from '@/app/_module/services/discount.service';
 
@@ -24,7 +24,8 @@ export function useBuyTicketFlow({
   const router = useRouter();
   const searchParams = useSearchParams();
   const { makePayment } = useMakePayment();
-  const { mutate: createOrder, isPending: isSubmittingOrder } = useCreateOrder();
+  const { mutate: createOrder, isPending: isSubmittingOrder } =
+    useCreateOrder();
 
   // ── View state ────────────────────────────────────────────────────────────
   const [view, setView] = useState<TicketBuyView>('form');
@@ -95,15 +96,20 @@ export function useBuyTicketFlow({
       onSuccess: (data) => {
         setReference(data.reference);
         makePayment({
-          amount: Number(data.amount) * 100,
+          amount: Number(data.amount),
           orderId: data.id,
           reference: data.reference,
           customerEmail: isGift ? receiverEmail.trim() : email.trim(),
           customerFullName: isGift ? receiverName.trim() : fullName.trim(),
           paymentDescription: `Payment for the Purchase of ${selectedPackage.title} ticket.`,
+          onLoadComplete: () => {
+            trackInitiateCheckout({
+              amount: Number(data.amount),
+              ticketType: data.ticket.name,
+              quantity: 1,
+            });
+          },
           onComplete: () => {
-            const ticketPrice = Number(data.amount) || 0;
-            trackPurchase(ticketPrice, data.reference);
             setView('success');
           },
         });

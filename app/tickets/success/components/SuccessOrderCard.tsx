@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Download, AlertCircle, Calendar, Tag, Hash, RefreshCw } from 'lucide-react';
 import type { GetOrderReferenceResponseDto } from '@/app/_module/api/types';
-import { trackPurchase } from '@/components/MetaPixel';
+import { trackPurchase } from '@/utils/meta-pixel';
 import StatusBadge from './StatusBadge';
 import DetailRow from './DetailRow';
 
@@ -41,10 +41,14 @@ export default function SuccessOrderCard({
 
   useEffect(() => {
     if (order.status === 'PAID') {
-      const price = Number(order.amount) || 0;
-      trackPurchase(price, reference || order.code);
+      trackPurchase({
+        amount: Number(order.amount),
+        reference: reference || order.code,
+        ticketType: order.ticket.name,
+        quantity: 1,
+      });
     }
-  }, [order.status, order.amount, reference, order.code]);
+  }, [order.status, order.amount, reference, order.code, order.ticket.name]);
 
   return (
     <motion.div

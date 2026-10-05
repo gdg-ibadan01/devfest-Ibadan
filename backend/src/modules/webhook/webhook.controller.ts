@@ -4,6 +4,7 @@ import {
   HttpStatus,
   Logger,
   Post,
+  RawBodyRequest,
   Req,
   Headers,
 } from '@nestjs/common';
@@ -22,13 +23,14 @@ export class WebhookController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Receive Monnify webhook events' })
   async handleMonnifyWebhook(
-    @Req() req: Request,
+    @Req() req: RawBodyRequest<Request>,
     @Headers('monnify-signature') signature: string | undefined,
   ) {
     try {
       await this.webhookService.handleMonnifyEvent(
         req.body as Record<string, unknown>,
         signature,
+        req.rawBody,
       );
     } catch (err) {
       this.logger.error(

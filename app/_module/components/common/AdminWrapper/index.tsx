@@ -1,12 +1,13 @@
 'use client';
 
-import { ReactNode } from 'react';
-import { Menu, Bell } from 'lucide-react';
+import { ReactNode, useState } from 'react';
+import { Menu, Bell, RefreshCw } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import DevfestLogo from '../../icons/DevfestLogo.svg';
 import AdminNotificationBell from '../../icons/AdminNotificationBell';
 import { useSidenav } from '@/app/_module/context/SidenavContext';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface AdminHeaderWrapperProps {
   children: ReactNode;
@@ -15,6 +16,17 @@ interface AdminHeaderWrapperProps {
 
 const AdminWrapper = ({ children, title }: AdminHeaderWrapperProps) => {
   const { open } = useSidenav();
+  const queryClient = useQueryClient();
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await queryClient.refetchQueries({ type: 'active' });
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   return (
     <div className="w-full min-h-screen">
@@ -24,7 +36,22 @@ const AdminWrapper = ({ children, title }: AdminHeaderWrapperProps) => {
           <h1 className="text-[25px] font-bold leading-tight text-[#1e1e1e]">
             {title}
           </h1>
-          <AdminNotificationBell />
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              aria-label="Refresh page data"
+              className="inline-flex h-9 items-center gap-2 rounded-md border border-gray-200 px-3 text-[13px] font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <RefreshCw
+                size={15}
+                className={isRefreshing ? 'animate-spin' : ''}
+              />
+              {isRefreshing ? 'Refreshing…' : 'Refresh'}
+            </button>
+            <AdminNotificationBell />
+          </div>
         </div>
 
         {/* MOBILE header */}
@@ -41,6 +68,19 @@ const AdminWrapper = ({ children, title }: AdminHeaderWrapperProps) => {
           {/* Right actions */}
           <div className="flex items-center gap-1 flex-shrink-0">
             <Bell size={22} />
+            <button
+              type="button"
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              aria-label="Refresh page data"
+              title="Refresh page data"
+              className="flex items-center justify-center w-9 h-9 rounded-md text-gray-700 hover:bg-gray-100 transition-colors disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <RefreshCw
+                size={18}
+                className={isRefreshing ? 'animate-spin' : ''}
+              />
+            </button>
             <button
               type="button"
               onClick={open}

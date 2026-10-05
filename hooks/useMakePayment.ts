@@ -41,6 +41,7 @@ type PaymentParams = {
   customerFullName: string;
   paymentDescription: string;
   onComplete: (response: MonnifyResponse) => void;
+  onLoadComplete?: () => void;
 };
 
 export const useMakePayment = () => {
@@ -55,6 +56,7 @@ export const useMakePayment = () => {
     customerFullName,
     paymentDescription,
     onComplete,
+    onLoadComplete,
   }: PaymentParams) => {
     if (!apiKey || !contractCode) {
       throw new Error('Monnify API key or contract code is missing');
@@ -87,7 +89,7 @@ export const useMakePayment = () => {
       },
 
       onLoadComplete: () => {
-        console.log('Payment modal loaded');
+        onLoadComplete?.();
       },
 
       onLoadStart: () => {

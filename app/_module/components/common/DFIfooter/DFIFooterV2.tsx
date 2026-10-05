@@ -12,25 +12,30 @@ interface FooterLink {
 }
 
 const columnOneLinks: FooterLink[] = [
-  { label: 'Sponsors', href: '/sponsors' },
-  { label: 'Schedule', href: '/schedule' },
+  { label: 'Sponsors', href: '#' },
+  { label: 'Schedule', href: '#' },
   { label: 'Merch', href: 'https://selar.co/m/gdg-ibadan1', isExternal: true },
 ];
 
-const columnTwoLinks: FooterLink[] = [
-  {
-    label: 'Apply to Speak',
-    href: 'https://tinyurl.com/devfestib2026',
-    isExternal: true,
-  },
+// const columnTwoLinks: FooterLink[] = [
+//   {
+//     label: 'Apply to Speak',
+//     href: 'https://tinyurl.com/devfestib2026',
+//     isExternal: true,
+//   },
+//   {
+//     label: 'Apply to be a Sponsor',
+//     href: "https://wa.me/2348136023230?text=I'm%20ready%20to%20power%20the%20future%20of%20tech%20at%20DevFest%20Ibadan%202026.%20I%20would%20like%20to%20inquire%20about%20sponsorship%20opportunities%21%20Let's%20connect%20to%20build%20something%20great.",
+//     isExternal: true,
+//   },
+// ];
+
+const columnThreeLinks: FooterLink[] = [
   {
     label: 'Apply to be a Sponsor',
     href: "https://wa.me/2348136023230?text=I'm%20ready%20to%20power%20the%20future%20of%20tech%20at%20DevFest%20Ibadan%202026.%20I%20would%20like%20to%20inquire%20about%20sponsorship%20opportunities%21%20Let's%20connect%20to%20build%20something%20great.",
     isExternal: true,
   },
-];
-
-const columnThreeLinks: FooterLink[] = [
   {
     label: 'Join our Community',
     href: 'https://gdg.community.dev/gdg-ibadan/',
@@ -172,9 +177,9 @@ export const DFIFooterV2: FC = () => {
               <div className="flex flex-col space-y-4">
                 {columnOneLinks.map(renderLink)}
               </div>
-              <div className="flex flex-col space-y-4">
+              {/* <div className="flex flex-col space-y-4">
                 {columnTwoLinks.map(renderLink)}
-              </div>
+              </div> */}
               <div className="flex flex-col space-y-4 col-span-2 sm:col-span-1">
                 {columnThreeLinks.map(renderLink)}
               </div>
