@@ -23,7 +23,7 @@ export default function PasswordChangedPage() {
           </div>
 
           {/* CTA */}
-          <Link href="/admin" className="w-full">
+          <Link href="/core" className="w-full">
             <button
               type="button"
               className="w-full py-3 rounded-[8px] bg-[#1e1e1e] text-white text-[14px] font-semibold hover:bg-black transition-colors"

@@ -24,7 +24,7 @@ import { footerClass as styles } from './DFIfooter.classes';
 export const DFIFooterV1: FC = () => {
   const { frameOne, frameTwo, frameThree } = footerItems;
   const pathname = usePathname();
-  const adminRoute = '/admin';
+  const adminRoute = '/core';
 
   const controls = useAnimation();
   const footerRef = useRef(null);

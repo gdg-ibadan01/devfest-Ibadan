@@ -16,7 +16,7 @@ export default async function AdminsPage() {
   await queryClient.prefetchQuery({
     queryKey: queryKeys.admins.all({ page: PAGE, limit: FETCH_LIMIT }),
     queryFn: async () => {
-      const { data, status } = await serverFetch('/admin', {
+      const { data, status } = await serverFetch('/core', {
         params: { page: PAGE, limit: FETCH_LIMIT },
       });
       if (status < 200 || status >= 300) {

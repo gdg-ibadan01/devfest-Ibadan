@@ -40,7 +40,7 @@ const DFIHeader = (): ReactNode => {
       }
     >
       <div className={styles.wrapper}>
-        <Link href="/admin" className={styles.logoContainer}>
+        <Link href="/core" className={styles.logoContainer}>
           <Image src={DevfestLogo} alt="DevfestLogo" />
         </Link>
         <div className={styles.rightSection}>

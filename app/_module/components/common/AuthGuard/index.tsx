@@ -40,7 +40,7 @@ export default function AuthGuard({ children }: AuthGuardProps) {
         showToast.error('Unable to verify authentication. Please sign in.');
       }
 
-      router.replace('/admin');
+      router.replace('/core');
     }
   }, [isError, error, router]);
 
