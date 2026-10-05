@@ -104,6 +104,24 @@ function getInitials(fullName: string): string {
     .join('');
 }
 
+function NavLinksSkeleton() {
+  return (
+    <div
+      className="flex flex-1 flex-col"
+      role="status"
+      aria-label="Loading navigation"
+    >
+      {navItems.map(({ href }) => (
+        <div key={href} className="flex h-[54px] items-center gap-3 px-7">
+          <span className="h-[18px] w-[18px] rounded bg-white/15 animate-pulse" />
+          <span className="h-[18px] w-1/2 rounded bg-white/15 animate-pulse" />
+        </div>
+      ))}
+      {/* <span className="sr-only">Loading navigation links</span> */}
+    </div>
+  );
+}
+
 function normalizePermissionId(permission: unknown): string | null {
   if (typeof permission === 'string') return permission;
   if (permission && typeof permission === 'object' && 'id' in permission) {
@@ -148,13 +166,15 @@ function NavContent({ onLinkClick }: { onLinkClick?: () => void }) {
   const matchedRole = rolesData?.roles.find(
     (role) => role.name.toLowerCase() === me?.role?.name?.toLowerCase()
   );
-  const { data: roleDetails, isLoading: roleLoading } = useRole(
-    matchedRole?.id ?? ''
-  );
+  const {
+    data: roleDetails,
+    isLoading: roleDetailsLoading,
+    isError: roleDetailsError,
+  } = useRole(matchedRole?.id ?? '');
 
   const fullName = me?.fullName ?? '';
   const roleName = me?.role?.name ?? '';
-  const initials = fullName ? getInitials(fullName) : '??';
+  const initials = fullName ? getInitials(fullName) : '--';
   const assignedPermissions =
     roleDetails?.permissions ??
     matchedRole?.permissions ??
@@ -166,8 +186,22 @@ function NavContent({ onLinkClick }: { onLinkClick?: () => void }) {
       .filter((id): id is string => Boolean(id))
   );
   const allPermissions = allPermissionsData?.permissions ?? [];
-  const permissionsLoadingState =
-    meLoading || rolesLoading || permissionsLoading || roleLoading;
+
+  const meSettled = !meLoading;
+  const rolesSettled = !rolesLoading;
+  const permsListSettled = !permissionsLoading;
+
+  const roleDetailsSettled = matchedRole?.id
+    ? !!roleDetails || roleDetailsError
+    : rolesSettled;
+
+  const permissionsLoadingState = !(
+    meSettled &&
+    rolesSettled &&
+    permsListSettled &&
+    roleDetailsSettled
+  );
+
   const visibleItems = permissionsLoadingState
     ? navItems.filter((item) => !item.moduleTerms)
     : navItems.filter((item) =>
@@ -181,24 +215,27 @@ function NavContent({ onLinkClick }: { onLinkClick?: () => void }) {
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
       <div className="flex flex-1 flex-col">
-        {visibleItems.map(({ label, href, icon: Icon }) => {
-          const active = isActivePath(pathname, href);
-          return (
-            <Link
-              key={href}
-              href={href}
-              onClick={onLinkClick}
-              className={cn(
-                'flex h-[54px] items-center gap-3 px-7 text-[14px] font-normal text-white transition-colors hover:bg-white/10',
-                active && 'bg-core-blue hover:bg-core-blue'
-              )}
-            >
-              <Icon />
-              <span>{label}</span>
-            </Link>
-          );
-        })}
-
+        {permissionsLoadingState ? (
+          <NavLinksSkeleton />
+        ) : (
+          visibleItems.map(({ label, href, icon: Icon }) => {
+            const active = isActivePath(pathname, href);
+            return (
+              <Link
+                key={href}
+                href={href}
+                onClick={onLinkClick}
+                className={cn(
+                  'flex h-[54px] items-center gap-3 px-7 text-[14px] font-normal text-white transition-colors hover:bg-white/10',
+                  active && 'bg-core-blue hover:bg-core-blue'
+                )}
+              >
+                <Icon />
+                <span>{label}</span>
+              </Link>
+            );
+          })
+        )}
         <button
           type="button"
           onClick={handleLogout}
