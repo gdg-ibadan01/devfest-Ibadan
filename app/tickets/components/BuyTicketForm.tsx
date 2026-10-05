@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import GroupAttendeeFields from './GroupAttendeeFields';
-import { ArrowLeft, ArrowUpRight } from 'lucide-react';
+import GroupAttendeeFields, { type GroupMember } from './GroupAttendeeFields';
+import { AlertCircle, ArrowLeft, ArrowUpRight } from 'lucide-react';
 import BuyerDetailsFields, {
   type BuyerDetailsFieldsProps,
 } from './BuyerDetailsFields';
@@ -20,6 +20,8 @@ interface BuyTicketFormProps
     GiftRecipientFieldsProps,
     TicketPackageSelectorProps,
     TicketDiscountFieldProps {
+  groupMembers?: GroupMember[];
+  setGroupMembers?: (members: GroupMember[]) => void;
   onSubmit: (e: React.FormEvent) => void;
   onBack: () => void;
 }
@@ -40,6 +42,8 @@ export default function BuyTicketForm({
   selectedPackageId,
   setSelectedPackageId,
   packages,
+  groupMembers,
+  setGroupMembers,
   onSubmit,
   onBack,
   discountCode,
@@ -53,15 +57,40 @@ export default function BuyTicketForm({
   isDiscountFromUrl,
 }: Readonly<BuyTicketFormProps>) {
   const isGroupTicket = selectedPackageId.toLowerCase().includes('group');
-  const [attendeeEmails, setAttendeeEmails] = useState(['', '']);
-  const [savedGroupDetails, setSavedGroupDetails] = useState('');
-  const groupDetails = JSON.stringify({ fullName, email, attendeeEmails });
+  const [internalGroupMembers, setInternalGroupMembers] = useState<
+    GroupMember[]
+  >([
+    { fullName: '', email: '' },
+    { fullName: '', email: '' },
+  ]);
+  const members = groupMembers ?? internalGroupMembers;
+  const setMembers = setGroupMembers ?? setInternalGroupMembers;
 
   const baseInvalid = !fullName.trim() || !email.trim() || !selectedPackageId;
   const giftInvalid = isGift
     ? !receiverName.trim() || !receiverEmail.trim() || !receiverPhone.trim()
     : false;
-  const isFormInvalid = baseInvalid || giftInvalid;
+
+  const groupLeadInvalid =
+    fullName.trim().length < 3 || !email.trim() || !email.includes('@');
+  const groupMembersInvalid =
+    members.length < 2 ||
+    members.some(
+      (m) =>
+        m.fullName.trim().length < 3 ||
+        !m.email.trim() ||
+        !m.email.includes('@')
+    );
+  const allGroupEmails = [
+    email.trim().toLowerCase(),
+    ...members.map((m) => m.email.trim().toLowerCase()),
+  ].filter(Boolean);
+  const hasDuplicateEmails =
+    new Set(allGroupEmails).size !== allGroupEmails.length;
+
+  const isFormInvalid = isGroupTicket
+    ? groupLeadInvalid || groupMembersInvalid || hasDuplicateEmails
+    : baseInvalid || giftInvalid;
 
   return (
     <div className="w-full md:max-w-[732px] md:bg-white md:rounded-[20px] md:shadow-lg md:border border-gray-100 overflow-hidden">
@@ -81,16 +110,7 @@ export default function BuyTicketForm({
       </div>
 
       <div className="w-full md:px-5 md:pb-24">
-        <form
-          onSubmit={(event) => {
-            if (isGroupTicket) {
-              event.preventDefault();
-              return;
-            }
-            onSubmit(event);
-          }}
-          className="flex flex-col gap-5"
-        >
+        <form onSubmit={onSubmit} className="flex flex-col gap-5">
           {!isGroupTicket && (
             <>
               <BuyerDetailsFields
@@ -121,16 +141,24 @@ export default function BuyTicketForm({
           />
 
           {isGroupTicket && (
-            <GroupAttendeeFields
-              fullName={fullName}
-              setFullName={setFullName}
-              email={email}
-              setEmail={setEmail}
-              attendeeEmails={attendeeEmails}
-              onAttendeeEmailsChange={setAttendeeEmails}
-              isSaved={savedGroupDetails === groupDetails}
-              onSave={() => setSavedGroupDetails(groupDetails)}
-            />
+            <>
+              <GroupAttendeeFields
+                fullName={fullName}
+                setFullName={setFullName}
+                email={email}
+                setEmail={setEmail}
+                groupMembers={members}
+                onGroupMembersChange={setMembers}
+              />
+              {hasDuplicateEmails && (
+                <div className="flex items-center gap-2 text-red-600 bg-red-50 border border-red-200 rounded-[8px] p-3 text-[13px]">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>
+                    Each attendee in the group must have a unique email address.
+                  </span>
+                </div>
+              )}
+            </>
           )}
 
           <TicketDiscountField
@@ -145,32 +173,14 @@ export default function BuyTicketForm({
             isDiscountFromUrl={isDiscountFromUrl}
           />
 
-          {isGroupTicket ? (
-            <div className="flex flex-col items-end gap-12 mt-24">
-              <p id="groupCheckoutNotice" className="text-[13px] text-gray-500">
-                Group checkout is not available yet.
-              </p>
-              <button
-                type="button"
-                disabled
-                aria-describedby="groupCheckoutNotice"
-                className="h-56 w-full sm:w-[205px] rounded-[100px] bg-[#1E1E1E] text-[16px] text-white disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                Continue
-              </button>
-            </div>
-          ) : (
-            <>
-              {/* Submit Button */}
-              <button
-                type="submit"
-                disabled={isFormInvalid}
-                className="w-full bg-[#1E1E1E] py-4 text-white hover:bg-core-blue rounded-[100px] flex gap-2 justify-center items-center transition-colors duration-500 font-bold my-2 md:my-4 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#1E1E1E]"
-              >
-                Proceed to Payment <ArrowUpRight className="w-5 h-5" />
-              </button>
-            </>
-          )}
+          {/* Submit Button */}
+          <button
+            type="submit"
+            disabled={isFormInvalid}
+            className="w-full bg-[#1E1E1E] py-4 text-white hover:bg-core-blue rounded-[100px] flex gap-2 justify-center items-center transition-colors duration-500 font-bold my-2 md:my-4 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#1E1E1E] cursor-pointer"
+          >
+            Proceed to Payment <ArrowUpRight className="w-5 h-5" />
+          </button>
         </form>
       </div>
     </div>

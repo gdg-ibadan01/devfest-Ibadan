@@ -17,33 +17,7 @@ export function useTicketPackages() {
   } = useTicketsOnSale();
 
   const packages: TicketPackage[] = useMemo(() => {
-    // return (onSaleData?.data || []).map((ticket) => {
-    return [
-      {
-        name: 'Early Bird',
-        description: '',
-        slug: 'devfest-ibadan-early-bird-2026',
-        validityDates: ['2026-11-21T00:00:00.000Z'],
-        eventDates: ['2026-11-21T00:00:00.000Z'],
-        price: '5000.00',
-      },
-      {
-        name: 'Group Ticket',
-        description: '',
-        slug: 'devfest-ibadan-group-ticket-2026',
-        validityDates: ['2026-11-21T00:00:00.000Z'],
-        eventDates: ['2026-11-21T00:00:00.000Z'],
-        price: '5000.00',
-      },
-      {
-        name: 'Late Ticket',
-        description: '',
-        slug: 'devfest-ibadan-late-ticket-2026',
-        validityDates: ['2026-11-21T00:00:00.000Z'],
-        eventDates: ['2026-11-21T00:00:00.000Z'],
-        price: '6000.00',
-      },
-    ].map((ticket) => {
+    return (onSaleData?.data || []).map((ticket) => {
       const price = Number.parseFloat(ticket.price) || 0;
       return {
         id: ticket.slug,
