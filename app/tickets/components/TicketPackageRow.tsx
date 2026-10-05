@@ -49,7 +49,7 @@ export default function TicketPackageRow({
             {pkg.title}
           </span>
           {pkg.seatsPerUnit && pkg.seatsPerUnit > 1 ? (
-            <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-700 border border-blue-200 whitespace-nowrap">
+            <span className="px-2 py-0.5 rounded-xl text-[10px] font-semibold bg-blue-50 text-blue-700 border border-blue-200 whitespace-nowrap">
               Group of {pkg.seatsPerUnit}
             </span>
           ) : null}
