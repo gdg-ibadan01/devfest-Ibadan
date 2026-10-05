@@ -90,6 +90,13 @@ export function useBuyTicketFlow({
     }
   }, []);
 
+  // ── Auto-reset gift mode when switching to a group ticket ────────────────
+  useEffect(() => {
+    if (isGroupTicket && isGift) {
+      handleSetIsGift(false);
+    }
+  }, [isGroupTicket, isGift, handleSetIsGift]);
+
   // ── Form submission ───────────────────────────────────────────────────────
   const handleFormSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
@@ -107,11 +114,11 @@ export function useBuyTicketFlow({
         group: {
           payer: {
             fullName: fullName.trim(),
-            email: email.trim(),
+            email: email.trim().toLowerCase(),
           },
           members: groupMembers.map((m) => ({
             fullName: m.fullName.trim(),
-            email: m.email.trim(),
+            email: m.email.trim().toLowerCase(),
           })),
         },
       };
@@ -123,7 +130,7 @@ export function useBuyTicketFlow({
             amount: Number(data.amount),
             orderId: data.id,
             reference: data.reference,
-            customerEmail: email.trim(),
+            customerEmail: email.trim().toLowerCase(),
             customerFullName: fullName.trim(),
             paymentDescription: `Payment for the Purchase of ${selectedPackage.title} ticket.`,
             onLoadComplete: () => {
@@ -147,12 +154,12 @@ export function useBuyTicketFlow({
           slug: selectedPackage.id,
           attendee: {
             fullName: receiverName.trim(),
-            email: receiverEmail.trim(),
+            email: receiverEmail.trim().toLowerCase(),
             phoneNumber: receiverPhone.trim() || undefined,
           },
           gifter: {
             fullName: fullName.trim(),
-            email: email.trim(),
+            email: email.trim().toLowerCase(),
           },
           discountCode: appliedDiscount?.code || '',
         }
@@ -160,7 +167,7 @@ export function useBuyTicketFlow({
           slug: selectedPackage.id,
           attendee: {
             fullName: fullName.trim(),
-            email: email.trim(),
+            email: email.trim().toLowerCase(),
           },
           discountCode: appliedDiscount?.code || '',
         };

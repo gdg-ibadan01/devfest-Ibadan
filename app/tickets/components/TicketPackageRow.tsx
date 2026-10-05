@@ -44,19 +44,15 @@ export default function TicketPackageRow({
 
       {/* Content Section */}
       <div className="flex-1 flex flex-col md:flex-row md:items-center md:justify-between gap-y-1.5 md:gap-y-0 select-none">
-        <div className="flex items-center justify-between gap-[12px]">
+        <div className="flex items-center gap-[10px] flex-wrap">
           <span className="font-normal md:font-semibold text-gray-800 text-[14px] md:text-[17px] shrink-0">
             {pkg.title}
           </span>
-          {/* <span
-            className={`px-2 py-0.5 rounded-[24px] text-[10px] md:text-[14px] border transition-colors shrink-0 ${
-              isSelected
-                ? 'bg-[#4285F4] border-[#4285F4] text-white'
-                : 'bg-white border-gray-300 text-gray-500'
-            }`}
-          >
-            {pkg.badge}
-          </span> */}
+          {pkg.seatsPerUnit && pkg.seatsPerUnit > 1 ? (
+            <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-700 border border-blue-200 whitespace-nowrap">
+              Group of {pkg.seatsPerUnit}
+            </span>
+          ) : null}
         </div>
         <span
           className={`font-bold text-[15px] md:text-[17px] shrink-0 ${
