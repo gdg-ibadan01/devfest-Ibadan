@@ -1,5 +1,4 @@
 import Image from 'next/image';
-import { Trash2 } from 'lucide-react';
 import type { BuyerDetailsFieldsProps } from './BuyerDetailsFields';
 
 export interface GroupMember {
@@ -63,7 +62,7 @@ export default function GroupAttendeeFields({
         </legend>
         <div className="grid grid-cols-1 gap-20 sm:grid-cols-2">
           <label className={labelClassName} htmlFor="groupLeadName">
-            Full Name *
+            Full Name *{' '}
             <input
               id="groupLeadName"
               autoComplete="name"
@@ -76,7 +75,7 @@ export default function GroupAttendeeFields({
             />
           </label>
           <label className={labelClassName} htmlFor="groupLeadEmail">
-            Email Address *
+            Email Address *{' '}
             <input
               id="groupLeadEmail"
               type="email"
@@ -98,22 +97,6 @@ export default function GroupAttendeeFields({
               Attendee {index + 2}
             </legend>
             <div className="flex items-center gap-8">
-              {groupMembers.length > 2 && (
-                <button
-                  type="button"
-                  aria-label={`Delete attendee ${index + 2}`}
-                  onClick={() => {
-                    if (groupMembers.length > 2) {
-                      onGroupMembersChange(
-                        groupMembers.filter((_, i) => i !== index)
-                      );
-                    }
-                  }}
-                  className="flex h-36 w-36 items-center justify-center rounded-full text-red-600 hover:bg-red-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-red-600 cursor-pointer"
-                >
-                  <Trash2 className="h-5 w-5" aria-hidden="true" />
-                </button>
-              )}
               {index === 0 && canAddMore && (
                 <button
                   type="button"
@@ -141,7 +124,7 @@ export default function GroupAttendeeFields({
               className={labelClassName}
               htmlFor={`groupMemberName-${index}`}
             >
-              Full Name *
+              Full Name *{' '}
               <input
                 id={`groupMemberName-${index}`}
                 autoComplete="name"
@@ -159,7 +142,7 @@ export default function GroupAttendeeFields({
               className={labelClassName}
               htmlFor={`groupMemberEmail-${index}`}
             >
-              Email Address *
+              Email Address *{' '}
               <input
                 id={`groupMemberEmail-${index}`}
                 type="email"
