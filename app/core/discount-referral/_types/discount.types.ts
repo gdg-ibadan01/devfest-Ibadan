@@ -7,6 +7,8 @@ export type DiscountKind = 'SINGLE' | 'BULK';
 
 export interface CreateDiscountForm {
   name: string;
+  /** Optional custom discount code; if omitted, the backend auto-generates one */
+  code: string;
   type: DiscountKind;
   /** Naira amount, raw numeric string (e.g. "1000" or "1000.50") */
   amount: string;
