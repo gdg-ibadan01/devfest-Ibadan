@@ -37,7 +37,7 @@ export class DiscountsService {
         },
         data: {
           name: payload.name,
-          code,
+          code: payload.code || code,
           type: payload.type,
           amount: payload.amount,
           ticketSlugs: [...new Set(payload.ticketSlugs)],
