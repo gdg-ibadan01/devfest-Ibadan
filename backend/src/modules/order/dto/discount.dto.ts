@@ -73,6 +73,18 @@ export class CreateDiscountResponseDto {
 }
 
 export class CreateDiscountDto {
+  @ApiProperty({
+    example: 'DevFestGSDoC2026',
+    description: 'Set discount code',
+  })
+  @Transform(({ value }: { value: unknown }) =>
+    typeof value === 'string' ? value.trim() : value,
+  )
+  @IsOptional()
+  @IsString()
+  @MinLength(6)
+  code: string;
+
   @ApiProperty({ example: 'DevFest2026 Early Bird' })
   @IsString()
   @IsNotEmpty()
