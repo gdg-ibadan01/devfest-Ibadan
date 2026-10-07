@@ -1543,6 +1543,11 @@ export interface components {
             isActive: boolean;
         };
         CreateDiscountDto: {
+            /**
+             * @description Set discount code
+             * @example DevFestGSDoC2026
+             */
+            code?: string;
             /** @example DevFest2026 Early Bird */
             name: string;
             /**
