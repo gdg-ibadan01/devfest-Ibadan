@@ -11,6 +11,7 @@ import type { CreateDiscountDto } from '@/app/_module/api/types';
 
 const INITIAL_FORM: CreateDiscountForm = {
   name: '',
+  code: '',
   type: 'SINGLE',
   amount: '',
   ticketSlugs: [],
@@ -40,11 +41,13 @@ function TextInput({
   value,
   onChange,
   error,
+  className,
 }: {
   placeholder: string;
   value: string;
   onChange: (v: string) => void;
   error?: string;
+  className?: string;
 }) {
   return (
     <div>
@@ -55,7 +58,8 @@ function TextInput({
         placeholder={placeholder}
         className={cn(
           'w-full border rounded-md px-4 py-3 text-[13px] text-gray-800 placeholder:text-gray-300 focus:outline-none transition-colors bg-transparent',
-          error ? '' : 'border-gray-200 focus:border-gray-400'
+          error ? '' : 'border-gray-200 focus:border-gray-400',
+          className
         )}
         style={error ? { borderColor: '#E61530' } : undefined}
       />
@@ -212,6 +216,7 @@ function ToggleSwitch({
 
 interface Errors {
   name?: string;
+  code?: string;
   amount?: string;
   ticketSlugs?: string;
   limit?: string;
@@ -274,6 +279,15 @@ export default function CreateDiscountModal({
     const e: Errors = {};
     if (!form.name.trim()) e.name = 'Discount name is required.';
 
+    const trimmedCode = form.code.trim();
+    if (trimmedCode) {
+      if (trimmedCode.length < 6) {
+        e.code = 'Discount code must be at least 6 characters.';
+      } else if (!/^[A-Z0-9_-]+$/i.test(trimmedCode)) {
+        e.code = 'Discount code can only contain letters, numbers, hyphens, and underscores.';
+      }
+    }
+
     const amount = parseFloat(form.amount);
     if (!form.amount || isNaN(amount) || amount < 1) {
       e.amount = 'Amount must be at least ₦1.';
@@ -310,6 +324,8 @@ export default function CreateDiscountModal({
   const handleSubmit = () => {
     if (!validate()) return;
 
+    const trimmedCode = form.code.trim();
+
     const payload: CreateDiscountDto = {
       name: form.name.trim(),
       type: form.type,
@@ -319,6 +335,7 @@ export default function CreateDiscountModal({
       validFrom: form.validFrom,
       validTo: form.validTo,
       forFirstTimersOnly: form.forFirstTimersOnly,
+      ...(trimmedCode ? { code: trimmedCode } : {}),
       ...(form.type === 'BULK'
         ? {
             recipientEmails: form.recipientEmails
@@ -371,6 +388,24 @@ export default function CreateDiscountModal({
               onChange={(v) => patch('name', v)}
               error={errors.name}
             />
+          </div>
+
+          {/* Discount Code */}
+          <div>
+            <FieldLabel>
+              Discount Code{' '}
+              <span className="font-normal text-gray-400 text-[12px]">(Optional)</span>
+            </FieldLabel>
+            <TextInput
+              placeholder="e.g. DEVFEST2026 (leave blank to auto-generate)"
+              value={form.code}
+              onChange={(v) => patch('code', v.toUpperCase().replace(/\s+/g, ''))}
+              error={errors.code}
+              className="font-mono uppercase tracking-wider placeholder:normal-case placeholder:font-sans placeholder:tracking-normal"
+            />
+            <p className="mt-1.5 text-[11px] text-gray-400">
+              Must be at least 6 characters if provided. If left blank, a code will be generated automatically.
+            </p>
           </div>
 
           {/* Discount Type */}
