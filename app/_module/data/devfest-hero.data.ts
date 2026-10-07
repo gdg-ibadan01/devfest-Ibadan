@@ -13,7 +13,7 @@ export const HERO_DATA = {
     title: 'Early Bird Active',
     badge: 'BEST VALUE',
     description:
-      'Secure your ticket at ₦5,000 - first 300 only. Closes October 9, 2026.',
+      'Secure your ticket at ₦5,000 - first 300 only. Closes October 16, 2026.',
     buyHref: '/tickets/buy',
   },
 };
