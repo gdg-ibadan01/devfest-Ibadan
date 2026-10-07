@@ -2,11 +2,13 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useCreateOrder } from '@/app/_module/services';
+import { useCreateOrder, useCreateGroupBuyOrder } from '@/app/_module/services';
 import { useMakePayment } from '@/hooks/useMakePayment';
 import { trackInitiateCheckout } from '@/utils/meta-pixel';
 import type { TicketPackage } from '../components';
+import type { GroupMember } from '../components/GroupAttendeeFields';
 import type { AppliedDiscount } from '@/app/_module/services/discount.service';
+import type { CreateGroupBuyOrderDto } from '@/app/_module/api/types';
 
 export type TicketBuyView = 'form' | 'summary' | 'success';
 
@@ -24,8 +26,12 @@ export function useBuyTicketFlow({
   const router = useRouter();
   const searchParams = useSearchParams();
   const { makePayment } = useMakePayment();
-  const { mutate: createOrder, isPending: isSubmittingOrder } =
+  const { mutate: createOrder, isPending: isSubmittingSingleOrder } =
     useCreateOrder();
+  const { mutate: createGroupOrder, isPending: isSubmittingGroupOrder } =
+    useCreateGroupBuyOrder();
+
+  const isSubmittingOrder = isSubmittingSingleOrder || isSubmittingGroupOrder;
 
   // ── View state ────────────────────────────────────────────────────────────
   const [view, setView] = useState<TicketBuyView>('form');
@@ -34,6 +40,31 @@ export function useBuyTicketFlow({
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [reference, setReference] = useState<string | null>(null);
+
+  // ── Group members (for group ticket packages) ──────────────────────────────
+  const isGroupTicket = Boolean(
+    (selectedPackage?.seatsPerUnit && selectedPackage.seatsPerUnit > 1) ||
+    selectedPackage?.id.toLowerCase().includes('group')
+  );
+
+  const [groupMembers, setGroupMembers] = useState<GroupMember[]>([
+    { fullName: '', email: '' },
+    { fullName: '', email: '' },
+  ]);
+
+  // Dynamically sync group member slots to (seatsPerUnit - 1), preserving entered data
+  useEffect(() => {
+    if (!isGroupTicket || !selectedPackage) return;
+    const targetCount = Math.max(2, (selectedPackage.seatsPerUnit || 3) - 1);
+    setGroupMembers((prev) => {
+      if (prev.length === targetCount) return prev;
+      const next: GroupMember[] = [];
+      for (let i = 0; i < targetCount; i++) {
+        next.push(prev[i] ?? { fullName: '', email: '' });
+      }
+      return next;
+    });
+  }, [isGroupTicket, selectedPackage]);
 
   // ── Gift mode ─────────────────────────────────────────────────────────────
   const [isGift, setIsGift] = useState(false);
@@ -59,6 +90,13 @@ export function useBuyTicketFlow({
     }
   }, []);
 
+  // ── Auto-reset gift mode when switching to a group ticket ────────────────
+  useEffect(() => {
+    if (isGroupTicket && isGift) {
+      handleSetIsGift(false);
+    }
+  }, [isGroupTicket, isGift, handleSetIsGift]);
+
   // ── Form submission ───────────────────────────────────────────────────────
   const handleFormSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
@@ -69,17 +107,59 @@ export function useBuyTicketFlow({
   const handlePay = useCallback(() => {
     if (!selectedPackage) return;
 
+    if (isGroupTicket) {
+      const groupPayload: CreateGroupBuyOrderDto = {
+        slug: selectedPackage.id,
+        discountCode: appliedDiscount?.code || undefined,
+        group: {
+          payer: {
+            fullName: fullName.trim(),
+            email: email.trim().toLowerCase(),
+          },
+          members: groupMembers.map((m) => ({
+            fullName: m.fullName.trim(),
+            email: m.email.trim().toLowerCase(),
+          })),
+        },
+      };
+
+      createGroupOrder(groupPayload, {
+        onSuccess: (data) => {
+          setReference(data.reference);
+          makePayment({
+            amount: Number(data.amount),
+            orderId: data.id,
+            reference: data.reference,
+            customerEmail: email.trim().toLowerCase(),
+            customerFullName: fullName.trim(),
+            paymentDescription: `Payment for the Purchase of ${selectedPackage.title} ticket.`,
+            onLoadComplete: () => {
+              trackInitiateCheckout({
+                amount: Number(data.amount),
+                ticketType: data.ticket.name,
+                quantity: 1 + groupMembers.length,
+              });
+            },
+            onComplete: () => {
+              setView('success');
+            },
+          });
+        },
+      });
+      return;
+    }
+
     const orderPayload = isGift
       ? {
           slug: selectedPackage.id,
           attendee: {
             fullName: receiverName.trim(),
-            email: receiverEmail.trim(),
+            email: receiverEmail.trim().toLowerCase(),
             phoneNumber: receiverPhone.trim() || undefined,
           },
           gifter: {
             fullName: fullName.trim(),
-            email: email.trim(),
+            email: email.trim().toLowerCase(),
           },
           discountCode: appliedDiscount?.code || '',
         }
@@ -87,7 +167,7 @@ export function useBuyTicketFlow({
           slug: selectedPackage.id,
           attendee: {
             fullName: fullName.trim(),
-            email: email.trim(),
+            email: email.trim().toLowerCase(),
           },
           discountCode: appliedDiscount?.code || '',
         };
@@ -117,14 +197,17 @@ export function useBuyTicketFlow({
     });
   }, [
     selectedPackage,
+    isGroupTicket,
     isGift,
     receiverName,
     receiverEmail,
     receiverPhone,
     fullName,
     email,
+    groupMembers,
     appliedDiscount,
     createOrder,
+    createGroupOrder,
     makePayment,
   ]);
 
@@ -140,6 +223,10 @@ export function useBuyTicketFlow({
   const handleResetToForm = useCallback(() => {
     setFullName('');
     setEmail('');
+    setGroupMembers([
+      { fullName: '', email: '' },
+      { fullName: '', email: '' },
+    ]);
     setReference(null);
     setIsGift(false);
     setReceiverName('');
@@ -156,6 +243,9 @@ export function useBuyTicketFlow({
     setFullName,
     email,
     setEmail,
+    groupMembers,
+    setGroupMembers,
+    isGroupTicket,
     reference,
     isGift,
     handleSetIsGift,
