@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import GroupAttendeeFields, { type GroupMember } from './GroupAttendeeFields';
 import { AlertCircle, ArrowLeft, ArrowUpRight } from 'lucide-react';
 import BuyerDetailsFields, {
@@ -56,13 +56,31 @@ export default function BuyTicketForm({
   setDiscountError,
   isDiscountFromUrl,
 }: Readonly<BuyTicketFormProps>) {
-  const isGroupTicket = selectedPackageId.toLowerCase().includes('group');
+  const currentPackage = packages.find((p) => p.id === selectedPackageId);
+  const isGroupTicket = Boolean(
+    (currentPackage?.seatsPerUnit && currentPackage.seatsPerUnit > 1) ||
+    selectedPackageId.toLowerCase().includes('group')
+  );
   const [internalGroupMembers, setInternalGroupMembers] = useState<
     GroupMember[]
   >([
     { fullName: '', email: '' },
     { fullName: '', email: '' },
   ]);
+
+  useEffect(() => {
+    if (!isGroupTicket || !currentPackage || groupMembers) return;
+    const targetCount = Math.max(2, (currentPackage.seatsPerUnit || 3) - 1);
+    setInternalGroupMembers((prev) => {
+      if (prev.length === targetCount) return prev;
+      const next: GroupMember[] = [];
+      for (let i = 0; i < targetCount; i++) {
+        next.push(prev[i] ?? { fullName: '', email: '' });
+      }
+      return next;
+    });
+  }, [isGroupTicket, currentPackage, groupMembers]);
+
   const members = groupMembers ?? internalGroupMembers;
   const setMembers = setGroupMembers ?? setInternalGroupMembers;
 
@@ -149,6 +167,7 @@ export default function BuyTicketForm({
                 setEmail={setEmail}
                 groupMembers={members}
                 onGroupMembersChange={setMembers}
+                maxAttendees={currentPackage?.seatsPerUnit}
               />
               {hasDuplicateEmails && (
                 <div className="flex items-center gap-2 text-red-600 bg-red-50 border border-red-200 rounded-[8px] p-3 text-[13px]">

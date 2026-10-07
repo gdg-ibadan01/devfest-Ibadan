@@ -40,15 +40,15 @@ export const ticketTiers: TicketTier[] = [
   },
   {
     id: 'group-of-5',
-    name: 'GROUP OF 5',
+    name: 'GROUP OF 3',
     isActive: true,
-    price: '₦20,000',
+    price: '₦12,000',
     subtitle: '₦4,000/person · Bring your squad',
     buttonText: 'Get Ticket',
     // buttonHref: '/tickets/buy?tier=group-of-5',
     buttonHref: '/tickets/buy',
     features: [
-      '5 tickets included',
+      '3 tickets included',
       'Entry to all tracks',
       'Workshops & codelabs',
       'Networking sessions',
