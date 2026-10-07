@@ -231,14 +231,9 @@ export class OrdersService {
         );
     }
 
-    const { amount, vatAndCharges } =
-      this.paymentProvider.calculateAmountWithCharges(
-        record.order.amount.toNumber() * 100,
-      );
-
     return {
-      amount: amount.toFixed(2),
-      vatAndCharges: vatAndCharges.toFixed(2),
+      amount: record.order.amount.toFixed(2),
+      vatAndCharges: '0.00',
       currency: 'NGN',
       expiresAt: record.order.expiresAt,
       id: record.order.id,
@@ -601,14 +596,9 @@ export class OrdersService {
       }
     }
 
-    const { amount, vatAndCharges } =
-      this.paymentProvider.calculateAmountWithCharges(
-        rec!.order.amount.toNumber() * 100,
-      );
-
     return {
-      amount: amount.toFixed(2),
-      vatAndCharges: vatAndCharges.toFixed(2),
+      amount: rec!.order.amount.toFixed(2),
+      vatAndCharges: '0.00',
       currency: 'NGN',
       expiresAt: rec!.order.expiresAt,
       id: rec!.order.id,
@@ -908,7 +898,7 @@ export class OrdersService {
       reference: order.reference,
       status: order.status,
       amount: order.amount.toFixed(2),
-      vatAndCharges: vatAndCharges.toFixed(2),
+      vatAndCharges: '0.00',
       currency: order.currency,
       // checkoutUrl: order.checkoutUrl,
       expiresAt: order.expiresAt,
