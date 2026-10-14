@@ -3,47 +3,12 @@ import { Button } from '@/components/ui/button';
 
 const sponsors = [
   {
-    name: 'Cardify',
-    website: 'cardify.com',
-    logo: 'cardify.png',
-    width: 183.065,
-    height: 44,
-  },
-  {
-    name: 'Obiex',
-    website: 'obiex.com',
-    logo: 'obiex.png',
-    width: 156.75,
-    height: 44,
-  },
-  {
-    name: 'Foodbolt',
-    website: 'foodbolt.com',
-    logo: 'foodbolt.png',
-    width: 170,
-    height: 115.513,
-  },
-  {
     name: 'Google',
     website: 'google.com',
     logo: 'google.png',
     width: 112,
     height: 46.667,
-  },
-  {
-    name: 'Interswitch',
-    website: 'interswitchgroup.com',
-    logo: 'interswitch.png',
-    width: 161,
-    height: 44.107,
-  },
-  {
-    name: 'Heyfood',
-    website: 'heyfood.com',
-    logo: 'heyfood.png',
-    width: 122.332,
-    height: 46.843,
-  },
+  }
 ];
 
 export default function OurSponsors() {
