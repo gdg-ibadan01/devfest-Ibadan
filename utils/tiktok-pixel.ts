@@ -1,4 +1,7 @@
-export const TIKTOK_PIXEL_ID = process.env.NEXT_PUBLIC_TIKTOK_PIXEL_ID;
+export const TIKTOK_PIXEL_ID =
+  process.env.NEXT_PUBLIC_TIKTOK_PIXEL_ID !== undefined
+    ? process.env.NEXT_PUBLIC_TIKTOK_PIXEL_ID
+    : 'DB73SMBC77U3SVPIJMP0';
 
 declare global {
   interface Window {
