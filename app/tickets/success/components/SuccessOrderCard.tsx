@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Download, AlertCircle, Calendar, Tag, Hash, RefreshCw } from 'lucide-react';
 import type { GetOrderReferenceResponseDto } from '@/app/_module/api/types';
 import { trackPurchase } from '@/utils/meta-pixel';
+import { trackPurchase as trackTikTokPurchase } from '@/utils/tiktok-pixel';
 import StatusBadge from './StatusBadge';
 import DetailRow from './DetailRow';
 
@@ -41,12 +42,14 @@ export default function SuccessOrderCard({
 
   useEffect(() => {
     if (order.status === 'PAID') {
-      trackPurchase({
+      const orderPayload = {
         amount: Number(order.amount),
         reference: reference || order.code,
         ticketType: order.ticket.name,
         quantity: 1,
-      });
+      };
+      trackPurchase(orderPayload);
+      trackTikTokPurchase(orderPayload);
     }
   }, [order.status, order.amount, reference, order.code, order.ticket.name]);
 

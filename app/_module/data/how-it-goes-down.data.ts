@@ -43,7 +43,7 @@ export const eventCards: EventCard[] = [
     label: 'MAIN EVENT',
     description:
       'The main event! A full day of talks across all tracks, workshops, codelabs, sponsor booths, networking, and swag — live at Kakanfo Inn, Ibadan.',
-    buttonText: 'Register here',
+    buttonText: 'Get tickets',
     buttonHref: '/tickets/buy',
     colorScheme: 'red',
   },
