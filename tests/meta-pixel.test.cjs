@@ -105,6 +105,7 @@ test('success card emits completion events only for backend-confirmed PAID order
       exports: {},
       require(name) {
         if (name === '@/utils/meta-pixel') return api;
+        if (name === '@/utils/tiktok-pixel') return { trackPurchase() {} };
         if (name === 'react') return { useEffect: (effect) => effect() };
         if (name === 'react/jsx-runtime') return { jsx: () => null, jsxs: () => null };
         if (name === 'framer-motion') return { motion: { div: 'div', p: 'p', button: 'button' } };

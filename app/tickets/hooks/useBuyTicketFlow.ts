@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useCreateOrder, useCreateGroupBuyOrder } from '@/app/_module/services';
 import { useMakePayment } from '@/hooks/useMakePayment';
 import { trackInitiateCheckout } from '@/utils/meta-pixel';
+import { trackInitiateCheckout as trackTikTokInitiateCheckout } from '@/utils/tiktok-pixel';
 import type { TicketPackage } from '../components';
 import type { GroupMember } from '../components/GroupAttendeeFields';
 import type { AppliedDiscount } from '@/app/_module/services/discount.service';
@@ -134,11 +135,13 @@ export function useBuyTicketFlow({
             customerFullName: fullName.trim(),
             paymentDescription: `Payment for the Purchase of ${selectedPackage.title} ticket.`,
             onLoadComplete: () => {
-              trackInitiateCheckout({
+              const checkoutEvent = {
                 amount: Number(data.amount),
                 ticketType: data.ticket.name,
                 quantity: 1 + groupMembers.length,
-              });
+              };
+              trackInitiateCheckout(checkoutEvent);
+              trackTikTokInitiateCheckout(checkoutEvent);
             },
             onComplete: () => {
               setView('success');
@@ -183,11 +186,13 @@ export function useBuyTicketFlow({
           customerFullName: isGift ? receiverName.trim() : fullName.trim(),
           paymentDescription: `Payment for the Purchase of ${selectedPackage.title} ticket.`,
           onLoadComplete: () => {
-            trackInitiateCheckout({
+            const checkoutEvent = {
               amount: Number(data.amount),
               ticketType: data.ticket.name,
               quantity: 1,
-            });
+            };
+            trackInitiateCheckout(checkoutEvent);
+            trackTikTokInitiateCheckout(checkoutEvent);
           },
           onComplete: () => {
             setView('success');

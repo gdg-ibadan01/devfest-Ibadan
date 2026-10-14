@@ -3,6 +3,7 @@ import './globals.css';
 import RootLayout from './layouts';
 import { Toaster } from 'sonner';
 import MetaPixel from '@/components/MetaPixel';
+import TikTokPixel from '@/components/TikTokPixel';
 
 export const metadata: Metadata = {
   title: 'Devfest Ibadan 2026',
@@ -18,6 +19,7 @@ export default function AppLayout({
   return (
     <RootLayout>
       <MetaPixel />
+      <TikTokPixel />
       <Toaster position="top-center" />
       {children}
     </RootLayout>
