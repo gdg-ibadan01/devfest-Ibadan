@@ -121,7 +121,7 @@ const DevfestHero: FC = () => {
 
                 {/* Buy swags */}
                 <Link
-                  href="https://selar.co/m/gdg-ibadan1"
+                  href="https://eventpulse.ng/shop/devfest-ibadan-2026"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="group relative inline-flex p-[2px] rounded-[100px] overflow-hidden transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] shadow-sm"
