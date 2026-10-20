@@ -26,7 +26,7 @@ This website includes the following sections and features:
 - **Venue Information** - Event location details and imagery
 - **Speakers Showcase** - Featured speakers and their profiles
 - **Sponsors Display** - Event sponsors and partners
-- **Merchandise Store** - Official DevFest merchandise with Selar integration
+- **Merchandise Store** - Official DevFest merchandise with Event Pulse integration
 
 ### 📄 **Ticketing System**
 
@@ -211,7 +211,7 @@ Make sure you have the following installed on your machine:
 
 ### **External Integrations**
 
-- **Selar** - Merchandise store integration
+- **Event Pulse** - Merchandise store integration
 - **GDG Community** - Event registration platform
 - **Sessionize** - Speaker management (configured in Next.js)
 
@@ -259,7 +259,7 @@ This project is licensed under the MIT License. See the [Contributing Guidelines
 ## 🌐 Links
 
 - **🎟️ Event Registration:** [GDG Community Platform](https://devfestibadan.com/ticket)
-- **🛍️ Official Merchandise:** [Selar Store](https://selar.co/m/gdg-ibadan1)
+- **🛍️ Official Merchandise:** [Event Pulse Store](https://eventpulse.ng/shop/devfest-ibadan-2026)
 - **📧 Contact:** Reach out to the GDG Ibadan team for any inquiries
 
 ## 📱 Social Media
