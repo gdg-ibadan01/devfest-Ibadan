@@ -14,7 +14,11 @@ interface FooterLink {
 const columnOneLinks: FooterLink[] = [
   { label: 'Sponsors', href: '#' },
   { label: 'Schedule', href: '#' },
-  { label: 'Merch', href: 'https://selar.co/m/gdg-ibadan1', isExternal: true },
+  {
+    label: 'Merch',
+    href: 'https://eventpulse.ng/shop/devfest-ibadan-2026',
+    isExternal: true,
+  },
 ];
 
 // const columnTwoLinks: FooterLink[] = [

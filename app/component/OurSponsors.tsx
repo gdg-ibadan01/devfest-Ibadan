@@ -3,27 +3,6 @@ import { Button } from '@/components/ui/button';
 
 const sponsors = [
   {
-    name: 'Cardify',
-    website: 'cardify.com',
-    logo: 'cardify.png',
-    width: 183.065,
-    height: 44,
-  },
-  {
-    name: 'Obiex',
-    website: 'obiex.com',
-    logo: 'obiex.png',
-    width: 156.75,
-    height: 44,
-  },
-  {
-    name: 'Foodbolt',
-    website: 'foodbolt.com',
-    logo: 'foodbolt.png',
-    width: 170,
-    height: 115.513,
-  },
-  {
     name: 'Google',
     website: 'google.com',
     logo: 'google.png',
@@ -31,18 +10,11 @@ const sponsors = [
     height: 46.667,
   },
   {
-    name: 'Interswitch',
-    website: 'interswitchgroup.com',
-    logo: 'interswitch.png',
-    width: 161,
-    height: 44.107,
-  },
-  {
-    name: 'Heyfood',
-    website: 'heyfood.com',
-    logo: 'heyfood.png',
-    width: 122.332,
-    height: 46.843,
+    name: 'Notzero',
+    website: 'notzero.tech',
+    logo: 'notzero.png',
+    width: 135,
+    height: 48,
   },
 ];
 
@@ -79,7 +51,7 @@ export default function OurSponsors() {
           </div>
         </div>
 
-        <ul className="grid grid-cols-1 gap-px border border-[#f0f0f0] bg-[#f0f0f0] sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="grid grid-cols-1 gap-px border border-[#f0f0f0] sm:grid-cols-2 lg:grid-cols-3">
           {sponsors.map((sponsor, index) => (
             <li
               key={sponsor.website}

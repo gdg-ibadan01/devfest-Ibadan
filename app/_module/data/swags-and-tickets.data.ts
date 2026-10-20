@@ -21,7 +21,7 @@ export const swagsAndTicketsCards: SwagTicketCardProps[] = [
     description: 'Score the official DevFest Ibadan 2026 premium merch pack.',
     perks: swagPerks,
     buttonText: 'Buy swags',
-    buttonHref: 'https://selar.co/m/gdg-ibadan1',
+    buttonHref: 'https://eventpulse.ng/shop/devfest-ibadan-2026',
     isExternal: true,
     colorScheme: 'green',
     delay: 0,
