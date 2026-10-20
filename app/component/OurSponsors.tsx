@@ -8,7 +8,14 @@ const sponsors = [
     logo: 'google.png',
     width: 112,
     height: 46.667,
-  }
+  },
+  {
+    name: 'Notzero',
+    website: 'notzero.tech',
+    logo: 'notzero.png',
+    width: 135,
+    height: 48,
+  },
 ];
 
 export default function OurSponsors() {
@@ -44,7 +51,7 @@ export default function OurSponsors() {
           </div>
         </div>
 
-        <ul className="grid grid-cols-1 gap-px border border-[#f0f0f0] bg-[#f0f0f0] sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="grid grid-cols-1 gap-px border border-[#f0f0f0] sm:grid-cols-2 lg:grid-cols-3">
           {sponsors.map((sponsor, index) => (
             <li
               key={sponsor.website}
