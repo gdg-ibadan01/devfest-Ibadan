@@ -5,3 +5,4 @@ export * from './how-it-goes-down.data';
 export * from './call-for-partnership.data';
 export * from './meet-our-speakers.data';
 export * from './secure-your-tickets.data';
+export * from './sponsors.data';
