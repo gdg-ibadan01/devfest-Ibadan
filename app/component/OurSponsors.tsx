@@ -1,22 +1,6 @@
-import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-
-const sponsors = [
-  {
-    name: 'Google',
-    website: 'google.com',
-    logo: 'google.png',
-    width: 112,
-    height: 46.667,
-  },
-  {
-    name: 'Notzero',
-    website: 'notzero.tech',
-    logo: 'notzero.png',
-    width: 135,
-    height: 48,
-  },
-];
+import SponsorCard from './SponsorCard';
+import { SPONSORS_2026 } from '@/app/_module/data/sponsors.data';
 
 export default function OurSponsors() {
   return (
@@ -51,58 +35,15 @@ export default function OurSponsors() {
           </div>
         </div>
 
-        <ul className="grid grid-cols-1 gap-px border border-[#f0f0f0] sm:grid-cols-2 lg:grid-cols-3">
-          {sponsors.map((sponsor, index) => (
-            <li
-              key={sponsor.website}
-              className={index === 0 ? 'bg-[#eef6fc]' : 'bg-white'}
-            >
-              <a
-                href={`https://${sponsor.website}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={`Visit ${sponsor.name} (opens in a new tab)`}
-                className="group flex h-[271px] flex-col justify-between px-[32px] pb-[17px] pt-[32px] transition-colors hover:bg-core-blue/5 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-core-blue"
-              >
-                <div className="relative min-h-0 flex-1 overflow-hidden">
-                  <Image
-                    src={`/sponsors/${sponsor.logo}`}
-                    alt={sponsor.name}
-                    width={Math.round(sponsor.width)}
-                    height={Math.round(sponsor.height)}
-                    unoptimized
-                    className="absolute max-w-none object-cover"
-                    style={{
-                      width: sponsor.width,
-                      height: sponsor.height,
-                      left:
-                        sponsor.name === 'Foodbolt'
-                          ? -9.67
-                          : sponsor.name === 'Interswitch'
-                            ? -0.33
-                            : 0,
-                      top: sponsor.name === 'Foodbolt' ? -36 : 0,
-                    }}
-                  />
-                </div>
-                <div
-                  className={`flex items-center justify-between gap-[8px] border-t pt-[14px] ${index === 0 ? 'border-pastel-blue' : 'border-[#f0f0f0]'}`}
-                >
-                  <span className="text-[14px] font-medium leading-[20px] text-[#111] group-hover:underline">
-                    {sponsor.website}
-                  </span>
-                  <Image
-                    src="/sponsors/arrow-up-right.svg"
-                    alt=""
-                    width={20}
-                    height={20}
-                    className="shrink-0"
-                  />
-                </div>
-              </a>
-            </li>
+        <div className="grid grid-cols-1 gap-px border border-[#f0f0f0] sm:grid-cols-2 lg:grid-cols-3">
+          {SPONSORS_2026.map((sponsor, index) => (
+            <SponsorCard
+              key={`${sponsor.website}-${index}`}
+              sponsor={sponsor}
+              isFeatured={index === 0}
+            />
           ))}
-        </ul>
+        </div>
       </div>
     </section>
   );
