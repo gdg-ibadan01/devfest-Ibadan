@@ -1,11 +1,9 @@
-import CallForSpeakers from './component/CallForSpeakers';
 import CallForPartnership from './component/CallForPartnership';
 import DevfestHero from './component/DevfestHero';
 import HowItGoesDown from './component/HowItGoesDown';
-import SwagsAndTickets from './component/SwagsAndTickets';
-import SecureYourTickets from './component/SecureYourTickets';
-import MeetOurSpeakers from './component/MeetOurSpeakers';
 import OurSponsors from './component/OurSponsors';
+import SecureYourTickets from './component/SecureYourTickets';
+import SwagsAndTickets from './component/SwagsAndTickets';
 
 export const metadata = {
   title: 'DevFest Ibadan 2026',
@@ -66,6 +64,7 @@ export default function Home() {
   return (
     <>
       <DevfestHero />
+      {/* <SponsorsMarquee /> */}
       {/* <CallForSpeakers /> */}
       <SwagsAndTickets />
       <HowItGoesDown />
