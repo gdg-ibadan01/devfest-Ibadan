@@ -113,8 +113,18 @@ export class CreateOrderResponseDto {
   @ApiProperty()
   reference: string;
 
-  @ApiProperty({ enum: ['AWAITING_PAYMENT'] })
+  @ApiProperty({
+    enum: ['AWAITING_PAYMENT', 'PAID'],
+    description:
+      'PAID when a discount covered the full price (isFree); no payment is needed.',
+  })
   status: string;
+
+  @ApiProperty({
+    description:
+      'True when a discount reduced the amount to zero. The order is already PAID and tickets have been issued.',
+  })
+  isFree: boolean;
 
   @ApiProperty({
     type: String,
