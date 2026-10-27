@@ -511,13 +511,7 @@ export class OrdersService {
       currentDate: now,
     });
 
-    const amount = ticket.price.minus(discount?.amount ?? 0);
-    if (amount.lte(0)) {
-      throw new ServiceError(
-        'Ticket price configuration is invalid',
-        OrdersService.ERRORS.ValidationErr,
-      );
-    }
+    const expectedAmount = ticket.price.minus(discount?.amount ?? 0);
 
     const paidCount = await tx.order.count({
       where: { ticketId: ticket.id, status: OrderStatus.PAID },
@@ -553,7 +547,7 @@ export class OrdersService {
         gifterName: args.gifterName,
         gifterEmail: args.gifterEmail,
         createdById: args.createdById,
-        amount: amount.toFixed(2),
+        amount: expectedAmount.toFixed(2),
         currency: 'NGN',
         status: OrderStatus.AWAITING_PAYMENT,
         paymentProvider: this.paymentProvider.name,
@@ -675,13 +669,7 @@ export class OrdersService {
       currentDate: now,
     });
 
-    const amount = ticket.price.minus(discount?.amount ?? 0);
-    if (amount.lte(0)) {
-      throw new ServiceError(
-        'Ticket price configuration is invalid',
-        OrdersService.ERRORS.ValidationErr,
-      );
-    }
+    const expectedAmount = ticket.price.minus(discount?.amount ?? 0);
 
     const paidCount = await tx.order.count({
       where: { ticketId: ticket.id, status: OrderStatus.PAID },
@@ -716,7 +704,7 @@ export class OrdersService {
       attendeeFullName: p.fullName,
       attendeeEmail: p.email,
       attendeePhoneNumber: p.phoneNumber,
-      amount: p.isPayer ? amount.toFixed(2) : 0,
+      amount: p.isPayer ? expectedAmount.toFixed(2) : 0,
       currency: 'NGN',
       status: OrderStatus.AWAITING_PAYMENT,
       paymentProvider: this.paymentProvider.name,
