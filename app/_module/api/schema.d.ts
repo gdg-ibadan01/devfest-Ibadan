@@ -1326,8 +1326,13 @@ export interface components {
         CreateOrderResponseDto: {
             id: string;
             reference: string;
-            /** @enum {string} */
-            status: "AWAITING_PAYMENT";
+            /**
+             * @description PAID when a discount covered the full price (isFree); no payment is needed.
+             * @enum {string}
+             */
+            status: "AWAITING_PAYMENT" | "PAID";
+            /** @description True when a discount reduced the amount to zero. The order is already PAID and tickets have been issued. */
+            isFree: boolean;
             /**
              * @description Total amount payable in Naira (2 decimal places)
              * @example 9500.00
@@ -1470,8 +1475,13 @@ export interface components {
         CreateGroupBuyOrderResponseDto: {
             id: string;
             reference: string;
-            /** @enum {string} */
-            status: "AWAITING_PAYMENT";
+            /**
+             * @description PAID when a discount covered the full price (isFree); no payment is needed.
+             * @enum {string}
+             */
+            status: "AWAITING_PAYMENT" | "PAID";
+            /** @description True when a discount reduced the amount to zero. The order is already PAID and tickets have been issued. */
+            isFree: boolean;
             /**
              * @description Total amount payable in Naira (2 decimal places)
              * @example 28500.00

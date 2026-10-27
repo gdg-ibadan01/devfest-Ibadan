@@ -127,6 +127,10 @@ export function useBuyTicketFlow({
       createGroupOrder(groupPayload, {
         onSuccess: (data) => {
           setReference(data.reference);
+          if (data.isFree) {
+            setView('success');
+            return;
+          }
           makePayment({
             amount: Number(data.amount),
             orderId: data.id,
@@ -178,6 +182,10 @@ export function useBuyTicketFlow({
     createOrder(orderPayload, {
       onSuccess: (data) => {
         setReference(data.reference);
+        if (data.isFree) {
+          setView('success');
+          return;
+        }
         makePayment({
           amount: Number(data.amount),
           orderId: data.id,

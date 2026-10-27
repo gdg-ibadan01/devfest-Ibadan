@@ -44,6 +44,7 @@ export default function TicketSummary({
 }: Readonly<TicketSummaryProps>) {
   const discountAmount = appliedDiscount?.amount ?? 0;
   const total = Math.max(0, selectedPackage.price - discountAmount);
+  const isFree = Boolean(appliedDiscount) && total === 0;
 
   return (
     <div className="w-full md:max-w-[732px] md:bg-white md:rounded-[20px] md:shadow-lg md:border border-gray-100 overflow-hidden">
@@ -202,7 +203,7 @@ export default function TicketSummary({
             Total Amount
           </span>
           <span className="text-[#1D4ED8] font-bold text-[18px] md:text-[22px]">
-            {formatAmount(total)}
+            {isFree ? 'Free' : formatAmount(total)}
           </span>
         </div>
 
@@ -216,6 +217,8 @@ export default function TicketSummary({
           >
             {isLoading ? (
               <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            ) : isFree ? (
+              'Get Free Ticket'
             ) : (
               'Make Payment'
             )}
