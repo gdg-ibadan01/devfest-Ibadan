@@ -7,6 +7,7 @@ import { Download, AlertCircle, Calendar, Tag, Hash, RefreshCw } from 'lucide-re
 import type { GetOrderReferenceResponseDto } from '@/app/_module/api/types';
 import { trackPurchase } from '@/utils/meta-pixel';
 import { trackPurchase as trackTikTokPurchase } from '@/utils/tiktok-pixel';
+import { trackPurchase as trackGAPurchase } from '@/utils/google-analytics';
 import StatusBadge from './StatusBadge';
 import DetailRow from './DetailRow';
 
@@ -50,6 +51,7 @@ export default function SuccessOrderCard({
       };
       trackPurchase(orderPayload);
       trackTikTokPurchase(orderPayload);
+      trackGAPurchase(orderPayload);
     }
   }, [order.status, order.amount, reference, order.code, order.ticket.name]);
 

@@ -5,6 +5,7 @@ import { Toaster } from 'sonner';
 import Script from 'next/script';
 import MetaPixel from '@/components/MetaPixel';
 import TikTokPixel from '@/components/TikTokPixel';
+import GoogleAnalytics from '@/components/GoogleAnalytics';
 import { TIKTOK_PIXEL_ID } from '@/utils/tiktok-pixel';
 
 export const metadata: Metadata = {
@@ -40,6 +41,7 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
       />
       <MetaPixel />
       <TikTokPixel />
+      <GoogleAnalytics />
       <Toaster position="top-center" />
       {children}
     </RootLayout>
