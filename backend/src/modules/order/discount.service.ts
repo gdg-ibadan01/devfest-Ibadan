@@ -2,7 +2,11 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { OrderStatus } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { randomString } from 'src/common/transformers/strings';
-import { CreateDiscountDto, DiscountListQueryDto } from './dto/discount.dto';
+import {
+  CreateDiscountDto,
+  DiscountListQueryDto,
+  UpdateDiscountDto,
+} from './dto/discount.dto';
 
 @Injectable()
 export class DiscountsService {
@@ -48,6 +52,42 @@ export class DiscountsService {
           ),
           forFirstTimersOnly: payload.forFirstTimersOnly ?? false,
           recipientEmails: payload.type === 'BULK' ? recipientEmails : [],
+        },
+      })
+      .then((result) => ({ ...result, amount: result.amount.toFixed(2) }));
+  }
+
+  async updateDiscount(discountId: string, payload: UpdateDiscountDto) {
+    const existing = await this.prisma.discount.findUnique({
+      where: { id: discountId },
+    });
+    if (!existing) throw new NotFoundException('Discount not found');
+
+    const data: { validTo?: Date | null } = {};
+    if (payload.validTo !== undefined) {
+      data.validTo =
+        payload.validTo === null
+          ? null
+          : new Date(new Date(payload.validTo).setUTCHours(23, 59, 59, 999));
+    }
+
+    return this.prisma.discount
+      .update({
+        where: { id: discountId },
+        data,
+        select: {
+          id: true,
+          name: true,
+          code: true,
+          type: true,
+          amount: true,
+          ticketSlugs: true,
+          limit: true,
+          validFrom: true,
+          validTo: true,
+          forFirstTimersOnly: true,
+          recipientEmails: true,
+          createdAt: true,
         },
       })
       .then((result) => ({ ...result, amount: result.amount.toFixed(2) }));
