@@ -6,6 +6,7 @@ import { useCreateOrder, useCreateGroupBuyOrder } from '@/app/_module/services';
 import { useMakePayment } from '@/hooks/useMakePayment';
 import { trackInitiateCheckout } from '@/utils/meta-pixel';
 import { trackInitiateCheckout as trackTikTokInitiateCheckout } from '@/utils/tiktok-pixel';
+import { trackInitiateCheckout as trackGAInitiateCheckout } from '@/utils/google-analytics';
 import type { TicketPackage } from '../components';
 import type { GroupMember } from '../components/GroupAttendeeFields';
 import type { AppliedDiscount } from '@/app/_module/services/discount.service';
@@ -146,6 +147,7 @@ export function useBuyTicketFlow({
               };
               trackInitiateCheckout(checkoutEvent);
               trackTikTokInitiateCheckout(checkoutEvent);
+              trackGAInitiateCheckout(checkoutEvent);
             },
             onComplete: () => {
               setView('success');
@@ -201,6 +203,7 @@ export function useBuyTicketFlow({
             };
             trackInitiateCheckout(checkoutEvent);
             trackTikTokInitiateCheckout(checkoutEvent);
+            trackGAInitiateCheckout(checkoutEvent);
           },
           onComplete: () => {
             setView('success');
