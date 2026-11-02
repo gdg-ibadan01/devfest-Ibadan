@@ -4,6 +4,7 @@ import {
   IsEnum,
   IsIn,
   IsInt,
+  IsISO8601,
   IsNotEmpty,
   IsOptional,
   IsString,
@@ -14,7 +15,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { OrderStatus } from '@prisma/client';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional, PickType } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
 
 export class OrderAttendeeDto {
@@ -229,6 +230,24 @@ export class OrdersQueryDto {
 
   @ApiPropertyOptional({
     description:
+      'Only return orders created at or after this instant (ISO 8601)',
+    example: '2026-11-01T00:00:00.000Z',
+  })
+  @IsOptional()
+  @IsISO8601()
+  dateFrom?: string;
+
+  @ApiPropertyOptional({
+    description:
+      'Only return orders created at or before this instant (ISO 8601)',
+    example: '2026-11-07T23:59:59.999Z',
+  })
+  @IsOptional()
+  @IsISO8601()
+  dateTo?: string;
+
+  @ApiPropertyOptional({
+    description:
       'Pagination direction. `next` returns earlier-dated orders, `previous` returns more recent orders.',
     enum: ['next', 'previous'],
     default: 'next',
@@ -260,9 +279,28 @@ export class OrdersQueryDto {
   limit?: number = 20;
 }
 
+export class OrdersExportQueryDto extends PickType(OrdersQueryDto, [
+  'search',
+  'status',
+  'dateFrom',
+  'dateTo',
+] as const) {
+  @ApiPropertyOptional({
+    description: 'File format the export is for. Recorded in the audit log.',
+    enum: ['csv', 'pdf'],
+    default: 'csv',
+  })
+  @IsOptional()
+  @IsIn(['csv', 'pdf'])
+  format?: 'csv' | 'pdf' = 'csv';
+}
+
 export class OrderListItemDto {
   @ApiProperty()
   id: string;
+
+  @ApiProperty({ type: Date, format: 'date-time' })
+  createdAt: Date;
 
   @ApiProperty({ type: Date, format: 'date-time', nullable: true })
   paidAt: Date | null;
@@ -320,6 +358,20 @@ export class OrdersPaginationMetaDto {
     description: 'Whether more items exist in the direction of travel',
   })
   hasMore: boolean;
+}
+
+export class OrderExportResponseDto {
+  @ApiProperty({ type: [OrderListItemDto] })
+  data: OrderListItemDto[];
+
+  @ApiProperty({ description: 'Number of rows in this export' })
+  total: number;
+
+  @ApiProperty({
+    description:
+      'True when more orders matched than the export limit; narrow the filters to export the rest',
+  })
+  truncated: boolean;
 }
 
 export class OrderListResponseDto {

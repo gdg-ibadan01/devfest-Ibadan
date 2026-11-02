@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Inject,
   Injectable,
   InternalServerErrorException,
@@ -27,6 +28,7 @@ import { MonnifyRejectedPaymentWebhookEventData } from '../payment/interfaces/mo
 import {
   CreateOrderDto,
   CreateOrderResponseDto,
+  OrdersExportQueryDto,
   OrdersQueryDto,
 } from './dto/order.dto';
 import { TicketsService } from '../ticket/ticket.service';
@@ -39,6 +41,8 @@ import { CreateGroupBuyOrderDto } from './dto/group-buy-order.dto';
 const ORDER_TTL_MINUTES = 5;
 const TX_MAX_ATTEMPTS = 3;
 const CANCEL_MAX_ATTEMPTS = 3;
+const EXPORT_BATCH_SIZE = 500;
+const EXPORT_MAX_ROWS = 10_000;
 
 type TxClient = Prisma.TransactionClient;
 
@@ -428,12 +432,24 @@ export class OrdersService {
     };
   }
 
-  async list(query: OrdersQueryDto) {
-    const { cursor, direction = 'next', limit = 20, search, status } = query;
+  private buildListWhere(
+    query: Pick<OrdersQueryDto, 'search' | 'status' | 'dateFrom' | 'dateTo'>,
+  ): Prisma.OrderWhereInput {
+    const { search, status, dateFrom, dateTo } = query;
+
+    if (dateFrom && dateTo && new Date(dateFrom) > new Date(dateTo)) {
+      throw new BadRequestException('dateFrom must not be after dateTo');
+    }
 
     const where: Prisma.OrderWhereInput = {};
     if (status) {
       where.status = status;
+    }
+    if (dateFrom || dateTo) {
+      where.createdAt = {
+        ...(dateFrom && { gte: new Date(dateFrom) }),
+        ...(dateTo && { lte: new Date(dateTo) }),
+      };
     }
     if (search) {
       where.OR = [
@@ -442,6 +458,38 @@ export class OrdersService {
         { reference: { contains: search, mode: 'insensitive' } },
       ];
     }
+    return where;
+  }
+
+  private toListItem(
+    o: Order & {
+      ticket: { id: string; name: string; validityDates: Date[] };
+    },
+  ) {
+    return {
+      id: o.id,
+      createdAt: o.createdAt,
+      paidAt: o.paidAt,
+      amount: o.amount.toFixed(2),
+      status: o.status,
+      attendeeFullName: o.attendeeFullName,
+      attendeeEmail: o.attendeeEmail,
+      checkIns: o.checkIns,
+      ticket: {
+        id: o.ticket.id,
+        name: o.ticket.name,
+        code: o.reference.slice(-6),
+        validity: o.ticket.validityDates
+          .map((d) => d.toLocaleDateString('en-US', { weekday: 'short' }))
+          .join(' + '),
+      },
+    };
+  }
+
+  async list(query: OrdersQueryDto) {
+    const { cursor, direction = 'next', limit = 20 } = query;
+
+    const where = this.buildListWhere(query);
 
     const orderBy =
       direction === 'next' ? { id: 'asc' as const } : { id: 'desc' as const };
@@ -459,23 +507,7 @@ export class OrdersService {
     const hasMore = results.length > limit;
     if (hasMore) results.pop();
 
-    const data = results.map((o) => ({
-      id: o.id,
-      paidAt: o.paidAt,
-      amount: o.amount.toFixed(2),
-      status: o.status,
-      attendeeFullName: o.attendeeFullName,
-      attendeeEmail: o.attendeeEmail,
-      checkIns: o.checkIns,
-      ticket: {
-        id: o.ticket.id,
-        name: o.ticket.name,
-        code: o.reference.slice(-6),
-        validity: o.ticket.validityDates
-          .map((d) => d.toLocaleDateString('en-US', { weekday: 'short' }))
-          .join(' + '),
-      },
-    }));
+    const data = results.map((o) => this.toListItem(o));
 
     return {
       data,
@@ -486,6 +518,62 @@ export class OrdersService {
         hasMore,
       },
     };
+  }
+
+  /** Every order matching the filters (capped), with an audit log entry. */
+  async exportOrders(query: OrdersExportQueryDto, adminId: string) {
+    const where = this.buildListWhere(query);
+
+    const rows: ReturnType<OrdersService['toListItem']>[] = [];
+    let cursor: string | undefined;
+    let truncated = false;
+
+    while (true) {
+      const batch = await this.prisma.order.findMany({
+        where,
+        take: EXPORT_BATCH_SIZE,
+        ...(cursor && { cursor: { id: cursor }, skip: 1 }),
+        orderBy: { id: 'asc' },
+        include: {
+          ticket: { select: { name: true, validityDates: true, id: true } },
+        },
+      });
+
+      for (const o of batch) {
+        if (rows.length >= EXPORT_MAX_ROWS) {
+          truncated = true;
+          break;
+        }
+        rows.push(this.toListItem(o));
+      }
+
+      if (truncated || batch.length < EXPORT_BATCH_SIZE) break;
+      cursor = batch[batch.length - 1].id;
+    }
+
+    await this.prisma.auditLog
+      .create({
+        data: {
+          adminId,
+          action: 'EXPORT_ORDERS',
+          metadata: {
+            format: query.format ?? 'csv',
+            rowCount: rows.length,
+            truncated,
+            filters: {
+              search: query.search ?? null,
+              status: query.status ?? null,
+              dateFrom: query.dateFrom ?? null,
+              dateTo: query.dateTo ?? null,
+            },
+          },
+        },
+      })
+      .catch((err: Error) =>
+        this.logger.error(`Failed to write export audit log: ${err.message}`),
+      );
+
+    return { data: rows, total: rows.length, truncated };
   }
 
   private async createOrderRecord(
