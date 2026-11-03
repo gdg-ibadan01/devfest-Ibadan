@@ -183,6 +183,18 @@ export class CreateDiscountDto {
   }
 }
 
+export class UpdateDiscountDto {
+  @ApiPropertyOptional({
+    example: '2026-12-31',
+    nullable: true,
+    description:
+      'End date in YYYY-MM-DD format. Discount expires at end of day. Set to null to clear the expiry. Omit to leave unchanged.',
+  })
+  @IsOptional()
+  @IsDateString()
+  validTo?: string | null;
+}
+
 export class DiscountListQueryDto {
   @ApiPropertyOptional({
     description: 'Filter discounts by name (case-insensitive)',

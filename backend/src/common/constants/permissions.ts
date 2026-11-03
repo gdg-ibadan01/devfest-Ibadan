@@ -22,6 +22,7 @@ export const PERMISSIONS = [
   { id: 'payment_reports.export', label: 'Export payment report' },
   { id: 'discounts.create', label: 'Create discount' },
   { id: 'discounts.list', label: 'View discounts list' },
+  { id: 'discounts.update', label: 'Update discount' },
   { id: 'orders.list', label: 'View orders list' },
   { id: 'audit-logs.view-list', label: 'View audit logs list' },
   { id: 'audit-logs.view', label: 'View audit log detail' },
