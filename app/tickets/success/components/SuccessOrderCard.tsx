@@ -2,8 +2,17 @@
 
 import React, { useEffect } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Download, AlertCircle, Calendar, Tag, Hash, RefreshCw } from 'lucide-react';
+import {
+  Download,
+  AlertCircle,
+  Calendar,
+  Tag,
+  Hash,
+  RefreshCw,
+  Image as ImageIcon,
+} from 'lucide-react';
 import type { GetOrderReferenceResponseDto } from '@/app/_module/api/types';
 import { trackPurchase } from '@/utils/meta-pixel';
 import { trackPurchase as trackTikTokPurchase } from '@/utils/tiktok-pixel';
@@ -202,6 +211,24 @@ export default function SuccessOrderCard({
               </motion.button>
             )}
           </AnimatePresence>
+
+          {isPaid && (
+            <motion.div
+              key="flyer-link"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.62, duration: 0.3 }}
+            >
+              <Link
+                href="/flyer"
+                id="create-flyer-btn"
+                className="w-full flex items-center justify-center gap-2.5 border-2 border-[#1E1E1E] hover:bg-black/5 text-[#1E1E1E] py-3.5 rounded-[100px] font-bold transition-all text-[15px] md:text-[16px] font-sans focus:outline-none"
+              >
+                <ImageIcon className="w-4 h-4" />
+                <span>Create your attendee flyer</span>
+              </Link>
+            </motion.div>
+          )}
 
           {/* Refetch / Refresh Button when AWAITING_PAYMENT */}
           {order.status === 'AWAITING_PAYMENT' && onRefetch && (

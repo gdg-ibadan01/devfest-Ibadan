@@ -60,6 +60,17 @@ export function trackInitiateCheckout(order: TicketEvent) {
   if (options) gtagEvent('begin_checkout', options);
 }
 
+/** An attendee has supplied a name and photo for their flyer. */
+export function trackFlyerGenerated() {
+  gtagEvent('flyer_generated');
+}
+
+export function trackFlyerDownloaded(
+  method: 'download' | 'share' | 'copy' | 'copy_image' | 'x' | 'whatsapp' | 'linkedin'
+) {
+  gtagEvent('flyer_downloaded', { method });
+}
+
 /** Call only for an order confirmed PAID by the backend. */
 export function trackPurchase(order: TicketEvent & { reference: string }) {
   if (typeof window === 'undefined') return;
