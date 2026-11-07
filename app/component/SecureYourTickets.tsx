@@ -31,8 +31,7 @@ const SecureYourTickets: FC = () => {
             transition={{ duration: 0.45, delay: 0.1 }}
             className="mt-3.5 text-sm sm:text-base text-[#4A4A4A] leading-relaxed font-sans"
           >
-            Lock in your spot at DevFest Ibadan 2026. Early bird pricing
-            won&apos;t last forever.
+            Lock in your spot at DevFest Ibadan 2026.
           </motion.p>
         </div>
 

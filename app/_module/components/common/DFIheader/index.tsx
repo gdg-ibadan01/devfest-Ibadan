@@ -46,7 +46,7 @@ const DFIHeader = (): ReactNode => {
       <div className={styles.wrapper}>
         <Link href="/" className={styles.logoContainer}>
           {/* <DevfestLogo fill="fill-black" stroke="stroke-black" /> */}
-          <Image src={DevfestLogo} alt="DevfestLogo" />
+          <Image src={DevfestLogo} alt="DevFest Ibadan 2026" />
         </Link>
         {isTablet && (
           <nav className="lg:block">
@@ -97,10 +97,10 @@ const DFIHeader = (): ReactNode => {
         >
           {!showMenu ? (
             // <Hamburger color="fill-black" />
-            <Image src={Hamburger} alt="Hamburger" />
+            <Image src={Hamburger} alt="" />
           ) : (
             // 'test'
-            <Image src={Cancel} alt="Cancel" />
+            <Image src={Cancel} alt="" />
             // <Cancel color="stroke-black" />
           )}
         </button>

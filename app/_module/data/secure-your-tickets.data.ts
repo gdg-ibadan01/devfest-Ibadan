@@ -4,15 +4,15 @@ export type TicketTier = TicketPricingCardProps & { id: string };
 
 export const ticketTiers: TicketTier[] = [
   {
-    id: 'early-bird',
-    name: 'EARLY BIRD',
+    id: 'standard',
+    name: 'STANDARD',
     price: '₦5,000',
-    subtitle: 'Save before Oct 16',
+    subtitle: 'Full-day access',
     badge: 'BEST VALUE',
     isPopular: true,
     isActive: true,
     buttonText: 'Get Ticket',
-    // buttonHref: '/tickets/buy?tier=early-bird',
+    // buttonHref: '/tickets/buy?tier=standard',
     buttonHref: '/tickets/buy',
     features: [
       'Entry to all tracks',

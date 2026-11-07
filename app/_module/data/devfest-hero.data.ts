@@ -8,12 +8,11 @@ export const HERO_DATA = {
   targetDate: TARGET_DATE,
   title: 'DEVFEST IBADAN 2026.',
   subtitle:
-    "Ibadan Nigeria's biggest developer conference. Early bird tickets from ₦5,000.",
-  earlyBird: {
-    title: 'Early Bird Active',
+    "Ibadan Nigeria's biggest developer conference. Tickets from ₦5,000.",
+  tickets: {
+    title: 'Tickets Available',
     badge: 'BEST VALUE',
-    description:
-      'Secure your ticket at ₦5,000 - first 300 only. Closes October 16, 2026.',
+    description: 'Secure your ticket at ₦5,000.',
     buyHref: '/tickets/buy',
   },
 };

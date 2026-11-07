@@ -1,5 +1,13 @@
 import Image from 'next/image';
 import { ORGANIZERS_DATA } from './organizers';
+import { pageMetadata } from '@/app/_module/config/seo';
+
+export const metadata = pageMetadata({
+  title: 'Meet the Organisers',
+  description:
+    'Meet the GDG Ibadan organisers and volunteers behind DevFest Ibadan 2026, the developer conference holding on 21 November in Ibadan.',
+  path: '/organizers',
+});
 
 export default function Organizers() {
   return (
