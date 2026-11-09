@@ -24,7 +24,9 @@ import {
   CreateOrderDto,
   CreateOrderResponseDto,
   GetOrderReferenceResponseDto,
+  OrderExportResponseDto,
   OrderListResponseDto,
+  OrdersExportQueryDto,
   OrdersQueryDto,
 } from './dto/order.dto';
 import {
@@ -115,7 +117,7 @@ export class OrdersController {
   @ApiOperation({
     summary: 'List orders',
     description:
-      'Cursor-paginated list of orders. By default returns earlier-dated orders first.',
+      'Cursor-paginated list of orders. By default returns earlier-dated orders first. Optionally filter by creation date with dateFrom and dateTo.',
   })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -132,6 +134,35 @@ export class OrdersController {
   })
   findAll(@Query() query: OrdersQueryDto) {
     return this.ordersService.list(query);
+  }
+
+  @Get('export')
+  @ApiBearerAuth()
+  @RequirePermission('payment_reports.export')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @ApiOperation({
+    summary: 'Export orders',
+    description:
+      'Returns every order matching the filters (up to 10,000) and records the export in the audit log.',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Orders exported successfully',
+    type: OrderExportResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.UNAUTHORIZED,
+    description: 'Not authenticated',
+  })
+  @ApiResponse({
+    status: HttpStatus.FORBIDDEN,
+    description: 'Requires permission',
+  })
+  exportOrders(
+    @Query() query: OrdersExportQueryDto,
+    @CurrentUser() user: IJwtPayload,
+  ) {
+    return this.ordersService.exportOrders(query, user.sub);
   }
 
   @Get('reference/:reference')

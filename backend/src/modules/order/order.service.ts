@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Inject,
   Injectable,
   InternalServerErrorException,
@@ -27,6 +28,7 @@ import { MonnifyRejectedPaymentWebhookEventData } from '../payment/interfaces/mo
 import {
   CreateOrderDto,
   CreateOrderResponseDto,
+  OrdersExportQueryDto,
   OrdersQueryDto,
 } from './dto/order.dto';
 import { TicketsService } from '../ticket/ticket.service';
@@ -39,14 +41,35 @@ import { CreateGroupBuyOrderDto } from './dto/group-buy-order.dto';
 const ORDER_TTL_MINUTES = 5;
 const TX_MAX_ATTEMPTS = 3;
 const CANCEL_MAX_ATTEMPTS = 3;
+const EXPORT_BATCH_SIZE = 500;
+const EXPORT_MAX_ROWS = 10_000;
 
 type TxClient = Prisma.TransactionClient;
 
 interface CreatedOrderRecord {
   order: Order;
+  /** Every order row created in the transaction (more than one for group buys). */
+  orders: Order[];
   ticketName: string;
   ticketSlug: string;
+  validityDates: Date[];
   createdById?: string | null;
+}
+
+interface TicketIssuanceArgs {
+  payer: {
+    id: string;
+    reference: string;
+    amount: Prisma.Decimal | number;
+    groupReference: string | null;
+  };
+  validityDates: Date[];
+  recipients: {
+    id: string;
+    reference: string;
+    fullName: string;
+    email: string;
+  }[];
 }
 
 interface CreateRefundRecord {
@@ -231,6 +254,9 @@ export class OrdersService {
         );
     }
 
+    const isFree = record.order.status === OrderStatus.PAID;
+    if (isFree) await this.issueFreeTickets(record);
+
     return {
       amount: record.order.amount.toFixed(2),
       vatAndCharges: '0.00',
@@ -239,6 +265,7 @@ export class OrdersService {
       id: record.order.id,
       reference: record.order.reference,
       status: record.order.status,
+      isFree,
       ticket: {
         name: record.ticketName,
         slug: record.ticketSlug,
@@ -325,6 +352,16 @@ export class OrdersService {
         payload.gifter?.fullName.trim() ?? payload.attendee.fullName.trim(),
       email: gifterEmail ?? attendeeEmail,
     };
+    if (record.order.status === OrderStatus.PAID) {
+      await this.issueFreeTickets(record);
+      return this.toResponseDto(
+        record.order,
+        { name: record.ticketName, slug: record.ticketSlug },
+        0,
+        record.createdById,
+      );
+    }
+
     const response = await this.initializeCheckout(record, payer);
 
     // if (createdById && response.checkoutUrl) {
@@ -395,12 +432,24 @@ export class OrdersService {
     };
   }
 
-  async list(query: OrdersQueryDto) {
-    const { cursor, direction = 'next', limit = 20, search, status } = query;
+  private buildListWhere(
+    query: Pick<OrdersQueryDto, 'search' | 'status' | 'dateFrom' | 'dateTo'>,
+  ): Prisma.OrderWhereInput {
+    const { search, status, dateFrom, dateTo } = query;
+
+    if (dateFrom && dateTo && new Date(dateFrom) > new Date(dateTo)) {
+      throw new BadRequestException('dateFrom must not be after dateTo');
+    }
 
     const where: Prisma.OrderWhereInput = {};
     if (status) {
       where.status = status;
+    }
+    if (dateFrom || dateTo) {
+      where.createdAt = {
+        ...(dateFrom && { gte: new Date(dateFrom) }),
+        ...(dateTo && { lte: new Date(dateTo) }),
+      };
     }
     if (search) {
       where.OR = [
@@ -409,6 +458,38 @@ export class OrdersService {
         { reference: { contains: search, mode: 'insensitive' } },
       ];
     }
+    return where;
+  }
+
+  private toListItem(
+    o: Order & {
+      ticket: { id: string; name: string; validityDates: Date[] };
+    },
+  ) {
+    return {
+      id: o.id,
+      createdAt: o.createdAt,
+      paidAt: o.paidAt,
+      amount: o.amount.toFixed(2),
+      status: o.status,
+      attendeeFullName: o.attendeeFullName,
+      attendeeEmail: o.attendeeEmail,
+      checkIns: o.checkIns,
+      ticket: {
+        id: o.ticket.id,
+        name: o.ticket.name,
+        code: o.reference.slice(-6),
+        validity: o.ticket.validityDates
+          .map((d) => d.toLocaleDateString('en-US', { weekday: 'short' }))
+          .join(' + '),
+      },
+    };
+  }
+
+  async list(query: OrdersQueryDto) {
+    const { cursor, direction = 'next', limit = 20 } = query;
+
+    const where = this.buildListWhere(query);
 
     const orderBy =
       direction === 'next' ? { id: 'asc' as const } : { id: 'desc' as const };
@@ -426,23 +507,7 @@ export class OrdersService {
     const hasMore = results.length > limit;
     if (hasMore) results.pop();
 
-    const data = results.map((o) => ({
-      id: o.id,
-      paidAt: o.paidAt,
-      amount: o.amount.toFixed(2),
-      status: o.status,
-      attendeeFullName: o.attendeeFullName,
-      attendeeEmail: o.attendeeEmail,
-      checkIns: o.checkIns,
-      ticket: {
-        id: o.ticket.id,
-        name: o.ticket.name,
-        code: o.reference.slice(-6),
-        validity: o.ticket.validityDates
-          .map((d) => d.toLocaleDateString('en-US', { weekday: 'short' }))
-          .join(' + '),
-      },
-    }));
+    const data = results.map((o) => this.toListItem(o));
 
     return {
       data,
@@ -453,6 +518,62 @@ export class OrdersService {
         hasMore,
       },
     };
+  }
+
+  /** Every order matching the filters (capped), with an audit log entry. */
+  async exportOrders(query: OrdersExportQueryDto, adminId: string) {
+    const where = this.buildListWhere(query);
+
+    const rows: ReturnType<OrdersService['toListItem']>[] = [];
+    let cursor: string | undefined;
+    let truncated = false;
+
+    while (true) {
+      const batch = await this.prisma.order.findMany({
+        where,
+        take: EXPORT_BATCH_SIZE,
+        ...(cursor && { cursor: { id: cursor }, skip: 1 }),
+        orderBy: { id: 'asc' },
+        include: {
+          ticket: { select: { name: true, validityDates: true, id: true } },
+        },
+      });
+
+      for (const o of batch) {
+        if (rows.length >= EXPORT_MAX_ROWS) {
+          truncated = true;
+          break;
+        }
+        rows.push(this.toListItem(o));
+      }
+
+      if (truncated || batch.length < EXPORT_BATCH_SIZE) break;
+      cursor = batch[batch.length - 1].id;
+    }
+
+    await this.prisma.auditLog
+      .create({
+        data: {
+          adminId,
+          action: 'EXPORT_ORDERS',
+          metadata: {
+            format: query.format ?? 'csv',
+            rowCount: rows.length,
+            truncated,
+            filters: {
+              search: query.search ?? null,
+              status: query.status ?? null,
+              dateFrom: query.dateFrom ?? null,
+              dateTo: query.dateTo ?? null,
+            },
+          },
+        },
+      })
+      .catch((err: Error) =>
+        this.logger.error(`Failed to write export audit log: ${err.message}`),
+      );
+
+    return { data: rows, total: rows.length, truncated };
   }
 
   private async createOrderRecord(
@@ -511,7 +632,8 @@ export class OrdersService {
       currentDate: now,
     });
 
-    const expectedAmount = ticket.price.minus(discount?.amount ?? 0);
+    const expectedAmount = this.computeExpectedAmount(ticket.price, discount);
+    const isFree = expectedAmount.lte(0);
 
     const paidCount = await tx.order.count({
       where: { ticketId: ticket.id, status: OrderStatus.PAID },
@@ -537,9 +659,10 @@ export class OrdersService {
       );
     }
 
+    const reference = this.generateReference(ticket.name);
     const order = await tx.order.create({
       data: {
-        reference: this.generateReference(ticket.name),
+        reference,
         ticketId: ticket.id,
         attendeeFullName: args.attendeeFullName,
         attendeeEmail: args.attendeeEmail,
@@ -549,7 +672,11 @@ export class OrdersService {
         createdById: args.createdById,
         amount: expectedAmount.toFixed(2),
         currency: 'NGN',
-        status: OrderStatus.AWAITING_PAYMENT,
+        status: isFree ? OrderStatus.PAID : OrderStatus.AWAITING_PAYMENT,
+        paidAt: isFree ? now : null,
+        providerTransactionRef: isFree
+          ? this.freeTransactionRef(reference)
+          : null,
         paymentProvider: this.paymentProvider.name,
         expiresAt: new Date(now.getTime() + ORDER_TTL_MINUTES * 60_000),
         discountId: discount ? discount.id : null,
@@ -558,8 +685,10 @@ export class OrdersService {
 
     return {
       order,
+      orders: [order],
       ticketName: ticket.name,
       ticketSlug: ticket.slug,
+      validityDates: ticket.validity_dates,
       createdById: args.createdById ?? null,
     };
   }
@@ -590,6 +719,9 @@ export class OrdersService {
       }
     }
 
+    const isFree = rec!.order.status === OrderStatus.PAID;
+    if (isFree) await this.issueFreeTickets(rec!);
+
     return {
       amount: rec!.order.amount.toFixed(2),
       vatAndCharges: '0.00',
@@ -598,6 +730,7 @@ export class OrdersService {
       id: rec!.order.id,
       reference: rec!.order.reference,
       status: rec!.order.status,
+      isFree,
       ticket: {
         name: rec!.ticketName,
         slug: rec!.ticketSlug,
@@ -669,7 +802,8 @@ export class OrdersService {
       currentDate: now,
     });
 
-    const expectedAmount = ticket.price.minus(discount?.amount ?? 0);
+    const expectedAmount = this.computeExpectedAmount(ticket.price, discount);
+    const isFree = expectedAmount.lte(0);
 
     const paidCount = await tx.order.count({
       where: { ticketId: ticket.id, status: OrderStatus.PAID },
@@ -697,31 +831,41 @@ export class OrdersService {
     }
 
     const groupReference = crypto.randomUUID();
-    const bulkOrdersToCreate = members.map((p) => ({
-      reference: this.generateReference(ticket.name),
-      ticketId: ticket.id,
-      groupReference,
-      attendeeFullName: p.fullName,
-      attendeeEmail: p.email,
-      attendeePhoneNumber: p.phoneNumber,
-      amount: p.isPayer ? expectedAmount.toFixed(2) : 0,
-      currency: 'NGN',
-      status: OrderStatus.AWAITING_PAYMENT,
-      paymentProvider: this.paymentProvider.name,
-      expiresAt: new Date(now.getTime() + ORDER_TTL_MINUTES * 60_000),
-      discountId: discount && p.isPayer ? discount.id : null,
-    }));
+    const bulkOrdersToCreate = members.map((p) => {
+      const reference = this.generateReference(ticket.name);
+      return {
+        reference,
+        ticketId: ticket.id,
+        groupReference,
+        attendeeFullName: p.fullName,
+        attendeeEmail: p.email,
+        attendeePhoneNumber: p.phoneNumber,
+        amount: p.isPayer ? expectedAmount.toFixed(2) : 0,
+        currency: 'NGN',
+        status: isFree ? OrderStatus.PAID : OrderStatus.AWAITING_PAYMENT,
+        paidAt: isFree ? now : null,
+        providerTransactionRef: isFree
+          ? this.freeTransactionRef(reference)
+          : null,
+        paymentProvider: this.paymentProvider.name,
+        expiresAt: new Date(now.getTime() + ORDER_TTL_MINUTES * 60_000),
+        discountId: discount && p.isPayer ? discount.id : null,
+      };
+    });
 
     const orders = await tx.order.createManyAndReturn({
       data: bulkOrdersToCreate,
     });
 
+    const payerEmail = group.payer.email.trim().toLowerCase();
     return {
-      order: orders.find((o) =>
-        o.amount.greaterThan(0),
+      order: orders.find(
+        (o) => o.attendeeEmail === payerEmail,
       ) as CreatedOrderRecord['order'],
+      orders,
       ticketName: ticket.name,
       ticketSlug: ticket.slug,
+      validityDates: ticket.validity_dates,
     };
   }
 
@@ -885,6 +1029,7 @@ export class OrdersService {
       id: order.id,
       reference: order.reference,
       status: order.status,
+      isFree: order.status === OrderStatus.PAID,
       amount: order.amount.toFixed(2),
       vatAndCharges: '0.00',
       currency: order.currency,
@@ -893,6 +1038,94 @@ export class OrdersService {
       ticket,
       createdById: createdById ?? null,
     };
+  }
+
+  /** Ticket price less the discount, never below zero. */
+  private computeExpectedAmount(
+    price: Prisma.Decimal,
+    discount: Discount | null,
+  ): Prisma.Decimal {
+    if (!discount && price.lte(0)) {
+      throw new ServiceError(
+        'Ticket price configuration is invalid',
+        OrdersService.ERRORS.ValidationErr,
+      );
+    }
+    return Prisma.Decimal.max(0, price.minus(discount?.amount ?? 0));
+  }
+
+  private freeTransactionRef(reference: string): string {
+    return `FREE-${reference}`;
+  }
+
+  /** Generates the payer's ticket PDF and emails every attendee in the order. */
+  private async issueTickets(args: TicketIssuanceArgs): Promise<void> {
+    const payerTicketUrl = await this.ticketsService.ensureTicketPdf({
+      id: args.payer.id,
+      reference: args.payer.reference,
+      amount: args.payer.amount,
+      groupReference: args.payer.groupReference,
+      ticket: { validityDates: args.validityDates },
+    });
+
+    if (!payerTicketUrl) {
+      this.logger.error(
+        `Failed to generate ticket PDF for order ${args.payer.id}`,
+      );
+    }
+
+    const emailResults = await Promise.allSettled(
+      args.recipients.map((row) =>
+        this.mailService.sendTicketConfirmationEmail({
+          eventDate: new Date('2026-11-21'),
+          fullName: row.fullName,
+          ticketCode: row.reference.slice(-6),
+          ticketDownloadUrl: this.generateSignedDownloadUrl(row.reference),
+          email: row.email,
+        }),
+      ),
+    );
+
+    emailResults.forEach((result, index) => {
+      const row = args.recipients[index];
+      if (result.status === 'rejected') {
+        this.logger.error(
+          `Failed to send ticket confirmation email for order ${row.id} to ${row.email}: ${
+            result.reason instanceof Error
+              ? result.reason.message
+              : result.reason
+          }`,
+        );
+        return;
+      }
+      this.logger.log(`Ticket confirmation email sent for order ${row.id}`);
+    });
+  }
+
+  /** Issues tickets for orders created already PAID because a discount covered the full price. */
+  private async issueFreeTickets(record: CreatedOrderRecord): Promise<void> {
+    try {
+      await this.issueTickets({
+        payer: {
+          id: record.order.id,
+          reference: record.order.reference,
+          amount: record.order.amount,
+          groupReference: record.order.groupReference,
+        },
+        validityDates: record.validityDates,
+        recipients: record.orders.map((o) => ({
+          id: o.id,
+          reference: o.reference,
+          fullName: o.attendeeFullName,
+          email: o.attendeeEmail,
+        })),
+      });
+    } catch (err) {
+      // The order is already PAID. findByReference regenerates a missing PDF.
+      this.logger.error(
+        `Failed to issue tickets for free order ${record.order.id}: ${(err as Error).message}`,
+      );
+    }
   }
 
   private generateReference(name: string): string {
@@ -1102,47 +1335,22 @@ Initiating refund for order ${order.id}`,
     }
 
     if (txResult.order && txResult.ticket) {
-      const payerTicketUrl = await this.ticketsService.ensureTicketPdf({
-        id: txResult.order.id,
-        reference: txResult.order.reference,
-        amount: txResult.order.amount,
-        groupReference: txResult.order.group_reference,
-        ticket: { validityDates: txResult.ticket.validity_dates },
-      });
-
-      if (!payerTicketUrl) {
-        this.logger.error(
-          `Failed to generate ticket PDF for order ${txResult.order.id}`,
-        );
-      }
-    }
-
-    const emailResults = await Promise.allSettled(
-      txResult.group.map((row) =>
-        this.mailService.sendTicketConfirmationEmail({
-          eventDate: new Date('2026-11-21'),
+      await this.issueTickets({
+        payer: {
+          id: txResult.order.id,
+          reference: txResult.order.reference,
+          amount: txResult.order.amount,
+          groupReference: txResult.order.group_reference,
+        },
+        validityDates: txResult.ticket.validity_dates,
+        recipients: txResult.group.map((row) => ({
+          id: row.id,
+          reference: row.reference,
           fullName: row.attendee_full_name,
-          ticketCode: row.reference.slice(-6),
-          ticketDownloadUrl: this.generateSignedDownloadUrl(row.reference),
           email: row.attendee_email,
-        }),
-      ),
-    );
-
-    emailResults.forEach((result, index) => {
-      const row = txResult.group[index];
-      if (result.status === 'rejected') {
-        this.logger.error(
-          `Failed to send ticket confirmation email for order ${row.id} to ${row.attendee_email}: ${
-            result.reason instanceof Error
-              ? result.reason.message
-              : result.reason
-          }`,
-        );
-        return;
-      }
-      this.logger.log(`Ticket confirmation email sent for order ${row.id}`);
-    });
+        })),
+      });
+    }
   }
 
   private async recordRefund(

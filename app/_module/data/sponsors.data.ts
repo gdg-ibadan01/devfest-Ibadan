@@ -29,6 +29,15 @@ export const SPONSORS_2026: Sponsor[] = [
     description:
       'Leading on-demand food and grocery delivery platform in Africa, delivering meals and essentials in minutes.',
   },
+  {
+    name: 'Tradestack',
+    website: 'usetradestack.com',
+    logo: 'tradestack.png',
+    width: 200,
+    height: 28,
+    description:
+      'TradeStack is a cross-border commerce and payments platform that enables individuals and businesses to buy and sell cryptocurrency, trade gift cards, source products from China, make supplier payments in RMB, and access pre-order financing solutions all from a single platform.',
+  },
 ];
 
 export const sponsors = SPONSORS_2026;

@@ -10,6 +10,8 @@ import type {
   CreateGroupBuyOrderResponseDto,
   OrderListResponseDto,
   OrderListParams,
+  OrderExportParams,
+  OrderExportResponseDto,
   OrderListItemDto,
   GetOrderReferenceResponseDto,
   AdminCreateOrderDto,
@@ -36,6 +38,18 @@ export function useOrders(
     placeholderData: (previousData) => previousData,
     enabled: options.enabled ?? true,
   });
+}
+
+// ---- Export orders (audit-logged by the API) ---------------------
+
+export async function exportOrders(
+  params: OrderExportParams
+): Promise<OrderExportResponseDto> {
+  const { data } = await apiClient.get<OrderExportResponseDto>(
+    '/orders/export',
+    { params }
+  );
+  return data;
 }
 
 // ---- Check-in-filtered orders (client-side scan) -----------------

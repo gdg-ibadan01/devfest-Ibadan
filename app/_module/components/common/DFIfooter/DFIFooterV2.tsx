@@ -12,8 +12,8 @@ interface FooterLink {
 }
 
 const columnOneLinks: FooterLink[] = [
-  { label: 'Sponsors', href: '#' },
-  { label: 'Schedule', href: '#' },
+  { label: 'Sponsors', href: '/#sponsors' },
+  { label: 'Schedule', href: '/schedule' },
   {
     label: 'Merch',
     href: 'https://eventpulse.ng/shop/devfest-ibadan-2026',

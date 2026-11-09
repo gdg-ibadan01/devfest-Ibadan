@@ -11,13 +11,16 @@ import {
   ChevronRight,
   Loader2,
 } from 'lucide-react';
-import { format, isValid, parseISO } from 'date-fns';
+import { endOfDay, format, isValid, parseISO, startOfDay } from 'date-fns';
 import { cn } from '@/app/_module/lib/utils';
 import type { OrderListItemDto } from '@/app/_module/api/types';
 import type { OrderStatus } from '../_types/order.types';
 import OrderActionsMenu from './OrderActionsMenu';
 import EmptyState from '@/app/_module/components/common/EmptyState';
-import { useOrders } from '@/app/_module/services/order.service';
+import { exportOrders, useOrders } from '@/app/_module/services/order.service';
+import { DatePickerInput } from '@/app/_module/components/ui/DatePicker';
+import { notifyApiError } from '@/app/_module/lib/apiError';
+import { showToast } from '@/app/_module/lib/notify';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -66,6 +69,7 @@ const COLUMNS = [
   'Ticket',
   'Code',
   'Validity',
+  'Order Date',
   'Amount',
   'Status',
   'Action',
@@ -175,6 +179,7 @@ function exportRows(rows: OrderListItemDto[]) {
     o.ticket?.name ?? '',
     o.ticket?.code ?? '',
     o.ticket?.validity ?? '',
+    formatDateSafe(o.createdAt),
     o.amount,
     STATUS_LABELS[o.status as OrderStatus] ?? o.status,
   ]);
@@ -187,6 +192,7 @@ function exportCSV(rows: OrderListItemDto[]) {
     'Ticket',
     'Code',
     'Validity',
+    'Order Date',
     'Amount',
     'Status',
   ];
@@ -213,7 +219,18 @@ async function exportPDF(rows: OrderListItemDto[]) {
 
   autoTable(doc, {
     startY: 22,
-    head: [['Full Name', 'Email', 'Ticket', 'Code', 'Validity', 'Amount', 'Status']],
+    head: [
+      [
+        'Full Name',
+        'Email',
+        'Ticket',
+        'Code',
+        'Validity',
+        'Order Date',
+        'Amount',
+        'Status',
+      ],
+    ],
     body: exportRows(rows),
     styles: { fontSize: 9 },
     headStyles: { fillColor: [20, 20, 20] },
@@ -236,6 +253,9 @@ export default function OrdersTable({
   const [searchInput, setSearchInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
+  // yyyy-MM-dd values from DatePickerInput
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
   const [cursor, setCursor] = useState<string | undefined>(undefined);
   const [direction, setDirection] = useState<'next' | 'previous' | undefined>(
     undefined
@@ -246,18 +266,29 @@ export default function OrdersTable({
   // reliably resolve back to page one.
   const [cursorStack, setCursorStack] = useState<string[]>([]);
   const [exportOpen, setExportOpen] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+
+  // Local-day bounds, so a picked day is inclusive from 00:00 to 23:59:59.
+  const dateFromIso = dateFrom
+    ? startOfDay(parseISO(dateFrom)).toISOString()
+    : undefined;
+  const dateToIso = dateTo
+    ? endOfDay(parseISO(dateTo)).toISOString()
+    : undefined;
 
   const { data, isLoading, isFetching, isError } = useOrders({
     limit: PAGE_SIZE,
     search: searchQuery || undefined,
     status: (filterStatus || undefined) as OrderStatus | undefined,
+    dateFrom: dateFromIso,
+    dateTo: dateToIso,
     cursor,
     direction,
   });
 
   const orders = data?.data ?? [];
   const meta = data?.meta;
-  const hasFilters = !!(searchQuery || filterStatus);
+  const hasFilters = !!(searchQuery || filterStatus || dateFrom || dateTo);
   const showLoadingOverlay = isFetching && !isLoading;
 
   const resetPagination = () => {
@@ -279,6 +310,20 @@ export default function OrdersTable({
     setSearchInput('');
     setSearchQuery('');
     setFilterStatus('');
+    setDateFrom('');
+    setDateTo('');
+    resetPagination();
+  };
+
+  const handleDateFromChange = (value: string) => {
+    setDateFrom(value);
+    // Keep the range valid: a start date after the end date clears the end.
+    if (value && dateTo && value > dateTo) setDateTo('');
+    resetPagination();
+  };
+
+  const handleDateToChange = (value: string) => {
+    setDateTo(value);
     resetPagination();
   };
 
@@ -299,14 +344,38 @@ export default function OrdersTable({
     setDirection(prevCursor ? 'previous' : undefined);
   };
 
-  const handleExportCSV = () => {
-    exportCSV(orders);
+  // Exports every order matching the current filters (not just this page).
+  // The API records each export in the audit log.
+  const runExport = async (fileFormat: 'csv' | 'pdf') => {
     setExportOpen(false);
+    setIsExporting(true);
+    try {
+      const result = await exportOrders({
+        search: searchQuery || undefined,
+        status: (filterStatus || undefined) as OrderStatus | undefined,
+        dateFrom: dateFromIso,
+        dateTo: dateToIso,
+        format: fileFormat,
+      });
+      if (result.total === 0) {
+        showToast.info('No orders match the current filters');
+        return;
+      }
+      if (fileFormat === 'csv') exportCSV(result.data);
+      else await exportPDF(result.data);
+      if (result.truncated) {
+        showToast.info(
+          `Export limited to the first ${result.total.toLocaleString()} orders. Narrow the filters to export the rest.`
+        );
+      }
+    } catch (error) {
+      notifyApiError(error, 'Failed to export orders');
+    } finally {
+      setIsExporting(false);
+    }
   };
-  const handleExportPDF = () => {
-    exportPDF(orders);
-    setExportOpen(false);
-  };
+  const handleExportCSV = () => runExport('csv');
+  const handleExportPDF = () => runExport('pdf');
 
   return (
     <>
@@ -346,8 +415,27 @@ export default function OrdersTable({
           Search
         </button>
 
-        {/* Status filter + export/create — right-aligned */}
+        {/* Date range + status filter + export/create — right-aligned */}
         <div className="flex flex-wrap items-center gap-3 sm:ml-auto w-full sm:w-auto">
+          <div className="w-[calc(50%-6px)] sm:w-[160px]">
+            <DatePickerInput
+              value={dateFrom}
+              onChange={handleDateFromChange}
+              placeholder="From date"
+              className="!py-[11px] !px-3"
+              toDate={dateTo ? parseISO(dateTo) : undefined}
+            />
+          </div>
+          <div className="w-[calc(50%-6px)] sm:w-[160px]">
+            <DatePickerInput
+              value={dateTo}
+              onChange={handleDateToChange}
+              placeholder="To date"
+              className="!py-[11px] !px-3"
+              fromDate={dateFrom ? parseISO(dateFrom) : undefined}
+            />
+          </div>
+
           <StatusDropdown
             value={filterStatus}
             onChange={(v) => {
@@ -376,10 +464,15 @@ export default function OrdersTable({
           <div className="relative flex-shrink-0">
             <button
               onClick={() => setExportOpen((p) => !p)}
-              className="w-[42px] h-[42px] flex-shrink-0 flex items-center justify-center rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors text-gray-600"
+              disabled={isExporting}
+              className="w-[42px] h-[42px] flex-shrink-0 flex items-center justify-center rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors text-gray-600 disabled:opacity-60"
               title="Export"
             >
-              <Download size={15} />
+              {isExporting ? (
+                <Loader2 size={15} className="animate-spin" />
+              ) : (
+                <Download size={15} />
+              )}
             </button>
             {exportOpen && (
               <>
@@ -462,6 +555,9 @@ export default function OrdersTable({
                     </td>
                     <td className="px-5 py-4 text-[13px] text-gray-600 whitespace-nowrap">
                       {order.ticket?.validity ?? '—'}
+                    </td>
+                    <td className="px-5 py-4 text-[13px] text-gray-600 whitespace-nowrap">
+                      {formatDateSafe(order.createdAt)}
                     </td>
                     <td className="px-5 py-4 text-[13px] font-semibold text-gray-800 whitespace-nowrap">
                       {order.amount

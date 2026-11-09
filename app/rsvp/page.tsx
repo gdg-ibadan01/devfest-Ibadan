@@ -172,7 +172,7 @@ export default function Rsvp() {
         </div>
         <div className="px-4 md:px-9 py-4 space-y-4">
           <div className="space-y-1">
-            <h1 className="font-bold text-lg">DevFest Ibadan 2026 - Early bird Seat Reservation</h1>
+            <h1 className="font-bold text-lg">DevFest Ibadan 2026 - Seat Reservation</h1>
             <p className="text-sm text-[#666666]">
               Please fill out your details to reserve your ticket.
             </p>
