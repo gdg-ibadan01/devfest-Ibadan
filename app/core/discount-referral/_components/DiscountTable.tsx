@@ -1,20 +1,47 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { Search, Plus, ChevronLeft, ChevronRight, X, Copy, Check } from 'lucide-react';
+import {
+  Search,
+  Plus,
+  ChevronLeft,
+  ChevronRight,
+  X,
+  Copy,
+  Check,
+} from 'lucide-react';
 import { format, isValid, parseISO } from 'date-fns';
 import { cn } from '@/app/_module/lib/utils';
 import { useDiscounts } from '@/app/_module/services/discounts.service';
 import EmptyState from '@/app/_module/components/common/EmptyState';
 import type { DiscountListItemDto } from '@/app/_module/api/types';
+import DiscountActionsMenu from './DiscountActionsMenu';
+import UpdateDiscountModal from './UpdateDiscountModal';
+
+
 
 const STATUS_CONFIG: Record<
   DiscountListItemDto['status'],
   { dot: string; text: string; bg: string; label: string }
 > = {
-  ACTIVE: { dot: 'bg-[#34A853]', text: 'text-[#1B873B]', bg: 'bg-[#E8F5E9]', label: 'Active' },
-  SCHEDULED: { dot: 'bg-[#F59E0B]', text: 'text-[#92400E]', bg: 'bg-[#FEF3C7]', label: 'Scheduled' },
-  EXPIRED: { dot: 'bg-[#9AA0A6]', text: 'text-[#5F6368]', bg: 'bg-[#F1F3F4]', label: 'Expired' },
+  ACTIVE: {
+    dot: 'bg-[#34A853]',
+    text: 'text-[#1B873B]',
+    bg: 'bg-[#E8F5E9]',
+    label: 'Active',
+  },
+  SCHEDULED: {
+    dot: 'bg-[#F59E0B]',
+    text: 'text-[#92400E]',
+    bg: 'bg-[#FEF3C7]',
+    label: 'Scheduled',
+  },
+  EXPIRED: {
+    dot: 'bg-[#9AA0A6]',
+    text: 'text-[#5F6368]',
+    bg: 'bg-[#F1F3F4]',
+    label: 'Expired',
+  },
 };
 
 const COLUMNS = [
@@ -25,7 +52,9 @@ const COLUMNS = [
   'Tickets',
   'Usage',
   'Valid From',
+  'Valid To',
   'Status',
+  'Actions',
 ];
 
 function formatAmount(val: string): string {
@@ -63,6 +92,8 @@ export default function DiscountTable({ onCreateClick }: DiscountTableProps) {
   const [direction, setDirection] = useState<'next' | 'previous' | undefined>(undefined);
   const [cursorStack, setCursorStack] = useState<string[]>([]);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
+  const [selectedDiscount, setSelectedDiscount] =
+     useState<DiscountListItemDto | null>(null);
 
   const { data, isLoading, isError, isFetching } = useDiscounts({
     name: searchQuery || undefined,
@@ -103,7 +134,7 @@ export default function DiscountTable({ onCreateClick }: DiscountTableProps) {
   };
 
   const hasData = discounts.length > 0;
-  const showLoading = isLoading || isFetching;
+const showLoading = isLoading || (isFetching && !hasData);
 
   const copyCode = async (code: string) => {
     await navigator.clipboard.writeText(code);
@@ -177,7 +208,10 @@ export default function DiscountTable({ onCreateClick }: DiscountTableProps) {
                 Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} />)
               ) : isError ? (
                 <tr>
-                  <td colSpan={COLUMNS.length} className="text-center py-12 text-[13px] text-red-400">
+                  <td
+                    colSpan={COLUMNS.length}
+                    className="text-center py-12 text-[13px] text-red-400"
+                  >
                     Failed to load discounts. Please refresh.
                   </td>
                 </tr>
@@ -185,7 +219,8 @@ export default function DiscountTable({ onCreateClick }: DiscountTableProps) {
                 <EmptyState />
               ) : (
                 discounts.map((discount) => {
-                  const badge = STATUS_CONFIG[discount.status] ?? STATUS_CONFIG.SCHEDULED;
+                  const badge =
+                    STATUS_CONFIG[discount.status] ?? STATUS_CONFIG.SCHEDULED;
                   return (
                     <tr
                       key={discount.id}
@@ -229,6 +264,9 @@ export default function DiscountTable({ onCreateClick }: DiscountTableProps) {
                       <td className="px-5 py-4 text-[13px] text-gray-600">
                         {formatDate(discount.validFrom)}
                       </td>
+                      <td className="px-5 py-4 text-[13px] text-gray-600">
+                        {formatDate(discount.validTo ?? '')}
+                      </td>
                       <td className="px-5 py-4">
                         <span
                           className={cn(
@@ -237,9 +275,19 @@ export default function DiscountTable({ onCreateClick }: DiscountTableProps) {
                             badge.text
                           )}
                         >
-                          <span className={cn('w-[7px] h-[7px] rounded-full flex-shrink-0', badge.dot)} />
+                          <span
+                            className={cn(
+                              'w-[7px] h-[7px] rounded-full flex-shrink-0',
+                              badge.dot
+                            )}
+                          />
                           {badge.label}
                         </span>
+                      </td>
+                      <td className="px-5 py-4">
+                        <DiscountActionsMenu
+                          onUpdate={() => setSelectedDiscount(discount)}
+                        />
                       </td>
                     </tr>
                   );
@@ -253,7 +301,8 @@ export default function DiscountTable({ onCreateClick }: DiscountTableProps) {
         {!showLoading && (meta?.hasMore || cursorStack.length > 0) && (
           <div className="flex items-center justify-between px-5 py-3 border-t border-gray-100 bg-white">
             <span className="text-[12px] text-gray-400">
-              {discounts.length} discount{discounts.length !== 1 ? 's' : ''} shown
+              {discounts.length} discount{discounts.length !== 1 ? 's' : ''}{' '}
+              shown
             </span>
             <div className="flex items-center gap-2">
               <button
@@ -284,6 +333,11 @@ export default function DiscountTable({ onCreateClick }: DiscountTableProps) {
           </div>
         )}
       </div>
+      <UpdateDiscountModal
+        open={selectedDiscount !== null}
+        discount={selectedDiscount}
+        onClose={() => setSelectedDiscount(null)}
+      />
     </>
   );
 }

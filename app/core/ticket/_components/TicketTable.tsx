@@ -232,7 +232,7 @@ export default function TicketTable() {
                       <div className="flex items-center gap-2 flex-wrap">
                         <span>{ticket.name}</span>
                         {ticket.seatsPerUnit > 1 && (
-                          <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-700 border border-blue-200 whitespace-nowrap">
+                          <span className="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-[#F3F3F3] text-blue-700 border border-blue-200 whitespace-nowrap">
                             Group of {ticket.seatsPerUnit}
                           </span>
                         )}
@@ -282,8 +282,8 @@ export default function TicketTable() {
                           setPreviewTicketId(ticket.id);
                           setPreviewOpen(true);
                         }}
-                        onEdit={() => { }}
-                        onDelete={() => { }}
+                        onEdit={() => {}}
+                        onDelete={() => {}}
                       />
                     </td>
                   </tr>

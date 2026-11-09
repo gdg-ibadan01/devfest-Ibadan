@@ -627,6 +627,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/discounts/{discountId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update discount valid_to */
+        patch: operations["DiscountsController_updateDiscount"];
+        trace?: never;
+    };
     "/api/v1/discounts/code/{discountCode}": {
         parameters: {
             query?: never;
@@ -1580,6 +1597,13 @@ export interface components {
             amount: string;
             /** @description Whether the discount is currently active */
             isActive: boolean;
+        };
+        UpdateDiscountDto: {
+            /**
+             * @description End date in YYYY-MM-DD format. Discount expires at end of day. Set to null to clear the expiry. Omit to leave unchanged.
+             * @example 2026-12-31
+             */
+            validTo?: string | null;
         };
         CreateDiscountDto: {
             /**
@@ -3066,6 +3090,60 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["DiscountByCodeResponseDto"];
                 };
+            };
+            /** @description Discount not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    DiscountsController_updateDiscount: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                discountId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateDiscountDto"];
+            };
+        };
+        responses: {
+            /** @description Discount updated successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreateDiscountResponseDto"];
+                };
+            };
+            /** @description Validation error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Requires permission */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Discount not found */
             404: {

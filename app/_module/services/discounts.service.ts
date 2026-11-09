@@ -8,6 +8,7 @@ import type {
   CreateDiscountResponseDto,
   DiscountListResponseDto,
   DiscountListParams,
+  UpdateDiscountDto,
 } from '@/app/_module/api/types';
 
 // ---- List discounts -------------------------------------------------
@@ -30,6 +31,61 @@ export function useDiscounts(params: DiscountListParams = {}) {
 async function createDiscount(dto: CreateDiscountDto): Promise<CreateDiscountResponseDto> {
   const { data } = await apiClient.post<CreateDiscountResponseDto>('/discounts', dto);
   return data;
+}
+
+// ---- Update discount expiry ----------------------------------------
+
+async function updateDiscount({
+  discountId,
+  dto,
+}: {
+  discountId: string;
+  dto: UpdateDiscountDto;
+}): Promise<CreateDiscountResponseDto> {
+  const { data } = await apiClient.patch<CreateDiscountResponseDto>(
+    `/discounts/${encodeURIComponent(discountId)}`,
+    dto
+  );
+
+  return data;
+}
+
+export function useUpdateDiscount() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: updateDiscount,
+    onSuccess: (updatedDiscount) => {
+      queryClient.setQueriesData<DiscountListResponseDto>(
+        { queryKey: ['discounts'], exact: false },
+        (currentData) => {
+          if (!currentData) return currentData;
+
+          return {
+            ...currentData,
+            data: currentData.data.map((discount) =>
+              discount.id === updatedDiscount.id
+                ? {
+                    ...discount,
+                    validTo: updatedDiscount.validTo,
+                  }
+                : discount
+            ),
+          };
+        }
+      );
+
+      queryClient.invalidateQueries({
+        queryKey: ['discounts'],
+        exact: false,
+      });
+
+      showToast.success('Discount updated successfully');
+    },
+    onError: (error: Error) => {
+      notifyApiError(error, 'Failed to update discount');
+    },
+  });
 }
 
 export function useCreateDiscount() {
