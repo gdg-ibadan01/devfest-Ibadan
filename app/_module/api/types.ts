@@ -98,6 +98,7 @@ export type DashboardOverviewResponseDto =
 // OpenAPI document marks a nullable numeric field with `type: object`.
 // Keep the API's actual contract explicit for callers.
 export type CreateDiscountDto = Schemas['CreateDiscountDto'];
+export type UpdateDiscountDto = Schemas['UpdateDiscountDto'];
 export type CreateDiscountResponseDto = Schemas['CreateDiscountResponseDto'];
 export type DiscountListTicketDto = Schemas['DiscountListTicketDto'];
 export type DiscountListItemDto = Schemas['DiscountListItemDto'];
@@ -124,9 +125,25 @@ export interface OrderListParams {
   search?: string;
   status?:
     'AWAITING_PAYMENT' | 'PAID' | 'CANCELLED' | 'AWAITING_REFUND' | 'REFUNDED';
+  /** ISO 8601 instant; only orders created at or after it. */
+  dateFrom?: string;
+  /** ISO 8601 instant; only orders created at or before it. */
+  dateTo?: string;
   direction?: 'next' | 'previous';
   cursor?: string;
   limit?: number;
+}
+
+export type OrderExportParams = Pick<
+  OrderListParams,
+  'search' | 'status' | 'dateFrom' | 'dateTo'
+> & { format?: 'csv' | 'pdf' };
+
+export interface OrderExportResponseDto {
+  data: OrderListItemDto[];
+  total: number;
+  /** True when more orders matched than the export limit. */
+  truncated: boolean;
 }
 
 export interface PaginationParams {

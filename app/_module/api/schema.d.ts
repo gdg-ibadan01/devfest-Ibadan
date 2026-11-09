@@ -520,12 +520,32 @@ export interface paths {
         };
         /**
          * List orders
-         * @description Cursor-paginated list of orders. By default returns earlier-dated orders first.
+         * @description Cursor-paginated list of orders. By default returns earlier-dated orders first. Optionally filter by creation date with dateFrom and dateTo.
          */
         get: operations["OrdersController_findAll"];
         put?: never;
         /** Create a ticket order */
         post: operations["OrdersController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orders/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Export orders
+         * @description Returns every order matching the filters (up to 10,000) and records the export in the audit log.
+         */
+        get: operations["OrdersController_exportOrders"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -605,6 +625,23 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/v1/discounts/{discountId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update discount valid_to */
+        patch: operations["DiscountsController_updateDiscount"];
         trace?: never;
     };
     "/api/v1/discounts/code/{discountCode}": {
@@ -1326,8 +1363,13 @@ export interface components {
         CreateOrderResponseDto: {
             id: string;
             reference: string;
-            /** @enum {string} */
-            status: "AWAITING_PAYMENT";
+            /**
+             * @description PAID when a discount covered the full price (isFree); no payment is needed.
+             * @enum {string}
+             */
+            status: "AWAITING_PAYMENT" | "PAID";
+            /** @description True when a discount reduced the amount to zero. The order is already PAID and tickets have been issued. */
+            isFree: boolean;
             /**
              * @description Total amount payable in Naira (2 decimal places)
              * @example 9500.00
@@ -1347,6 +1389,8 @@ export interface components {
         };
         OrderListItemDto: {
             id: string;
+            /** Format: date-time */
+            createdAt: string;
             /** Format: date-time */
             paidAt: string | null;
             /**
@@ -1382,6 +1426,13 @@ export interface components {
         OrderListResponseDto: {
             data: components["schemas"]["OrderListItemDto"][];
             meta: components["schemas"]["OrdersPaginationMetaDto"];
+        };
+        OrderExportResponseDto: {
+            data: components["schemas"]["OrderListItemDto"][];
+            /** @description Number of rows in this export */
+            total: number;
+            /** @description True when more orders matched than the export limit; narrow the filters to export the rest */
+            truncated: boolean;
         };
         GetOrderReferenceResponseDto: {
             ticket: {
@@ -1470,8 +1521,13 @@ export interface components {
         CreateGroupBuyOrderResponseDto: {
             id: string;
             reference: string;
-            /** @enum {string} */
-            status: "AWAITING_PAYMENT";
+            /**
+             * @description PAID when a discount covered the full price (isFree); no payment is needed.
+             * @enum {string}
+             */
+            status: "AWAITING_PAYMENT" | "PAID";
+            /** @description True when a discount reduced the total to zero. All group orders are already PAID and tickets have been issued. */
+            isFree: boolean;
             /**
              * @description Total amount payable in Naira (2 decimal places)
              * @example 28500.00
@@ -1541,6 +1597,13 @@ export interface components {
             amount: string;
             /** @description Whether the discount is currently active */
             isActive: boolean;
+        };
+        UpdateDiscountDto: {
+            /**
+             * @description End date in YYYY-MM-DD format. Discount expires at end of day. Set to null to clear the expiry. Omit to leave unchanged.
+             * @example 2026-12-31
+             */
+            validTo?: string | null;
         };
         CreateDiscountDto: {
             /**
@@ -2662,6 +2725,10 @@ export interface operations {
                 search?: string;
                 /** @description Filter orders by status. When omitted, orders of all statuses are returned. */
                 status?: "AWAITING_PAYMENT" | "PAID" | "CANCELLED" | "AWAITING_REFUND" | "REFUNDED";
+                /** @description Only return orders created at or after this instant (ISO 8601) */
+                dateFrom?: string;
+                /** @description Only return orders created at or before this instant (ISO 8601) */
+                dateTo?: string;
                 /** @description Pagination direction. `next` returns earlier-dated orders, `previous` returns more recent orders. */
                 direction?: "next" | "previous";
                 /** @description Cursor for pagination. Pass the ID of the last item from the previous page. */
@@ -2745,6 +2812,51 @@ export interface operations {
             };
             /** @description Payment initialization failed */
             502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    OrdersController_exportOrders: {
+        parameters: {
+            query?: {
+                /** @description Search orders by attendee email, attendee full name, or reference (case-insensitive) */
+                search?: string;
+                /** @description Filter orders by status. When omitted, orders of all statuses are returned. */
+                status?: "AWAITING_PAYMENT" | "PAID" | "CANCELLED" | "AWAITING_REFUND" | "REFUNDED";
+                /** @description Only return orders created at or after this instant (ISO 8601) */
+                dateFrom?: string;
+                /** @description Only return orders created at or before this instant (ISO 8601) */
+                dateTo?: string;
+                /** @description File format the export is for. Recorded in the audit log. */
+                format?: "csv" | "pdf";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Orders exported successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderExportResponseDto"];
+                };
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Requires permission */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -2978,6 +3090,60 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["DiscountByCodeResponseDto"];
                 };
+            };
+            /** @description Discount not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    DiscountsController_updateDiscount: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                discountId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateDiscountDto"];
+            };
+        };
+        responses: {
+            /** @description Discount updated successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreateDiscountResponseDto"];
+                };
+            };
+            /** @description Validation error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Requires permission */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Discount not found */
             404: {

@@ -73,7 +73,7 @@ const DevfestHero: FC = () => {
           <div className="lg:col-span-7 flex flex-col justify-between">
             <div>
               <motion.h1
-                initial={{ opacity: 0, y: 18 }}
+                initial={false}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, ease: 'easeOut' }}
                 className="font-black font-grotesk text-[42px] sm:text-6xl md:text-7xl lg:text-[76px] xl:text-[84px] leading-[95%] tracking-tight text-black"
@@ -91,13 +91,13 @@ const DevfestHero: FC = () => {
               </motion.h1>
 
               <motion.p
-                initial={{ opacity: 0, y: 18 }}
+                initial={false}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.1, ease: 'easeOut' }}
                 className="my-5 sm:my-6 text-sm sm:text-base md:text-lg text-[#4B5563] max-w-lg leading-relaxed font-sans"
               >
-                Ibadan Nigeria&apos;s biggest developer conference. Early bird
-                tickets from ₦5,000.
+                Ibadan Nigeria&apos;s biggest developer conference. Tickets from
+                ₦5,000.
               </motion.p>
 
               {/* Action Buttons */}
@@ -163,7 +163,7 @@ const DevfestHero: FC = () => {
               {/* Header: Title + BEST VALUE badge */}
               <div className="flex items-center justify-between gap-3">
                 <h2 className="text-xl sm:text-2xl font-black text-black font-grotesk tracking-tight">
-                  Early Bird Active
+                  Tickets Available
                 </h2>
                 <span className="bg-[#EA4335] text-white text-[10px] sm:text-[11px] font-bold px-3 py-1 rounded-[100px] uppercase tracking-wider shrink-0">
                   BEST VALUE
@@ -172,8 +172,7 @@ const DevfestHero: FC = () => {
 
               {/* Subtext */}
               <p className="mt-2 text-xs sm:text-[13px] text-[#4B5563] leading-relaxed">
-                Secure your ticket at ₦5,000 - first 300 only. Closes October
-                16, 2026.
+                Secure your ticket at ₦5,000.
               </p>
 
               {/* White Countdown Box */}

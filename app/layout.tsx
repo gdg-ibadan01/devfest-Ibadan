@@ -1,16 +1,45 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
+import {
+  DEFAULT_DESCRIPTION,
+  DEFAULT_TITLE,
+  OG_IMAGE,
+  ORGANIZER,
+  SITE_NAME,
+  SITE_URL,
+} from './_module/config/seo';
 import './globals.css';
 import RootLayout from './layouts';
 import { Toaster } from 'sonner';
 import Script from 'next/script';
 import MetaPixel from '@/components/MetaPixel';
 import TikTokPixel from '@/components/TikTokPixel';
+import GoogleAnalytics from '@/components/GoogleAnalytics';
 import { TIKTOK_PIXEL_ID } from '@/utils/tiktok-pixel';
 
 export const metadata: Metadata = {
-  title: 'Devfest Ibadan 2026',
-  description:
-    'Join DevFest Ibadan 2026 on 21 November at Kakanfo Inn & Conference Centre for talks, workshops, codelabs and networking.',
+  metadataBase: new URL(SITE_URL),
+  title: { default: DEFAULT_TITLE, template: `%s | ${SITE_NAME}` },
+  description: DEFAULT_DESCRIPTION,
+  applicationName: SITE_NAME,
+  authors: [{ name: ORGANIZER.name, url: ORGANIZER.url }],
+  creator: ORGANIZER.name,
+  publisher: ORGANIZER.name,
+  openGraph: {
+    siteName: SITE_NAME,
+    locale: 'en_NG',
+    type: 'website',
+    images: [OG_IMAGE],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    images: [OG_IMAGE.url],
+  },
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  themeColor: '#4285f4',
 };
 
 export default function AppLayout({
@@ -24,7 +53,7 @@ export default function AppLayout({
     <RootLayout>
       <Script
         id="tiktok-pixel-base"
-        strategy="beforeInteractive"
+        strategy="afterInteractive"
         dangerouslySetInnerHTML={{
           __html: `
 !function (w, d, t) {
@@ -40,6 +69,7 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
       />
       <MetaPixel />
       <TikTokPixel />
+      <GoogleAnalytics />
       <Toaster position="top-center" />
       {children}
     </RootLayout>
