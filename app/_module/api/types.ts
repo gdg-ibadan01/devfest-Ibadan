@@ -244,3 +244,87 @@ export interface OrderListParams {
   status?:
     'AWAITING_PAYMENT' | 'PAID' | 'CANCELLED' | 'AWAITING_REFUND' | 'REFUNDED';
 }
+
+// ---- Emails (hand-written until `yarn gen:api` picks up the new endpoints) --
+export type EmailSendStatus = 'PENDING' | 'SENT' | 'FAILED';
+export type EmailCampaignStatus =
+  | 'DRAFT'
+  | 'SENDING'
+  | 'SENT'
+  | 'PARTIAL'
+  | 'FAILED';
+
+export interface CampaignAudience {
+  ticketId?: string;
+  /** true = only checked-in, false = only not checked-in, undefined = everyone */
+  checkedIn?: boolean;
+  ticketEmailNotConfirmed?: boolean;
+}
+
+export interface CampaignStats {
+  total: number;
+  sent: number;
+  failed: number;
+  pending: number;
+}
+
+export interface EmailCampaignDto {
+  id: string;
+  subject: string;
+  preheader: string;
+  body: string;
+  audience: CampaignAudience;
+  status: EmailCampaignStatus;
+  sentAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  createdByName?: string;
+  stats: CampaignStats;
+}
+
+export interface SaveEmailCampaignDto {
+  subject: string;
+  preheader?: string;
+  body: string;
+  audience?: CampaignAudience;
+}
+
+/** What the mail provider reported after accepting a message. */
+export type EmailEventState = 'DELIVERED' | 'DELAYED' | 'BOUNCED' | 'COMPLAINED';
+
+export interface EmailDeliveryDto {
+  id: string;
+  email: string;
+  fullName: string;
+  status: EmailSendStatus;
+  error: string | null;
+  attempts: number;
+  sentAt: string | null;
+  event: EmailEventState | null;
+  eventDetail: string | null;
+}
+
+export interface EmailDeliveriesResponse {
+  data: EmailDeliveryDto[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+export interface TicketEmailSummary {
+  sent: number;
+  failed: number;
+  pending: number;
+  unknown: number;
+  unconfirmed: number;
+}
+
+export interface ResendBulkResult {
+  attempted: number;
+  sent: number;
+  failed: number;
+  /** Set when the mail limit was reached part-way; the rest go out automatically later. */
+  deferred: number;
+  remaining: number;
+  budgetLeft: number | null;
+}

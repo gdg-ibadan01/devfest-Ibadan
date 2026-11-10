@@ -49,6 +49,17 @@ export const queryKeys = {
     overview: () => ['dashboard', 'overview'] as const,
   },
 
+  // Emails
+  emails: {
+    campaigns: () => ['emails', 'campaigns'] as const,
+    campaign: (id: string) => ['emails', 'campaigns', id] as const,
+    deliveries: (id: string, params?: Record<string, unknown>) =>
+      ['emails', 'campaigns', id, 'deliveries', params] as const,
+    audienceCount: (audience: Record<string, unknown>) =>
+      ['emails', 'audience-count', audience] as const,
+    ticketSummary: () => ['emails', 'ticket-summary'] as const,
+  },
+
   // Discounts
   discounts: {
     all: (params?: Record<string, unknown>) => ['discounts', params] as const,

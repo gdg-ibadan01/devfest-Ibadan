@@ -552,6 +552,63 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/orders/ticket-emails/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Ticket email delivery summary
+         * @description Counts of PAID orders by ticket-email state. "unknown" means the order predates email tracking.
+         */
+        get: operations["OrdersController_ticketEmailSummary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orders/resend-tickets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Re-send ticket emails that are not confirmed sent
+         * @description Sends up to 100 at a time (and never past the configured hourly/daily mail budget). Call again to continue; `remaining` is how many are still unconfirmed.
+         */
+        post: operations["OrdersController_resendUnconfirmedTickets"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orders/{id}/resend-ticket": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Re-send one attendee their ticket email */
+        post: operations["OrdersController_resendTicket"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/orders/reference/{reference}": {
         parameters: {
             query?: never;
@@ -627,23 +684,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/discounts/{discountId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** Update discount valid_to */
-        patch: operations["DiscountsController_updateDiscount"];
-        trace?: never;
-    };
     "/api/v1/discounts/code/{discountCode}": {
         parameters: {
             query?: never;
@@ -659,6 +699,26 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/v1/discounts/{discountId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update discount valid_to
+         * @description Updates the expiry date of a discount. Set validTo to null to clear it, or omit it to leave it unchanged.
+         */
+        patch: operations["DiscountsController_updateDiscount"];
         trace?: never;
     };
     "/api/v1/tickets": {
@@ -759,6 +819,168 @@ export interface paths {
         put?: never;
         /** Receive Monnify webhook events */
         post: operations["WebhookController_handleMonnifyWebhook"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/webhooks/resend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Receive Resend delivery events (delivered, bounced, complained) */
+        post: operations["WebhookController_handleResendWebhook"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/email-campaigns": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List email campaigns (newest first) */
+        get: operations["EmailCampaignController_list"];
+        put?: never;
+        /** Create a draft email */
+        post: operations["EmailCampaignController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/email-campaigns/audience-count": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** How many ticket holders match an audience filter */
+        post: operations["EmailCampaignController_audienceCount"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/email-campaigns/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Render unsaved content with sample values */
+        post: operations["EmailCampaignController_preview"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/email-campaigns/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get a campaign with delivery stats */
+        get: operations["EmailCampaignController_get"];
+        put?: never;
+        post?: never;
+        /** Delete a draft */
+        delete: operations["EmailCampaignController_remove"];
+        options?: never;
+        head?: never;
+        /** Edit a draft */
+        patch: operations["EmailCampaignController_update"];
+        trace?: never;
+    };
+    "/api/v1/email-campaigns/{id}/deliveries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Per-recipient delivery results */
+        get: operations["EmailCampaignController_deliveries"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/email-campaigns/{id}/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Send a test of the draft to one or more email addresses
+         * @description Defaults to your own address. Does not queue or record a campaign delivery.
+         */
+        post: operations["EmailCampaignController_sendTest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/email-campaigns/{id}/send": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Send the draft to the audience
+         * @description Queues one delivery per ticket holder and sends in the background, within the configured mail budget.
+         */
+        post: operations["EmailCampaignController_send"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/email-campaigns/{id}/retry-failed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Re-queue the failed deliveries */
+        post: operations["EmailCampaignController_retryFailed"];
         delete?: never;
         options?: never;
         head?: never;
@@ -882,7 +1104,7 @@ export interface components {
              *       "attendees.list"
              *     ]
              */
-            permissions: ("tickets.create" | "tickets.list" | "tickets.edit" | "tickets.disable" | "attendees.create" | "attendees.check_in" | "attendees.list" | "admins.create" | "admins.list" | "admins.invite" | "admins.update" | "admins.profile" | "admins.deactivate" | "admins.activate" | "roles.create" | "roles.edit" | "roles.assign" | "roles.list" | "roles.deactivate" | "permissions.assign" | "payment_reports.export" | "discounts.create" | "discounts.list" | "orders.list" | "audit-logs.view-list" | "audit-logs.view" | "dashboard.view")[];
+            permissions: ("tickets.create" | "tickets.list" | "tickets.edit" | "tickets.disable" | "attendees.create" | "attendees.check_in" | "attendees.list" | "admins.create" | "admins.list" | "admins.invite" | "admins.update" | "admins.profile" | "admins.deactivate" | "admins.activate" | "roles.create" | "roles.edit" | "roles.assign" | "roles.list" | "roles.deactivate" | "permissions.assign" | "payment_reports.export" | "discounts.create" | "discounts.list" | "discounts.update" | "orders.list" | "audit-logs.view-list" | "audit-logs.view" | "dashboard.view" | "emails.send" | "emails.manage")[];
         };
         FindOneAdminResponseDto: {
             id: string;
@@ -982,14 +1204,14 @@ export interface components {
             /** @description Description of the role */
             description: string;
             /** @description Permissions for this role */
-            permissions: ("tickets.create" | "tickets.list" | "tickets.edit" | "tickets.disable" | "attendees.create" | "attendees.check_in" | "attendees.list" | "admins.create" | "admins.list" | "admins.invite" | "admins.update" | "admins.profile" | "admins.deactivate" | "admins.activate" | "roles.create" | "roles.edit" | "roles.assign" | "roles.list" | "roles.deactivate" | "permissions.assign" | "payment_reports.export" | "discounts.create" | "discounts.list" | "orders.list" | "audit-logs.view-list" | "audit-logs.view" | "dashboard.view")[];
+            permissions: ("tickets.create" | "tickets.list" | "tickets.edit" | "tickets.disable" | "attendees.create" | "attendees.check_in" | "attendees.list" | "admins.create" | "admins.list" | "admins.invite" | "admins.update" | "admins.profile" | "admins.deactivate" | "admins.activate" | "roles.create" | "roles.edit" | "roles.assign" | "roles.list" | "roles.deactivate" | "permissions.assign" | "payment_reports.export" | "discounts.create" | "discounts.list" | "discounts.update" | "orders.list" | "audit-logs.view-list" | "audit-logs.view" | "dashboard.view" | "emails.send" | "emails.manage")[];
             isActive: boolean;
         };
         PermissionDto: {
             /** @enum {string} */
-            readonly id: "tickets.create" | "tickets.list" | "tickets.edit" | "tickets.disable" | "attendees.create" | "attendees.check_in" | "attendees.list" | "admins.create" | "admins.list" | "admins.invite" | "admins.update" | "admins.profile" | "admins.deactivate" | "admins.activate" | "roles.create" | "roles.edit" | "roles.assign" | "roles.list" | "roles.deactivate" | "permissions.assign" | "payment_reports.export" | "discounts.create" | "discounts.list" | "orders.list" | "audit-logs.view-list" | "audit-logs.view" | "dashboard.view";
+            readonly id: "tickets.create" | "tickets.list" | "tickets.edit" | "tickets.disable" | "attendees.create" | "attendees.check_in" | "attendees.list" | "admins.create" | "admins.list" | "admins.invite" | "admins.update" | "admins.profile" | "admins.deactivate" | "admins.activate" | "roles.create" | "roles.edit" | "roles.assign" | "roles.list" | "roles.deactivate" | "permissions.assign" | "payment_reports.export" | "discounts.create" | "discounts.list" | "discounts.update" | "orders.list" | "audit-logs.view-list" | "audit-logs.view" | "dashboard.view" | "emails.send" | "emails.manage";
             /** @enum {string} */
-            readonly label: "Create tickets" | "View tickets list" | "Edit tickets" | "Disable tickets" | "Add new attendee" | "Check-in attendees" | "View attendee list" | "Create admin" | "View admin list" | "Invite admin" | "Update admin" | "View admin profile" | "Deactivate admin" | "Activate admin" | "Create role" | "Edit role" | "Assign role" | "View roles list" | "Deactivate role" | "Assign permissions" | "Export payment report" | "Create discount" | "View discounts list" | "View orders list" | "View audit logs list" | "View audit log detail" | "View dashboard";
+            readonly label: "Create tickets" | "View tickets list" | "Edit tickets" | "Disable tickets" | "Add new attendee" | "Check-in attendees" | "View attendee list" | "Create admin" | "View admin list" | "Invite admin" | "Update admin" | "View admin profile" | "Deactivate admin" | "Activate admin" | "Create role" | "Edit role" | "Assign role" | "View roles list" | "Deactivate role" | "Assign permissions" | "Export payment report" | "Create discount" | "View discounts list" | "Update discount" | "View orders list" | "View audit logs list" | "View audit log detail" | "View dashboard" | "Send ticket emails" | "View and compose emails";
         };
         CreateRoleResponseDto: {
             readonly id: string;
@@ -1023,7 +1245,7 @@ export interface components {
             /** @description Description of the role */
             description?: string;
             /** @description Permissions for this role */
-            permissions?: ("tickets.create" | "tickets.list" | "tickets.edit" | "tickets.disable" | "attendees.create" | "attendees.check_in" | "attendees.list" | "admins.create" | "admins.list" | "admins.invite" | "admins.update" | "admins.profile" | "admins.deactivate" | "admins.activate" | "roles.create" | "roles.edit" | "roles.assign" | "roles.list" | "roles.deactivate" | "permissions.assign" | "payment_reports.export" | "discounts.create" | "discounts.list" | "orders.list" | "audit-logs.view-list" | "audit-logs.view" | "dashboard.view")[];
+            permissions?: ("tickets.create" | "tickets.list" | "tickets.edit" | "tickets.disable" | "attendees.create" | "attendees.check_in" | "attendees.list" | "admins.create" | "admins.list" | "admins.invite" | "admins.update" | "admins.profile" | "admins.deactivate" | "admins.activate" | "roles.create" | "roles.edit" | "roles.assign" | "roles.list" | "roles.deactivate" | "permissions.assign" | "payment_reports.export" | "discounts.create" | "discounts.list" | "discounts.update" | "orders.list" | "audit-logs.view-list" | "audit-logs.view" | "dashboard.view" | "emails.send" | "emails.manage")[];
             isActive?: boolean;
         };
         RoleResponseDto: {
@@ -1403,6 +1625,17 @@ export interface components {
             attendeeFullName: string;
             attendeeEmail: string;
             checkIns: string[];
+            /**
+             * @description Ticket email state; null = unknown (before tracking)
+             * @enum {string|null}
+             */
+            ticketEmailStatus: "PENDING" | "SENT" | "FAILED" | null;
+            /**
+             * @description What the mail provider reported after accepting the ticket email
+             * @enum {string|null}
+             */
+            ticketEmailEvent: "DELIVERED" | "DELAYED" | "BOUNCED" | "COMPLAINED" | null;
+            ticketEmailEventDetail: string | null;
             ticket: {
                 id?: string;
                 /** @example Google DevFest 2026 */
@@ -1598,13 +1831,6 @@ export interface components {
             /** @description Whether the discount is currently active */
             isActive: boolean;
         };
-        UpdateDiscountDto: {
-            /**
-             * @description End date in YYYY-MM-DD format. Discount expires at end of day. Set to null to clear the expiry. Omit to leave unchanged.
-             * @example 2026-12-31
-             */
-            validTo?: string | null;
-        };
         CreateDiscountDto: {
             /**
              * @description Set discount code
@@ -1681,6 +1907,13 @@ export interface components {
             recipientEmails: string[];
             /** Format: date-time */
             createdAt: string;
+        };
+        UpdateDiscountDto: {
+            /**
+             * @description End date in YYYY-MM-DD format. Discount expires at end of day. Set to null to clear the expiry. Omit to leave unchanged.
+             * @example 2026-12-31
+             */
+            validTo?: string | null;
         };
         CreateTicketDto: {
             name: string;
@@ -1827,6 +2060,39 @@ export interface components {
             /** Format: date-time */
             createdAt: string;
             creator: components["schemas"]["TicketCreatorDto"];
+        };
+        CampaignAudienceDto: {
+            /** @description Only holders of this ticket type */
+            ticketId?: string;
+            /** @description true = only checked-in, false = only not checked-in */
+            checkedIn?: boolean;
+            /** @description Only holders whose ticket confirmation email is not confirmed sent */
+            ticketEmailNotConfirmed?: boolean;
+        };
+        CreateEmailCampaignDto: {
+            /** @example Venue and schedule update */
+            subject: string;
+            /** @description Inbox preview text */
+            preheader?: string;
+            /** @description Plain text / light markdown. Tokens: {{first_name}}, {{full_name}}, {{ticket_code}}, {{ticket_link}} */
+            body: string;
+            audience?: components["schemas"]["CampaignAudienceDto"];
+        };
+        AudienceCountDto: {
+            audience?: components["schemas"]["CampaignAudienceDto"];
+        };
+        UpdateEmailCampaignDto: {
+            /** @example Venue and schedule update */
+            subject?: string;
+            /** @description Inbox preview text */
+            preheader?: string;
+            /** @description Plain text / light markdown. Tokens: {{first_name}}, {{full_name}}, {{ticket_code}}, {{ticket_link}} */
+            body?: string;
+            audience?: components["schemas"]["CampaignAudienceDto"];
+        };
+        SendTestEmailDto: {
+            /** @description Addresses to send the test to (max 10). Defaults to your own address. */
+            emails?: string[];
         };
     };
     responses: never;
@@ -2864,6 +3130,59 @@ export interface operations {
             };
         };
     };
+    OrdersController_ticketEmailSummary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    OrdersController_resendUnconfirmedTickets: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    OrdersController_resendTicket: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     OrdersController_findByReference: {
         parameters: {
             query?: never;
@@ -3337,6 +3656,248 @@ export interface operations {
             query?: never;
             header?: never;
             path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    WebhookController_handleResendWebhook: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    EmailCampaignController_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    EmailCampaignController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateEmailCampaignDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    EmailCampaignController_audienceCount: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AudienceCountDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    EmailCampaignController_preview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateEmailCampaignDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    EmailCampaignController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    EmailCampaignController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    EmailCampaignController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateEmailCampaignDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    EmailCampaignController_deliveries: {
+        parameters: {
+            query?: {
+                status?: "PENDING" | "SENT" | "FAILED";
+                page?: number;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    EmailCampaignController_sendTest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SendTestEmailDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    EmailCampaignController_send: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    EmailCampaignController_retryFailed: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         requestBody?: never;
