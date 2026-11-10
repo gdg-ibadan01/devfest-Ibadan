@@ -98,6 +98,7 @@ export type DashboardOverviewResponseDto =
 // OpenAPI document marks a nullable numeric field with `type: object`.
 // Keep the API's actual contract explicit for callers.
 export type CreateDiscountDto = Schemas['CreateDiscountDto'];
+export type UpdateDiscountDto = Schemas['UpdateDiscountDto'];
 export type CreateDiscountResponseDto = Schemas['CreateDiscountResponseDto'];
 export type DiscountListTicketDto = Schemas['DiscountListTicketDto'];
 export type DiscountListItemDto = Schemas['DiscountListItemDto'];
