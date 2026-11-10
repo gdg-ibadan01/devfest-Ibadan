@@ -19,33 +19,98 @@ export class MailService implements OnModuleInit {
 
   constructor(private readonly configService: ConfigService) {
     this.transporter = nodemailer.createTransport({
-      host: this.configService.get<string>('cpanel.host'),
-      port: this.configService.get<number>('cpanel.port'),
-      secure: this.configService.get<number>('cpanel.port') === 465,
+      host: this.configService.get<string>('mail.host'),
+      port: this.configService.get<number>('mail.port'),
+      secure: this.configService.get<number>('mail.port') === 465,
+      // Reuse connections and stay under the provider's ~2 requests/second.
+      pool: true,
+      maxConnections: 2,
+      maxMessages: 100,
+      rateDelta: 1000,
+      rateLimit: 2,
       auth: {
-        user: this.configService.get<string>('cpanel.user'),
-        pass: this.configService.get<string>('cpanel.password'),
+        user: this.configService.get<string>('mail.user'),
+        pass: this.configService.get<string>('mail.password'),
       },
     });
     this.transporter
       .verify()
       .then(() => {
-        this.logger.log('✅ cPanel SMTP connection successful');
+        this.logger.log('✅ SMTP connection successful');
       })
       .catch((error) => {
-        this.logger.error('❌ cPanel SMTP connection failed:', error.message);
+        this.logger.error('❌ SMTP connection failed:', error.message);
       });
   }
 
   async onModuleInit() {
     try {
       await this.transporter.verify();
-      this.logger.log('✅ cPanel SMTP connection successful');
+      this.logger.log('✅ SMTP connection successful');
     } catch (error) {
       this.logger.error(
-        `❌ cPanel SMTP connection failed: ${error instanceof Error ? error.message : error}`,
+        `❌ SMTP connection failed: ${error instanceof Error ? error.message : error}`,
       );
     }
+  }
+
+  /** Timestamps of recent sends, used to stay inside the provider's hourly/daily caps. */
+  private readonly sentAt: number[] = [];
+
+  /** Sends one message and counts it against the hourly/daily budget. */
+  private async deliver(options: nodemailer.SendMailOptions) {
+    const info = await this.transporter.sendMail(options);
+    this.sentAt.push(Date.now());
+    return info;
+  }
+
+  /**
+   * How many more emails can go out right now without passing the configured
+   * MAIL_MAX_PER_HOUR / MAIL_MAX_PER_DAY (Infinity when no cap is set).
+   * The window lives in memory, so it resets on restart; the provider still
+   * enforces its own limit.
+   */
+  remainingBudget(): number {
+    const HOUR = 60 * 60 * 1000;
+    const now = Date.now();
+    while (this.sentAt.length && now - this.sentAt[0] > 24 * HOUR) {
+      this.sentAt.shift();
+    }
+    const perHour = this.configService.get<number>('mail.maxPerHour') ?? 0;
+    const perDay = this.configService.get<number>('mail.maxPerDay') ?? 0;
+    const lastHour = this.sentAt.filter((t) => now - t <= HOUR).length;
+    const left = [
+      perHour > 0 ? perHour - lastHour : Infinity,
+      perDay > 0 ? perDay - this.sentAt.length : Infinity,
+    ];
+    return Math.max(0, Math.min(...left));
+  }
+
+  /** Address used as the sender and shown as the support contact. */
+  supportEmail(): string {
+    return (
+      this.configService.get<string>('mail.from.email') ??
+      'noreply@gdgibadan.com'
+    );
+  }
+
+  /** Sends an admin-composed message (already rendered to HTML) to one recipient. */
+  async sendCustomEmail(args: {
+    to: string;
+    subject: string;
+    html: string;
+    text: string;
+  }) {
+    const fromEmail =
+      this.configService.get<string>('mail.from.email') ??
+      'noreply@gdgibadan.com';
+    return this.deliver({
+      from: `"GDG Ibadan" <${fromEmail}>`,
+      to: args.to,
+      subject: args.subject,
+      html: args.html,
+      text: args.text,
+    });
   }
 
   async sendTicketConfirmationEmail(
@@ -59,7 +124,7 @@ export class MailService implements OnModuleInit {
       'https://example.com/default-logo.png';
 
     const supportEmail =
-      this.configService.get<string>('cpanel.from.email') ??
+      this.configService.get<string>('mail.from.email') ??
       'noreply@gdgibadan.com';
 
     const html = ticketConfirmationTemplate({
@@ -68,7 +133,7 @@ export class MailService implements OnModuleInit {
       logoUrl,
     });
 
-    return await this.transporter.sendMail({
+    return await this.deliver({
       from: `"GDG Ibadan" <${supportEmail}>`,
       to: payload.email,
       subject: 'Ticket Confirmed - DevFest Ibadan 2026',
@@ -87,7 +152,7 @@ export class MailService implements OnModuleInit {
       'https://example.com/default-logo.png';
 
     const supportEmail =
-      this.configService.get<string>('cpanel.from.email') ??
+      this.configService.get<string>('mail.from.email') ??
       'noreply@gdgibadan.com';
 
     const html = paymentSuccessTemplate(
@@ -98,10 +163,10 @@ export class MailService implements OnModuleInit {
       logoUrl,
     );
 
-    return this.transporter.sendMail({
+    return this.deliver({
       from: `"GDG Event Manager" <${supportEmail}>`,
       to: email,
-      subject: 'Payment Successful - DevFest Ibadan 2025',
+      subject: 'Payment Successful - DevFest Ibadan 2026',
       html,
     });
   }
@@ -116,7 +181,7 @@ export class MailService implements OnModuleInit {
       'https://example.com/default-logo.png';
 
     const supportEmail =
-      this.configService.get<string>('cpanel.from.email') ??
+      this.configService.get<string>('mail.from.email') ??
       'noreply@gdgibadan.com';
 
     const html = paymentFailedTemplate(
@@ -126,10 +191,10 @@ export class MailService implements OnModuleInit {
       logoUrl,
     );
 
-    return this.transporter.sendMail({
+    return this.deliver({
       from: `"GDG Event Manager" <${supportEmail}>`,
       to: email,
-      subject: 'Payment Failed - DevFest Ibadan 2025',
+      subject: 'Payment Failed - DevFest Ibadan 2026',
       html,
     });
   }
@@ -146,13 +211,13 @@ export class MailService implements OnModuleInit {
       'https://example.com/default-logo.png';
 
     const supportEmail =
-      this.configService.get<string>('cpanel.from.email') ??
+      this.configService.get<string>('mail.from.email') ??
       'noreply@gdgibadan.com';
 
-    await this.transporter.sendMail({
+    await this.deliver({
       from: `"GDG Event Manager" <${supportEmail}>`,
       to: email,
-      subject: 'Event Reminder - DevFest Ibadan 2025',
+      subject: 'Event Reminder - DevFest Ibadan 2026',
       html: eventReminderTemplate(
         fullName,
         eventDate,
@@ -169,8 +234,8 @@ export class MailService implements OnModuleInit {
       this.configService.get<string>('app.logoUrl') ??
       'https://example.com/default-logo.png';
 
-    await this.transporter.sendMail({
-      from: `"GDG Event Manager" <${this.configService.get<string>('cpanel.from.email')}>`,
+    await this.deliver({
+      from: `"GDG Event Manager" <${this.configService.get<string>('mail.from.email')}>`,
       to: email,
       subject: 'You are invited as an Admin',
       html: adminInviteTemplate(fullName, logoUrl, tempPassword),
@@ -188,10 +253,10 @@ export class MailService implements OnModuleInit {
       'https://example.com/default-logo.png';
 
     const supportEmail =
-      this.configService.get<string>('cpanel.from.email') ??
+      this.configService.get<string>('mail.from.email') ??
       'noreply@gdgibadan.com';
 
-    const info = await this.transporter.sendMail({
+    const info = await this.deliver({
       from: `"GDG Event Manager" <${supportEmail}>`,
       to: email,
       subject: 'Complete Your Payment - DevFest Ibadan 2026',
@@ -218,10 +283,10 @@ export class MailService implements OnModuleInit {
       'https://example.com/default-logo.png';
 
     const supportEmail =
-      this.configService.get<string>('cpanel.from.email') ??
+      this.configService.get<string>('mail.from.email') ??
       'noreply@gdgibadan.com';
 
-    await this.transporter.sendMail({
+    await this.deliver({
       from: `"GDG Event Manager" <${supportEmail}>`,
       to: email,
       subject: 'Password Reset Request - GDG Ibadan Admin',

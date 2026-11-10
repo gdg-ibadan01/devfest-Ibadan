@@ -31,7 +31,7 @@ export function eventReminderTemplate(
           <!-- Body -->
           <tr>
             <td style="padding: 30px; color: #333333; font-size: 16px; line-height: 1.6; text-align: center;">
-              <h2 style="margin-top: 0; color: #007BFF;">DevFest Ibadan 2025 Kicks Off Tomorrow!</h2>
+              <h2 style="margin-top: 0; color: #007BFF;">DevFest Ibadan 2026 Kicks Off Tomorrow!</h2>
               <p>Hi <strong>${fullName}</strong>,</p>
               <p>We're thrilled to have you joining us! Here's a quick reminder of your event details:</p>
               <p style="font-size: 16px; line-height: 1.8;">

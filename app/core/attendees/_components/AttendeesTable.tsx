@@ -23,6 +23,7 @@ import {
   useCheckInFilteredOrders,
 } from '@/app/_module/services/order.service';
 import { notifyApiError } from '@/app/_module/lib/apiError';
+import { useResendTicketEmail } from '@/app/_module/services';
 import { showToast } from '@/app/_module/lib/notify';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -76,6 +77,7 @@ const COLUMNS = [
   'Amount',
   'Status',
   'Check In',
+  'Ticket Email',
   'Action',
 ];
 
@@ -117,6 +119,61 @@ function CheckInBadge({ checkedIn }: { checkedIn: boolean }) {
         className={cn('w-[7px] h-[7px] rounded-full flex-shrink-0', cfg.dot)}
       />
       {checkedIn ? 'Checked In' : 'Not Checked In'}
+    </span>
+  );
+}
+
+const TICKET_EMAIL_STYLES = {
+  SENT: { label: 'Sent', cls: 'bg-[#E6F4EA] text-[#137333]' },
+  FAILED: { label: 'Failed', cls: 'bg-[#FCE8E6] text-[#C5221F]' },
+  PENDING: { label: 'Waiting', cls: 'bg-[#FEF7E0] text-[#B06000]' },
+  UNKNOWN: { label: 'Unknown', cls: 'bg-[#F1F3F4] text-[#5F6368]' },
+} as const;
+
+const TICKET_EMAIL_EVENT_STYLES = {
+  DELIVERED: { label: 'Delivered', cls: 'bg-[#E6F4EA] text-[#137333]' },
+  DELAYED: { label: 'Delayed', cls: 'bg-[#FEF7E0] text-[#B06000]' },
+  BOUNCED: { label: 'Bounced', cls: 'bg-[#FCE8E6] text-[#C5221F]' },
+  COMPLAINED: { label: 'Marked spam', cls: 'bg-[#FCE8E6] text-[#C5221F]' },
+} as const;
+
+function TicketEmailBadge({
+  status,
+  event,
+  detail,
+}: {
+  status: OrderListItemDto['ticketEmailStatus'];
+  event?: OrderListItemDto['ticketEmailEvent'];
+  detail?: string | null;
+}) {
+  // Once the provider reports back (delivered, bounced...), that is more
+  // useful than "Sent", which only means it was handed to the provider.
+  if (status === 'SENT' && event) {
+    const { label, cls } = TICKET_EMAIL_EVENT_STYLES[event];
+    return (
+      <span
+        className={`inline-flex rounded-full px-2.5 py-0.5 text-[12px] font-medium ${cls}`}
+        title={
+          event === 'BOUNCED' || event === 'COMPLAINED'
+            ? (detail ?? 'The ticket email did not reach the attendee')
+            : undefined
+        }
+      >
+        {label}
+      </span>
+    );
+  }
+  const { label, cls } = TICKET_EMAIL_STYLES[status ?? 'UNKNOWN'];
+  return (
+    <span
+      className={`inline-flex rounded-full px-2.5 py-0.5 text-[12px] font-medium ${cls}`}
+      title={
+        status
+          ? undefined
+          : 'Sent before email tracking began; delivery is unconfirmed'
+      }
+    >
+      {label}
     </span>
   );
 }
@@ -166,23 +223,23 @@ function CheckInFilterDropdown({
             >
               All
             </button>
-            {(Object.keys(CHECKIN_FILTER_LABELS) as Exclude<CheckInFilter, ''>[]).map(
-              (s) => (
-                <button
-                  key={s}
-                  onClick={() => {
-                    onChange(s);
-                    setOpen(false);
-                  }}
-                  className={cn(
-                    'w-full text-left px-4 py-2.5 text-[13px] hover:bg-gray-50 whitespace-nowrap',
-                    value === s && 'font-semibold'
-                  )}
-                >
-                  {CHECKIN_FILTER_LABELS[s]}
-                </button>
-              )
-            )}
+            {(
+              Object.keys(CHECKIN_FILTER_LABELS) as Exclude<CheckInFilter, ''>[]
+            ).map((s) => (
+              <button
+                key={s}
+                onClick={() => {
+                  onChange(s);
+                  setOpen(false);
+                }}
+                className={cn(
+                  'w-full text-left px-4 py-2.5 text-[13px] hover:bg-gray-50 whitespace-nowrap',
+                  value === s && 'font-semibold'
+                )}
+              >
+                {CHECKIN_FILTER_LABELS[s]}
+              </button>
+            ))}
           </div>
         </>
       )}
@@ -291,6 +348,7 @@ export default function AttendeesTable({
   const [scanCursorStack, setScanCursorStack] = useState<string[]>([]);
 
   const [exportOpen, setExportOpen] = useState(false);
+  const resendTicket = useResendTicketEmail();
   const [isExporting, setIsExporting] = useState(false);
 
   const unfilteredResult = useOrders(
@@ -319,12 +377,12 @@ export default function AttendeesTable({
   // scan when a check-in filter is active, or the raw unfiltered page
   // otherwise. No further client-side filtering needed here.
   const visibleOrders = isFiltering
-    ? filteredResult.data?.data ?? []
-    : unfilteredResult.data?.data ?? [];
+    ? (filteredResult.data?.data ?? [])
+    : (unfilteredResult.data?.data ?? []);
 
   const hasMore = isFiltering
-    ? filteredResult.data?.hasMore ?? false
-    : unfilteredResult.data?.meta?.hasMore ?? false;
+    ? (filteredResult.data?.hasMore ?? false)
+    : (unfilteredResult.data?.meta?.hasMore ?? false);
 
   const hasPrev = isFiltering
     ? scanCursorStack.length > 0
@@ -368,7 +426,9 @@ export default function AttendeesTable({
       return;
     }
     setCursorStack((prev) => [...prev, cursor ?? '']);
-    setCursor(unfilteredResult.data?.data[unfilteredResult.data.data.length - 1]?.id);
+    setCursor(
+      unfilteredResult.data?.data[unfilteredResult.data.data.length - 1]?.id
+    );
     setDirection('next');
   };
 
@@ -600,11 +660,27 @@ export default function AttendeesTable({
                           </span>
                         )} */}
                       </td>
+                      <td className="px-5 py-4 whitespace-nowrap">
+                        <TicketEmailBadge
+                          status={order.ticketEmailStatus}
+                          event={order.ticketEmailEvent}
+                          detail={order.ticketEmailEventDetail}
+                        />
+                      </td>
                       <td
                         className="px-5 py-4"
                         onClick={(e) => e.stopPropagation()}
                       >
                         <AttendeeActionsMenu
+                          onResendTicket={
+                            order.status === 'PAID'
+                              ? () => resendTicket.mutate(order.id)
+                              : undefined
+                          }
+                          resending={
+                            resendTicket.isPending &&
+                            resendTicket.variables === order.id
+                          }
                           onCheckIn={() => onCheckIn(order)}
                           disabled={checkedIn}
                           loading={checkingInOrderId === order.id}
@@ -622,8 +698,8 @@ export default function AttendeesTable({
         {!isLoading && (hasPrev || hasMore) && (
           <div className="flex items-center justify-between px-5 py-3 border-t border-gray-100 bg-white">
             <span className="text-[12px] text-gray-400">
-              {visibleOrders.length} attendee{visibleOrders.length === 1 ? '' : 's'} on this
-              page
+              {visibleOrders.length} attendee
+              {visibleOrders.length === 1 ? '' : 's'} on this page
               {scanLimitReached && (
                 <span className="ml-2 text-amber-500">
                   (showing partial results — try narrowing your search)

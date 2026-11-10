@@ -6,6 +6,8 @@ export default registerAs('app', () => ({
   url: process.env.APP_URL || 'http://localhost:3000',
   nodeEnv: process.env.NODE_ENV || 'development',
   logoUrl: process.env.LOGO_URL || 'https://example.com/default-logo.png',
+  /** Optional full-width banner (1200x400 works well) shown at the top of campaign emails. */
+  emailHeaderUrl: process.env.EMAIL_HEADER_URL || undefined,
   frontendUrl:
     process.env.FRONTEND_URL ||
     process.env.FRONTEND_SUCCESS_URL ||
