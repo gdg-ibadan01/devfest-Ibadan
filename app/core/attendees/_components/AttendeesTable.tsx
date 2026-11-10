@@ -12,11 +12,18 @@ import {
 } from 'lucide-react';
 import { format, isValid, parseISO } from 'date-fns';
 import { cn } from '@/app/_module/lib/utils';
+import { downloadContactsCsv, zipNotice } from '@/utils/contacts-csv';
 import type { OrderListItemDto } from '@/app/_module/api/types';
 import type { OrderStatus } from '../_types/attendee.types';
 import AttendeeActionsMenu from './AttendeeActionsMenu';
 import EmptyState from '@/app/_module/components/common/EmptyState';
-import { useOrders, useCheckInFilteredOrders } from '@/app/_module/services/order.service';
+import {
+  exportOrders,
+  useOrders,
+  useCheckInFilteredOrders,
+} from '@/app/_module/services/order.service';
+import { notifyApiError } from '@/app/_module/lib/apiError';
+import { showToast } from '@/app/_module/lib/notify';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -206,29 +213,13 @@ function exportRows(rows: OrderListItemDto[]) {
   ]);
 }
 
-function exportCSV(rows: OrderListItemDto[]) {
-  const headers = [
-    'Full Name',
-    'Email',
-    'Ticket',
-    'Code',
-    'Validity',
-    'Amount',
-    'Status',
-    'Check In',
-  ];
-  const lines = exportRows(rows).map((row) =>
-    row.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(',')
+async function exportCSV(rows: OrderListItemDto[]) {
+  const result = await downloadContactsCsv(
+    rows.map((o) => ({ email: o.attendeeEmail, fullName: o.attendeeFullName })),
+    `attendees-${format(new Date(), 'yyyy-MM-dd')}.csv`
   );
-
-  const csv = [headers.join(','), ...lines].join('\n');
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `attendees-${format(new Date(), 'yyyy-MM-dd')}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
+  const notice = zipNotice(result);
+  if (notice) showToast.info(notice);
 }
 
 async function exportPDF(rows: OrderListItemDto[]) {
@@ -300,6 +291,7 @@ export default function AttendeesTable({
   const [scanCursorStack, setScanCursorStack] = useState<string[]>([]);
 
   const [exportOpen, setExportOpen] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
   const unfilteredResult = useOrders(
     {
@@ -397,9 +389,38 @@ export default function AttendeesTable({
     setDirection(prevCursor ? 'previous' : undefined);
   };
 
-  const handleExportCSV = () => {
-    exportCSV(visibleOrders);
+  // Exports every paid or free attendee (PAID orders — a fully-discounted
+  // order is PAID too) matching the search, not just the 15 on screen. The
+  // check-in filter can't be applied server-side, so while it's active we
+  // export the filtered rows that are loaded.
+  const handleExportCSV = async () => {
     setExportOpen(false);
+    if (isFiltering) {
+      await exportCSV(visibleOrders);
+      return;
+    }
+    setIsExporting(true);
+    try {
+      const result = await exportOrders({
+        search: searchQuery || undefined,
+        status: 'PAID',
+        format: 'csv',
+      });
+      if (result.total === 0) {
+        showToast.info('No attendees match the current search');
+        return;
+      }
+      await exportCSV(result.data);
+      if (result.truncated) {
+        showToast.info(
+          `Export limited to the first ${result.total.toLocaleString()} attendees (server maximum). Narrow the search to export the rest.`
+        );
+      }
+    } catch (error) {
+      notifyApiError(error, 'Failed to export attendees');
+    } finally {
+      setIsExporting(false);
+    }
   };
   const handleExportPDF = () => {
     exportPDF(visibleOrders);
@@ -467,10 +488,15 @@ export default function AttendeesTable({
           <div className="relative flex-shrink-0">
             <button
               onClick={() => setExportOpen((p) => !p)}
+              disabled={isExporting}
               className="w-[42px] h-[42px] flex-shrink-0 flex items-center justify-center rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors text-gray-600"
               title="Export"
             >
-              <Download size={15} />
+              {isExporting ? (
+                <Loader2 size={15} className="animate-spin" />
+              ) : (
+                <Download size={15} />
+              )}
             </button>
             {exportOpen && (
               <>
