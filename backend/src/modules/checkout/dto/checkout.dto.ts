@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNotEmpty, IsString, MaxLength } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
 import { Transform } from 'class-transformer';
 import { OrderStatus } from '@prisma/client';
 import { CheckoutSessionDto } from 'src/modules/order/dto/order.dto';
@@ -18,15 +18,16 @@ export class VerifyCheckoutDto {
   @MaxLength(100)
   reference!: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     description:
-      'Gateway transaction id from the popup (ALATPay transactionId / Monnify transactionReference)',
+      "Gateway transaction id from the popup (ALATPay transactionId / Monnify transactionReference). Omit when the popup didn't return one (ALATPay card payments): the order's completed transaction is then looked up on the gateway.",
   })
   @Transform(trim)
+  @IsOptional()
   @IsString()
   @IsNotEmpty()
   @MaxLength(200)
-  transactionRef!: string;
+  transactionRef?: string;
 }
 
 export class VerifyCheckoutResponseDto {

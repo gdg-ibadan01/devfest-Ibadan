@@ -5,29 +5,28 @@ function positiveInt(value: string | undefined, fallback: number): number {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 }
 
+/**
+ * ALATPay has one set of hosts. Test vs live is decided by the keys: test-mode
+ * keys open the same popup in "Test Mode" (no real money moves).
+ */
 export default registerAs('alatpay', () => {
-  const env: 'live' | 'sandbox' =
-    (process.env.ALATPAY_ENV || 'sandbox').trim().toLowerCase() === 'live'
-      ? 'live'
-      : 'sandbox';
-  const live = env === 'live';
-
   return {
-    env,
     /**
      * Popup `apiKey`, and (per the ALATPay docs) the `Ocp-Apim-Subscription-Key`
      * for transaction requery.
      */
     publicKey: process.env.ALATPAY_PUBLIC_KEY?.trim(),
-    /** Optional. Only tried for requery if ALATPay rejects the public key. */
+    /**
+     * Server-to-server key for the transaction API (verify, reconciliation).
+     * The popup doesn't use it, but ALATPay rejects the public key there (401).
+     */
     secretKey: process.env.ALATPAY_SECRET_KEY?.trim(),
     businessId: process.env.ALATPAY_BUSINESS_ID?.trim(),
     /** Verifies the `x-signature` header on callbacks (HMAC-SHA256, Base64). */
     webhookSecret: process.env.ALATPAY_WEBHOOK_SECRET?.trim(),
-    /** Signs the order token we put in popup metadata. Falls back to the secret key. */
+    /** Signs the order token we put in popup metadata. Defaults to the webhook secret. */
     orderTokenSecret:
       process.env.ALATPAY_ORDER_TOKEN_SECRET?.trim() ||
-      process.env.ALATPAY_SECRET_KEY?.trim() ||
       process.env.ALATPAY_WEBHOOK_SECRET?.trim(),
     /**
      * Optional defence in depth on top of the signature: comma-separated IPs
@@ -41,15 +40,10 @@ export default registerAs('alatpay', () => {
     orderTtlMinutes: positiveInt(process.env.ALATPAY_ORDER_TTL_MINUTES, 30),
     transactionsBaseUrl: (
       process.env.ALATPAY_TRANSACTIONS_BASE_URL ||
-      (live
-        ? 'https://apibox.alatpay.ng/alatpaytransaction/api/v1/transactions'
-        : 'https://alatpay.azure-api.net/transaction/api/v1/transactions')
+      'https://apibox.alatpay.ng/alatpaytransaction/api/v1/transactions'
     ).replace(/\/+$/, ''),
     scriptUrl:
-      process.env.ALATPAY_SCRIPT_URL ||
-      (live
-        ? 'https://web.alatpay.ng/js/alatpay.js'
-        : 'https://alatpay-client.azurewebsites.net/js/alatpay.js'),
+      process.env.ALATPAY_SCRIPT_URL || 'https://web.alatpay.ng/js/alatpay.js',
     /** Background requery of unpaid ALATPay orders (GET /transactions, per the Transaction Monitoring docs). */
     reconciliationEnabled:
       process.env.ALATPAY_RECONCILIATION_ENABLED === 'true',

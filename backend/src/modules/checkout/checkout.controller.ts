@@ -8,6 +8,7 @@ import {
   Logger,
   Param,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -18,6 +19,7 @@ import {
 } from '@nestjs/swagger';
 import { OrdersService } from '../order/order.service';
 import { PaymentConfirmationService } from './payment-confirmation.service';
+import { AlatpayService } from '../payment/alatpay.service';
 import { IpRateLimitGuard } from './ip-rate-limit.guard';
 import {
   CheckoutSessionResponseDto,
@@ -41,6 +43,7 @@ export class CheckoutController {
     private readonly orders: OrdersService,
     private readonly confirmation: PaymentConfirmationService,
     private readonly prisma: PrismaService,
+    private readonly alatpay: AlatpayService,
   ) {}
 
   @Post('verify')
@@ -102,6 +105,30 @@ export class CheckoutController {
         );
       return result;
     } catch (err) {
+      throw this.toHttp(err);
+    }
+  }
+
+  @Get('admin/alatpay-transactions')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermission('orders.list')
+  @ApiOperation({
+    summary: 'Admin: recent ALATPay transactions as the gateway reports them',
+    description:
+      'Support/diagnostics for "paid but not confirmed": lists transactions since `hours` ago (default 3, max 48) with the order they belong to.',
+  })
+  async alatpayTransactions(@Query('hours') hours?: string) {
+    // hours=all → no date filter (latest transactions, newest first)
+    const h = Math.min(Math.max(Number(hours) || 3, 1), 48);
+    try {
+      return await this.alatpay.inspectTransactions(
+        hours === 'all' ? null : new Date(Date.now() - h * 3_600_000),
+      );
+    } catch (err) {
+      if (err instanceof GatewayRequestError) {
+        throw new HttpException(err.message, HttpStatus.BAD_GATEWAY);
+      }
       throw this.toHttp(err);
     }
   }

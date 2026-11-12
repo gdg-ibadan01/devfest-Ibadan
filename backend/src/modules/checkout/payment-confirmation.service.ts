@@ -43,6 +43,8 @@ interface ConfirmParams {
 /** In-process requery retries for transient gateway errors. */
 const REQUERY_BACKOFF_MS = [1_000, 3_000];
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+/** Clock skew allowance when searching gateway transactions for an order. */
+const LOOKUP_SLACK_MS = 5 * 60_000;
 
 /**
  * The single path that turns a provider transaction into a PAID order.
@@ -88,10 +90,14 @@ export class PaymentConfirmationService {
     });
   }
 
-  /** Browser reports a completed popup payment. Never trusted without a requery. */
+  /**
+   * Browser reports a completed popup payment. Never trusted without a
+   * requery. Without a transaction id (ALATPay card payments), the order's
+   * completed transaction is looked up on the gateway by its metadata.
+   */
   async verifyFromClient(
     reference: string,
-    transactionRef: string,
+    transactionRef: string | undefined,
     source: ConfirmSource = 'CLIENT',
   ): Promise<{
     status: OrderStatus;
@@ -99,7 +105,12 @@ export class PaymentConfirmationService {
   }> {
     const order = await this.prisma.order.findFirst({
       where: { reference },
-      select: { id: true, status: true, paymentProvider: true },
+      select: {
+        id: true,
+        status: true,
+        paymentProvider: true,
+        createdAt: true,
+      },
     });
     if (!order) {
       throw new ServiceError(
@@ -111,9 +122,24 @@ export class PaymentConfirmationService {
       return { status: order.status, outcome: 'ALREADY_FINAL' };
     }
 
+    const provider = this.payments.for(order.paymentProvider).name;
+    const ref =
+      transactionRef ??
+      (provider === 'ALATPAY'
+        ? await this.alatpay.findCompletedTransactionRef(
+            order.id,
+            new Date(order.createdAt.getTime() - LOOKUP_SLACK_MS),
+          )
+        : null);
+    if (!ref) {
+      // Nothing completed on the gateway yet; the webhook or reconciliation
+      // will confirm it once it is.
+      return { status: order.status, outcome: 'NOT_COMPLETED' };
+    }
+
     const result = await this.confirm({
-      provider: this.payments.for(order.paymentProvider).name,
-      transactionRef,
+      provider,
+      transactionRef: ref,
       source,
       expectedReference: reference,
     });

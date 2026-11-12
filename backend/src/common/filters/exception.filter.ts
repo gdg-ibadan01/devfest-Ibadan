@@ -3,6 +3,8 @@ import {
   Catch,
   ArgumentsHost,
   HttpException,
+  HttpStatus,
+  Logger,
 } from '@nestjs/common';
 import { Response } from 'express';
 
@@ -14,6 +16,8 @@ import { Response } from 'express';
 
 @Catch(HttpException)
 export class HttpExceptionFilter implements ExceptionFilter {
+  private readonly logger = new Logger(HttpExceptionFilter.name);
+
   /** Catch the incoming exception */
   catch(exception: HttpException, host: ArgumentsHost) {
     /** Extracting the HTTP response object from host object */
@@ -48,6 +52,16 @@ export class HttpExceptionFilter implements ExceptionFilter {
       } = exceptionResponse as Record<string, unknown>;
       message = objectMessage as string;
       extras = rest;
+    }
+
+    /**
+     * 500s carry raw internal errors (Prisma messages with file paths, etc.)
+     * from the controllers' `default:` branches. Log them, never send them.
+     */
+    if (statusCode === HttpStatus.INTERNAL_SERVER_ERROR) {
+      this.logger.error(message);
+      message = 'Something went wrong on our side. Please try again.';
+      extras = {};
     }
 
     /** return a custom response object to client */

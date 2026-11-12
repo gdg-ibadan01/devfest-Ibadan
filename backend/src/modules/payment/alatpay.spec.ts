@@ -7,7 +7,6 @@ import {
 } from './alatpay.mapper';
 
 const cfg = {
-  env: 'sandbox' as const,
   publicKey: 'pub',
   secretKey: 'sec',
   businessId: 'biz',

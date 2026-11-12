@@ -35,14 +35,16 @@ export class AlatpayService implements PaymentProvider {
   constructor(
     @Inject(alatpayConfig.KEY)
     private readonly cfg: ConfigType<typeof alatpayConfig>,
-  ) {}
+  ) {
+    if (cfg.publicKey && !cfg.secretKey) {
+      this.logger.warn(
+        'ALATPAY_SECRET_KEY is not set: card payments can only be confirmed by webhook (verify and reconciliation need it).',
+      );
+    }
+  }
 
   get orderTtlMinutes(): number {
     return this.cfg.orderTtlMinutes;
-  }
-
-  get environment(): 'live' | 'sandbox' {
-    return this.cfg.env;
   }
 
   get reconciliationEnabled(): boolean {
@@ -196,6 +198,71 @@ export class AlatpayService implements PaymentProvider {
       .filter((tx) => tx.transactionRef);
   }
 
+  /**
+   * Admin diagnostics: recent transactions exactly as ALATPay returns them
+   * (envelope shape + each transaction normalized), to answer "I paid but my
+   * order isn't confirmed" without dashboard access.
+   */
+  async inspectTransactions(since: Date | null) {
+    this.assertConfigured();
+    const query = new URLSearchParams({
+      businessId: this.requireConfig('businessId'),
+      page: '1',
+      limit: '50',
+      ...(since && {
+        startAt: since.toISOString(),
+        endAt: new Date().toISOString(),
+      }),
+    });
+    const res = await this.get(
+      `${this.cfg.transactionsBaseUrl}?${query.toString()}`,
+    );
+    const body = res.data;
+    const rows = unwrapList(body);
+    const data = getCI(body, ['data']);
+    return {
+      host: new URL(this.cfg.transactionsBaseUrl).host,
+      envelopeKeys:
+        body && typeof body === 'object' ? Object.keys(body as object) : [],
+      message: getCI(body, ['message']) ?? null,
+      dataShape: Array.isArray(data)
+        ? `array(${data.length})`
+        : data && typeof data === 'object'
+          ? `object{${Object.keys(data).join(',')}}`
+          : String(data),
+      count: rows.length,
+      transactions: rows.map((row) => {
+        const tx = normalizeAlatpayTransaction(row);
+        return {
+          transactionRef: tx.transactionRef,
+          status: tx.status,
+          gatewayStatus: getCI(tx.raw, ['status']),
+          amount: tx.amount,
+          orderId: tx.orderId,
+          reference: tx.reference,
+          channel: getCI(tx.raw, ['channel']),
+          createdAt: getCI(tx.raw, ['createdAt']),
+          metadata: getCI(tx.raw, ['customer', 'metadata']) ?? null,
+        };
+      }),
+    };
+  }
+
+  /**
+   * The completed transaction for one of our orders, found by the orderId in
+   * its metadata. Card payments: the popup reports success without an id.
+   */
+  async findCompletedTransactionRef(
+    orderId: string,
+    since: Date,
+  ): Promise<string | null> {
+    const transactions = await this.listTransactions(since, new Date());
+    const match = transactions.find(
+      (tx) => tx.orderId === orderId && tx.status === 'COMPLETED',
+    );
+    return match?.transactionRef ?? null;
+  }
+
   /** ALATPay publishes no refund API: refunds are done by hand from the dashboard. */
   requestRefund(params: RefundPaymentParams): Promise<RefundPaymentResult> {
     this.logger.error(
@@ -211,11 +278,11 @@ export class AlatpayService implements PaymentProvider {
   }
 
   /**
-   * GET with `Ocp-Apim-Subscription-Key`. The ALATPay docs specify the public
-   * key; if it is rejected and a secret key is configured, that is tried once.
+   * GET with `Ocp-Apim-Subscription-Key`. The transaction API wants the secret
+   * key (the public key gets a 401); the public key is tried only as a fallback.
    */
   private async get(url: string): Promise<AxiosResponse<unknown>> {
-    const keys = [this.cfg.publicKey, this.cfg.secretKey].filter(
+    const keys = [this.cfg.secretKey, this.cfg.publicKey].filter(
       (key, index, all): key is string => !!key && all.indexOf(key) === index,
     );
 
@@ -256,16 +323,11 @@ export class AlatpayService implements PaymentProvider {
           res.status,
         );
       }
-      if (key !== this.cfg.publicKey) {
-        this.logger.warn(
-          'ALATPay rejected the PUBLIC key for requery but accepted the SECRET key. Check ALATPAY_PUBLIC_KEY.',
-        );
-      }
       return res;
     }
 
     throw new GatewayRequestError(
-      `ALATPay rejected our credentials (HTTP ${lastStatus}). Check ALATPAY_PUBLIC_KEY.`,
+      `ALATPay rejected our credentials (HTTP ${lastStatus}). Check ALATPAY_SECRET_KEY.`,
       false,
       lastStatus,
     );
