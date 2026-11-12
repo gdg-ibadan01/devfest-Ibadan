@@ -66,6 +66,11 @@ export const queryKeys = {
     byCode: (code: string) => ['discounts', 'code', code] as const,
   },
 
+  // Payment gateway
+  paymentGateway: {
+    status: () => ['payment-gateway'] as const,
+  },
+
   // Audit Logs
   auditLogs: {
     all: (params?: Record<string, unknown>) => ['audit-logs', params] as const,

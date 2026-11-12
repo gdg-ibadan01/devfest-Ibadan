@@ -15,6 +15,9 @@ import type {
   OrderListItemDto,
   GetOrderReferenceResponseDto,
   AdminCreateOrderDto,
+  CheckoutSessionResponse,
+  VerifyCheckoutDto,
+  VerifyCheckoutResponse,
 } from '@/app/_module/api/types';
 
 // ---- List orders (replaces the old attendees list) -------------
@@ -257,17 +260,54 @@ async function getOrderByReference(
   return data;
 }
 
+/** True when the API said the order doesn't exist (vs. a temporary failure). */
+export function isNotFound(error: unknown): boolean {
+  return (error as { status?: number } | null)?.status === 404;
+}
+
 export function useOrderByReference(reference: string | null) {
   return useQuery({
     queryKey: queryKeys.orders.reference(reference ?? ''),
     queryFn: () => getOrderByReference(reference!),
     enabled: !!reference,
-    // Give the payment webhook time to confirm the order after the popup closes.
-    refetchInterval: (query) =>
-      query.state.data?.status === 'AWAITING_PAYMENT' &&
-      query.state.dataUpdateCount < 20
-        ? 3000
-        : false,
-    retry: false,
+    // Give the payment webhook time to confirm the order after the popup
+    // closes. Bank transfers can take minutes, so poll for up to ~15 minutes.
+    refetchInterval: (query) => {
+      // Keep trying through a temporary outage (anything but "not found").
+      if (query.state.status === 'error') {
+        return !isNotFound(query.state.error) &&
+          query.state.errorUpdateCount < 60
+          ? 5000
+          : false;
+      }
+      return query.state.data?.status === 'AWAITING_PAYMENT' &&
+        query.state.dataUpdateCount < 180
+        ? 5000
+        : false;
+    },
+    retry: (failureCount, error) => !isNotFound(error) && failureCount < 2,
   });
+}
+
+// ---- Checkout (gateway-agnostic) ---------------------------------
+
+/** Asks the API to re-query the gateway and confirm a popup payment. */
+export async function verifyCheckout(
+  dto: VerifyCheckoutDto
+): Promise<VerifyCheckoutResponse> {
+  const { data } = await apiClient.post<VerifyCheckoutResponse>(
+    '/checkout/verify',
+    dto
+  );
+  return data;
+}
+
+/** Re-issues the inline checkout for an unpaid order (pay link / retry). */
+export async function getCheckoutSession(
+  reference: string
+): Promise<CheckoutSessionResponse> {
+  const { data } = await apiClient.get<CheckoutSessionResponse>(
+    `/checkout/${encodeURIComponent(reference)}`
+  );
+  return data;
 }

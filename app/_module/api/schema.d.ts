@@ -465,6 +465,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/payment-gateway": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Payment gateway for new orders, and which gateways are configured */
+        get: operations["PaymentGatewayController_getGateway"];
+        /**
+         * Switch the payment gateway for new orders (orders already started keep theirs)
+         * @description Takes effect immediately on this instance; other instances pick it up within 30 seconds. Recorded in the audit log as SWITCH_PAYMENT_GATEWAY.
+         */
+        put: operations["PaymentGatewayController_setGateway"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/dashboard/overview": {
         parameters: {
             query?: never;
@@ -808,6 +829,83 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/checkout/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Confirm a payment the checkout popup reported as complete
+         * @description Re-queries the gateway the order was created on and, if the transaction is completed and belongs to this order, marks it PAID and issues tickets. Idempotent; the webhook does the same independently.
+         */
+        post: operations["CheckoutController_verify"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/checkout/requery": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Admin: re-check a payment by gateway transaction id
+         * @description Use when a customer has paid but the order is still awaiting payment.
+         */
+        post: operations["CheckoutController_requery"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/checkout/{reference}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get the inline checkout for an unpaid order
+         * @description Used by the pay-link page and "Complete payment". Returns payment=null once the order is no longer awaiting payment.
+         */
+        get: operations["CheckoutController_getCheckout"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/webhooks/alatpay": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Receive ALATPay transaction callbacks */
+        post: operations["WebhookController_handleAlatpayWebhook"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/webhooks/monnify": {
         parameters: {
             query?: never;
@@ -1104,7 +1202,7 @@ export interface components {
              *       "attendees.list"
              *     ]
              */
-            permissions: ("tickets.create" | "tickets.list" | "tickets.edit" | "tickets.disable" | "attendees.create" | "attendees.check_in" | "attendees.list" | "admins.create" | "admins.list" | "admins.invite" | "admins.update" | "admins.profile" | "admins.deactivate" | "admins.activate" | "roles.create" | "roles.edit" | "roles.assign" | "roles.list" | "roles.deactivate" | "permissions.assign" | "payment_reports.export" | "discounts.create" | "discounts.list" | "discounts.update" | "orders.list" | "audit-logs.view-list" | "audit-logs.view" | "dashboard.view" | "emails.send" | "emails.manage")[];
+            permissions: ("tickets.create" | "tickets.list" | "tickets.edit" | "tickets.disable" | "attendees.create" | "attendees.check_in" | "attendees.list" | "admins.create" | "admins.list" | "admins.invite" | "admins.update" | "admins.profile" | "admins.deactivate" | "admins.activate" | "roles.create" | "roles.edit" | "roles.assign" | "roles.list" | "roles.deactivate" | "permissions.assign" | "payment_reports.export" | "discounts.create" | "discounts.list" | "discounts.update" | "orders.list" | "audit-logs.view-list" | "audit-logs.view" | "dashboard.view" | "emails.send" | "emails.manage" | "payment_gateway.view" | "payment_gateway.manage")[];
         };
         FindOneAdminResponseDto: {
             id: string;
@@ -1204,14 +1302,14 @@ export interface components {
             /** @description Description of the role */
             description: string;
             /** @description Permissions for this role */
-            permissions: ("tickets.create" | "tickets.list" | "tickets.edit" | "tickets.disable" | "attendees.create" | "attendees.check_in" | "attendees.list" | "admins.create" | "admins.list" | "admins.invite" | "admins.update" | "admins.profile" | "admins.deactivate" | "admins.activate" | "roles.create" | "roles.edit" | "roles.assign" | "roles.list" | "roles.deactivate" | "permissions.assign" | "payment_reports.export" | "discounts.create" | "discounts.list" | "discounts.update" | "orders.list" | "audit-logs.view-list" | "audit-logs.view" | "dashboard.view" | "emails.send" | "emails.manage")[];
+            permissions: ("tickets.create" | "tickets.list" | "tickets.edit" | "tickets.disable" | "attendees.create" | "attendees.check_in" | "attendees.list" | "admins.create" | "admins.list" | "admins.invite" | "admins.update" | "admins.profile" | "admins.deactivate" | "admins.activate" | "roles.create" | "roles.edit" | "roles.assign" | "roles.list" | "roles.deactivate" | "permissions.assign" | "payment_reports.export" | "discounts.create" | "discounts.list" | "discounts.update" | "orders.list" | "audit-logs.view-list" | "audit-logs.view" | "dashboard.view" | "emails.send" | "emails.manage" | "payment_gateway.view" | "payment_gateway.manage")[];
             isActive: boolean;
         };
         PermissionDto: {
             /** @enum {string} */
-            readonly id: "tickets.create" | "tickets.list" | "tickets.edit" | "tickets.disable" | "attendees.create" | "attendees.check_in" | "attendees.list" | "admins.create" | "admins.list" | "admins.invite" | "admins.update" | "admins.profile" | "admins.deactivate" | "admins.activate" | "roles.create" | "roles.edit" | "roles.assign" | "roles.list" | "roles.deactivate" | "permissions.assign" | "payment_reports.export" | "discounts.create" | "discounts.list" | "discounts.update" | "orders.list" | "audit-logs.view-list" | "audit-logs.view" | "dashboard.view" | "emails.send" | "emails.manage";
+            readonly id: "tickets.create" | "tickets.list" | "tickets.edit" | "tickets.disable" | "attendees.create" | "attendees.check_in" | "attendees.list" | "admins.create" | "admins.list" | "admins.invite" | "admins.update" | "admins.profile" | "admins.deactivate" | "admins.activate" | "roles.create" | "roles.edit" | "roles.assign" | "roles.list" | "roles.deactivate" | "permissions.assign" | "payment_reports.export" | "discounts.create" | "discounts.list" | "discounts.update" | "orders.list" | "audit-logs.view-list" | "audit-logs.view" | "dashboard.view" | "emails.send" | "emails.manage" | "payment_gateway.view" | "payment_gateway.manage";
             /** @enum {string} */
-            readonly label: "Create tickets" | "View tickets list" | "Edit tickets" | "Disable tickets" | "Add new attendee" | "Check-in attendees" | "View attendee list" | "Create admin" | "View admin list" | "Invite admin" | "Update admin" | "View admin profile" | "Deactivate admin" | "Activate admin" | "Create role" | "Edit role" | "Assign role" | "View roles list" | "Deactivate role" | "Assign permissions" | "Export payment report" | "Create discount" | "View discounts list" | "Update discount" | "View orders list" | "View audit logs list" | "View audit log detail" | "View dashboard" | "Send ticket emails" | "View and compose emails";
+            readonly label: "Create tickets" | "View tickets list" | "Edit tickets" | "Disable tickets" | "Add new attendee" | "Check-in attendees" | "View attendee list" | "Create admin" | "View admin list" | "Invite admin" | "Update admin" | "View admin profile" | "Deactivate admin" | "Activate admin" | "Create role" | "Edit role" | "Assign role" | "View roles list" | "Deactivate role" | "Assign permissions" | "Export payment report" | "Create discount" | "View discounts list" | "Update discount" | "View orders list" | "View audit logs list" | "View audit log detail" | "View dashboard" | "Send ticket emails" | "View and compose emails" | "View payment gateway" | "Switch payment gateway";
         };
         CreateRoleResponseDto: {
             readonly id: string;
@@ -1245,7 +1343,7 @@ export interface components {
             /** @description Description of the role */
             description?: string;
             /** @description Permissions for this role */
-            permissions?: ("tickets.create" | "tickets.list" | "tickets.edit" | "tickets.disable" | "attendees.create" | "attendees.check_in" | "attendees.list" | "admins.create" | "admins.list" | "admins.invite" | "admins.update" | "admins.profile" | "admins.deactivate" | "admins.activate" | "roles.create" | "roles.edit" | "roles.assign" | "roles.list" | "roles.deactivate" | "permissions.assign" | "payment_reports.export" | "discounts.create" | "discounts.list" | "discounts.update" | "orders.list" | "audit-logs.view-list" | "audit-logs.view" | "dashboard.view" | "emails.send" | "emails.manage")[];
+            permissions?: ("tickets.create" | "tickets.list" | "tickets.edit" | "tickets.disable" | "attendees.create" | "attendees.check_in" | "attendees.list" | "admins.create" | "admins.list" | "admins.invite" | "admins.update" | "admins.profile" | "admins.deactivate" | "admins.activate" | "roles.create" | "roles.edit" | "roles.assign" | "roles.list" | "roles.deactivate" | "permissions.assign" | "payment_reports.export" | "discounts.create" | "discounts.list" | "discounts.update" | "orders.list" | "audit-logs.view-list" | "audit-logs.view" | "dashboard.view" | "emails.send" | "emails.manage" | "payment_gateway.view" | "payment_gateway.manage")[];
             isActive?: boolean;
         };
         RoleResponseDto: {
@@ -1406,6 +1504,54 @@ export interface components {
              * @example pay_1234567890abcdef
              */
             reference: string;
+        };
+        PaymentGatewayAdminDto: {
+            /** @example 01a08cef-ea12-7479-8a52-552dac34f3a0 */
+            id: string;
+            /** @example Super Admin */
+            fullName: string;
+        };
+        PaymentGatewayProviderDto: {
+            /**
+             * @example ALATPAY
+             * @enum {string}
+             */
+            name: "ALATPAY" | "MONNIFY";
+            /** @example ALATPay */
+            label: string;
+            /**
+             * @description Whether its credentials are set on the server
+             * @example true
+             */
+            configured: boolean;
+        };
+        PaymentGatewayStatusDto: {
+            /**
+             * @description Gateway new orders use right now
+             * @enum {string}
+             */
+            active: "ALATPAY" | "MONNIFY";
+            /**
+             * @description Gateway that was chosen. Differs from `active` only if it is missing credentials and new orders fell back to the other one.
+             * @enum {string}
+             */
+            selected: "ALATPAY" | "MONNIFY";
+            /**
+             * @description DASHBOARD = chosen by an admin; ENV = PAYMENT_PROVIDER default (no one has switched yet)
+             * @enum {string}
+             */
+            source: "DASHBOARD" | "ENV";
+            /** Format: date-time */
+            updatedAt: string | null;
+            updatedBy: components["schemas"]["PaymentGatewayAdminDto"] | null;
+            providers: components["schemas"]["PaymentGatewayProviderDto"][];
+        };
+        SetPaymentGatewayDto: {
+            /**
+             * @example ALATPAY
+             * @enum {string}
+             */
+            provider: "ALATPAY" | "MONNIFY";
         };
         DashboardStatsDto: {
             /** @example 1247 */
@@ -1582,6 +1728,21 @@ export interface components {
             name: string;
             slug: string;
         };
+        CheckoutSessionDto: {
+            /** @enum {string} */
+            provider: "ALATPAY" | "MONNIFY";
+            /** @enum {string} */
+            mode: "INLINE";
+            reference: string;
+            /** @description Amount in Naira */
+            amount: number;
+            /** @example NGN */
+            currency: string;
+            /** @description Provider-specific inline checkout config. Pass it to the provider popup unchanged. */
+            config: {
+                [key: string]: unknown;
+            };
+        };
         CreateOrderResponseDto: {
             id: string;
             reference: string;
@@ -1608,6 +1769,19 @@ export interface components {
             ticket: components["schemas"]["OrderedTicketDto"];
             /** @description Admin ID who created this order on behalf of the attendee */
             createdById?: string | null;
+            /** @description Inline checkout to open for unpaid orders. Null when the order is free. */
+            payment?: components["schemas"]["CheckoutSessionDto"] | null;
+        };
+        OrderConflictResponseDto: {
+            /** @example false */
+            success: boolean;
+            /** @example You already have an unpaid order for this ticket. Complete your payment to get your ticket. */
+            message: string;
+            /**
+             * @description Set when the conflict is the payer's own unpaid order: its payment reference, so the client can resume it (GET /checkout/{reference}) instead of starting a new order.
+             * @example DevFestIbadan2026-N66LTX
+             */
+            pendingReference?: string;
         };
         OrderListItemDto: {
             id: string;
@@ -1671,8 +1845,11 @@ export interface components {
             ticket: {
                 /** @example Google DevFest 2026 */
                 name?: string;
-                /** @example https://example.com/download/ticket.pdf */
-                url?: string;
+                /**
+                 * @description Null until the order is PAID
+                 * @example https://example.com/download/ticket.pdf
+                 */
+                url?: string | null;
                 /**
                  * @example [
                  *       "2026-09-20T00:00:00.000Z",
@@ -1775,6 +1952,8 @@ export interface components {
             /** Format: date-time */
             expiresAt: string;
             ticket: components["schemas"]["OrderedTicketDto"];
+            /** @description Inline checkout to open for unpaid orders. Null when the order is free. */
+            payment?: components["schemas"]["CheckoutSessionDto"] | null;
         };
         DiscountListTicketDto: {
             id: string;
@@ -2060,6 +2239,38 @@ export interface components {
             /** Format: date-time */
             createdAt: string;
             creator: components["schemas"]["TicketCreatorDto"];
+        };
+        VerifyCheckoutDto: {
+            /**
+             * @description Our order reference
+             * @example DevFest-AB12CD
+             */
+            reference: string;
+            /** @description Gateway transaction id from the popup (ALATPay transactionId / Monnify transactionReference) */
+            transactionRef: string;
+        };
+        VerifyCheckoutResponseDto: {
+            /** @enum {string} */
+            status: "AWAITING_PAYMENT" | "PAID" | "CANCELLED" | "AWAITING_REFUND" | "REFUNDED";
+            /** @enum {string} */
+            outcome: "PROCESSED" | "DUPLICATE" | "NOT_COMPLETED" | "REJECTED" | "IGNORED" | "ALREADY_FINAL";
+        };
+        CheckoutSessionResponseDto: {
+            reference: string;
+            /** @enum {string} */
+            status: "AWAITING_PAYMENT" | "PAID" | "CANCELLED" | "AWAITING_REFUND" | "REFUNDED";
+            /** @enum {string} */
+            provider: "ALATPAY" | "MONNIFY";
+            /** @example 9500.00 */
+            amount: string;
+            /** @example NGN */
+            currency: string;
+            /** Format: date-time */
+            expiresAt: string;
+            ticket: {
+                name?: string;
+            };
+            payment?: components["schemas"]["CheckoutSessionDto"] | null;
         };
         CampaignAudienceDto: {
             /** @description Only holders of this ticket type */
@@ -2930,6 +3141,84 @@ export interface operations {
             };
         };
     };
+    PaymentGatewayController_getGateway: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentGatewayStatusDto"];
+                };
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Requires permission */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PaymentGatewayController_setGateway: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetPaymentGatewayDto"];
+            };
+        };
+        responses: {
+            /** @description Switched. Returns the new status. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentGatewayStatusDto"];
+                };
+            };
+            /** @description Unknown gateway, or its credentials are missing on the server */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Requires permission */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     DashboardController_overview: {
         parameters: {
             query?: never;
@@ -3069,12 +3358,14 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Ticket sold out, all remaining units reserved, or duplicate order */
+            /** @description Ticket sold out, all remaining units reserved, or duplicate order. A duplicate of the payer's own unpaid order includes `pendingReference`. */
             409: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["OrderConflictResponseDto"];
+                };
             };
             /** @description Payment initialization failed */
             502: {
@@ -3241,12 +3532,14 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Ticket sold out, all remaining units reserved, or duplicate order for attendee */
+            /** @description Ticket sold out, all remaining units reserved, or duplicate order for attendee. A duplicate unpaid order includes `pendingReference`. */
             409: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["OrderConflictResponseDto"];
+                };
             };
             /** @description Payment initialization failed */
             502: {
@@ -3293,12 +3586,14 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Ticket sold out, all remaining units reserved, or a member already has an order */
+            /** @description Ticket sold out, all remaining units reserved, or a member already has an order. If that is the payer's own unpaid group order, `pendingReference` is its payment reference. */
             409: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["OrderConflictResponseDto"];
+                };
             };
         };
     };
@@ -3644,6 +3939,90 @@ export interface operations {
             };
             /** @description Invalid token or ticket not found */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    CheckoutController_verify: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VerifyCheckoutDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VerifyCheckoutResponseDto"];
+                };
+            };
+        };
+    };
+    CheckoutController_requery: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VerifyCheckoutDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VerifyCheckoutResponseDto"];
+                };
+            };
+        };
+    };
+    CheckoutController_getCheckout: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reference: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CheckoutSessionResponseDto"];
+                };
+            };
+        };
+    };
+    WebhookController_handleAlatpayWebhook: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };

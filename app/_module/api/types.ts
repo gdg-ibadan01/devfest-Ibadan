@@ -62,16 +62,67 @@ export type CheckedInListResponseDto = Schemas['CheckedInListResponseDto'];
 export type InitiatePaymentDto = Schemas['InitiatePaymentDto'];
 export type VerifyPaymentDto = Schemas['VerifyPaymentDto'];
 
+// ---- Payment gateway ---------------------------------------
+export type PaymentGatewayStatus = Schemas['PaymentGatewayStatusDto'];
+export type PaymentGatewayName = Schemas['SetPaymentGatewayDto']['provider'];
+
+// ---- Orders: duplicate-order conflict (409) ----------------
+export type OrderConflictResponseDto = Schemas['OrderConflictResponseDto'];
+
+// ---- Checkout (hand-written: provider-specific popup config) -------------
+export type PaymentProviderName = 'ALATPAY' | 'MONNIFY';
+
+/** Server-built inline checkout. Pass `config` to the provider popup as-is. */
+export interface PaymentSession {
+  provider: PaymentProviderName;
+  mode: 'INLINE';
+  reference: string;
+  amount: number;
+  currency: string;
+  config: Record<string, unknown>;
+}
+
+export interface CheckoutSessionResponse {
+  reference: string;
+  status:
+    'AWAITING_PAYMENT' | 'PAID' | 'CANCELLED' | 'AWAITING_REFUND' | 'REFUNDED';
+  provider: PaymentProviderName;
+  amount: string;
+  currency: string;
+  expiresAt: string;
+  ticket: { name: string };
+  payment: PaymentSession | null;
+}
+
+export interface VerifyCheckoutDto {
+  reference: string;
+  /** Omit when the popup returned no transaction id (ALATPay cards). */
+  transactionRef?: string;
+}
+
+export interface VerifyCheckoutResponse {
+  status: CheckoutSessionResponse['status'];
+  outcome: string;
+}
+
 // ---- Orders ------------------------------------------------
 export type CreateOrderDto = Schemas['CreateOrderDto'] & {
   discountCode?: string;
 };
-export type CreateOrderResponseDto = Schemas['CreateOrderResponseDto'] & {
+export type CreateOrderResponseDto = Omit<
+  Schemas['CreateOrderResponseDto'],
+  'payment'
+> & {
   checkoutUrl?: string | null;
+  payment?: PaymentSession | null;
 };
 export type CreateGroupBuyOrderDto = Schemas['CreateGroupBuyOrderDto'];
-export type CreateGroupBuyOrderResponseDto =
-  Schemas['CreateGroupBuyOrderResponseDto'];
+export type CreateGroupBuyOrderResponseDto = Omit<
+  Schemas['CreateGroupBuyOrderResponseDto'],
+  'payment'
+> & {
+  payment?: PaymentSession | null;
+};
 export type GroupDto = Schemas['GroupDto'];
 export type GroupPayerDto = Schemas['GroupPayerDto'];
 export type GroupMemberDto = Schemas['GroupMemberDto'];
@@ -81,8 +132,14 @@ export type OrderedTicketDto = Schemas['OrderedTicketDto'];
 export type OrderListItemDto = Schemas['OrderListItemDto'];
 export type OrdersPaginationMetaDto = Schemas['OrdersPaginationMetaDto'];
 export type OrderListResponseDto = Schemas['OrderListResponseDto'];
-export type GetOrderReferenceResponseDto =
-  Schemas['GetOrderReferenceResponseDto'];
+export type GetOrderReferenceResponseDto = Omit<
+  Schemas['GetOrderReferenceResponseDto'],
+  'ticket'
+> & {
+  /** url is null until the order is PAID. */
+  ticket: { name: string; validityDates: string[]; url: string | null };
+  expiresAt?: string;
+};
 export type AdminCreateOrderDto = Schemas['AdminCreateOrderDto'];
 
 // ---- Dashboard -----------------------------------------------
