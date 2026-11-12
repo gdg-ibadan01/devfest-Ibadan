@@ -434,3 +434,22 @@ export class OrderListResponseDto {
   @ApiProperty({ type: OrdersPaginationMetaDto })
   meta: OrdersPaginationMetaDto;
 }
+
+/** 409 from order creation. */
+export class OrderConflictResponseDto {
+  @ApiProperty({ example: false })
+  success: boolean;
+
+  @ApiProperty({
+    example:
+      'You already have an unpaid order for this ticket. Complete your payment to get your ticket.',
+  })
+  message: string;
+
+  @ApiPropertyOptional({
+    description:
+      "Set when the conflict is the payer's own unpaid order: its payment reference, so the client can resume it (GET /checkout/{reference}) instead of starting a new order.",
+    example: 'DevFestIbadan2026-N66LTX',
+  })
+  pendingReference?: string;
+}

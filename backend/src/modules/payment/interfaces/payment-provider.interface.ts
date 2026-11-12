@@ -3,9 +3,6 @@ import type { PaymentProviderName } from 'src/config/payment.config';
 
 export type { PaymentProviderName } from 'src/config/payment.config';
 
-/** @deprecated Inject PaymentProviderRegistry instead. Kept for backwards compatibility. */
-export const PAYMENT_PROVIDER = 'PAYMENT_PROVIDER';
-
 export interface InitializePaymentParams {
   amount: number;
   customerName: string;

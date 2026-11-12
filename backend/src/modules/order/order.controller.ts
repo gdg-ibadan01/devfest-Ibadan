@@ -25,6 +25,7 @@ import {
   CreateOrderResponseDto,
   GetOrderReferenceResponseDto,
   OrderExportResponseDto,
+  OrderConflictResponseDto,
   OrderListResponseDto,
   OrdersExportQueryDto,
   OrdersQueryDto,
@@ -65,7 +66,8 @@ export class OrdersController {
   @ApiResponse({
     status: HttpStatus.CONFLICT,
     description:
-      'Ticket sold out, all remaining units reserved, or duplicate order',
+      "Ticket sold out, all remaining units reserved, or duplicate order. A duplicate of the payer's own unpaid order includes `pendingReference`.",
+    type: OrderConflictResponseDto,
   })
   @ApiResponse({
     status: HttpStatus.BAD_GATEWAY,
@@ -251,7 +253,8 @@ export class OrdersController {
   @ApiResponse({
     status: HttpStatus.CONFLICT,
     description:
-      'Ticket sold out, all remaining units reserved, or duplicate order for attendee',
+      'Ticket sold out, all remaining units reserved, or duplicate order for attendee. A duplicate unpaid order includes `pendingReference`.',
+    type: OrderConflictResponseDto,
   })
   @ApiResponse({
     status: HttpStatus.BAD_GATEWAY,
@@ -328,7 +331,8 @@ export class OrdersController {
   @ApiResponse({
     status: HttpStatus.CONFLICT,
     description:
-      'Ticket sold out, all remaining units reserved, or a member already has an order',
+      "Ticket sold out, all remaining units reserved, or a member already has an order. If that is the payer's own unpaid group order, `pendingReference` is its payment reference.",
+    type: OrderConflictResponseDto,
   })
   async createGroupBuy(
     @Body() payload: CreateGroupBuyOrderDto,
