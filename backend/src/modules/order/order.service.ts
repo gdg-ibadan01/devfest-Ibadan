@@ -21,11 +21,11 @@ import { PrismaErrors } from 'src/common/enums/prisma-errors.enum';
 import { randomString } from 'src/common/transformers/strings';
 import { buildSignedTicketDownloadUrl } from 'src/common/utils/ticket-download-url';
 import {
+  CheckoutSession,
   InitializePaymentParams,
-  PAYMENT_PROVIDER,
-  PaymentProvider,
+  PaymentProviderName,
 } from '../payment/interfaces/payment-provider.interface';
-import { MonnifyRejectedPaymentWebhookEventData } from '../payment/interfaces/monnify.interface';
+import { PaymentProviderRegistry } from '../payment/payment-provider.registry';
 import {
   CreateOrderDto,
   CreateOrderResponseDto,
@@ -39,8 +39,8 @@ import { ConfigType } from '@nestjs/config';
 import { MailService } from '../mail/mail.service';
 import { normalizeMessageId } from '../mail/message-id';
 import { CreateGroupBuyOrderDto } from './dto/group-buy-order.dto';
+import { DuplicateOrderError } from './duplicate-order.error';
 
-const ORDER_TTL_MINUTES = 5;
 const TX_MAX_ATTEMPTS = 3;
 const CANCEL_MAX_ATTEMPTS = 3;
 const EXPORT_BATCH_SIZE = 500;
@@ -99,7 +99,13 @@ interface PaymentSuccessPayload {
   amountPaid: number;
   currency: string;
   paymentStatus: string;
-  provider: 'MONNIFY';
+  provider: PaymentProviderName;
+}
+
+interface CheckoutPayer {
+  fullName: string;
+  email: string;
+  phoneNumber?: string | null;
 }
 
 interface ProcessRefundPayload {
@@ -173,6 +179,7 @@ export class OrdersService {
     TicketNotFoundErr: 'TicketNotFoundErr',
     TicketGroupCapacityExceededErr: 'TicketGroupCapacityExceededErr',
     OrderNotFoundErr: 'OrderNotFoundErr',
+    OrderExpiredErr: 'OrderExpiredErr',
     MaxedOutDiscountCodeErr: 'MaxedOutDiscountCodeErr',
     BulkDiscountRecipientMismatchErr: 'BulkDiscountRecipientMismatchErr',
     TicketDiscountCodeMismatchErr: 'TicketDiscountCodeMismatchErr',
@@ -184,7 +191,7 @@ export class OrdersService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly mailService: MailService,
-    @Inject(PAYMENT_PROVIDER) private readonly paymentProvider: PaymentProvider,
+    private readonly payments: PaymentProviderRegistry,
     private readonly ticketsService: TicketsService,
     @Inject(AppConfig.KEY)
     private appConfig: ConfigType<typeof AppConfig>,
@@ -269,6 +276,23 @@ export class OrdersService {
     const isFree = record.order.status === OrderStatus.PAID;
     if (isFree) await this.issueFreeTickets(record);
 
+    // The gifter pays for a gift; otherwise the attendee does.
+    const payment = isFree
+      ? null
+      : await this.openCheckout(
+          record.order,
+          {
+            fullName:
+              payload.gifter?.fullName.trim() ??
+              payload.attendee.fullName.trim(),
+            email: gifterEmail ?? attendeeEmail,
+            phoneNumber: payload.gifter
+              ? null
+              : payload.attendee.phoneNumber?.trim() || null,
+          },
+          record.ticketName,
+        );
+
     return {
       amount: record.order.amount.toFixed(2),
       vatAndCharges: '0.00',
@@ -282,6 +306,7 @@ export class OrdersService {
         name: record.ticketName,
         slug: record.ticketSlug,
       },
+      payment,
     };
   }
 
@@ -404,6 +429,63 @@ export class OrdersService {
     return response;
   }
 
+  /**
+   * Re-issues the inline checkout for an unpaid order, on the gateway the
+   * order was created with. Used by the pay-link page and "Complete payment".
+   */
+  async getCheckoutSession(reference: string) {
+    const order = await this.prisma.order.findFirst({
+      where: { reference },
+      include: { ticket: { select: { name: true } } },
+    });
+
+    if (!order) {
+      throw new ServiceError(
+        'Order not found',
+        OrdersService.ERRORS.OrderNotFoundErr,
+      );
+    }
+
+    const summary = {
+      reference: order.reference,
+      status: order.status,
+      provider: order.paymentProvider,
+      amount: order.amount.toFixed(2),
+      currency: order.currency,
+      expiresAt: order.expiresAt,
+      ticket: { name: order.ticket.name },
+    };
+
+    if (order.status !== OrderStatus.AWAITING_PAYMENT) {
+      return { ...summary, payment: null };
+    }
+    if (order.expiresAt.getTime() <= Date.now()) {
+      throw new ServiceError(
+        'This order has expired. Please start a new purchase.',
+        OrdersService.ERRORS.OrderExpiredErr,
+      );
+    }
+    if (Number(order.amount) <= 0) {
+      throw new ServiceError(
+        'Payment for this ticket is made by the group payer.',
+        OrdersService.ERRORS.ValidationErr,
+      );
+    }
+
+    const payment = await this.openCheckout(
+      order,
+      {
+        fullName: order.gifterName ?? order.attendeeFullName,
+        email: order.gifterEmail ?? order.attendeeEmail,
+        phoneNumber: order.gifterEmail ? null : order.attendeePhoneNumber,
+      },
+      order.ticket.name,
+      { cancelOnFailure: false },
+    );
+
+    return { ...summary, payment };
+  }
+
   async findByReference(reference: string) {
     const order = await this.prisma.order.findFirst({
       where: { reference },
@@ -417,11 +499,20 @@ export class OrdersService {
       );
     }
 
+    // Unpaid orders return their status (no ticket) so the success page can
+    // keep polling until the payment webhook confirms them.
     if (order.status !== OrderStatus.PAID) {
-      throw new ServiceError(
-        'Order payment not confirmed yet',
-        OrdersService.ERRORS.ValidationErr,
-      );
+      return {
+        ticket: {
+          name: order.ticket.name,
+          validityDates: order.ticket.validityDates,
+          url: null,
+        },
+        amount: order.amount.toFixed(2),
+        status: order.status,
+        code: '',
+        expiresAt: order.expiresAt,
+      };
     }
 
     const ticketUrl = order.ticketUrl
@@ -631,12 +722,20 @@ export class OrdersService {
           },
         ],
       },
-      select: { id: true },
+      select: {
+        status: true,
+        amount: true,
+        reference: true,
+        attendeeEmail: true,
+        gifterEmail: true,
+        groupReference: true,
+      },
     });
     if (activeOrder) {
-      throw new ServiceError(
-        'You already have an order for this ticket',
-        OrdersService.ERRORS.DuplicateErr,
+      throw await this.duplicateOrderError(
+        tx,
+        activeOrder,
+        args.gifterEmail ?? args.attendeeEmail,
       );
     }
 
@@ -674,6 +773,7 @@ export class OrdersService {
       );
     }
 
+    const provider = this.payments.active();
     const reference = this.generateReference(ticket.name);
     const order = await tx.order.create({
       data: {
@@ -693,8 +793,8 @@ export class OrdersService {
         providerTransactionRef: isFree
           ? this.freeTransactionRef(reference)
           : null,
-        paymentProvider: this.paymentProvider.name,
-        expiresAt: new Date(now.getTime() + ORDER_TTL_MINUTES * 60_000),
+        paymentProvider: provider.name,
+        expiresAt: new Date(now.getTime() + provider.orderTtlMinutes * 60_000),
         discountId: discount ? discount.id : null,
       },
     });
@@ -738,6 +838,18 @@ export class OrdersService {
     const isFree = rec!.order.status === OrderStatus.PAID;
     if (isFree) await this.issueFreeTickets(rec!);
 
+    const payment = isFree
+      ? null
+      : await this.openCheckout(
+          rec!.order,
+          {
+            fullName: payload.group.payer.fullName.trim(),
+            email: payload.group.payer.email.trim().toLowerCase(),
+            phoneNumber: payload.group.payer.phoneNumber?.trim() || null,
+          },
+          rec!.ticketName,
+        );
+
     return {
       amount: rec!.order.amount.toFixed(2),
       vatAndCharges: '0.00',
@@ -751,6 +863,7 @@ export class OrdersService {
         name: rec!.ticketName,
         slug: rec!.ticketSlug,
       },
+      payment,
     };
   }
 
@@ -805,9 +918,10 @@ export class OrdersService {
     });
 
     if (activeOrder) {
-      throw new ServiceError(
-        'You already have an order for this ticket',
-        OrdersService.ERRORS.DuplicateErr,
+      throw await this.duplicateOrderError(
+        tx,
+        activeOrder,
+        group.payer.email.trim().toLowerCase(),
       );
     }
 
@@ -846,6 +960,7 @@ export class OrdersService {
       );
     }
 
+    const provider = this.payments.active();
     const groupReference = crypto.randomUUID();
     const bulkOrdersToCreate = members.map((p) => {
       const reference = this.generateReference(ticket.name);
@@ -864,8 +979,8 @@ export class OrdersService {
         providerTransactionRef: isFree
           ? this.freeTransactionRef(reference)
           : null,
-        paymentProvider: this.paymentProvider.name,
-        expiresAt: new Date(now.getTime() + ORDER_TTL_MINUTES * 60_000),
+        paymentProvider: provider.name,
+        expiresAt: new Date(now.getTime() + provider.orderTtlMinutes * 60_000),
         discountId: discount && p.isPayer ? discount.id : null,
       };
     });
@@ -884,6 +999,53 @@ export class OrdersService {
       ticketSlug: ticket.slug,
       validityDates: ticket.validity_dates,
     };
+  }
+
+  /**
+   * Error for a clashing order. When the clash is an unpaid order that the
+   * same payer started, its payable reference is attached so the buyer can
+   * finish paying instead of waiting for it to expire.
+   */
+  private async duplicateOrderError(
+    tx: TxClient,
+    existing: Pick<
+      Order,
+      | 'status'
+      | 'amount'
+      | 'reference'
+      | 'attendeeEmail'
+      | 'gifterEmail'
+      | 'groupReference'
+    >,
+    payerEmail: string,
+  ): Promise<DuplicateOrderError> {
+    const alreadyOrdered = new DuplicateOrderError(
+      'You already have an order for this ticket',
+    );
+    if (existing.status !== OrderStatus.AWAITING_PAYMENT) return alreadyOrdered;
+
+    // A group is paid on the payer's order; members' orders are free.
+    const payable =
+      existing.groupReference && existing.amount.lte(0)
+        ? await tx.order.findFirst({
+            where: {
+              groupReference: existing.groupReference,
+              amount: { gt: 0 },
+            },
+            select: { reference: true, attendeeEmail: true, gifterEmail: true },
+          })
+        : existing;
+
+    if (
+      !payable ||
+      (payable.gifterEmail ?? payable.attendeeEmail) !== payerEmail
+    ) {
+      return alreadyOrdered;
+    }
+    return new DuplicateOrderError(
+      'You already have an unpaid order for this ticket. Complete your payment to get your ticket.',
+      payable.reference,
+    );
   }
 
   private groupPeople(group: CreateGroupBuyOrderDto['group']) {
@@ -990,6 +1152,58 @@ export class OrdersService {
     return discount;
   }
 
+  /**
+   * Builds the inline checkout on the order's own gateway. A failure here
+   * means the payer cannot pay, so (for a fresh order) the reservation is
+   * released and a PaymentErr is raised.
+   */
+  private async openCheckout(
+    order: Pick<
+      Order,
+      'id' | 'reference' | 'amount' | 'paymentProvider' | 'groupReference'
+    >,
+    payer: CheckoutPayer,
+    ticketName: string,
+    options: { cancelOnFailure?: boolean } = {},
+  ): Promise<CheckoutSession> {
+    try {
+      return await this.payments.for(order.paymentProvider).createCheckout({
+        orderId: order.id,
+        reference: order.reference,
+        amount: Number(order.amount),
+        customer: payer,
+        description: `GDG Ibadan ticket: ${ticketName}`,
+      });
+    } catch (err) {
+      this.logger.error(
+        `Checkout setup failed for order ${order.id} (${order.paymentProvider}): ${(err as Error).message}`,
+      );
+      if (options.cancelOnFailure !== false) {
+        if (order.groupReference) {
+          await this.prisma.order
+            .updateMany({
+              where: {
+                groupReference: order.groupReference,
+                status: OrderStatus.AWAITING_PAYMENT,
+              },
+              data: { status: OrderStatus.CANCELLED },
+            })
+            .catch((e: Error) =>
+              this.logger.error(
+                `Could not release group ${order.groupReference}: ${e.message}`,
+              ),
+            );
+        } else {
+          await this.cancel(order.id);
+        }
+      }
+      throw new ServiceError(
+        'Unable to initialize payment. Please try again shortly.',
+        OrdersService.ERRORS.PaymentErr,
+      );
+    }
+  }
+
   private async initializeCheckout(
     record: CreatedOrderRecord,
     payer: { fullName: string; email: string },
@@ -1005,8 +1219,26 @@ export class OrdersService {
       redirectUrl: `${this.appConfig.checkoutRedirectUrl}`,
     };
 
+    const provider = this.payments.for(order.paymentProvider);
+
+    if (!provider.initializePayment) {
+      // Inline-only gateway (ALATPay): the payer completes payment on our
+      // own pay page, which opens the gateway popup.
+      const checkoutUrl = `${this.appConfig.frontendUrl.replace(/\/+$/, '')}/tickets/pay/${encodeURIComponent(order.reference)}`;
+      const updated = await this.prisma.order.update({
+        where: { id: order.id },
+        data: { checkoutUrl },
+      });
+      return this.toResponseDto(
+        updated,
+        { name: ticketName, slug: ticketSlug },
+        0,
+        createdById,
+      );
+    }
+
     try {
-      const initialized = await this.paymentProvider.initializePayment(params);
+      const initialized = await provider.initializePayment(params);
 
       const updated = await this.prisma.order.update({
         where: { id: order.id },
@@ -1511,6 +1743,18 @@ export class OrdersService {
               return txResult;
             }
 
+            // A transaction can only settle the order it was opened for.
+            if (
+              event.paymentReference &&
+              order.reference !== event.paymentReference
+            ) {
+              this.logger.error(
+                `Payment reference ${event.paymentReference} does not match order ${order.id} (${order.reference}). Ignoring.`,
+              );
+              await this.setEventAsProcessed(tx, event.webhookEventId);
+              return txResult;
+            }
+
             const group = order.group_reference
               ? await tx.$queryRaw<OrderQueryRawResult[]>`
                   SELECT *
@@ -1532,7 +1776,9 @@ export class OrdersService {
             }
 
             // Since we're expecting only one currency now, this is fine
-            const amountMismatch = event.amountPaid < Number(order.amount);
+            // Half-a-kobo tolerance for float amounts from the gateways.
+            const amountMismatch =
+              event.amountPaid + 0.005 < Number(order.amount);
 
             if (amountMismatch) {
               this.logger.warn(
@@ -1708,6 +1954,9 @@ Initiating refund for order ${order.id}`,
 
     if (!order) return;
 
+    // Refund on the gateway that took the payment, not the current switch.
+    const provider = this.payments.for(refund.provider);
+
     for (let attempt = 1; attempt <= TX_MAX_ATTEMPTS; attempt++) {
       try {
         await this.prisma.refund.update({
@@ -1715,15 +1964,40 @@ Initiating refund for order ${order.id}`,
           data: { status: RefundStatus.REQUESTED },
         });
 
-        // TODO Use a switch statement to determine which provider to use
-        await this.paymentProvider.requestRefund({
-          transactionReference: order.providerTransactionRef!,
+        const result = await provider.requestRefund({
+          transactionReference:
+            refund.transactionReference || order.providerTransactionRef!,
           refundReference: refund.refundReference,
           amount: Number(order.amount),
           reason: 'Order could not be fulfilled',
         });
 
-        // TODO Handle provider response via webhook
+        if (result.manual) {
+          // No refund API: stays REQUESTED for an admin to refund by hand.
+          await this.prisma.refund.update({
+            where: { id: refundId },
+            data: {
+              reason: `MANUAL_REFUND_REQUIRED: ${result.message ?? 'refund the payer from the gateway dashboard'}`,
+            },
+          });
+          this.logger.error(
+            `MANUAL_REFUND_REQUIRED for order ${orderId} (refund ${refund.refundReference}, ${refund.provider}, NGN ${Number(order.amount).toFixed(2)}, ${refund.email})`,
+          );
+        } else if (!result.success) {
+          await this.prisma.refund.update({
+            where: { id: refundId },
+            data: {
+              status: RefundStatus.FAILED,
+              reason: result.message ?? 'Refund rejected by provider',
+            },
+          });
+          this.logger.error(
+            `Refund ${refundId} rejected by ${refund.provider}: ${result.message}`,
+          );
+        }
+
+        // Requested exactly once; outcome arrives via the provider/admin.
+        break;
       } catch (err) {
         if ((err as Error).name === 'InsufficientRefundAmountErr') {
           await this.prisma.refund.update({
@@ -1752,7 +2026,7 @@ Initiating refund for order ${order.id}`,
 
   async handleFailedPayment(payload: {
     webhookEventId: string;
-    event: MonnifyRejectedPaymentWebhookEventData;
+    event: { paymentReference: string };
   }): Promise<void> {
     const order = await this.prisma.order.findFirst({
       where: { reference: payload.event.paymentReference },

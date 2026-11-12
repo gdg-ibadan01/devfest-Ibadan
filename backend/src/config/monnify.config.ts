@@ -9,4 +9,8 @@ export default registerAs('monnify', () => ({
     process.env.MONNIFY_REDIRECT_URL ||
     `${process.env.FRONTEND_URL || 'http://localhost:3000'}/orders/confirm`,
   shouldVerifySignature: process.env.SHOULD_VERIFY_MONNIFY_SIGNATURE === 'true',
+  orderTtlMinutes:
+    Number.parseInt(process.env.MONNIFY_ORDER_TTL_MINUTES ?? '', 10) > 0
+      ? Number.parseInt(process.env.MONNIFY_ORDER_TTL_MINUTES as string, 10)
+      : 5,
 }));

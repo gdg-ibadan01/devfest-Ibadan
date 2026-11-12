@@ -36,6 +36,7 @@ import {
 import { PermissionsGuard } from '../admin/guards/permissions.guard';
 import { RequirePermission } from 'src/common/decorators/permissions.decorator';
 import { ServiceError } from '../../common/errors/service-error';
+import { duplicateOrderConflict } from './duplicate-order.error';
 import { CurrentUser } from 'src/common/decorators/current-user.decorator';
 import { IJwtPayload } from '../admin/interfaces/admin.interface';
 
@@ -89,9 +90,10 @@ export class OrdersController {
             (err as Error).message,
             HttpStatus.BAD_REQUEST,
           );
+        case OrdersService.ERRORS.DuplicateErr:
+          throw duplicateOrderConflict(err as Error);
         case OrdersService.ERRORS.SoldOutErr:
         case OrdersService.ERRORS.RetryLaterErr:
-        case OrdersService.ERRORS.DuplicateErr:
         case OrdersService.ERRORS.MaxedOutDiscountCodeErr:
           throw new HttpException((err as Error).message, HttpStatus.CONFLICT);
         case OrdersService.ERRORS.PaymentErr:
@@ -277,9 +279,11 @@ export class OrdersController {
           case OrdersService.ERRORS.TicketNotFoundErr:
             throw new HttpException(err.message, HttpStatus.NOT_FOUND);
 
+          case OrdersService.ERRORS.DuplicateErr:
+            throw duplicateOrderConflict(err);
+
           case OrdersService.ERRORS.SoldOutErr:
           case OrdersService.ERRORS.RetryLaterErr:
-          case OrdersService.ERRORS.DuplicateErr:
             throw new HttpException(err.message, HttpStatus.CONFLICT);
 
           case OrdersService.ERRORS.PaymentErr:
@@ -345,9 +349,10 @@ export class OrdersController {
             (err as Error).message,
             HttpStatus.BAD_REQUEST,
           );
+        case OrdersService.ERRORS.DuplicateErr:
+          throw duplicateOrderConflict(err as Error);
         case OrdersService.ERRORS.SoldOutErr:
         case OrdersService.ERRORS.RetryLaterErr:
-        case OrdersService.ERRORS.DuplicateErr:
         case OrdersService.ERRORS.MaxedOutDiscountCodeErr:
           throw new HttpException((err as Error).message, HttpStatus.CONFLICT);
         case OrdersService.ERRORS.PaymentErr:
