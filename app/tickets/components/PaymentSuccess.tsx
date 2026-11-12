@@ -1,5 +1,6 @@
-import { useOrderByReference } from '@/app/_module/services';
+import { isNotFound, useOrderByReference } from '@/app/_module/services';
 import { showToast } from '@/app/_module/lib/notify';
+import { useResumePayment } from '@/hooks/payments/useResumePayment';
 import {
   SuccessErrorState,
   SuccessLoadingState,
@@ -25,6 +26,7 @@ function SuccessContent({
     refetch,
     isRefetching,
   } = useOrderByReference(reference);
+  const { resume, isResuming } = useResumePayment(reference);
 
   const handleDownload = () => {
     if (order?.ticket?.url) {
@@ -49,9 +51,20 @@ function SuccessContent({
     return <SuccessLoadingState />;
   }
 
+  if (isError && !isNotFound(error)) {
+    return (
+      <SuccessErrorState
+        title="We couldn't check your order"
+        message="We're having trouble reaching our servers. If you've paid, your payment is safe and your ticket will be emailed to you. We'll keep checking."
+        reference={reference}
+        onRetry={() => void refetch()}
+        isRetrying={isRefetching}
+      />
+    );
+  }
+
   if (isError || !order) {
     const message =
-      (error as Error | null)?.message ??
       'We could not find your order. Please check the link or contact support.';
     return (
       <SuccessErrorState
@@ -72,6 +85,8 @@ function SuccessContent({
       resetButtonLabel={resetButtonLabel}
       onRefetch={handleRefetch}
       isRefetching={isRefetching}
+      onCompletePayment={resume}
+      isCompletingPayment={isResuming}
     />
   );
 }

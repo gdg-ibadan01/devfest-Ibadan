@@ -21,10 +21,14 @@ import paystackConfig from './config/paystack.config';
 import cloudinaryConfig from './config/cloudinary.config';
 import superadminConfig from './config/superadmin.config';
 import monnifyConfig from './config/monnify.config';
+import alatpayConfig from './config/alatpay.config';
+import paymentConfig from './config/payment.config';
+import { CheckoutModule } from './modules/checkout/checkout.module';
 import { TicketsModule } from './modules/ticket/ticket.module';
 import { UploadModule } from './modules/upload/upload.module';
 import { OrdersModule } from './modules/order/order.module';
 import { WebhookModule } from './modules/webhook/webhook.module';
+import { EmailCampaignModule } from './modules/email-campaign/email-campaign.module';
 import { PDFService } from './modules/pdf/pdf.service';
 
 @Module({
@@ -40,6 +44,8 @@ import { PDFService } from './modules/pdf/pdf.service';
         paystackConfig,
         superadminConfig,
         monnifyConfig,
+        alatpayConfig,
+        paymentConfig,
       ],
     }),
     // Logging
@@ -52,7 +58,9 @@ import { PDFService } from './modules/pdf/pdf.service';
     TicketsModule,
     UploadModule,
     OrdersModule,
+    CheckoutModule,
     WebhookModule,
+    EmailCampaignModule,
   ],
   controllers: [AppController],
   providers: [

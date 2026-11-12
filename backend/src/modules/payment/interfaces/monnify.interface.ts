@@ -47,6 +47,21 @@ export interface MonnifyRejectedPaymentWebhookEventData {
   paymentDescription?: string;
 }
 
+/** GET /api/v2/transactions/{transactionReference} response body. */
+export interface MonnifyTransactionStatusBody {
+  transactionReference?: string;
+  paymentReference?: string;
+  amountPaid?: number | string;
+  totalPayable?: number | string;
+  paymentStatus?: string;
+  paymentDescription?: string;
+  currency?: string;
+  currencyCode?: string;
+  paidOn?: string;
+  completedOn?: string;
+  metaData?: Record<string, unknown> | null;
+}
+
 export interface MonnifyRefundResponseBody {
   refundReference: string;
   transactionReference: string;

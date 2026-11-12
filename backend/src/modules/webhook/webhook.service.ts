@@ -16,8 +16,6 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { Prisma } from '@prisma/client';
 import { PrismaErrors } from 'src/common/enums/prisma-errors.enum';
 
-type TxClient = Prisma.TransactionClient;
-
 interface CreateWebhookRecord {
   eventType: string;
   payload: string;
@@ -69,14 +67,14 @@ export class WebhookService {
       return;
     }
 
-    const existingEvent = await this.prisma.$transaction(async (tx) => {
-      return await this.recordEvent(tx, {
-        eventType,
-        payload: JSON.stringify(eventData),
-        paymentReference: eventData.paymentReference,
-        transactionReference: eventData.transactionReference,
-        provider: 'MONNIFY',
-      });
+    // A single insert needs no transaction; a duplicate is detected by the
+    // unique (provider, eventType, transactionReference) constraint.
+    const existingEvent = await this.recordEvent({
+      eventType,
+      payload: JSON.stringify(eventData),
+      paymentReference: eventData.paymentReference,
+      transactionReference: eventData.transactionReference,
+      provider: 'MONNIFY',
     });
 
     if (!existingEvent) {
@@ -97,7 +95,11 @@ export class WebhookService {
       case 'SUCCESSFUL_TRANSACTION':
         await this.ordersService.handlePaymentSuccess({
           webhookEventId: existingEvent.id,
-          amountPaid: Number(eventData.settlementAmount),
+          // Gross amount the customer paid (settlementAmount is net of fees
+          // and wrongly triggered "underpaid" refunds).
+          amountPaid: Number(
+            eventData.amountPaid ?? eventData.settlementAmount,
+          ),
           currency: eventData.currency,
           metaData: eventData.metaData,
           paidOn: eventData.paidOn,
@@ -122,9 +124,9 @@ export class WebhookService {
     }
   }
 
-  private async recordEvent(tx: TxClient, ev: CreateWebhookRecord) {
+  private async recordEvent(ev: CreateWebhookRecord) {
     try {
-      return await tx.webhookEvent.create({
+      return await this.prisma.webhookEvent.create({
         data: {
           eventType: ev.eventType,
           payload: ev.payload,
@@ -141,9 +143,9 @@ export class WebhookService {
       ) {
         return await this.prisma.webhookEvent.findFirst({
           where: {
-            provider: 'MONNIFY',
+            provider: ev.provider,
             eventType: ev.eventType,
-            paymentReference: ev.paymentReference,
+            transactionReference: ev.transactionReference,
           },
         });
       }

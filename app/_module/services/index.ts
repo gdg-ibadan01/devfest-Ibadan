@@ -8,3 +8,5 @@ export * from './dashboard.service';
 export * from './discounts.service';
 export * from './audit-log.service';
 export * from './discount.service';
+export * from './emails.service';
+export * from './payment-gateway.service';

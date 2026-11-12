@@ -107,6 +107,31 @@ export class OrderedTicketDto {
   slug: string;
 }
 
+export class CheckoutSessionDto {
+  @ApiProperty({ enum: ['ALATPAY', 'MONNIFY'] })
+  provider: 'ALATPAY' | 'MONNIFY';
+
+  @ApiProperty({ enum: ['INLINE'] })
+  mode: 'INLINE';
+
+  @ApiProperty()
+  reference: string;
+
+  @ApiProperty({ description: 'Amount in Naira' })
+  amount: number;
+
+  @ApiProperty({ example: 'NGN' })
+  currency: string;
+
+  @ApiProperty({
+    type: 'object',
+    additionalProperties: true,
+    description:
+      'Provider-specific inline checkout config. Pass it to the provider popup unchanged.',
+  })
+  config: Record<string, unknown>;
+}
+
 export class CreateOrderResponseDto {
   @ApiProperty()
   id: string;
@@ -163,6 +188,14 @@ export class CreateOrderResponseDto {
     description: 'Admin ID who created this order on behalf of the attendee',
   })
   createdById?: string | null;
+
+  @ApiPropertyOptional({
+    type: CheckoutSessionDto,
+    nullable: true,
+    description:
+      'Inline checkout to open for unpaid orders. Null when the order is free.',
+  })
+  payment?: CheckoutSessionDto | null;
 }
 
 export class GetOrderReferenceResponseDto {
@@ -172,6 +205,8 @@ export class GetOrderReferenceResponseDto {
       name: { type: 'string', example: 'Google DevFest 2026' },
       url: {
         type: 'string',
+        nullable: true,
+        description: 'Null until the order is PAID',
         example: 'https://example.com/download/ticket.pdf',
       },
       validityDates: {
@@ -181,7 +216,7 @@ export class GetOrderReferenceResponseDto {
       },
     },
   })
-  ticket: { name: string; validityDates: Date[]; url: string };
+  ticket: { name: string; validityDates: Date[]; url: string | null };
 
   @ApiProperty({
     type: String,
@@ -325,6 +360,24 @@ export class OrderListItemDto {
   checkIns: Date[];
 
   @ApiProperty({
+    enum: ['PENDING', 'SENT', 'FAILED'],
+    nullable: true,
+    description: 'Ticket email state; null = unknown (before tracking)',
+  })
+  ticketEmailStatus: 'PENDING' | 'SENT' | 'FAILED' | null;
+
+  @ApiProperty({
+    enum: ['DELIVERED', 'DELAYED', 'BOUNCED', 'COMPLAINED'],
+    nullable: true,
+    description:
+      'What the mail provider reported after accepting the ticket email',
+  })
+  ticketEmailEvent: 'DELIVERED' | 'DELAYED' | 'BOUNCED' | 'COMPLAINED' | null;
+
+  @ApiProperty({ nullable: true, type: String })
+  ticketEmailEventDetail: string | null;
+
+  @ApiProperty({
     type: 'object',
     properties: {
       id: { type: 'string' },
@@ -380,4 +433,23 @@ export class OrderListResponseDto {
 
   @ApiProperty({ type: OrdersPaginationMetaDto })
   meta: OrdersPaginationMetaDto;
+}
+
+/** 409 from order creation. */
+export class OrderConflictResponseDto {
+  @ApiProperty({ example: false })
+  success: boolean;
+
+  @ApiProperty({
+    example:
+      'You already have an unpaid order for this ticket. Complete your payment to get your ticket.',
+  })
+  message: string;
+
+  @ApiPropertyOptional({
+    description:
+      "Set when the conflict is the payer's own unpaid order: its payment reference, so the client can resume it (GET /checkout/{reference}) instead of starting a new order.",
+    example: 'DevFestIbadan2026-N66LTX',
+  })
+  pendingReference?: string;
 }

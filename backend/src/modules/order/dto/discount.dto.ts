@@ -73,7 +73,7 @@ export class CreateDiscountResponseDto {
 }
 
 export class CreateDiscountDto {
-  @ApiProperty({
+  @ApiPropertyOptional({
     example: 'DevFestGSDoC2026',
     description: 'Set discount code',
   })
@@ -83,7 +83,7 @@ export class CreateDiscountDto {
   @IsOptional()
   @IsString()
   @MinLength(6)
-  code: string;
+  code?: string;
 
   @ApiProperty({ example: 'DevFest2026 Early Bird' })
   @IsString()
@@ -185,6 +185,7 @@ export class CreateDiscountDto {
 
 export class UpdateDiscountDto {
   @ApiPropertyOptional({
+    type: String,
     example: '2026-12-31',
     nullable: true,
     description:

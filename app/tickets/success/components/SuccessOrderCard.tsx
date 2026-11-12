@@ -11,6 +11,7 @@ import {
   Tag,
   Hash,
   RefreshCw,
+  CreditCard,
   Image as ImageIcon,
 } from 'lucide-react';
 import type { GetOrderReferenceResponseDto } from '@/app/_module/api/types';
@@ -37,6 +38,9 @@ interface SuccessOrderCardProps {
   resetButtonLabel?: string;
   onRefetch?: () => void;
   isRefetching?: boolean;
+  /** Reopens the payment popup for this same order. */
+  onCompletePayment?: () => void;
+  isCompletingPayment?: boolean;
 }
 
 export default function SuccessOrderCard({
@@ -47,8 +51,15 @@ export default function SuccessOrderCard({
   resetButtonLabel,
   onRefetch,
   isRefetching,
+  onCompletePayment,
+  isCompletingPayment,
 }: Readonly<SuccessOrderCardProps>) {
   const isPaid = order.status === 'PAID';
+  const isAwaitingPayment = order.status === 'AWAITING_PAYMENT';
+  const isExpired =
+    isAwaitingPayment &&
+    !!order.expiresAt &&
+    new Date(order.expiresAt).getTime() <= Date.now();
 
   useEffect(() => {
     if (order.status === 'PAID') {
@@ -141,7 +152,7 @@ export default function SuccessOrderCard({
             icon={
               <span className="text-[14px] font-bold leading-none">₦</span>
             }
-            label="Amount Paid"
+            label={isPaid ? 'Amount Paid' : 'Amount'}
             value={`₦${Number(order.amount).toLocaleString('en-NG', {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
@@ -188,7 +199,9 @@ export default function SuccessOrderCard({
             transition={{ delay: 0.55, duration: 0.3 }}
             className="text-[13px] text-[#515151] font-sans text-center mb-6 leading-relaxed"
           >
-            We are confirming your payment with the gateway. If you have completed payment, click below to refresh the status.
+            {isExpired
+              ? 'This order has expired. If you already paid, refresh the status; otherwise start a new purchase.'
+              : 'If you have paid, we are confirming it with the payment gateway (bank transfers can take a few minutes) and your ticket will be emailed to you. If you have not paid yet, click Complete Payment.'}
           </motion.p>
         ) : null}
 
@@ -228,6 +241,25 @@ export default function SuccessOrderCard({
                 <span>Create your attendee flyer</span>
               </Link>
             </motion.div>
+          )}
+
+          {isAwaitingPayment && !isExpired && onCompletePayment && (
+            <motion.button
+              key="complete-payment-btn"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.58, duration: 0.3 }}
+              type="button"
+              id="complete-payment-btn"
+              onClick={onCompletePayment}
+              disabled={isCompletingPayment}
+              className="w-full flex items-center justify-center gap-2.5 bg-core-blue hover:bg-[#1E1E1E] disabled:bg-gray-400 text-white py-4 rounded-[100px] font-bold transition-all text-[15px] md:text-[16px] font-sans shadow-md hover:shadow-lg disabled:cursor-not-allowed cursor-pointer focus:outline-none"
+            >
+              <CreditCard className="w-4 h-4" />
+              <span>
+                {isCompletingPayment ? 'Opening payment...' : 'Complete Payment'}
+              </span>
+            </motion.button>
           )}
 
           {/* Refetch / Refresh Button when AWAITING_PAYMENT */}

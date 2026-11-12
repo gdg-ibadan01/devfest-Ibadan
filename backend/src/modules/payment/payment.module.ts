@@ -2,19 +2,27 @@ import { Module } from '@nestjs/common';
 import { PaymentsService } from './payment.service';
 import { MailModule } from '../mail/mail.module';
 import { PaymentsController } from './payment.controller';
+import { PaymentGatewayController } from './payment-gateway.controller';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { MonnifyService } from './monnify.service';
-import { PAYMENT_PROVIDER } from './interfaces/payment-provider.interface';
+import { AlatpayService } from './alatpay.service';
+import { PaymentProviderRegistry } from './payment-provider.registry';
 
 @Module({
   imports: [MailModule],
-  controllers: [PaymentsController],
+  controllers: [PaymentsController, PaymentGatewayController],
   providers: [
     PaymentsService,
     PrismaService,
     MonnifyService,
-    { provide: PAYMENT_PROVIDER, useExisting: MonnifyService },
+    AlatpayService,
+    PaymentProviderRegistry,
   ],
-  exports: [PaymentsService, PAYMENT_PROVIDER, MonnifyService],
+  exports: [
+    PaymentsService,
+    MonnifyService,
+    AlatpayService,
+    PaymentProviderRegistry,
+  ],
 })
 export class PaymentsModule {}

@@ -27,6 +27,10 @@ export const PERMISSIONS = [
   { id: 'audit-logs.view-list', label: 'View audit logs list' },
   { id: 'audit-logs.view', label: 'View audit log detail' },
   { id: 'dashboard.view', label: 'View dashboard' },
+  { id: 'emails.send', label: 'Send ticket emails' },
+  { id: 'emails.manage', label: 'View and compose emails' },
+  { id: 'payment_gateway.view', label: 'View payment gateway' },
+  { id: 'payment_gateway.manage', label: 'Switch payment gateway' },
 ] as const;
 
 export type PERMISSION_ID = (typeof PERMISSIONS)[number]['id'];

@@ -11,6 +11,9 @@ import Ellipsis from '@/app/_module/components/icons/Ellipsis';
 
 interface AttendeeActionsMenuProps {
   onCheckIn: () => void;
+  /** Re-send this attendee their ticket email. Hidden when omitted. */
+  onResendTicket?: () => void;
+  resending?: boolean;
   disabled?: boolean;
   /** True while a check-in request for this specific row is in flight. */
   loading?: boolean;
@@ -18,6 +21,8 @@ interface AttendeeActionsMenuProps {
 
 export default function AttendeeActionsMenu({
   onCheckIn,
+  onResendTicket,
+  resending,
   disabled,
   loading,
 }: AttendeeActionsMenuProps) {
@@ -35,7 +40,7 @@ export default function AttendeeActionsMenu({
           )}
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-36">
+      <DropdownMenuContent align="end" className="w-44">
         <DropdownMenuItem
           onClick={onCheckIn}
           disabled={disabled || loading}
@@ -43,6 +48,15 @@ export default function AttendeeActionsMenu({
         >
           {loading ? 'Checking In…' : disabled ? 'Already Checked In' : 'Check In'}
         </DropdownMenuItem>
+        {onResendTicket && (
+          <DropdownMenuItem
+            onClick={onResendTicket}
+            disabled={resending}
+            className="text-[13px] cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {resending ? 'Sending…' : 'Resend ticket email'}
+          </DropdownMenuItem>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );

@@ -3,6 +3,8 @@ import {
   Catch,
   ArgumentsHost,
   HttpException,
+  HttpStatus,
+  Logger,
 } from '@nestjs/common';
 import { Response } from 'express';
 
@@ -14,6 +16,8 @@ import { Response } from 'express';
 
 @Catch(HttpException)
 export class HttpExceptionFilter implements ExceptionFilter {
+  private readonly logger = new Logger(HttpExceptionFilter.name);
+
   /** Catch the incoming exception */
   catch(exception: HttpException, host: ArgumentsHost) {
     /** Extracting the HTTP response object from host object */
@@ -27,6 +31,8 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const exceptionResponse: string | object = exception.getResponse();
 
     let message: string = '';
+    /** Extra fields a handler put on the response (e.g. `pendingReference`) */
+    let extras: Record<string, unknown> = {};
 
     /** Check if the response is an object or a string */
     if (typeof exceptionResponse === 'string') {
@@ -38,7 +44,24 @@ export class HttpExceptionFilter implements ExceptionFilter {
       'message' in exceptionResponse
     ) {
       /** Handle case where the response is an object */
-      message = (exceptionResponse as { message: string }).message;
+      const {
+        message: objectMessage,
+        statusCode: _statusCode,
+        error: _error,
+        ...rest
+      } = exceptionResponse as Record<string, unknown>;
+      message = objectMessage as string;
+      extras = rest;
+    }
+
+    /**
+     * 500s carry raw internal errors (Prisma messages with file paths, etc.)
+     * from the controllers' `default:` branches. Log them, never send them.
+     */
+    if (statusCode === HttpStatus.INTERNAL_SERVER_ERROR) {
+      this.logger.error(message);
+      message = 'Something went wrong on our side. Please try again.';
+      extras = {};
     }
 
     /** return a custom response object to client */
@@ -46,6 +69,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
       // statusCode,
       success: false,
       message,
+      ...extras,
       // timestamp: new Date().toISOString(),
     });
   }

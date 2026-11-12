@@ -58,21 +58,27 @@ export function SuccessLoadingState() {
 }
 
 export function SuccessErrorState({
+  title = 'Order Not Found',
   message,
   reference,
   onReset,
   resetButtonLabel = 'Back to Ticket Form',
+  onRetry,
+  isRetrying = false,
 }: Readonly<{
+  title?: string;
   message: string;
   reference?: string | null;
   onReset?: () => void;
   resetButtonLabel?: string;
+  onRetry?: () => void;
+  isRetrying?: boolean;
 }>) {
   return (
     <div className="w-full md:max-w-[560px] md:bg-white md:rounded-[24px] md:shadow-xl md:border border-gray-100 overflow-hidden p-8 md:p-12 flex flex-col items-center gap-5">
       <AlertCircle className="w-14 h-14 text-red-500" />
       <h2 className="text-[20px] font-bold text-[#1E1E1E] text-center">
-        Order Not Found
+        {title}
       </h2>
       <p className="text-[#515151] text-[14px] font-sans text-center max-w-[360px] leading-relaxed">
         {message}
@@ -81,6 +87,16 @@ export function SuccessErrorState({
         <p className="text-[12px] text-gray-400 font-mono bg-gray-50 px-3 py-1.5 rounded-lg">
           Ref: {reference}
         </p>
+      )}
+      {onRetry && (
+        <button
+          type="button"
+          onClick={onRetry}
+          disabled={isRetrying}
+          className="w-full mt-2 flex items-center justify-center gap-2 bg-[#1E1E1E] hover:bg-core-blue disabled:opacity-60 text-white py-3.5 rounded-[100px] font-bold transition-all text-[15px] md:text-[16px] font-sans shadow-md cursor-pointer focus:outline-none"
+        >
+          <span>{isRetrying ? 'Checking...' : 'Check again'}</span>
+        </button>
       )}
       {onReset && (
         <button

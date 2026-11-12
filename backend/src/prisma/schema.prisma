@@ -37,6 +37,7 @@ model Admin {
   auditLogs           AuditLog[]
   tickets             Ticket[]
   createdOrders       Order[]              @relation("OrderCreatedBy")
+  emailCampaigns      EmailCampaign[]
 
   @@map("admins")
 }
@@ -110,38 +111,51 @@ enum DiscountType {
 }
 
 model Order {
-  id                     String      @id @default(uuid(7))
+  id                     String           @id @default(uuid(7))
   reference              String
-  ticketId               String      @map("ticket_id")
-  ticket                 Ticket      @relation(fields: [ticketId], references: [id])
-  attendeeFullName       String      @map("attendee_full_name")
-  attendeeEmail          String      @map("attendee_email")
-  attendeePhoneNumber    String?     @map("attendee_phone_number")
-  gifterName             String?     @map("gifter_name")
-  gifterEmail            String?     @map("gifter_email")
+  ticketId               String           @map("ticket_id")
+  ticket                 Ticket           @relation(fields: [ticketId], references: [id])
+  attendeeFullName       String           @map("attendee_full_name")
+  attendeeEmail          String           @map("attendee_email")
+  attendeePhoneNumber    String?          @map("attendee_phone_number")
+  gifterName             String?          @map("gifter_name")
+  gifterEmail            String?          @map("gifter_email")
   amount                 Decimal
-  currency               String      @default("NGN")
-  status                 OrderStatus @default(AWAITING_PAYMENT)
-  paymentProvider        String      @default("MONNIFY") @map("payment_provider")
-  providerTransactionRef String?     @map("provider_transaction_ref")
-  checkoutUrl            String?     @map("checkout_url")
-  expiresAt              DateTime    @map("expires_at")
-  paidAt                 DateTime?   @map("paid_at")
-  checkIns               DateTime[]  @default([]) @map("check_ins")
-  ticketUrl              String?     @map("ticket_url")
-  discountId             String?     @map("discount_id")
-  discount               Discount?   @relation(fields: [discountId], references: [id])
-  createdById            String?     @map("created_by_id")
-  createdBy              Admin?      @relation("OrderCreatedBy", fields: [createdById], references: [id])
-  groupReference         String?     @map("group_reference")
-  createdAt              DateTime    @default(now()) @map("created_at")
-  updatedAt              DateTime    @updatedAt @map("updated_at")
+  currency               String           @default("NGN")
+  status                 OrderStatus      @default(AWAITING_PAYMENT)
+  paymentProvider        String           @default("MONNIFY") @map("payment_provider")
+  providerTransactionRef String?          @map("provider_transaction_ref")
+  checkoutUrl            String?          @map("checkout_url")
+  expiresAt              DateTime         @map("expires_at")
+  paidAt                 DateTime?        @map("paid_at")
+  checkIns               DateTime[]       @default([]) @map("check_ins")
+  ticketUrl              String?          @map("ticket_url")
+  discountId             String?          @map("discount_id")
+  discount               Discount?        @relation(fields: [discountId], references: [id])
+  createdById            String?          @map("created_by_id")
+  createdBy              Admin?           @relation("OrderCreatedBy", fields: [createdById], references: [id])
+  groupReference         String?          @map("group_reference")
+  // Ticket confirmation email tracking. null = unknown (orders from before tracking).
+  ticketEmailStatus      EmailSendStatus? @map("ticket_email_status")
+  ticketEmailSentAt      DateTime?        @map("ticket_email_sent_at")
+  ticketEmailError       String?          @map("ticket_email_error")
+  ticketEmailAttempts    Int              @default(0) @map("ticket_email_attempts")
+  /// Message-ID of the last ticket email (normalised), used to match provider webhooks.
+  ticketEmailMessageId   String?          @map("ticket_email_message_id")
+  /// What the provider reported after accepting it (delivered / bounced / ...).
+  ticketEmailEvent       EmailEventState? @map("ticket_email_event")
+  ticketEmailEventAt     DateTime?        @map("ticket_email_event_at")
+  ticketEmailEventDetail String?          @map("ticket_email_event_detail")
+  createdAt              DateTime         @default(now()) @map("created_at")
+  updatedAt              DateTime         @updatedAt @map("updated_at")
 
-  refund Refund?
+  refund          Refund?
+  emailDeliveries EmailDelivery[]
 
   @@unique([reference])
   @@index([ticketId, status])
   @@index([groupReference])
+  @@index([ticketEmailMessageId])
   @@map("orders")
 }
 
@@ -185,9 +199,9 @@ model Discount {
   type               DiscountType
   amount             Decimal
   ticketSlugs        String[]     @map("ticket_slugs")
-limit              Int           @default(0)
-  validFrom          DateTime      @map("valid_from")
-  validTo            DateTime?     @map("valid_to")
+  limit              Int          @default(0)
+  validFrom          DateTime     @map("valid_from")
+  validTo            DateTime?    @map("valid_to")
   forFirstTimersOnly Boolean      @default(false) @map("for_first_timers_only")
   recipientEmails    String[]     @default([]) @map("recipient_emails")
   createdAt          DateTime     @default(now()) @map("created_at")
@@ -196,4 +210,86 @@ limit              Int           @default(0)
   orders Order[]
 
   @@map("discounts")
+}
+
+/// Outcome reported by the mail provider's webhooks after it accepted a message.
+enum EmailEventState {
+  DELIVERED
+  DELAYED
+  BOUNCED
+  COMPLAINED
+}
+
+enum EmailSendStatus {
+  PENDING
+  SENT
+  FAILED
+}
+
+enum EmailCampaignStatus {
+  DRAFT
+  SENDING
+  SENT
+  PARTIAL
+  FAILED
+}
+
+/// An admin-composed email to ticket holders, saved as a draft until sent.
+model EmailCampaign {
+  id          String              @id @default(uuid(7))
+  subject     String
+  /// Inbox preview text shown next to the subject.
+  preheader   String              @default("")
+  /// Plain text / light markdown with {{first_name}}, {{ticket_code}}, {{ticket_link}} tokens.
+  body        String
+  /// Recipient filter, e.g. { "ticketId": "...", "checkedIn": true, "ticketEmailNotConfirmed": true }.
+  audience    Json                @default("{}")
+  status      EmailCampaignStatus @default(DRAFT)
+  createdById String              @map("created_by_id")
+  createdBy   Admin               @relation(fields: [createdById], references: [id])
+  sentAt      DateTime?           @map("sent_at")
+  createdAt   DateTime            @default(now()) @map("created_at")
+  updatedAt   DateTime            @updatedAt @map("updated_at")
+
+  deliveries EmailDelivery[]
+
+  @@index([status])
+  @@map("email_campaigns")
+}
+
+/// One recipient of a campaign. Unique per campaign + email so a retry can never double-send.
+model EmailDelivery {
+  id         String          @id @default(uuid(7))
+  campaignId String          @map("campaign_id")
+  campaign   EmailCampaign   @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  orderId    String          @map("order_id")
+  order      Order           @relation(fields: [orderId], references: [id])
+  email      String
+  fullName   String          @map("full_name")
+  status     EmailSendStatus @default(PENDING)
+  error      String?
+  attempts   Int             @default(0)
+  messageId  String?         @map("message_id")
+  event       EmailEventState? @map("event")
+  eventAt     DateTime?        @map("event_at")
+  eventDetail String?          @map("event_detail")
+  sentAt     DateTime?       @map("sent_at")
+  createdAt  DateTime        @default(now()) @map("created_at")
+  updatedAt  DateTime        @updatedAt @map("updated_at")
+
+  @@unique([campaignId, email])
+  @@index([campaignId, status])
+  @@index([messageId])
+  @@map("email_deliveries")
+}
+
+/// Runtime settings admins can change without a redeploy (e.g. the payment
+/// gateway for new orders). One row per setting key.
+model AppSetting {
+  key         String   @id
+  value       Json
+  updatedById String?  @map("updated_by_id")
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@map("app_settings")
 }
