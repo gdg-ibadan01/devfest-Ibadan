@@ -41,7 +41,7 @@ export const SPONSORS_2026: Sponsor[] = [
   {
     name: 'Alatpay',
     website: 'alatpay.ng',
-    logo: 'alatpay.jpeg',
+    logo: 'alatpay.png',
     role: 'Payment Partner',
     width: 58,
     height: 48,
