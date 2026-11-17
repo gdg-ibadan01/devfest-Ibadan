@@ -7,11 +7,17 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { MailModule } from '../mail/mail.module';
 import { PaymentsModule } from '../payment/payment.module';
 import { TicketsModule } from '../ticket/ticket.module';
+import { TicketEmailSweeper } from './ticket-email.sweeper';
 
 @Module({
   imports: [MailModule, PaymentsModule, TicketsModule],
   controllers: [OrdersController, DiscountsController],
-  providers: [OrdersService, DiscountsService, PrismaService],
+  providers: [
+    OrdersService,
+    DiscountsService,
+    PrismaService,
+    TicketEmailSweeper,
+  ],
   exports: [OrdersService, DiscountsService],
 })
 export class OrdersModule {}

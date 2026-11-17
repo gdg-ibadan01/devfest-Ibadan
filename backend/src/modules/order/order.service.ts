@@ -9,6 +9,7 @@ import {
 import {
   Discount,
   DiscountType,
+  EmailSendStatus,
   OrderStatus,
   Prisma,
   RefundStatus,
@@ -36,6 +37,7 @@ import crypto from 'node:crypto';
 import AppConfig from 'src/config/app.config';
 import { ConfigType } from '@nestjs/config';
 import { MailService } from '../mail/mail.service';
+import { normalizeMessageId } from '../mail/message-id';
 import { CreateGroupBuyOrderDto } from './dto/group-buy-order.dto';
 
 const ORDER_TTL_MINUTES = 5;
@@ -55,6 +57,16 @@ interface CreatedOrderRecord {
   validityDates: Date[];
   createdById?: string | null;
 }
+
+type TicketEmailOutcome = 'sent' | 'failed' | 'deferred';
+
+/** A PENDING ticket email older than this is considered stuck and retried. */
+const PENDING_STALE_MS = 5 * 60 * 1000;
+/** Wait this long after a failed send before retrying it automatically. */
+const FAILED_RETRY_MS = 10 * 60 * 1000;
+/** Automatic retries stop after this many sends; an admin can still resend by hand. */
+const MAX_TICKET_EMAIL_ATTEMPTS = 5;
+const SWEEP_BATCH_SIZE = 20;
 
 interface TicketIssuanceArgs {
   payer: {
@@ -475,6 +487,9 @@ export class OrdersService {
       attendeeFullName: o.attendeeFullName,
       attendeeEmail: o.attendeeEmail,
       checkIns: o.checkIns,
+      ticketEmailStatus: o.ticketEmailStatus,
+      ticketEmailEvent: o.ticketEmailEvent,
+      ticketEmailEventDetail: o.ticketEmailEventDetail,
       ticket: {
         id: o.ticket.id,
         name: o.ticket.name,
@@ -674,6 +689,7 @@ export class OrdersService {
         currency: 'NGN',
         status: isFree ? OrderStatus.PAID : OrderStatus.AWAITING_PAYMENT,
         paidAt: isFree ? now : null,
+        ticketEmailStatus: isFree ? EmailSendStatus.PENDING : null,
         providerTransactionRef: isFree
           ? this.freeTransactionRef(reference)
           : null,
@@ -844,6 +860,7 @@ export class OrdersService {
         currency: 'NGN',
         status: isFree ? OrderStatus.PAID : OrderStatus.AWAITING_PAYMENT,
         paidAt: isFree ? now : null,
+        ticketEmailStatus: isFree ? EmailSendStatus.PENDING : null,
         providerTransactionRef: isFree
           ? this.freeTransactionRef(reference)
           : null,
@@ -1074,32 +1091,319 @@ export class OrdersService {
       );
     }
 
-    const emailResults = await Promise.allSettled(
-      args.recipients.map((row) =>
-        this.mailService.sendTicketConfirmationEmail({
-          eventDate: new Date('2026-11-21'),
-          fullName: row.fullName,
-          ticketCode: row.reference.slice(-6),
-          ticketDownloadUrl: this.generateSignedDownloadUrl(row.reference),
-          email: row.email,
-        }),
-      ),
+    await Promise.allSettled(
+      args.recipients.map((row) => this.sendTicketEmail(row)),
     );
+  }
 
-    emailResults.forEach((result, index) => {
-      const row = args.recipients[index];
-      if (result.status === 'rejected') {
-        this.logger.error(
-          `Failed to send ticket confirmation email for order ${row.id} to ${row.email}: ${
-            result.reason instanceof Error
-              ? result.reason.message
-              : result.reason
-          }`,
+  /**
+   * Sends one attendee's ticket email and records the outcome on the order, so
+   * a rejected, rate-limited or deferred send is visible and is retried.
+   *  - 'sent': the provider accepted it.
+   *  - 'failed': the provider rejected it (recorded, retried later).
+   *  - 'deferred': the mail budget (MAIL_MAX_PER_HOUR/DAY) is used up, so it
+   *    was not attempted; it stays PENDING and goes out when there is room.
+   * An order already confirmed SENT is never downgraded by a later failure.
+   */
+  private async sendTicketEmail(row: {
+    id: string;
+    reference: string;
+    fullName: string;
+    email: string;
+  }): Promise<TicketEmailOutcome> {
+    const notConfirmedSent: Prisma.OrderWhereInput = {
+      id: row.id,
+      OR: [
+        { ticketEmailStatus: null },
+        { ticketEmailStatus: { not: EmailSendStatus.SENT } },
+      ],
+    };
+
+    if (this.mailService.remainingBudget() <= 0) {
+      this.logger.warn(
+        `Mail budget used up; ticket email for order ${row.id} deferred`,
+      );
+      await this.prisma.order
+        .updateMany({
+          where: notConfirmedSent,
+          data: { ticketEmailStatus: EmailSendStatus.PENDING },
+        })
+        .catch((e: Error) =>
+          this.logger.error(
+            `Could not mark order ${row.id} pending: ${e.message}`,
+          ),
         );
-        return;
-      }
-      this.logger.log(`Ticket confirmation email sent for order ${row.id}`);
+      return 'deferred';
+    }
+
+    let messageId: string | null = null;
+    try {
+      const info = (await this.mailService.sendTicketConfirmationEmail({
+        eventDate: new Date('2026-11-21'),
+        fullName: row.fullName,
+        ticketCode: row.reference.slice(-6),
+        ticketDownloadUrl: this.generateSignedDownloadUrl(row.reference),
+        email: row.email,
+      })) as { messageId?: string } | undefined;
+      messageId = normalizeMessageId(info?.messageId);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      this.logger.error(
+        `Failed to send ticket confirmation email for order ${row.id} to ${row.email}: ${message}`,
+      );
+      await this.prisma.order
+        .updateMany({
+          where: notConfirmedSent,
+          data: {
+            ticketEmailStatus: EmailSendStatus.FAILED,
+            ticketEmailError: message.slice(0, 500),
+            ticketEmailAttempts: { increment: 1 },
+          },
+        })
+        .catch((e: Error) =>
+          this.logger.error(
+            `Could not record email failure for order ${row.id}: ${e.message}`,
+          ),
+        );
+      return 'failed';
+    }
+
+    this.logger.log(`Ticket confirmation email sent for order ${row.id}`);
+    await this.prisma.order
+      .update({
+        where: { id: row.id },
+        data: {
+          ticketEmailStatus: EmailSendStatus.SENT,
+          ticketEmailSentAt: new Date(),
+          ticketEmailError: null,
+          ticketEmailAttempts: { increment: 1 },
+          // A new send starts a new delivery history.
+          ticketEmailMessageId: messageId,
+          ticketEmailEvent: null,
+          ticketEmailEventAt: null,
+          ticketEmailEventDetail: null,
+        },
+      })
+      .catch((e: Error) =>
+        this.logger.error(
+          `Could not record email success for order ${row.id}: ${e.message}`,
+        ),
+      );
+    return 'sent';
+  }
+
+  /**
+   * Background retry (run by TicketEmailSweeper). Picks up PAID orders whose
+   * ticket email is stuck PENDING (process stopped, or deferred by the mail
+   * budget) or FAILED with attempts left, regenerates a missing ticket PDF, and
+   * sends. Never exceeds the mail budget and gives up after
+   * MAX_TICKET_EMAIL_ATTEMPTS (an admin can still resend by hand).
+   */
+  async retryUnconfirmedTicketEmails(limit = SWEEP_BATCH_SIZE) {
+    const budget = this.mailService.remainingBudget();
+    const take = Math.min(limit, Number.isFinite(budget) ? budget : limit);
+    if (take <= 0) return { attempted: 0, sent: 0 };
+
+    const now = Date.now();
+    const candidates = await this.prisma.order.findMany({
+      where: {
+        status: OrderStatus.PAID,
+        OR: [
+          {
+            ticketEmailStatus: EmailSendStatus.PENDING,
+            updatedAt: { lt: new Date(now - PENDING_STALE_MS) },
+          },
+          {
+            ticketEmailStatus: EmailSendStatus.FAILED,
+            ticketEmailAttempts: { lt: MAX_TICKET_EMAIL_ATTEMPTS },
+            updatedAt: { lt: new Date(now - FAILED_RETRY_MS) },
+          },
+        ],
+      },
+      orderBy: { updatedAt: 'asc' },
+      take,
+      include: { ticket: { select: { validityDates: true } } },
     });
+
+    let attempted = 0;
+    let sent = 0;
+    for (const order of candidates) {
+      // Claim it so a second instance doesn't pick up the same order. Any
+      // update bumps updatedAt, so the loser's condition no longer matches.
+      const claim = await this.prisma.order.updateMany({
+        where: {
+          id: order.id,
+          ticketEmailStatus: order.ticketEmailStatus,
+          updatedAt: order.updatedAt,
+        },
+        data: { ticketEmailStatus: EmailSendStatus.PENDING },
+      });
+      if (claim.count === 0) continue;
+
+      if (!order.ticketUrl) {
+        await this.ticketsService
+          .ensureTicketPdf({
+            id: order.id,
+            reference: order.reference,
+            amount: order.amount,
+            groupReference: order.groupReference,
+            ticket: { validityDates: order.ticket.validityDates },
+          })
+          .catch((e: Error) =>
+            this.logger.warn(
+              `Could not regenerate ticket PDF for order ${order.id}: ${e.message}`,
+            ),
+          );
+      }
+
+      attempted++;
+      const outcome = await this.sendTicketEmail({
+        id: order.id,
+        reference: order.reference,
+        fullName: order.attendeeFullName,
+        email: order.attendeeEmail,
+      });
+      if (outcome === 'sent') sent++;
+      if (outcome === 'deferred') break;
+    }
+
+    if (attempted > 0) {
+      this.logger.log(
+        `Ticket email retry: ${sent}/${attempted} sent this round`,
+      );
+    }
+    return { attempted, sent };
+  }
+
+  /** Orders whose ticket email is not confirmed sent (failed, pending, or from before tracking). */
+  private readonly unconfirmedTicketEmailWhere: Prisma.OrderWhereInput = {
+    status: OrderStatus.PAID,
+    OR: [
+      { ticketEmailStatus: null },
+      { ticketEmailStatus: { not: EmailSendStatus.SENT } },
+    ],
+  };
+
+  /** Re-sends one attendee's ticket email (fresh signed link). */
+  async resendTicketEmail(orderId: string, adminId: string) {
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+    });
+    if (!order) throw new NotFoundException('Order not found');
+    if (order.status !== OrderStatus.PAID) {
+      throw new BadRequestException('Only paid orders have a ticket to send');
+    }
+
+    const outcome = await this.sendTicketEmail({
+      id: order.id,
+      reference: order.reference,
+      fullName: order.attendeeFullName,
+      email: order.attendeeEmail,
+    });
+
+    await this.prisma.auditLog.create({
+      data: {
+        adminId,
+        action: 'RESEND_TICKET_EMAIL',
+        metadata: { orderId, email: order.attendeeEmail, outcome },
+      },
+    });
+    // deferred = the mail limit is used up; it goes out automatically later.
+    return { sent: outcome === 'sent', deferred: outcome === 'deferred' };
+  }
+
+  /**
+   * Re-sends to PAID orders whose ticket email is not confirmed, oldest first,
+   * up to `limit` and never past the configured hourly/daily mail budget. Call
+   * again later to continue; `remaining` says how many are still unconfirmed.
+   */
+  async resendUnconfirmedTicketEmails(adminId: string, limit = 100) {
+    const budget = this.mailService.remainingBudget();
+    const take = Math.min(limit, Number.isFinite(budget) ? budget : limit);
+
+    const orders =
+      take > 0
+        ? await this.prisma.order.findMany({
+            where: this.unconfirmedTicketEmailWhere,
+            orderBy: { paidAt: 'asc' },
+            take,
+          })
+        : [];
+
+    let sent = 0;
+    let attempted = 0;
+    let deferred = 0;
+    for (const order of orders) {
+      const outcome = await this.sendTicketEmail({
+        id: order.id,
+        reference: order.reference,
+        fullName: order.attendeeFullName,
+        email: order.attendeeEmail,
+      });
+      if (outcome === 'deferred') {
+        deferred++;
+        break;
+      }
+      attempted++;
+      if (outcome === 'sent') sent++;
+    }
+
+    const remaining = await this.prisma.order.count({
+      where: this.unconfirmedTicketEmailWhere,
+    });
+
+    await this.prisma.auditLog.create({
+      data: {
+        adminId,
+        action: 'RESEND_TICKET_EMAILS_BULK',
+        metadata: { attempted, sent, deferred, remaining },
+      },
+    });
+
+    return {
+      attempted,
+      sent,
+      failed: attempted - sent,
+      deferred,
+      remaining,
+      budgetLeft: Number.isFinite(budget)
+        ? Math.max(0, budget - orders.length)
+        : null,
+    };
+  }
+
+  /** Counts of PAID orders by ticket-email state (unknown = sent before tracking existed). */
+  async ticketEmailSummary() {
+    const [sent, failed, pending, unknown] = await Promise.all([
+      this.prisma.order.count({
+        where: {
+          status: OrderStatus.PAID,
+          ticketEmailStatus: EmailSendStatus.SENT,
+        },
+      }),
+      this.prisma.order.count({
+        where: {
+          status: OrderStatus.PAID,
+          ticketEmailStatus: EmailSendStatus.FAILED,
+        },
+      }),
+      this.prisma.order.count({
+        where: {
+          status: OrderStatus.PAID,
+          ticketEmailStatus: EmailSendStatus.PENDING,
+        },
+      }),
+      this.prisma.order.count({
+        where: { status: OrderStatus.PAID, ticketEmailStatus: null },
+      }),
+    ]);
+    return {
+      sent,
+      failed,
+      pending,
+      unknown,
+      unconfirmed: failed + pending + unknown,
+    };
   }
 
   /** Issues tickets for orders created already PAID because a discount covered the full price. */
@@ -1291,6 +1595,10 @@ Initiating refund for order ${order.id}`,
                   status: OrderStatus.PAID,
                   paidAt: now,
                   providerTransactionRef: event.transactionReference,
+                  // Recorded in the same transaction, so if the process stops
+                  // before the email goes out the retry job still finds it.
+                  ticketEmailStatus: EmailSendStatus.PENDING,
+                  ticketEmailAttempts: 0,
                 },
               });
 
@@ -1335,7 +1643,11 @@ Initiating refund for order ${order.id}`,
     }
 
     if (txResult.order && txResult.ticket) {
-      await this.issueTickets({
+      // Not awaited: slow mail must not hold the provider's webhook request
+      // open. The orders are already PENDING, so a failure or restart here is
+      // picked up by the retry job (retryUnconfirmedTicketEmails).
+      const orderId = txResult.order.id;
+      void this.issueTickets({
         payer: {
           id: txResult.order.id,
           reference: txResult.order.reference,
@@ -1349,7 +1661,11 @@ Initiating refund for order ${order.id}`,
           fullName: row.attendee_full_name,
           email: row.attendee_email,
         })),
-      });
+      }).catch((err: Error) =>
+        this.logger.error(
+          `Failed to issue tickets for order ${orderId}: ${err.message}`,
+        ),
+      );
     }
   }
 

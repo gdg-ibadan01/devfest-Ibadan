@@ -165,6 +165,43 @@ export class OrdersController {
     return this.ordersService.exportOrders(query, user.sub);
   }
 
+  @Get('ticket-emails/summary')
+  @ApiBearerAuth()
+  @RequirePermission('emails.send')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @ApiOperation({
+    summary: 'Ticket email delivery summary',
+    description:
+      'Counts of PAID orders by ticket-email state. "unknown" means the order predates email tracking.',
+  })
+  ticketEmailSummary() {
+    return this.ordersService.ticketEmailSummary();
+  }
+
+  @Post('resend-tickets')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @RequirePermission('emails.send')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @ApiOperation({
+    summary: 'Re-send ticket emails that are not confirmed sent',
+    description:
+      'Sends up to 100 at a time (and never past the configured hourly/daily mail budget). Call again to continue; `remaining` is how many are still unconfirmed.',
+  })
+  resendUnconfirmedTickets(@CurrentUser() user: IJwtPayload) {
+    return this.ordersService.resendUnconfirmedTicketEmails(user.sub);
+  }
+
+  @Post(':id/resend-ticket')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @RequirePermission('emails.send')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @ApiOperation({ summary: 'Re-send one attendee their ticket email' })
+  resendTicket(@Param('id') id: string, @CurrentUser() user: IJwtPayload) {
+    return this.ordersService.resendTicketEmail(id, user.sub);
+  }
+
   @Get('reference/:reference')
   @ApiOperation({
     summary: 'Get order by payment reference',

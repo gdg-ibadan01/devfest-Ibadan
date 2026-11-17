@@ -13,6 +13,8 @@ import {
 } from 'lucide-react';
 import { format, isValid, parseISO } from 'date-fns';
 import { cn } from '@/app/_module/lib/utils';
+import { downloadContactsCsv, zipNotice } from '@/utils/contacts-csv';
+import { showToast } from '@/app/_module/lib/notify';
 import type { CheckedInListItemDto, TicketListItemDto } from '@/app/_module/api/types';
 import EmptyState from '@/app/_module/components/common/EmptyState';
 import { useTickets } from '@/app/_module/services/tickets.service';
@@ -155,29 +157,13 @@ function exportRows(rows: CheckedInListItemDto[]) {
   ]);
 }
 
-function exportCSV(rows: CheckedInListItemDto[], ticketName?: string) {
-  const headers = [
-    'Full Name',
-    'Email',
-    'Ticket',
-    'Code',
-    'Validity',
-    'Amount',
-    'Status',
-    'Checked In At',
-  ];
-  const lines = exportRows(rows).map((row) =>
-    row.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(',')
+async function exportCSV(rows: CheckedInListItemDto[], ticketName?: string) {
+  const result = await downloadContactsCsv(
+    rows.map((a) => ({ email: a.attendeeEmail, fullName: a.attendeeFullName })),
+    `checkins-${ticketName ? ticketName.replace(/\s+/g, '-').toLowerCase() + '-' : ''}${format(new Date(), 'yyyy-MM-dd')}.csv`
   );
-
-  const csv = [headers.join(','), ...lines].join('\n');
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `checkins-${ticketName ? ticketName.replace(/\s+/g, '-').toLowerCase() + '-' : ''}${format(new Date(), 'yyyy-MM-dd')}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
+  const notice = zipNotice(result);
+  if (notice) showToast.info(notice);
 }
 
 async function exportPDF(rows: CheckedInListItemDto[], ticketName?: string) {
