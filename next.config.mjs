@@ -12,7 +12,7 @@ const NOINDEX_PATHS = [
 
 const nextConfig = {
   images: {
-    domains: ['sessionize.com'],
+    remotePatterns: [{ protocol: 'https', hostname: 'sessionize.com' }],
   },
   async headers() {
     return NOINDEX_PATHS.map((source) => ({
