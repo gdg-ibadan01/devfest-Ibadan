@@ -25,6 +25,7 @@ import {
 } from '@/app/_module/services';
 import AdminOrders from '../../icons/AdminOrders';
 import Checkins from '../../icons/Checkins';
+import Mail from '../../icons/Mail';
 
 const navItems: {
   label: string;
@@ -68,6 +69,12 @@ const navItems: {
       href: '/core/checkins',
       icon: Checkins,
       moduleTerms: ['attendee', 'check'],
+    },
+    {
+      label: 'Emails',
+      href: '/core/emails',
+      icon: Mail,
+      moduleTerms: ['email'],
     },
     {
       label: 'Discount & Referral',

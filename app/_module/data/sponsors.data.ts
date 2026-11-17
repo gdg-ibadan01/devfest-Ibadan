@@ -38,6 +38,26 @@ export const SPONSORS_2026: Sponsor[] = [
     description:
       'TradeStack is a cross-border commerce and payments platform that enables individuals and businesses to buy and sell cryptocurrency, trade gift cards, source products from China, make supplier payments in RMB, and access pre-order financing solutions all from a single platform.',
   },
+  {
+    name: 'Alatpay',
+    website: 'alatpay.ng',
+    logo: 'alatpay.jpeg',
+    role: 'Payment Partner',
+    width: 58,
+    height: 48,
+    description:
+      'Digital payment gateway and checkout platform by Wema Bank, empowering businesses with seamless, secure local and international payment collections.',
+  },
+  {
+    name: 'Kakanfo',
+    website: 'kakanfoinn.com',
+    logo: 'kakanfo.png',
+    role: 'Official Hospitality Partner',
+    width: 90,
+    height: 90,
+    description:
+      'Premier hospitality and conference centre in Ibadan, providing world-class event spaces, accommodations, and dining experiences.',
+  },
 ];
 
 export const sponsors = SPONSORS_2026;

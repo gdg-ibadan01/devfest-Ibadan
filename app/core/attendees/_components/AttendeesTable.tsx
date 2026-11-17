@@ -12,11 +12,19 @@ import {
 } from 'lucide-react';
 import { format, isValid, parseISO } from 'date-fns';
 import { cn } from '@/app/_module/lib/utils';
+import { downloadContactsCsv, zipNotice } from '@/utils/contacts-csv';
 import type { OrderListItemDto } from '@/app/_module/api/types';
 import type { OrderStatus } from '../_types/attendee.types';
 import AttendeeActionsMenu from './AttendeeActionsMenu';
 import EmptyState from '@/app/_module/components/common/EmptyState';
-import { useOrders, useCheckInFilteredOrders } from '@/app/_module/services/order.service';
+import {
+  exportOrders,
+  useOrders,
+  useCheckInFilteredOrders,
+} from '@/app/_module/services/order.service';
+import { notifyApiError } from '@/app/_module/lib/apiError';
+import { useResendTicketEmail } from '@/app/_module/services';
+import { showToast } from '@/app/_module/lib/notify';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -69,6 +77,7 @@ const COLUMNS = [
   'Amount',
   'Status',
   'Check In',
+  'Ticket Email',
   'Action',
 ];
 
@@ -110,6 +119,61 @@ function CheckInBadge({ checkedIn }: { checkedIn: boolean }) {
         className={cn('w-[7px] h-[7px] rounded-full flex-shrink-0', cfg.dot)}
       />
       {checkedIn ? 'Checked In' : 'Not Checked In'}
+    </span>
+  );
+}
+
+const TICKET_EMAIL_STYLES = {
+  SENT: { label: 'Sent', cls: 'bg-[#E6F4EA] text-[#137333]' },
+  FAILED: { label: 'Failed', cls: 'bg-[#FCE8E6] text-[#C5221F]' },
+  PENDING: { label: 'Waiting', cls: 'bg-[#FEF7E0] text-[#B06000]' },
+  UNKNOWN: { label: 'Unknown', cls: 'bg-[#F1F3F4] text-[#5F6368]' },
+} as const;
+
+const TICKET_EMAIL_EVENT_STYLES = {
+  DELIVERED: { label: 'Delivered', cls: 'bg-[#E6F4EA] text-[#137333]' },
+  DELAYED: { label: 'Delayed', cls: 'bg-[#FEF7E0] text-[#B06000]' },
+  BOUNCED: { label: 'Bounced', cls: 'bg-[#FCE8E6] text-[#C5221F]' },
+  COMPLAINED: { label: 'Marked spam', cls: 'bg-[#FCE8E6] text-[#C5221F]' },
+} as const;
+
+function TicketEmailBadge({
+  status,
+  event,
+  detail,
+}: {
+  status: OrderListItemDto['ticketEmailStatus'];
+  event?: OrderListItemDto['ticketEmailEvent'];
+  detail?: string | null;
+}) {
+  // Once the provider reports back (delivered, bounced...), that is more
+  // useful than "Sent", which only means it was handed to the provider.
+  if (status === 'SENT' && event) {
+    const { label, cls } = TICKET_EMAIL_EVENT_STYLES[event];
+    return (
+      <span
+        className={`inline-flex rounded-full px-2.5 py-0.5 text-[12px] font-medium ${cls}`}
+        title={
+          event === 'BOUNCED' || event === 'COMPLAINED'
+            ? (detail ?? 'The ticket email did not reach the attendee')
+            : undefined
+        }
+      >
+        {label}
+      </span>
+    );
+  }
+  const { label, cls } = TICKET_EMAIL_STYLES[status ?? 'UNKNOWN'];
+  return (
+    <span
+      className={`inline-flex rounded-full px-2.5 py-0.5 text-[12px] font-medium ${cls}`}
+      title={
+        status
+          ? undefined
+          : 'Sent before email tracking began; delivery is unconfirmed'
+      }
+    >
+      {label}
     </span>
   );
 }
@@ -159,23 +223,23 @@ function CheckInFilterDropdown({
             >
               All
             </button>
-            {(Object.keys(CHECKIN_FILTER_LABELS) as Exclude<CheckInFilter, ''>[]).map(
-              (s) => (
-                <button
-                  key={s}
-                  onClick={() => {
-                    onChange(s);
-                    setOpen(false);
-                  }}
-                  className={cn(
-                    'w-full text-left px-4 py-2.5 text-[13px] hover:bg-gray-50 whitespace-nowrap',
-                    value === s && 'font-semibold'
-                  )}
-                >
-                  {CHECKIN_FILTER_LABELS[s]}
-                </button>
-              )
-            )}
+            {(
+              Object.keys(CHECKIN_FILTER_LABELS) as Exclude<CheckInFilter, ''>[]
+            ).map((s) => (
+              <button
+                key={s}
+                onClick={() => {
+                  onChange(s);
+                  setOpen(false);
+                }}
+                className={cn(
+                  'w-full text-left px-4 py-2.5 text-[13px] hover:bg-gray-50 whitespace-nowrap',
+                  value === s && 'font-semibold'
+                )}
+              >
+                {CHECKIN_FILTER_LABELS[s]}
+              </button>
+            ))}
           </div>
         </>
       )}
@@ -206,29 +270,13 @@ function exportRows(rows: OrderListItemDto[]) {
   ]);
 }
 
-function exportCSV(rows: OrderListItemDto[]) {
-  const headers = [
-    'Full Name',
-    'Email',
-    'Ticket',
-    'Code',
-    'Validity',
-    'Amount',
-    'Status',
-    'Check In',
-  ];
-  const lines = exportRows(rows).map((row) =>
-    row.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(',')
+async function exportCSV(rows: OrderListItemDto[]) {
+  const result = await downloadContactsCsv(
+    rows.map((o) => ({ email: o.attendeeEmail, fullName: o.attendeeFullName })),
+    `attendees-${format(new Date(), 'yyyy-MM-dd')}.csv`
   );
-
-  const csv = [headers.join(','), ...lines].join('\n');
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `attendees-${format(new Date(), 'yyyy-MM-dd')}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
+  const notice = zipNotice(result);
+  if (notice) showToast.info(notice);
 }
 
 async function exportPDF(rows: OrderListItemDto[]) {
@@ -300,6 +348,8 @@ export default function AttendeesTable({
   const [scanCursorStack, setScanCursorStack] = useState<string[]>([]);
 
   const [exportOpen, setExportOpen] = useState(false);
+  const resendTicket = useResendTicketEmail();
+  const [isExporting, setIsExporting] = useState(false);
 
   const unfilteredResult = useOrders(
     {
@@ -327,12 +377,12 @@ export default function AttendeesTable({
   // scan when a check-in filter is active, or the raw unfiltered page
   // otherwise. No further client-side filtering needed here.
   const visibleOrders = isFiltering
-    ? filteredResult.data?.data ?? []
-    : unfilteredResult.data?.data ?? [];
+    ? (filteredResult.data?.data ?? [])
+    : (unfilteredResult.data?.data ?? []);
 
   const hasMore = isFiltering
-    ? filteredResult.data?.hasMore ?? false
-    : unfilteredResult.data?.meta?.hasMore ?? false;
+    ? (filteredResult.data?.hasMore ?? false)
+    : (unfilteredResult.data?.meta?.hasMore ?? false);
 
   const hasPrev = isFiltering
     ? scanCursorStack.length > 0
@@ -376,7 +426,9 @@ export default function AttendeesTable({
       return;
     }
     setCursorStack((prev) => [...prev, cursor ?? '']);
-    setCursor(unfilteredResult.data?.data[unfilteredResult.data.data.length - 1]?.id);
+    setCursor(
+      unfilteredResult.data?.data[unfilteredResult.data.data.length - 1]?.id
+    );
     setDirection('next');
   };
 
@@ -397,9 +449,38 @@ export default function AttendeesTable({
     setDirection(prevCursor ? 'previous' : undefined);
   };
 
-  const handleExportCSV = () => {
-    exportCSV(visibleOrders);
+  // Exports every paid or free attendee (PAID orders — a fully-discounted
+  // order is PAID too) matching the search, not just the 15 on screen. The
+  // check-in filter can't be applied server-side, so while it's active we
+  // export the filtered rows that are loaded.
+  const handleExportCSV = async () => {
     setExportOpen(false);
+    if (isFiltering) {
+      await exportCSV(visibleOrders);
+      return;
+    }
+    setIsExporting(true);
+    try {
+      const result = await exportOrders({
+        search: searchQuery || undefined,
+        status: 'PAID',
+        format: 'csv',
+      });
+      if (result.total === 0) {
+        showToast.info('No attendees match the current search');
+        return;
+      }
+      await exportCSV(result.data);
+      if (result.truncated) {
+        showToast.info(
+          `Export limited to the first ${result.total.toLocaleString()} attendees (server maximum). Narrow the search to export the rest.`
+        );
+      }
+    } catch (error) {
+      notifyApiError(error, 'Failed to export attendees');
+    } finally {
+      setIsExporting(false);
+    }
   };
   const handleExportPDF = () => {
     exportPDF(visibleOrders);
@@ -467,10 +548,15 @@ export default function AttendeesTable({
           <div className="relative flex-shrink-0">
             <button
               onClick={() => setExportOpen((p) => !p)}
+              disabled={isExporting}
               className="w-[42px] h-[42px] flex-shrink-0 flex items-center justify-center rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors text-gray-600"
               title="Export"
             >
-              <Download size={15} />
+              {isExporting ? (
+                <Loader2 size={15} className="animate-spin" />
+              ) : (
+                <Download size={15} />
+              )}
             </button>
             {exportOpen && (
               <>
@@ -574,11 +660,27 @@ export default function AttendeesTable({
                           </span>
                         )} */}
                       </td>
+                      <td className="px-5 py-4 whitespace-nowrap">
+                        <TicketEmailBadge
+                          status={order.ticketEmailStatus}
+                          event={order.ticketEmailEvent}
+                          detail={order.ticketEmailEventDetail}
+                        />
+                      </td>
                       <td
                         className="px-5 py-4"
                         onClick={(e) => e.stopPropagation()}
                       >
                         <AttendeeActionsMenu
+                          onResendTicket={
+                            order.status === 'PAID'
+                              ? () => resendTicket.mutate(order.id)
+                              : undefined
+                          }
+                          resending={
+                            resendTicket.isPending &&
+                            resendTicket.variables === order.id
+                          }
                           onCheckIn={() => onCheckIn(order)}
                           disabled={checkedIn}
                           loading={checkingInOrderId === order.id}
@@ -596,8 +698,8 @@ export default function AttendeesTable({
         {!isLoading && (hasPrev || hasMore) && (
           <div className="flex items-center justify-between px-5 py-3 border-t border-gray-100 bg-white">
             <span className="text-[12px] text-gray-400">
-              {visibleOrders.length} attendee{visibleOrders.length === 1 ? '' : 's'} on this
-              page
+              {visibleOrders.length} attendee
+              {visibleOrders.length === 1 ? '' : 's'} on this page
               {scanLimitReached && (
                 <span className="ml-2 text-amber-500">
                   (showing partial results — try narrowing your search)

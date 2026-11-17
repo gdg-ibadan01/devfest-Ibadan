@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { endOfDay, format, isValid, parseISO, startOfDay } from 'date-fns';
 import { cn } from '@/app/_module/lib/utils';
+import { downloadContactsCsv, zipNotice } from '@/utils/contacts-csv';
 import type { OrderListItemDto } from '@/app/_module/api/types';
 import type { OrderStatus } from '../_types/order.types';
 import OrderActionsMenu from './OrderActionsMenu';
@@ -185,29 +186,13 @@ function exportRows(rows: OrderListItemDto[]) {
   ]);
 }
 
-function exportCSV(rows: OrderListItemDto[]) {
-  const headers = [
-    'Full Name',
-    'Email',
-    'Ticket',
-    'Code',
-    'Validity',
-    'Order Date',
-    'Amount',
-    'Status',
-  ];
-  const lines = exportRows(rows).map((row) =>
-    row.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(',')
+async function exportCSV(rows: OrderListItemDto[]) {
+  const result = await downloadContactsCsv(
+    rows.map((o) => ({ email: o.attendeeEmail, fullName: o.attendeeFullName })),
+    `orders-${format(new Date(), 'yyyy-MM-dd')}.csv`
   );
-
-  const csv = [headers.join(','), ...lines].join('\n');
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `orders-${format(new Date(), 'yyyy-MM-dd')}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
+  const notice = zipNotice(result);
+  if (notice) showToast.info(notice);
 }
 
 async function exportPDF(rows: OrderListItemDto[]) {
@@ -361,11 +346,11 @@ export default function OrdersTable({
         showToast.info('No orders match the current filters');
         return;
       }
-      if (fileFormat === 'csv') exportCSV(result.data);
+      if (fileFormat === 'csv') await exportCSV(result.data);
       else await exportPDF(result.data);
       if (result.truncated) {
         showToast.info(
-          `Export limited to the first ${result.total.toLocaleString()} orders. Narrow the filters to export the rest.`
+          `Export limited to the first ${result.total.toLocaleString()} orders (server maximum). Narrow the filters to export the rest.`
         );
       }
     } catch (error) {

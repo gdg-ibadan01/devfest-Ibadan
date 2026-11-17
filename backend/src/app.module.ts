@@ -25,6 +25,7 @@ import { TicketsModule } from './modules/ticket/ticket.module';
 import { UploadModule } from './modules/upload/upload.module';
 import { OrdersModule } from './modules/order/order.module';
 import { WebhookModule } from './modules/webhook/webhook.module';
+import { EmailCampaignModule } from './modules/email-campaign/email-campaign.module';
 import { PDFService } from './modules/pdf/pdf.service';
 
 @Module({
@@ -53,6 +54,7 @@ import { PDFService } from './modules/pdf/pdf.service';
     UploadModule,
     OrdersModule,
     WebhookModule,
+    EmailCampaignModule,
   ],
   controllers: [AppController],
   providers: [

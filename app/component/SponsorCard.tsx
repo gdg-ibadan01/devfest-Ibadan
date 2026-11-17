@@ -11,6 +11,7 @@ export interface Sponsor {
   width?: number;
   height: number;
   description?: string;
+  role?: string;
 }
 
 export interface SponsorCardProps {
@@ -64,6 +65,11 @@ export const SponsorCard = ({
               height: sponsor.height,
             }}
           />
+          {sponsor.role && (
+            <span className="pointer-events-none absolute right-0 top-0 inline-flex items-center rounded-2xl border border-core-blue/20 bg-core-blue/10 px-2.5 py-1 text-[10px] font-semibold text-core-blue transition-colors duration-150 group-hover:border-core-blue/40 group-hover:bg-white group-hover:shadow-xs sm:text-[11px]">
+              {sponsor.role}
+            </span>
+          )}
           {sponsor.description && (
             <motion.p
               initial={false}

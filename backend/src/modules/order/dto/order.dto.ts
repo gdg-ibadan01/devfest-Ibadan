@@ -325,6 +325,24 @@ export class OrderListItemDto {
   checkIns: Date[];
 
   @ApiProperty({
+    enum: ['PENDING', 'SENT', 'FAILED'],
+    nullable: true,
+    description: 'Ticket email state; null = unknown (before tracking)',
+  })
+  ticketEmailStatus: 'PENDING' | 'SENT' | 'FAILED' | null;
+
+  @ApiProperty({
+    enum: ['DELIVERED', 'DELAYED', 'BOUNCED', 'COMPLAINED'],
+    nullable: true,
+    description:
+      'What the mail provider reported after accepting the ticket email',
+  })
+  ticketEmailEvent: 'DELIVERED' | 'DELAYED' | 'BOUNCED' | 'COMPLAINED' | null;
+
+  @ApiProperty({ nullable: true, type: String })
+  ticketEmailEventDetail: string | null;
+
+  @ApiProperty({
     type: 'object',
     properties: {
       id: { type: 'string' },

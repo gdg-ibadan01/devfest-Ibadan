@@ -1,4 +1,5 @@
 import { Payment } from '@/types/services';
+import { downloadContactsCsv } from './contacts-csv';
 
 interface ExportDataProps {
   data: Payment[];
@@ -9,49 +10,13 @@ export const exportToCSV = ({
   data,
   filename = 'payments.csv',
 }: ExportDataProps) => {
-  const headers = [
-    'Payment ID',
-    'Ticket ID',
-    'Attendee Name',
-    'Email',
-    'Amount',
-    'Status',
-    'Payment Reference',
-    'Payment Method',
-    'Paid At',
-    'Checked-in',
-  ];
-
-  const csvContent = [
-    headers.join(','),
-    ...data.map((payment) => {
-      return [
-        payment.id,
-        payment.tickets?.[0]?.ticketNumber || 'N/A',
-        `"${payment.attendee.fullName}"`,
-        payment.attendee.email,
-        payment.amount,
-        payment.status,
-        payment.paymentReference,
-        payment.paymentMethod,
-        payment.paidAt || 'N/A',
-        payment.tickets?.[0].isCheckedIn ? 'Yes' : 'No',
-      ].join(',');
-    }),
-  ].join('\n');
-
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-  const link = document.createElement('a');
-
-  if (link.download !== undefined) {
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', filename);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  }
+  downloadContactsCsv(
+    data.map((payment) => ({
+      email: payment.attendee.email,
+      fullName: payment.attendee.fullName,
+    })),
+    filename
+  );
 };
 
 export const exportToExcel = async ({
