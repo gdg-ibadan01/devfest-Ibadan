@@ -2,15 +2,34 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import { useCreateOrder, useCreateGroupBuyOrder } from '@/app/_module/services';
-import { useMakePayment } from '@/hooks/useMakePayment';
+import { queryKeys } from '@/app/_module/api/queryKeys';
+import { showToast } from '@/app/_module/lib/notify';
+import {
+  confirmPayment,
+  usePaymentLauncher,
+} from '@/hooks/payments/usePaymentLauncher';
 import { trackInitiateCheckout } from '@/utils/meta-pixel';
 import { trackInitiateCheckout as trackTikTokInitiateCheckout } from '@/utils/tiktok-pixel';
 import { trackInitiateCheckout as trackGAInitiateCheckout } from '@/utils/google-analytics';
 import type { TicketPackage } from '../components';
 import type { GroupMember } from '../components/GroupAttendeeFields';
 import type { AppliedDiscount } from '@/app/_module/services/discount.service';
-import type { CreateGroupBuyOrderDto } from '@/app/_module/api/types';
+import type {
+  CreateGroupBuyOrderDto,
+  OrderConflictResponseDto,
+  PaymentSession,
+} from '@/app/_module/api/types';
+
+/** The fields of a created order (single or group) that checkout needs. */
+interface CreatedOrder {
+  reference: string;
+  amount: string;
+  isFree: boolean;
+  ticket: { name: string };
+  payment?: PaymentSession | null;
+}
 
 export type TicketBuyView = 'form' | 'summary' | 'success';
 
@@ -27,13 +46,16 @@ export function useBuyTicketFlow({
 }: UseBuyTicketFlowProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { makePayment } = useMakePayment();
+  const { launch } = usePaymentLauncher();
+  const queryClient = useQueryClient();
   const { mutate: createOrder, isPending: isSubmittingSingleOrder } =
     useCreateOrder();
   const { mutate: createGroupOrder, isPending: isSubmittingGroupOrder } =
     useCreateGroupBuyOrder();
+  const [isLaunchingPayment, setIsLaunchingPayment] = useState(false);
 
-  const isSubmittingOrder = isSubmittingSingleOrder || isSubmittingGroupOrder;
+  const isSubmittingOrder =
+    isSubmittingSingleOrder || isSubmittingGroupOrder || isLaunchingPayment;
 
   // ── View state ────────────────────────────────────────────────────────────
   const [view, setView] = useState<TicketBuyView>('form');
@@ -105,6 +127,81 @@ export function useBuyTicketFlow({
     setView('summary');
   }, []);
 
+  // ── Checkout (gateway chosen by the server) ───────────────────────────────
+  // Every outcome lands on the success view: it shows PAID, or "awaiting
+  // payment" with a Complete Payment button that reuses this same order.
+  const startCheckout = useCallback(
+    (order: CreatedOrder, quantity: number) => {
+      setReference(order.reference);
+      if (order.isFree) {
+        setView('success');
+        return;
+      }
+      if (!order.payment) {
+        setView('success');
+        return;
+      }
+
+      const refreshOrder = () =>
+        void queryClient.invalidateQueries({
+          queryKey: queryKeys.orders.reference(order.reference),
+        });
+      const done = () => setIsLaunchingPayment(false);
+
+      setIsLaunchingPayment(true);
+      launch(order.payment, {
+        onOpened: () => {
+          done();
+          const checkoutEvent = {
+            amount: Number(order.amount),
+            ticketType: order.ticket.name,
+            quantity,
+          };
+          trackInitiateCheckout(checkoutEvent);
+          trackTikTokInitiateCheckout(checkoutEvent);
+          trackGAInitiateCheckout(checkoutEvent);
+        },
+        onSuccess: (transactionRef) => {
+          done();
+          setView('success');
+          void confirmPayment(order.reference, transactionRef).finally(
+            refreshOrder
+          );
+        },
+        onPending: () => {
+          done();
+          setView('success');
+        },
+        onDismiss: () => {
+          done();
+          setView('success');
+        },
+        onFailed: (message) => {
+          done();
+          showToast.error(
+            message || 'Payment was not completed. You can try again.'
+          );
+          setView('success');
+        },
+      }).catch((err: Error) => {
+        done();
+        showToast.error(err?.message || 'Could not open the payment window.');
+        setView('success');
+      });
+    },
+    [launch, queryClient]
+  );
+
+  // A 409 with `pendingReference` means this buyer already has an unpaid
+  // order for the ticket: show it (with Complete Payment) instead of stalling.
+  const resumePendingOrder = useCallback((error: Error) => {
+    const pending = (error as { data?: Partial<OrderConflictResponseDto> })
+      .data?.pendingReference;
+    if (!pending) return;
+    setReference(pending);
+    setView('success');
+  }, []);
+
   // ── Payment execution ─────────────────────────────────────────────────────
   const handlePay = useCallback(() => {
     if (!selectedPackage) return;
@@ -126,34 +223,8 @@ export function useBuyTicketFlow({
       };
 
       createGroupOrder(groupPayload, {
-        onSuccess: (data) => {
-          setReference(data.reference);
-          if (data.isFree) {
-            setView('success');
-            return;
-          }
-          makePayment({
-            amount: Number(data.amount),
-            orderId: data.id,
-            reference: data.reference,
-            customerEmail: email.trim().toLowerCase(),
-            customerFullName: fullName.trim(),
-            paymentDescription: `Payment for the Purchase of ${selectedPackage.title} ticket.`,
-            onLoadComplete: () => {
-              const checkoutEvent = {
-                amount: Number(data.amount),
-                ticketType: data.ticket.name,
-                quantity: 1 + groupMembers.length,
-              };
-              trackInitiateCheckout(checkoutEvent);
-              trackTikTokInitiateCheckout(checkoutEvent);
-              trackGAInitiateCheckout(checkoutEvent);
-            },
-            onComplete: () => {
-              setView('success');
-            },
-          });
-        },
+        onSuccess: (data) => startCheckout(data, 1 + groupMembers.length),
+        onError: resumePendingOrder,
       });
       return;
     }
@@ -182,34 +253,8 @@ export function useBuyTicketFlow({
         };
 
     createOrder(orderPayload, {
-      onSuccess: (data) => {
-        setReference(data.reference);
-        if (data.isFree) {
-          setView('success');
-          return;
-        }
-        makePayment({
-          amount: Number(data.amount),
-          orderId: data.id,
-          reference: data.reference,
-          customerEmail: isGift ? receiverEmail.trim() : email.trim(),
-          customerFullName: isGift ? receiverName.trim() : fullName.trim(),
-          paymentDescription: `Payment for the Purchase of ${selectedPackage.title} ticket.`,
-          onLoadComplete: () => {
-            const checkoutEvent = {
-              amount: Number(data.amount),
-              ticketType: data.ticket.name,
-              quantity: 1,
-            };
-            trackInitiateCheckout(checkoutEvent);
-            trackTikTokInitiateCheckout(checkoutEvent);
-            trackGAInitiateCheckout(checkoutEvent);
-          },
-          onComplete: () => {
-            setView('success');
-          },
-        });
-      },
+      onSuccess: (data) => startCheckout(data, 1),
+      onError: resumePendingOrder,
     });
   }, [
     selectedPackage,
@@ -224,7 +269,8 @@ export function useBuyTicketFlow({
     appliedDiscount,
     createOrder,
     createGroupOrder,
-    makePayment,
+    startCheckout,
+    resumePendingOrder,
   ]);
 
   // ── Navigation handlers ───────────────────────────────────────────────────

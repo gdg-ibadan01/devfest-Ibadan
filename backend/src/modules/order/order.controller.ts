@@ -25,6 +25,7 @@ import {
   CreateOrderResponseDto,
   GetOrderReferenceResponseDto,
   OrderExportResponseDto,
+  OrderConflictResponseDto,
   OrderListResponseDto,
   OrdersExportQueryDto,
   OrdersQueryDto,
@@ -36,6 +37,7 @@ import {
 import { PermissionsGuard } from '../admin/guards/permissions.guard';
 import { RequirePermission } from 'src/common/decorators/permissions.decorator';
 import { ServiceError } from '../../common/errors/service-error';
+import { duplicateOrderConflict } from './duplicate-order.error';
 import { CurrentUser } from 'src/common/decorators/current-user.decorator';
 import { IJwtPayload } from '../admin/interfaces/admin.interface';
 
@@ -64,7 +66,8 @@ export class OrdersController {
   @ApiResponse({
     status: HttpStatus.CONFLICT,
     description:
-      'Ticket sold out, all remaining units reserved, or duplicate order',
+      "Ticket sold out, all remaining units reserved, or duplicate order. A duplicate of the payer's own unpaid order includes `pendingReference`.",
+    type: OrderConflictResponseDto,
   })
   @ApiResponse({
     status: HttpStatus.BAD_GATEWAY,
@@ -89,9 +92,10 @@ export class OrdersController {
             (err as Error).message,
             HttpStatus.BAD_REQUEST,
           );
+        case OrdersService.ERRORS.DuplicateErr:
+          throw duplicateOrderConflict(err as Error);
         case OrdersService.ERRORS.SoldOutErr:
         case OrdersService.ERRORS.RetryLaterErr:
-        case OrdersService.ERRORS.DuplicateErr:
         case OrdersService.ERRORS.MaxedOutDiscountCodeErr:
           throw new HttpException((err as Error).message, HttpStatus.CONFLICT);
         case OrdersService.ERRORS.PaymentErr:
@@ -249,7 +253,8 @@ export class OrdersController {
   @ApiResponse({
     status: HttpStatus.CONFLICT,
     description:
-      'Ticket sold out, all remaining units reserved, or duplicate order for attendee',
+      'Ticket sold out, all remaining units reserved, or duplicate order for attendee. A duplicate unpaid order includes `pendingReference`.',
+    type: OrderConflictResponseDto,
   })
   @ApiResponse({
     status: HttpStatus.BAD_GATEWAY,
@@ -277,9 +282,11 @@ export class OrdersController {
           case OrdersService.ERRORS.TicketNotFoundErr:
             throw new HttpException(err.message, HttpStatus.NOT_FOUND);
 
+          case OrdersService.ERRORS.DuplicateErr:
+            throw duplicateOrderConflict(err);
+
           case OrdersService.ERRORS.SoldOutErr:
           case OrdersService.ERRORS.RetryLaterErr:
-          case OrdersService.ERRORS.DuplicateErr:
             throw new HttpException(err.message, HttpStatus.CONFLICT);
 
           case OrdersService.ERRORS.PaymentErr:
@@ -324,7 +331,8 @@ export class OrdersController {
   @ApiResponse({
     status: HttpStatus.CONFLICT,
     description:
-      'Ticket sold out, all remaining units reserved, or a member already has an order',
+      "Ticket sold out, all remaining units reserved, or a member already has an order. If that is the payer's own unpaid group order, `pendingReference` is its payment reference.",
+    type: OrderConflictResponseDto,
   })
   async createGroupBuy(
     @Body() payload: CreateGroupBuyOrderDto,
@@ -345,9 +353,10 @@ export class OrdersController {
             (err as Error).message,
             HttpStatus.BAD_REQUEST,
           );
+        case OrdersService.ERRORS.DuplicateErr:
+          throw duplicateOrderConflict(err as Error);
         case OrdersService.ERRORS.SoldOutErr:
         case OrdersService.ERRORS.RetryLaterErr:
-        case OrdersService.ERRORS.DuplicateErr:
         case OrdersService.ERRORS.MaxedOutDiscountCodeErr:
           throw new HttpException((err as Error).message, HttpStatus.CONFLICT);
         case OrdersService.ERRORS.PaymentErr:
