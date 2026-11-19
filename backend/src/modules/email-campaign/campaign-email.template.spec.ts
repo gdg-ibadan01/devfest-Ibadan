@@ -1,6 +1,7 @@
 import {
   fillTokens,
   markdownToHtml,
+  markdownToText,
   renderCampaignEmail,
 } from './campaign-email.template';
 
@@ -101,5 +102,35 @@ describe('campaign email template', () => {
 
   it('falls back to the small logo without a header', () => {
     expect(render().html).toContain('alt="GDG Ibadan"');
+  });
+});
+
+describe('inline images', () => {
+  const url = 'https://res.cloudinary.com/demo/image/upload/v1/a.png';
+
+  it('renders an image from an allowed host', () => {
+    const html = markdownToHtml(`Look: ![Poster](${url})`);
+    expect(html).toContain(`<img src="${url}" alt="Poster"`);
+  });
+
+  it('leaves images from other hosts, http and javascript as plain escaped text', () => {
+    for (const bad of [
+      'https://evil.example.com/pixel.gif',
+      'http://res.cloudinary.com/a.png',
+      'javascript:alert(1)',
+    ]) {
+      const html = markdownToHtml(`![x](${bad})`);
+      expect(html).not.toContain('<img');
+      expect(html).not.toContain('<a ');
+    }
+  });
+
+  it('cannot break out of the alt attribute', () => {
+    const html = markdownToHtml(`![a" onerror="x](${url})`);
+    expect(html).not.toMatch(/onerror="x/);
+  });
+
+  it('shows only the alt text in the plain-text version', () => {
+    expect(markdownToText(`Hi ![Poster](${url})`)).toBe('Hi Poster');
   });
 });

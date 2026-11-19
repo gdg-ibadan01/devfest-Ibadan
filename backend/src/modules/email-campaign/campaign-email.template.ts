@@ -15,6 +15,20 @@ export const CAMPAIGN_TOKEN_NAMES = [
 const LINK_TARGET = '(https?:\\/\\/[^\\s)]+|\\{\\{\\s*ticket_link\\s*\\}\\})';
 const MARKDOWN_LINK = new RegExp(`\\[([^\\]]+)\\]\\(${LINK_TARGET}\\)`, 'g');
 
+const MARKDOWN_IMAGE = /!\[([^\]]*)\]\((https?:\/\/[^\s)]+)\)/g;
+
+/** Hosts an email image may load from; anything else is shown as plain text. */
+export const DEFAULT_IMAGE_HOSTS = ['res.cloudinary.com'];
+
+function isAllowedImage(escapedUrl: string, hosts: string[]) {
+  try {
+    const url = new URL(escapedUrl.replace(/&amp;/g, '&'));
+    return url.protocol === 'https:' && hosts.includes(url.hostname);
+  } catch {
+    return false;
+  }
+}
+
 function escapeHtml(value: string) {
   return value
     .replace(/&/g, '&amp;')
@@ -32,9 +46,14 @@ export function fillTokens(text: string, tokens: CampaignTokens) {
   });
 }
 
-/** Inline markdown on already-escaped text: **bold**, *italic*, [text](https://url). */
-function inline(escaped: string) {
+/** Inline markdown on already-escaped text: **bold**, *italic*, [text](https://url), ![alt](https://image). */
+function inline(escaped: string, imageHosts: string[]) {
   return escaped
+    .replace(MARKDOWN_IMAGE, (match, alt: string, url: string) =>
+      isAllowedImage(url, imageHosts)
+        ? `<img src="${url}" alt="${alt}" style="display:block;max-width:100%;height:auto;border:0;margin:8px 0;" />`
+        : alt,
+    )
     .replace(MARKDOWN_LINK, '<a href="$2" style="color:#1a73e8;">$1</a>')
     .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
     .replace(/(^|[^*])\*([^*\n]+)\*/g, '$1<em>$2</em>');
@@ -44,7 +63,10 @@ function inline(escaped: string) {
  * Light markdown (paragraphs, "- " bullets, bold, italic, links) -> safe HTML.
  * Everything is escaped first; only the constructs above produce markup.
  */
-export function markdownToHtml(source: string) {
+export function markdownToHtml(
+  source: string,
+  imageHosts: string[] = DEFAULT_IMAGE_HOSTS,
+) {
   const blocks = source
     .replace(/\r\n/g, '\n')
     .trim()
@@ -56,12 +78,14 @@ export function markdownToHtml(source: string) {
         const items = lines
           .map(
             (l) =>
-              `<li style="margin:0 0 6px;">${inline(escapeHtml(l.replace(/^\s*[-*]\s+/, '')))}</li>`,
+              `<li style="margin:0 0 6px;">${inline(escapeHtml(l.replace(/^\s*[-*]\s+/, '')), imageHosts)}</li>`,
           )
           .join('');
         return `<ul style="margin:0 0 16px;padding-left:20px;">${items}</ul>`;
       }
-      const html = lines.map((l) => inline(escapeHtml(l))).join('<br />');
+      const html = lines
+        .map((l) => inline(escapeHtml(l), imageHosts))
+        .join('<br />');
       return `<p style="margin:0 0 16px;line-height:1.6;">${html}</p>`;
     })
     .join('\n');
@@ -70,6 +94,7 @@ export function markdownToHtml(source: string) {
 /** Plain-text alternative: markdown links shown as "text (url)", bold markers dropped. */
 export function markdownToText(source: string) {
   return source
+    .replace(/!\[([^\]]*)\]\(https?:\/\/[^\s)]+\)/g, '$1')
     .replace(MARKDOWN_LINK, '$1 ($2)')
     .replace(/\*\*([^*]+)\*\*/g, '$1')
     .trim();
@@ -84,6 +109,8 @@ export interface RenderCampaignInput {
   /** Full-width banner shown instead of the small logo when set. */
   headerUrl?: string;
   supportEmail: string;
+  /** Hosts allowed for ![alt](url) images in the body. */
+  imageHosts?: string[];
 }
 
 /**
@@ -100,7 +127,10 @@ export function renderCampaignEmail(input: RenderCampaignInput) {
     ticket_link: escapeHtml(tokens.ticket_link),
   };
 
-  const bodyHtml = fillTokens(markdownToHtml(input.body), escapedTokens);
+  const bodyHtml = fillTokens(
+    markdownToHtml(input.body, input.imageHosts),
+    escapedTokens,
+  );
   const subject = fillTokens(input.subject, tokens).replace(/[\r\n]+/g, ' ');
   const preheader = escapeHtml(
     fillTokens(input.preheader, tokens).replace(/[\r\n]+/g, ' '),

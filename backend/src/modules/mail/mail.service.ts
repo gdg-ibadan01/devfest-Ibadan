@@ -100,6 +100,7 @@ export class MailService implements OnModuleInit {
     subject: string;
     html: string;
     text: string;
+    attachments?: { filename: string; content: Buffer; contentType: string }[];
   }) {
     const fromEmail =
       this.configService.get<string>('mail.from.email') ??
@@ -110,6 +111,7 @@ export class MailService implements OnModuleInit {
       subject: args.subject,
       html: args.html,
       text: args.text,
+      ...(args.attachments?.length && { attachments: args.attachments }),
     });
   }
 

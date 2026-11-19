@@ -268,6 +268,18 @@ export interface CampaignStats {
   pending: number;
 }
 
+export type EmailAssetKind = 'INLINE_IMAGE' | 'ATTACHMENT';
+
+export interface EmailAssetDto {
+  id: string;
+  kind: EmailAssetKind;
+  filename: string;
+  mimeType: string;
+  size: number;
+  url: string;
+  createdAt: string;
+}
+
 export interface EmailCampaignDto {
   id: string;
   subject: string;
@@ -279,6 +291,8 @@ export interface EmailCampaignDto {
   createdAt: string;
   updatedAt: string;
   createdByName?: string;
+  /** Images and attachments; only returned when a single campaign is fetched. */
+  assets?: EmailAssetDto[];
   stats: CampaignStats;
 }
 

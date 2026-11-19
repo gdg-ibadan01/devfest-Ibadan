@@ -21,6 +21,7 @@ function setup(opts: {
   }[];
   failFor?: string[];
   status?: string;
+  assets?: Record<string, unknown>[];
 }) {
   const campaign: Record<string, unknown> = {
     id: 'c1',
@@ -101,6 +102,15 @@ function setup(opts: {
         }));
       }),
     },
+    emailCampaignAsset: {
+      findMany: jest.fn(async () => opts.assets ?? []),
+      findFirst: jest.fn(),
+      create: jest.fn(async ({ data }: { data: object }) => ({
+        id: 'a1',
+        ...data,
+      })),
+      delete: jest.fn(),
+    },
     admin: { findUnique: jest.fn(async () => ({ email: 'me@x.com' })) },
     auditLog: { create: jest.fn(async () => ({})) },
     $transaction: jest.fn(async (ops: Promise<unknown>[]) => Promise.all(ops)),
@@ -117,6 +127,14 @@ function setup(opts: {
       return { messageId: `m-${to}` };
     }),
   };
+  const upload = {
+    uploadEmailAsset: jest.fn(async () => ({
+      url: 'https://res.cloudinary.com/x/raw/upload/f.pdf',
+      publicId: 'email-assets/f',
+      resourceType: 'raw',
+    })),
+    deleteEmailAsset: jest.fn(async () => undefined),
+  };
   const appConfig = {
     ticketJWTSecret: 's',
     url: 'https://api.example.com',
@@ -126,14 +144,18 @@ function setup(opts: {
   const service = new EmailCampaignService(
     prisma as never,
     mail as never,
+    upload as never,
     appConfig as never,
   );
+  (
+    service as unknown as { attachmentRetryDelayMs: number }
+  ).attachmentRetryDelayMs = 1;
   const done = async () => {
     for (let i = 0; i < 200 && campaign.status === 'SENDING'; i++) {
       await new Promise((r) => setTimeout(r, 5));
     }
   };
-  return { service, prisma, mail, campaign, deliveries, sent, done };
+  return { service, prisma, mail, upload, campaign, deliveries, sent, done };
 }
 
 const order = (n: number, email = `p${n}@x.com`) => ({
@@ -244,6 +266,161 @@ describe('EmailCampaignService', () => {
       await t.service.sendTest('c1', 'admin1', ['a@x.com']);
       expect(t.deliveries).toHaveLength(0);
       expect(t.campaign.status).toBe('DRAFT');
+    });
+  });
+});
+
+describe('EmailCampaignService attachments', () => {
+  const pdfAsset = {
+    id: 'a1',
+    filename: 'agenda.pdf',
+    mimeType: 'application/pdf',
+    size: 1234,
+    url: 'https://res.cloudinary.com/x/raw/upload/agenda.pdf',
+    kind: 'ATTACHMENT',
+  };
+  const realFetch = global.fetch;
+  afterEach(() => {
+    global.fetch = realFetch;
+  });
+  const fetchOk = () =>
+    jest.fn(async () => ({
+      ok: true,
+      status: 200,
+      arrayBuffer: async () => new TextEncoder().encode('%PDF-1.4').buffer,
+    })) as unknown as typeof fetch;
+
+  it('downloads each attachment once and sends it to every recipient', async () => {
+    const t = setup({
+      orders: [order(1), order(2), order(3)],
+      assets: [pdfAsset],
+    });
+    global.fetch = fetchOk();
+    await t.service.send('c1', 'admin1');
+    await t.done();
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+    expect(t.mail.sendCustomEmail).toHaveBeenCalledTimes(3);
+    for (const call of t.mail.sendCustomEmail.mock.calls as unknown as [
+      { attachments: { filename: string; contentType: string }[] },
+    ][]) {
+      expect(call[0].attachments).toEqual([
+        expect.objectContaining({
+          filename: 'agenda.pdf',
+          contentType: 'application/pdf',
+        }),
+      ]);
+    }
+    expect(t.campaign.status).toBe('SENT');
+  });
+
+  it('refuses to start a send when an attachment cannot be fetched', async () => {
+    const t = setup({ orders: [order(1), order(2)], assets: [pdfAsset] });
+    global.fetch = jest.fn(async () => ({
+      ok: false,
+      status: 404,
+    })) as unknown as typeof fetch;
+    await expect(t.service.send('c1', 'admin1')).rejects.toThrow(/agenda\.pdf/);
+    expect(t.mail.sendCustomEmail).not.toHaveBeenCalled();
+    expect(t.campaign.status).toBe('DRAFT');
+    expect(t.deliveries).toHaveLength(0);
+  });
+
+  it('fails the waiting deliveries instead of sending without files on a later run', async () => {
+    const t = setup({ orders: [], assets: [pdfAsset], status: 'SENDING' });
+    t.deliveries.push(
+      ...[1, 2].map((n) => ({
+        id: `d${n}`,
+        campaignId: 'c1',
+        orderId: `o${n}`,
+        email: `p${n}@x.com`,
+        fullName: `Person ${n}`,
+        status: 'PENDING' as const,
+        attempts: 0,
+        error: null,
+      })),
+    );
+    global.fetch = jest.fn(async () => ({
+      ok: false,
+      status: 404,
+    })) as unknown as typeof fetch;
+    t.prisma.emailDelivery.updateMany.mockImplementation(
+      async ({ data }: { data: { status: 'FAILED'; error: string } }) => {
+        t.deliveries.forEach((d) => {
+          if (d.status === 'PENDING') Object.assign(d, data);
+        });
+      },
+    );
+    const result = await (
+      t.service as unknown as {
+        attachmentsForRun: (id: string) => Promise<unknown>;
+      }
+    ).attachmentsForRun('c1');
+    expect(result).toBeNull();
+    expect(t.mail.sendCustomEmail).not.toHaveBeenCalled();
+    expect(t.deliveries.every((d) => d.status === 'FAILED')).toBe(true);
+    expect(t.deliveries[0].error).toMatch(/agenda\.pdf/);
+    expect(t.campaign.status).toBe('FAILED');
+  });
+
+  it('refuses to add a file to a campaign that was already sent', async () => {
+    const t = setup({ orders: [order(1)], status: 'SENT' });
+    const file = {
+      originalname: 'a.pdf',
+      mimetype: 'application/pdf',
+      size: 8,
+      buffer: Buffer.from('%PDF-1.4'),
+    } as Express.Multer.File;
+    await expect(
+      t.service.addAsset('c1', 'admin1', file, 'ATTACHMENT' as never),
+    ).rejects.toBeInstanceOf(BadRequestException);
+    expect(t.upload.uploadEmailAsset).not.toHaveBeenCalled();
+  });
+
+  it('enforces the attachment count and total size', async () => {
+    const file = {
+      originalname: 'a.pdf',
+      mimetype: 'application/pdf',
+      size: 8,
+      buffer: Buffer.from('%PDF-1.4'),
+    } as Express.Multer.File;
+    const five = Array.from({ length: 5 }, (_, i) => ({
+      id: `a${i}`,
+      size: 10,
+    }));
+    const t1 = setup({ orders: [], assets: five });
+    await expect(
+      t1.service.addAsset('c1', 'admin1', file, 'ATTACHMENT' as never),
+    ).rejects.toThrow(/at most 5/);
+    const t2 = setup({
+      orders: [],
+      assets: [{ id: 'a1', size: 10 * 1024 * 1024 }],
+    });
+    await expect(
+      t2.service.addAsset('c1', 'admin1', file, 'ATTACHMENT' as never),
+    ).rejects.toThrow(/10 MB/);
+  });
+
+  it('stores a valid attachment and records who added it', async () => {
+    const t = setup({ orders: [] });
+    const file = {
+      originalname: 'agenda.pdf',
+      mimetype: 'application/pdf',
+      size: 8,
+      buffer: Buffer.from('%PDF-1.4'),
+    } as Express.Multer.File;
+    const asset = await t.service.addAsset(
+      'c1',
+      'admin1',
+      file,
+      'ATTACHMENT' as never,
+    );
+    expect(asset).toMatchObject({
+      filename: 'agenda.pdf',
+      createdById: 'admin1',
+    });
+    expect(t.upload.uploadEmailAsset).toHaveBeenCalledWith(file.buffer, {
+      image: false,
+      filename: 'agenda.pdf',
     });
   });
 });
