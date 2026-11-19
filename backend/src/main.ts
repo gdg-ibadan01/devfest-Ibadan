@@ -79,6 +79,15 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   // SwaggerModule.setup('api/docs', app, document);
   app.use('/api/docs', apiReference({ content: document }));
+  // Raw OpenAPI JSON for the frontend's `yarn gen:api` (same document the
+  // public /api/docs page already renders).
+  app
+    .getHttpAdapter()
+    .get(
+      '/api/docs-json',
+      (_req: unknown, res: { json: (b: unknown) => void }) =>
+        res.json(document),
+    );
 
   // Load environment variables
   const port = configService.get<number>('PORT') || 3000;
@@ -88,6 +97,7 @@ async function bootstrap() {
   await app.listen(port);
   logger.log(`🚀 Application is running on:${appUrl}`);
   logger.log(`Swagger documentation: ${appUrl}/api/docs`);
+  logger.log(`OpenAPI JSON: ${appUrl}/api/docs-json`);
   logger.log(`🔧 Environment: ${configService.get('NODE_ENV', 'development')}`);
 }
 bootstrap();

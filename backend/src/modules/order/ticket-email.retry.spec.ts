@@ -1,5 +1,10 @@
 // The real TicketsService pulls in the PDF renderer (.tsx), which Jest isn't set up for.
 jest.mock('../ticket/ticket.service', () => ({ TicketsService: class {} }));
+// The registry pulls in the payment gateways (MonnifyService -> dinero.js, an
+// ESM-only package Jest can't parse). These tests don't touch payments.
+jest.mock('../payment/payment-provider.registry', () => ({
+  PaymentProviderRegistry: class {},
+}));
 
 import { OrdersService } from './order.service';
 import { TicketEmailSweeper } from './ticket-email.sweeper';

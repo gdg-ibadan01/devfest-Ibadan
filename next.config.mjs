@@ -5,6 +5,7 @@ const NOINDEX_PATHS = [
   '/core/:path*',
   '/tickets/success',
   '/tickets/preview',
+  '/tickets/pay/:path*',
   '/forgot-password',
   '/reset-password',
   '/password-changed',

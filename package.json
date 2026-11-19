@@ -3,14 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -p 8000",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
     "prepare": "husky",
     "prettier": "prettier --write app/",
     "test": "echo \"No tests specified\" && exit 0",
-    "gen:api": "openapi-typescript /tmp/openapi_spec.json -o app/_module/api/schema.d.ts"
+    "gen:api": "openapi-typescript ${API_SPEC_URL:-http://localhost:4000/api/docs-json} -o app/_module/api/schema.d.ts"
   },
   "dependencies": {
     "@motionone/utils": "^10.18.0",
