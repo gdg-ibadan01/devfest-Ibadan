@@ -1,73 +1,36 @@
-'use client';
+import type { Metadata } from 'next';
+import { speakersData } from '../_module/data/meet-our-speakers.data';
+import { SpeakerCard } from '../component/SpeakerCard';
 
-import ComingSoon from '../_module/components/common/ComingSoon';
+export const metadata: Metadata = {
+  title: 'Speakers',
+  description:
+    'Meet the DevFest Ibadan speakers and explore their sessions, workshops, and social profiles.',
+  alternates: { canonical: '/speakers' },
+};
 
 export default function Speakers() {
-  // const [modal, setModal] = useState(false);
-  // const [speakerData, setSpeakerData] = useState<TspeakerProps>({
-  //   name: '',
-  //   title: '',
-  //   src: null as unknown as StaticImageData,
-  // });
-
-  // const handleClick = (data: TspeakerProps) => {
-  //   setModal(true);
-  //   setSpeakerData(data);
-  // };
-
   return (
-    <div className="bg-pastel-red min-h-[100vh]">
-      <ComingSoon
-        page="Speakers"
-        subtitle={
-          'Our speaker lineup is almost here! Prepare to be inspired by industry leaders, tech innovators, and creative thinkers who will transform your DevFest experience.'
-        }
-        fullArt={true}
-      />
-    </div>
+    <main
+      id="content"
+      className="min-h-screen bg-[#F8F6E2] pt-[112px] pb-[80px] sm:pt-[128px] sm:pb-[96px] lg:pt-[176px] lg:pb-[112px]"
+    >
+      <div className="mx-auto w-full max-w-[1360px] px-4 sm:px-6 lg:px-8">
+        <header className="mb-12 mt-6 max-w-2xl sm:mb-14">
+          <h1 className="font-grotesk text-3xl font-semibold leading-tight tracking-tight text-black sm:text-4xl md:text-5xl">
+            Meet Our Speakers
+          </h1>
+          <p className="mt-3 font-sans text-sm leading-relaxed text-[#4B5563] sm:text-base">
+            Meet the industry leaders and innovators taking the stage at DevFest
+            Ibadan. Explore their sessions and connect with them.
+          </p>
+        </header>
+        <div className="grid grid-cols-1 items-start gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {speakersData.map((speaker, index) => (
+            <SpeakerCard key={speaker.id} speaker={speaker} index={index % 4} />
+          ))}
+        </div>
+      </div>
+    </main>
   );
-  //   return (<div className={clsx(Styles.container)}>
-  //     <ComingSoon
-  //       page="Speakers"
-  //       subtitle={
-  //         'Our speaker lineup is almost here! Prepare to be inspired by industry leaders, tech innovators, and creative thinkers who will transform your DevFest experience.'
-  //       }
-  //     />
-  //     {/* <main className={clsx(Styles.main, '3xl:max-w-[1440px] mx-auto')}>
-  //       <section className="flex gap-5 flex-col items-center py-24">
-  //         <h1 className="text-5xl font-bold text-center">
-  //           Speakers Coming Soon
-  //         </h1>
-  //         <p className="text-xl font-extralight text-[#4D4D4D] md:w-[820px] text-center">
-  //           Our speaker lineup is almost here! Prepare to be inspired by
-  //           industry leaders, tech innovators, and creative thinkers who will
-  //           transform your DevFest experience.
-  //         </p>
-  //       </section> */}
-
-  //     {/* <header className={Styles.header}>
-  //         <section className={Styles.headerSection}>
-  //           <h1 className={Styles.headerSectionHeading}>
-  //             Meet our amazing speakers
-  //           </h1>
-  //           <p className={Styles.headerSectionParagraph}>
-  //             Our speakers are industry leaders, innovative thinkers, and
-  //             passionate tech enthusiasts who are eager to share their knowledge
-  //             and experiences with you.{' '}
-  //           </p>
-  //         </section>
-  //       </header> */}
-  //     {/* <Button className={Styles.headerButton}> Apply to Speak </Button> */}
-  //     {/* <section className={Styles.speakersListWrapper}>
-  //         {SpeakersList.map((data, idx) => (
-  //           <Fragment key={idx}>
-  //             <SpeakerCard handleClick={handleClick} {...data} />
-  //           </Fragment>
-  //         ))}
-  //       </section>
-  //     </main>
-  //       */}
-  //     {/* {modal && <SpeakerModal setModal={setModal} speakerData={speakerData} />} */}
-  //   </div>
-  // );
 }
