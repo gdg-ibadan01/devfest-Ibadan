@@ -26,6 +26,7 @@ import {
 import AdminOrders from '../../icons/AdminOrders';
 import Checkins from '../../icons/Checkins';
 import Mail from '../../icons/Mail';
+import PaymentGateway from '../../icons/PaymentGateway';
 
 const navItems: {
   label: string;
@@ -81,6 +82,12 @@ const navItems: {
       href: '/core/discount-referral',
       icon: DiscountReferral,
       moduleTerms: ['discount'],
+    },
+    {
+      label: 'Payment Gateway',
+      href: '/core/payment-gateway',
+      icon: PaymentGateway,
+      moduleTerms: ['payment gateway'],
     },
     {
       label: 'Roles & Permission',

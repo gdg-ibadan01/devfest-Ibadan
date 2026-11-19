@@ -11,7 +11,7 @@ import {
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
-import { OrderedTicketDto } from './order.dto';
+import { CheckoutSessionDto, OrderedTicketDto } from './order.dto';
 
 export class GroupPayerDto {
   @ApiProperty({
@@ -147,4 +147,12 @@ export class CreateGroupBuyOrderResponseDto {
 
   @ApiProperty({ type: OrderedTicketDto })
   ticket: OrderedTicketDto;
+
+  @ApiPropertyOptional({
+    type: CheckoutSessionDto,
+    nullable: true,
+    description:
+      'Inline checkout to open for unpaid orders. Null when the order is free.',
+  })
+  payment?: CheckoutSessionDto | null;
 }

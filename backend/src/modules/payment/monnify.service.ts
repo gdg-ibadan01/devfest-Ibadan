@@ -14,17 +14,23 @@ import axios, { AxiosError } from 'axios';
 import * as crypto from 'node:crypto';
 import { ServiceError } from 'src/common/errors/service-error';
 import {
+  CheckoutParams,
+  CheckoutSession,
+  GatewayRequestError,
   InitializePaymentParams,
   InitializedPayment,
+  NormalizedTransaction,
   PaymentProvider,
   RefundPaymentParams,
   RefundPaymentResult,
+  TransactionStatus,
 } from './interfaces/payment-provider.interface';
 import {
   MonnifyEnvelope,
   MonnifyInitResponseBody,
   MonnifyLoginResponseBody,
   MonnifyRefundResponseBody,
+  MonnifyTransactionStatusBody,
 } from './interfaces/monnify.interface';
 import monnifyConfig from 'src/config/monnify.config';
 
@@ -33,7 +39,7 @@ const TOKEN_SAFETY_MARGIN_SEC = 60;
 
 @Injectable()
 export class MonnifyService implements PaymentProvider {
-  readonly name = 'MONNIFY';
+  readonly name = 'MONNIFY' as const;
 
   static ERRORS = {
     AuthErr: 'MonnifyAuthErr',
@@ -52,6 +58,108 @@ export class MonnifyService implements PaymentProvider {
     @Inject(monnifyConfig.KEY)
     private readonly mnfyCfg: ConfigType<typeof monnifyConfig>,
   ) {}
+
+  get orderTtlMinutes(): number {
+    return this.mnfyCfg.orderTtlMinutes;
+  }
+
+  isConfigured(): boolean {
+    return Boolean(
+      this.mnfyCfg.apiKey &&
+      this.mnfyCfg.secretKey &&
+      this.mnfyCfg.contractCode,
+    );
+  }
+
+  /**
+   * Config for the Monnify inline SDK (monnify-ts) on the frontend. The API key
+   * and contract code are client-side credentials by design.
+   */
+  createCheckout(params: CheckoutParams): Promise<CheckoutSession> {
+    const session: CheckoutSession = {
+      provider: this.name,
+      mode: 'INLINE',
+      reference: params.reference,
+      amount: params.amount,
+      currency: 'NGN',
+      config: {
+        apiKey: this.getRequiredConfig('apiKey'),
+        contractCode: this.getRequiredConfig('contractCode'),
+        amount: params.amount,
+        currency: 'NGN',
+        reference: params.reference,
+        customerFullName: params.customer.fullName,
+        customerEmail: params.customer.email,
+        paymentDescription: params.description,
+        metadata: { orderId: params.orderId },
+      },
+    };
+    return Promise.resolve(session);
+  }
+
+  /** Monnify transaction status (v2), used to confirm client-side completions. */
+  async getTransaction(
+    transactionReference: string,
+  ): Promise<NormalizedTransaction> {
+    let res: MonnifyEnvelope<MonnifyTransactionStatusBody>;
+    try {
+      res = await this.request<MonnifyTransactionStatusBody>(
+        'GET',
+        `/api/v2/transactions/${encodeURIComponent(transactionReference)}`,
+      );
+    } catch (err) {
+      if (err instanceof ServiceError) {
+        throw new GatewayRequestError(err.message, true);
+      }
+      const status = (err as AxiosError).response?.status;
+      throw new GatewayRequestError(
+        `Monnify transaction lookup failed: ${(err as Error).message}`,
+        status === undefined || status >= 500 || status === 429,
+        status,
+      );
+    }
+
+    const body = res.responseBody;
+    if (!res.requestSuccessful || !body) {
+      throw new GatewayRequestError(
+        res.responseMessage || 'Monnify transaction not found',
+        false,
+        404,
+      );
+    }
+
+    const paymentStatus = String(body.paymentStatus ?? '').toUpperCase();
+    let status: TransactionStatus = 'PENDING';
+    if (paymentStatus === 'PAID' || paymentStatus === 'OVERPAID') {
+      status = 'COMPLETED';
+    } else if (
+      ['FAILED', 'EXPIRED', 'CANCELLED', 'REVERSED', 'ABANDONED'].includes(
+        paymentStatus,
+      )
+    ) {
+      status = 'FAILED';
+    }
+
+    const metaData = (body.metaData ?? {}) as Record<string, unknown>;
+    const amountPaid = Number(body.amountPaid ?? 0);
+
+    return {
+      provider: this.name,
+      transactionRef: body.transactionReference ?? transactionReference,
+      status,
+      amount: Number.isFinite(amountPaid) ? amountPaid : 0,
+      currency: String(
+        body.currencyCode ?? body.currency ?? 'NGN',
+      ).toUpperCase(),
+      orderId:
+        metaData.orderId != null ? String(metaData.orderId as string) : null,
+      reference: body.paymentReference ?? null,
+      orderToken: null,
+      paidAt: body.paidOn ?? body.completedOn ?? null,
+      description: body.paymentDescription ?? null,
+      raw: body,
+    };
+  }
 
   calculateAmountWithCharges(amountInKobo: number) {
     const MONNIFY_CAP_CHARGE = 200000; // ₦2,000 in kobo
@@ -146,11 +254,14 @@ export class MonnifyService implements PaymentProvider {
 
   verifyWebhookSignature(rawBody: string, signature: string): boolean {
     const secret = this.getRequiredConfig('secretKey');
-    const computed = crypto
-      .createHmac('sha512', secret)
-      .update(rawBody)
-      .digest('hex');
-    return computed === signature;
+    const computed = Buffer.from(
+      crypto.createHmac('sha512', secret).update(rawBody).digest('hex'),
+    );
+    const received = Buffer.from(signature.trim().toLowerCase());
+    return (
+      computed.length === received.length &&
+      crypto.timingSafeEqual(computed, received)
+    );
   }
 
   async requestRefund(

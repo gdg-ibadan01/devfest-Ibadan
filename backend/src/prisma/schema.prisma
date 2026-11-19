@@ -282,3 +282,14 @@ model EmailDelivery {
   @@index([messageId])
   @@map("email_deliveries")
 }
+
+/// Runtime settings admins can change without a redeploy (e.g. the payment
+/// gateway for new orders). One row per setting key.
+model AppSetting {
+  key         String   @id
+  value       Json
+  updatedById String?  @map("updated_by_id")
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@map("app_settings")
+}

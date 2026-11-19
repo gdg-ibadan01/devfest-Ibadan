@@ -118,6 +118,14 @@ export function apiResponse(data: unknown, status: number) {
 /** Handle errors consistently in route handlers */
 export function handleRouteError(err: unknown) {
   console.error('[API route error]', err);
+  // Node's fetch() throws TypeError('fetch failed') when the API can't be
+  // reached (down, restarting, network): an upstream outage, not a bug here.
+  if (err instanceof TypeError && err.message === 'fetch failed') {
+    return NextResponse.json(
+      { message: 'The service is temporarily unavailable. Please try again shortly.' },
+      { status: 503 }
+    );
+  }
   const message = err instanceof Error ? err.message : 'Internal server error';
   return NextResponse.json({ message }, { status: 500 });
 }
