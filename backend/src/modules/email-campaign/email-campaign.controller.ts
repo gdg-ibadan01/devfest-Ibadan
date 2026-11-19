@@ -9,9 +9,22 @@ import {
   Patch,
   Post,
   Query,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
+  BadRequestException,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
+import { EmailAssetKind } from '@prisma/client';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
+import { EMAIL_ASSET_LIMITS } from './email-asset.util';
 import { RequirePermission } from 'src/common/decorators/permissions.decorator';
 import { CurrentUser } from 'src/common/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../admin/guards/jwt-auth.guard';
@@ -87,6 +100,51 @@ export class EmailCampaignController {
   @ApiOperation({ summary: 'Delete a draft' })
   remove(@Param('id') id: string) {
     return this.campaigns.remove(id);
+  }
+
+  @Post(':id/assets')
+  @ApiOperation({
+    summary: 'Add an image (for the body) or a file attachment to a draft',
+    description:
+      'multipart/form-data with `file` and `kind` (INLINE_IMAGE or ATTACHMENT). PDF, images, Word, Excel, PowerPoint, CSV and text files up to 4 MB; at most 5 attachments and 10 MB in total.',
+  })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['file', 'kind'],
+      properties: {
+        file: { type: 'string', format: 'binary' },
+        kind: { type: 'string', enum: Object.values(EmailAssetKind) },
+      },
+    },
+  })
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: memoryStorage(),
+      limits: { fileSize: EMAIL_ASSET_LIMITS.maxFileBytes, files: 1 },
+    }),
+  )
+  addAsset(
+    @Param('id') id: string,
+    @UploadedFile() file: Express.Multer.File,
+    @Body('kind') kind: string,
+    @CurrentUser() user: IJwtPayload,
+  ) {
+    if (!Object.values(EmailAssetKind).includes(kind as EmailAssetKind)) {
+      throw new BadRequestException('kind must be INLINE_IMAGE or ATTACHMENT');
+    }
+    return this.campaigns.addAsset(id, user.sub, file, kind as EmailAssetKind);
+  }
+
+  @Delete(':id/assets/:assetId')
+  @ApiOperation({ summary: 'Remove an image or attachment from a draft' })
+  removeAsset(
+    @Param('id') id: string,
+    @Param('assetId') assetId: string,
+    @CurrentUser() user: IJwtPayload,
+  ) {
+    return this.campaigns.removeAsset(id, assetId, user.sub);
   }
 
   @Post(':id/test')

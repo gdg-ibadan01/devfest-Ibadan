@@ -1,4 +1,5 @@
 import {
+  BadGatewayException,
   BadRequestException,
   Inject,
   Injectable,
@@ -8,6 +9,7 @@ import {
 } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
 import {
+  EmailAssetKind,
   EmailCampaignStatus,
   EmailSendStatus,
   OrderStatus,
@@ -17,6 +19,8 @@ import AppConfig from 'src/config/app.config';
 import { buildSignedTicketDownloadUrl } from 'src/common/utils/ticket-download-url';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { MailService } from '../mail/mail.service';
+import { UploadService } from '../upload/upload.service';
+import { EMAIL_ASSET_LIMITS, validateEmailAsset } from './email-asset.util';
 import {
   CampaignAudienceDto,
   CreateEmailCampaignDto,
@@ -24,13 +28,28 @@ import {
   UpdateEmailCampaignDto,
 } from './dto/email-campaign.dto';
 import { normalizeMessageId } from '../mail/message-id';
-import { CampaignTokens, renderCampaignEmail } from './campaign-email.template';
+import {
+  CampaignTokens,
+  DEFAULT_IMAGE_HOSTS,
+  renderCampaignEmail,
+} from './campaign-email.template';
 
 /** A delivery that hits a provider rate limit is retried this many times before failing. */
 const MAX_ATTEMPTS = 5;
 const RATE_LIMIT_PAUSE_MS = 5 * 60 * 1000;
 const NO_BUDGET_PAUSE_MS = 60 * 1000;
 const BATCH_SIZE = 10;
+
+/** If an attachment cannot be fetched, retry this many times before failing the pending deliveries. */
+const ATTACHMENT_FETCH_TRIES = 3;
+const ATTACHMENT_RETRY_DELAY_MS = 30 * 1000;
+const ATTACHMENT_FETCH_TIMEOUT_MS = 30 * 1000;
+
+export interface LoadedAttachment {
+  filename: string;
+  content: Buffer;
+  contentType: string;
+}
 
 const RATE_LIMIT_PATTERN = /rate|limit|quota|too many|429|throttl/i;
 
@@ -42,10 +61,15 @@ export class EmailCampaignService implements OnApplicationBootstrap {
   private readonly logger = new Logger(EmailCampaignService.name);
   /** Campaign ids whose send loop is running in this process. */
   private readonly running = new Set<string>();
+  /** Attachments fetched by send()'s up-front check, handed to the run so they are downloaded once. */
+  private readonly preloaded = new Map<string, LoadedAttachment[]>();
+  /** Wait between attachment fetch retries (a field so tests can shorten it). */
+  private attachmentRetryDelayMs = ATTACHMENT_RETRY_DELAY_MS;
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly mailService: MailService,
+    private readonly uploadService: UploadService,
     @Inject(AppConfig.KEY)
     private readonly appConfig: ConfigType<typeof AppConfig>,
   ) {}
@@ -154,7 +178,18 @@ export class EmailCampaignService implements OnApplicationBootstrap {
   async remove(id: string) {
     const campaign = await this.findOrThrow(id);
     this.assertDraft(campaign.status);
+    const assets = await this.prisma.emailCampaignAsset.findMany({
+      where: { campaignId: id },
+    });
     await this.prisma.emailCampaign.delete({ where: { id } });
+    await Promise.all(
+      assets.map((a) =>
+        this.uploadService.deleteEmailAsset(
+          a.publicId,
+          a.resourceType === 'image' ? 'image' : 'raw',
+        ),
+      ),
+    );
     return { deleted: true };
   }
 
@@ -192,7 +227,11 @@ export class EmailCampaignService implements OnApplicationBootstrap {
 
   async get(id: string) {
     const campaign = await this.findOrThrow(id);
-    return { ...campaign, stats: await this.stats(id) };
+    const assets = await this.prisma.emailCampaignAsset.findMany({
+      where: { campaignId: id },
+      orderBy: { createdAt: 'asc' },
+    });
+    return { ...campaign, assets, stats: await this.stats(id) };
   }
 
   async deliveries(id: string, query: DeliveriesQueryDto) {
@@ -225,6 +264,145 @@ export class EmailCampaignService implements OnApplicationBootstrap {
     return { data, total, page, limit };
   }
 
+  // ---- assets ---------------------------------------------------------
+
+  /** Adds an image (shown in the body) or a file (sent as an attachment) to a draft. */
+  async addAsset(
+    id: string,
+    adminId: string,
+    file: Express.Multer.File | undefined,
+    kind: EmailAssetKind,
+  ) {
+    if (!file) throw new BadRequestException('No file was uploaded');
+    const campaign = await this.findOrThrow(id);
+    this.assertDraft(campaign.status);
+    const checked = validateEmailAsset(file, kind);
+
+    const existing = await this.prisma.emailCampaignAsset.findMany({
+      where: { campaignId: id, kind },
+      select: { size: true },
+    });
+    if (kind === EmailAssetKind.ATTACHMENT) {
+      if (existing.length >= EMAIL_ASSET_LIMITS.maxAttachments) {
+        throw new BadRequestException(
+          `You can attach at most ${EMAIL_ASSET_LIMITS.maxAttachments} files`,
+        );
+      }
+      const total = existing.reduce((sum, a) => sum + a.size, 0) + checked.size;
+      if (total > EMAIL_ASSET_LIMITS.maxAttachmentTotalBytes) {
+        throw new BadRequestException(
+          'Attachments can be at most 10 MB in total',
+        );
+      }
+    } else if (existing.length >= EMAIL_ASSET_LIMITS.maxInlineImages) {
+      throw new BadRequestException(
+        `You can add at most ${EMAIL_ASSET_LIMITS.maxInlineImages} images`,
+      );
+    }
+
+    let uploaded: Awaited<ReturnType<UploadService['uploadEmailAsset']>>;
+    try {
+      uploaded = await this.uploadService.uploadEmailAsset(file.buffer, {
+        image: checked.isImage,
+        filename: checked.filename,
+      });
+    } catch (err) {
+      const message =
+        (err as { message?: string } | undefined)?.message ?? String(err);
+      this.logger.error(`Email asset upload failed: ${message}`);
+      throw new BadGatewayException(
+        'The file could not be stored. Check the Cloudinary settings (CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET).',
+      );
+    }
+    try {
+      const asset = await this.prisma.emailCampaignAsset.create({
+        data: {
+          campaignId: id,
+          kind,
+          filename: checked.filename,
+          mimeType: checked.mimeType,
+          size: checked.size,
+          url: uploaded.url,
+          publicId: uploaded.publicId,
+          resourceType: uploaded.resourceType,
+          createdById: adminId,
+        },
+      });
+      await this.prisma.auditLog.create({
+        data: {
+          adminId,
+          action: 'ADD_EMAIL_ASSET',
+          metadata: { campaignId: id, assetId: asset.id, kind },
+        },
+      });
+      return asset;
+    } catch (err) {
+      // Don't leave an orphaned file in storage if the record could not be saved.
+      await this.uploadService.deleteEmailAsset(
+        uploaded.publicId,
+        uploaded.resourceType,
+      );
+      throw err;
+    }
+  }
+
+  async removeAsset(id: string, assetId: string, adminId: string) {
+    const campaign = await this.findOrThrow(id);
+    this.assertDraft(campaign.status);
+    const asset = await this.prisma.emailCampaignAsset.findFirst({
+      where: { id: assetId, campaignId: id },
+    });
+    if (!asset) throw new NotFoundException('Attachment not found');
+    await this.prisma.emailCampaignAsset.delete({ where: { id: assetId } });
+    await this.uploadService.deleteEmailAsset(
+      asset.publicId,
+      asset.resourceType === 'image' ? 'image' : 'raw',
+    );
+    await this.prisma.auditLog.create({
+      data: {
+        adminId,
+        action: 'REMOVE_EMAIL_ASSET',
+        metadata: { campaignId: id, assetId, kind: asset.kind },
+      },
+    });
+    return { removed: true };
+  }
+
+  /**
+   * Downloads the campaign's attachments once, so every recipient reuses the
+   * same buffers. Throws if any file is missing, too big or unreachable, so a
+   * campaign never goes out without the files the admin attached.
+   */
+  private async loadAttachments(
+    campaignId: string,
+  ): Promise<LoadedAttachment[]> {
+    const assets = await this.prisma.emailCampaignAsset.findMany({
+      where: { campaignId, kind: EmailAssetKind.ATTACHMENT },
+      orderBy: { createdAt: 'asc' },
+    });
+    return Promise.all(
+      assets.map(async (asset) => {
+        const res = await fetch(asset.url, {
+          signal: AbortSignal.timeout(ATTACHMENT_FETCH_TIMEOUT_MS),
+        });
+        if (!res.ok) {
+          throw new Error(
+            `Attachment "${asset.filename}" could not be fetched (${res.status})`,
+          );
+        }
+        const content = Buffer.from(await res.arrayBuffer());
+        if (content.length > EMAIL_ASSET_LIMITS.maxFileBytes) {
+          throw new Error(`Attachment "${asset.filename}" is too large`);
+        }
+        return {
+          filename: asset.filename,
+          content,
+          contentType: asset.mimeType,
+        };
+      }),
+    );
+  }
+
   // ---- rendering ------------------------------------------------------
 
   private render(
@@ -250,7 +428,20 @@ export class EmailCampaignService implements OnApplicationBootstrap {
       logoUrl: this.appConfig.logoUrl,
       headerUrl: this.appConfig.emailHeaderUrl,
       supportEmail: this.mailService.supportEmail(),
+      imageHosts: this.imageHosts(),
     });
+  }
+
+  private imageHosts() {
+    const hosts = [...DEFAULT_IMAGE_HOSTS];
+    try {
+      if (this.appConfig.emailHeaderUrl) {
+        hosts.push(new URL(this.appConfig.emailHeaderUrl).hostname);
+      }
+    } catch {
+      // ignore a malformed header url
+    }
+    return hosts;
   }
 
   /** Renders unsaved content with sample values, for the composer's live preview. */
@@ -295,6 +486,15 @@ export class EmailCampaignService implements OnApplicationBootstrap {
       reference: 'SAMPLEREF-ABC123',
     });
 
+    let attachments: LoadedAttachment[];
+    try {
+      attachments = await this.loadAttachments(id);
+    } catch (err) {
+      throw new BadRequestException(
+        err instanceof Error ? err.message : 'Attachments could not be loaded',
+      );
+    }
+
     const sent: string[] = [];
     const failed: { email: string; error: string }[] = [];
     for (const to of recipients) {
@@ -304,6 +504,7 @@ export class EmailCampaignService implements OnApplicationBootstrap {
           subject: `[Test] ${subject}`,
           html,
           text,
+          attachments,
         });
         sent.push(to);
       } catch (err) {
@@ -332,6 +533,14 @@ export class EmailCampaignService implements OnApplicationBootstrap {
     );
     if (recipients.length === 0) {
       throw new BadRequestException('No ticket holders match this audience');
+    }
+    // Fail now, not minutes later, if the attached files cannot be fetched.
+    try {
+      this.preloaded.set(id, await this.loadAttachments(id));
+    } catch (err) {
+      throw new BadRequestException(
+        `Not sent: ${err instanceof Error ? err.message : 'attachments could not be loaded'}`,
+      );
     }
 
     await this.prisma.$transaction([
@@ -406,6 +615,8 @@ export class EmailCampaignService implements OnApplicationBootstrap {
    * is stored per delivery, so a restart resumes where it stopped.
    */
   private async process(id: string) {
+    const attachments = await this.attachmentsForRun(id);
+    if (!attachments) return;
     while (true) {
       const campaign = await this.prisma.emailCampaign.findUnique({
         where: { id },
@@ -442,6 +653,7 @@ export class EmailCampaignService implements OnApplicationBootstrap {
             subject,
             html,
             text,
+            attachments,
           })) as { messageId?: string };
           await this.prisma.emailDelivery.update({
             where: { id: delivery.id },
@@ -484,6 +696,44 @@ export class EmailCampaignService implements OnApplicationBootstrap {
 
       if (rateLimited) await sleep(RATE_LIMIT_PAUSE_MS);
     }
+  }
+
+  /**
+   * Attachments for one send run. If they cannot be fetched after a few tries
+   * the pending deliveries are failed with a clear reason (an admin can retry
+   * them once the file is reachable) instead of sending emails without them.
+   */
+  private async attachmentsForRun(
+    id: string,
+  ): Promise<LoadedAttachment[] | null> {
+    const ready = this.preloaded.get(id);
+    if (ready) {
+      this.preloaded.delete(id);
+      return ready;
+    }
+    let lastError = '';
+    for (let attempt = 1; attempt <= ATTACHMENT_FETCH_TRIES; attempt++) {
+      try {
+        return await this.loadAttachments(id);
+      } catch (err) {
+        lastError = err instanceof Error ? err.message : String(err);
+        this.logger.warn(
+          `Campaign ${id}: attachments not ready (try ${attempt}/${ATTACHMENT_FETCH_TRIES}): ${lastError}`,
+        );
+        if (attempt < ATTACHMENT_FETCH_TRIES) {
+          await sleep(this.attachmentRetryDelayMs);
+        }
+      }
+    }
+    await this.prisma.emailDelivery.updateMany({
+      where: { campaignId: id, status: EmailSendStatus.PENDING },
+      data: {
+        status: EmailSendStatus.FAILED,
+        error: `Not sent: ${lastError}`.slice(0, 500),
+      },
+    });
+    await this.finish(id);
+    return null;
   }
 
   private async finish(id: string) {
