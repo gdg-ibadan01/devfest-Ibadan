@@ -10,10 +10,13 @@ import Ellipsis from '@/app/_module/components/icons/Ellipsis';
 
 interface OrderActionsMenuProps {
   onViewDetails: () => void;
+  /** Shown for unpaid/cancelled orders: confirm a payment the gateway has. */
+  onResolvePayment?: () => void;
 }
 
 export default function OrderActionsMenu({
   onViewDetails,
+  onResolvePayment,
 }: OrderActionsMenuProps) {
   return (
     <DropdownMenu>
@@ -22,13 +25,21 @@ export default function OrderActionsMenu({
           <Ellipsis />
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-36">
+      <DropdownMenuContent align="end" className="w-44">
         <DropdownMenuItem
           onClick={onViewDetails}
           className="text-[13px] cursor-pointer"
         >
           View Details
         </DropdownMenuItem>
+        {onResolvePayment && (
+          <DropdownMenuItem
+            onClick={onResolvePayment}
+            className="text-[13px] cursor-pointer font-medium text-[#1B873B]"
+          >
+            Resolve payment
+          </DropdownMenuItem>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );

@@ -21,6 +21,8 @@ import {
 } from './alatpay.mapper';
 
 const REQUEST_TIMEOUT_MS = 15_000;
+const LIST_PAGE_SIZE = 100;
+const LIST_MAX_PAGES = 5;
 
 @Injectable()
 export class AlatpayService implements PaymentProvider {
@@ -149,7 +151,8 @@ export class AlatpayService implements PaymentProvider {
     const res = await this.get(url);
 
     if (getCI(res.data, ['status']) === false) {
-      const message = String(getCI(res.data, ['message']) ?? 'not found');
+      const raw = getCI(res.data, ['message']);
+      const message = typeof raw === 'string' ? raw : 'not found';
       throw new GatewayRequestError(
         `ALATPay requery rejected ${transactionId}: ${message}`,
         false,
@@ -162,40 +165,49 @@ export class AlatpayService implements PaymentProvider {
     return tx;
   }
 
-  /** Completed transactions in a time window (used by reconciliation). */
+  /**
+   * Completed transactions in a time window (used by reconciliation and by
+   * order lookups without a transaction id).
+   *
+   * We don't send `status=completed`: ALATPay labels settled payments
+   * "Success" (bank transfers included), so a status filter on their side can
+   * drop exactly the payments we need. Status is mapped and filtered here.
+   * Pages are walked so a busy window isn't cut off at the first page.
+   */
   async listTransactions(
     startAt: Date,
     endAt: Date,
   ): Promise<NormalizedTransaction[]> {
     this.assertConfigured();
-    const query = new URLSearchParams({
-      businessId: this.requireConfig('businessId'),
-      status: 'completed',
-      page: '1',
-      limit: '100',
-      startAt: startAt.toISOString(),
-      endAt: endAt.toISOString(),
-    });
-    const res = await this.get(
-      `${this.cfg.transactionsBaseUrl}?${query.toString()}`,
-    );
-    const rows = unwrapList(res.data);
-    const data = getCI(res.data, ['data']);
-    if (
-      rows.length === 0 &&
-      data &&
-      typeof data === 'object' &&
-      !Array.isArray(data)
-    ) {
-      // The docs sample shows `data` as a single object. If the live API does
-      // the same, reconciliation silently finds nothing, so make it visible.
-      this.logger.warn(
-        'ALATPay transactions list returned an object, not an array; nothing reconciled',
+    const all: NormalizedTransaction[] = [];
+    for (let page = 1; page <= LIST_MAX_PAGES; page++) {
+      const query = new URLSearchParams({
+        businessId: this.requireConfig('businessId'),
+        page: String(page),
+        limit: String(LIST_PAGE_SIZE),
+        startAt: startAt.toISOString(),
+        endAt: endAt.toISOString(),
+      });
+      const res = await this.get(
+        `${this.cfg.transactionsBaseUrl}?${query.toString()}`,
       );
+      const rows = unwrapList(res.data);
+      if (page === 1 && rows.length === 0) {
+        const keys =
+          res.data && typeof res.data === 'object' ? Object.keys(res.data) : [];
+        const message = getCI(res.data, ['message']);
+        this.logger.warn(
+          `ALATPay transactions list returned no rows (keys: ${keys.join(',') || typeof res.data}; message: ${typeof message === 'string' ? message : '-'})`,
+        );
+      }
+      all.push(
+        ...rows
+          .map((row) => normalizeAlatpayTransaction(row))
+          .filter((tx) => tx.transactionRef),
+      );
+      if (rows.length < LIST_PAGE_SIZE) break;
     }
-    return rows
-      .map((row) => normalizeAlatpayTransaction(row))
-      .filter((tx) => tx.transactionRef);
+    return all.filter((tx) => tx.status === 'COMPLETED');
   }
 
   /**
@@ -222,8 +234,7 @@ export class AlatpayService implements PaymentProvider {
     const data = getCI(body, ['data']);
     return {
       host: new URL(this.cfg.transactionsBaseUrl).host,
-      envelopeKeys:
-        body && typeof body === 'object' ? Object.keys(body as object) : [],
+      envelopeKeys: body && typeof body === 'object' ? Object.keys(body) : [],
       message: getCI(body, ['message']) ?? null,
       dataShape: Array.isArray(data)
         ? `array(${data.length})`
@@ -255,10 +266,13 @@ export class AlatpayService implements PaymentProvider {
   async findCompletedTransactionRef(
     orderId: string,
     since: Date,
+    reference?: string,
   ): Promise<string | null> {
     const transactions = await this.listTransactions(since, new Date());
     const match = transactions.find(
-      (tx) => tx.orderId === orderId && tx.status === 'COMPLETED',
+      (tx) =>
+        tx.status === 'COMPLETED' &&
+        (tx.orderId === orderId || (!!reference && tx.reference === reference)),
     );
     return match?.transactionRef ?? null;
   }

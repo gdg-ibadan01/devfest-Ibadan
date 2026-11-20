@@ -37,6 +37,7 @@ export default function ReconciliationModal({
 }: ReconciliationModalProps) {
   const [hours, setHours] = useState(6);
   const [reference, setReference] = useState('');
+  const [transactionId, setTransactionId] = useState('');
   const { data, isLoading, isFetching, isError, error, refetch } =
     useReconciliation(hours, open);
   const confirm = useConfirmReconciliation();
@@ -53,7 +54,11 @@ export default function ReconciliationModal({
         onSuccess: (res) => {
           const msg = `${ref}: ${describeOutcome(res.outcome)} — order is ${res.status.replace(/_/g, ' ').toLowerCase()}`;
           if (res.status === 'PAID') showToast.success(msg);
-          else showToast.warning(msg, { duration: 7000 });
+          else
+            showToast.warning(
+              `${msg}. If ALATPay shows it as Success, paste its transaction ID below and confirm.`,
+              { duration: 9000 }
+            );
         },
         onError: (err) =>
           showToast.error(err.message || 'Could not re-check payment'),
@@ -139,6 +144,41 @@ export default function ReconciliationModal({
             </button>
           </form>
         </div>
+
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            const id = transactionId.trim();
+            if (!id) return;
+            confirm.mutate(id, { onSuccess: () => setTransactionId('') });
+          }}
+          className="flex flex-wrap items-center gap-2 border-b border-gray-100 bg-[#F8FAFF] px-6 py-3"
+        >
+          <p className="mr-auto text-[12px] text-gray-600">
+            Paid on ALATPay but not listed? Paste the transaction{' '}
+            <span className="font-semibold">ID</span> from ALATPay&apos;s
+            Transaction Details.
+          </p>
+          <input
+            value={transactionId}
+            onChange={(e) => setTransactionId(e.target.value)}
+            placeholder="e.g. 75e69d88-9701-45a3-825d-…"
+            autoComplete="off"
+            spellCheck={false}
+            className="w-[300px] rounded-md border border-gray-200 px-3 py-1.5 font-mono text-[12px] focus:outline-none focus:ring-2 focus:ring-black/10"
+          />
+          <button
+            type="submit"
+            disabled={!transactionId.trim() || confirm.isPending}
+            className="inline-flex items-center gap-1.5 rounded-md bg-[#34A853] px-3 py-1.5 text-[12px] font-semibold text-white disabled:opacity-50"
+          >
+            {confirm.isPending &&
+              confirm.variables === transactionId.trim() && (
+                <Loader2 size={12} className="animate-spin" />
+              )}
+            Confirm payment
+          </button>
+        </form>
 
         <div className="flex-1 overflow-auto px-6 py-4">
           {isLoading ? (

@@ -109,6 +109,7 @@ export class PaymentConfirmationService {
         id: true,
         status: true,
         paymentProvider: true,
+        providerTransactionRef: true,
         createdAt: true,
       },
     });
@@ -123,26 +124,78 @@ export class PaymentConfirmationService {
     }
 
     const provider = this.payments.for(order.paymentProvider).name;
-    const ref =
-      transactionRef ??
-      (provider === 'ALATPAY'
-        ? await this.alatpay.findCompletedTransactionRef(
-            order.id,
-            new Date(order.createdAt.getTime() - LOOKUP_SLACK_MS),
-          )
-        : null);
-    if (!ref) {
+
+    // Bank transfers: the popup reports "pending" with the gateway's
+    // transaction id before the money lands. Keep that id on the order so it
+    // can be re-checked by id later (sweeper, admin "Resolve payment") — the
+    // id is only ever a lookup hint; confirm() re-verifies it belongs to this
+    // order before anything is marked paid.
+    if (
+      transactionRef &&
+      provider === 'ALATPAY' &&
+      !order.providerTransactionRef
+    ) {
+      await this.prisma.order
+        .updateMany({
+          where: {
+            id: order.id,
+            status: OrderStatus.AWAITING_PAYMENT,
+            providerTransactionRef: null,
+          },
+          data: { providerTransactionRef: transactionRef },
+        })
+        .catch((e: Error) =>
+          this.logger.warn(
+            `Could not record transaction id for ${reference}: ${e.message}`,
+          ),
+        );
+    }
+
+    const knownRef = transactionRef ?? order.providerTransactionRef;
+    let result: ConfirmResult | null = null;
+    if (knownRef) {
+      try {
+        result = await this.confirm({
+          provider,
+          transactionRef: knownRef,
+          source,
+          expectedReference: reference,
+        });
+      } catch (err) {
+        // An explicitly supplied id that fails is the caller's answer;
+        // a stored hint that fails falls through to the order lookup below.
+        const transient = err instanceof GatewayRequestError && err.retryable;
+        if (transactionRef || transient) throw err;
+        this.logger.warn(
+          `Stored transaction id for ${reference} could not be confirmed: ${(err as Error).message}`,
+        );
+      }
+    }
+
+    const confirmedOrDone =
+      result &&
+      (result.outcome === 'PROCESSED' || result.outcome === 'DUPLICATE');
+    if (!confirmedOrDone && !transactionRef && provider === 'ALATPAY') {
+      const found = await this.alatpay.findCompletedTransactionRef(
+        order.id,
+        new Date(order.createdAt.getTime() - LOOKUP_SLACK_MS),
+        reference,
+      );
+      if (found && found !== knownRef) {
+        result = await this.confirm({
+          provider,
+          transactionRef: found,
+          source,
+          expectedReference: reference,
+        });
+      }
+    }
+
+    if (!result) {
       // Nothing completed on the gateway yet; the webhook or reconciliation
       // will confirm it once it is.
       return { status: order.status, outcome: 'NOT_COMPLETED' };
     }
-
-    const result = await this.confirm({
-      provider,
-      transactionRef: ref,
-      source,
-      expectedReference: reference,
-    });
 
     const fresh = await this.prisma.order.findUnique({
       where: { id: order.id },
@@ -277,7 +330,7 @@ export class PaymentConfirmationService {
           eventType,
           paymentReference: ev.paymentReference,
           transactionReference: ev.transactionReference,
-          payload: (ev.payload ?? {}) as Prisma.InputJsonValue,
+          payload: ev.payload ?? {},
           processed: false,
         },
       });
