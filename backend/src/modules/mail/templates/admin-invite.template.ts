@@ -58,7 +58,7 @@ export function adminInviteTemplate(
               }
 
               <p style="margin-top: 20px;">
-                <a href="https://devfest-ibadan.netlify.app/admin"
+                <a href="https://devfestibadan.com/core"
                   style="background: #007BFF;
                          color: #ffffff;
                          text-decoration: none;
