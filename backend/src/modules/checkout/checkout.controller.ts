@@ -59,7 +59,8 @@ export class CheckoutController {
   @ApiOperation({
     summary: 'Confirm a payment the checkout popup reported as complete',
     description:
-      'Re-queries the gateway the order was created on and, if the transaction is completed and belongs to this order, marks it PAID and issues tickets. Idempotent; the webhook does the same independently.',
+      'Re-queries the gateway the order was created on and, if the transaction is completed and belongs to this order, marks it PAID and issues tickets. Idempotent; the webhook does the same independently. ' +
+      'Call it for pending checkouts too (ALATPay bank transfers report a transaction id before the money lands): the id is recorded on the unpaid order (first one wins, never overwritten) and returned as `transactionRef` in GET /orders, so the order can later be confirmed by id. A recorded id is only a lookup hint — nothing is marked paid until the gateway confirms the transaction belongs to this order.',
   })
   @ApiResponse({ status: HttpStatus.OK, type: VerifyCheckoutResponseDto })
   async verify(@Body() dto: VerifyCheckoutDto) {
@@ -81,7 +82,8 @@ export class CheckoutController {
   @ApiOperation({
     summary: 'Admin: re-check a payment by order reference',
     description:
-      'Use when a customer has paid but the order is still awaiting payment. `transactionRef` is optional for ALATPay (the completed transaction is looked up by order). ' +
+      'Use when a customer has paid but the order is still awaiting payment. Without `transactionRef`, the transaction id recorded on the order (see POST /checkout/verify) is tried first, then — for ALATPay — the completed transaction is looked up by order. ' +
+      'With `transactionRef` (e.g. pasted from the ALATPay dashboard) only that id is checked, and it must belong to this order. Audit-logged as REQUERY_PAYMENT. ' +
       'Requires orders.list or attendees.create (door staff confirming a walk-in payment).',
   })
   @ApiResponse({ status: HttpStatus.OK, type: VerifyCheckoutResponseDto })
@@ -183,7 +185,7 @@ export class CheckoutController {
     summary:
       'Admin: confirm one ALATPay transaction from the reconciliation list',
     description:
-      'Re-verifies the transaction with ALATPay (amount, order token, currency) and runs the normal payment-success path, which issues the ticket. Audit-logged as RECONCILE_PAYMENT.',
+      'Re-verifies the transaction with ALATPay (amount, order token, currency) and runs the normal payment-success path, which issues the ticket. Works for orders in any status, including CANCELLED orders that expired while a bank transfer settled; the order is found from the transaction metadata. Audit-logged as RECONCILE_PAYMENT.',
   })
   @ApiResponse({ status: HttpStatus.OK, type: ReconcileConfirmResponseDto })
   async confirmReconciliation(
@@ -237,6 +239,8 @@ export class CheckoutController {
         return new HttpException(error.message, HttpStatus.BAD_REQUEST);
       case OrdersService.ERRORS.PaymentErr:
         return new HttpException(error.message, HttpStatus.BAD_GATEWAY);
+      case AlatpayService.ERRORS.ConfigErr:
+        return new HttpException(error.message, HttpStatus.SERVICE_UNAVAILABLE);
       default:
         this.logger.error(`Checkout error: ${error.message}`, error.stack);
         return new HttpException(

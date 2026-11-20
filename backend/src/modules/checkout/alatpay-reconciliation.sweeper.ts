@@ -11,6 +11,9 @@ import { PaymentConfirmationService } from './payment-confirmation.service';
 
 const SWEEP_INTERVAL_MS = 5 * 60 * 1000;
 const LOOKBACK_MS = 2 * 60 * 60 * 1000;
+/** Bank transfers can settle late; look back a day for orders with an id. */
+const ID_LOOKBACK_MS = 24 * 60 * 60 * 1000;
+const ID_BATCH = 50;
 
 /**
  * Safety net for lost ALATPay callbacks (retries are not documented): every
@@ -51,6 +54,7 @@ export class AlatpayReconciliationSweeper
     if (this.running) return;
     this.running = true;
     try {
+      await this.confirmByRecordedIds();
       const since = new Date(Date.now() - LOOKBACK_MS);
       const pending = await this.prisma.order.findMany({
         where: {
@@ -104,5 +108,50 @@ export class AlatpayReconciliationSweeper
     } finally {
       this.running = false;
     }
+  }
+
+  /**
+   * Orders whose checkout reported a transaction id (bank transfers report
+   * one while still pending) are re-checked by that id. This needs only the
+   * per-transaction requery, so it works even when ALATPay's list endpoint
+   * returns nothing. Covers orders that expired while the transfer settled.
+   */
+  async confirmByRecordedIds(): Promise<number> {
+    const since = new Date(Date.now() - ID_LOOKBACK_MS);
+    const orders = await this.prisma.order.findMany({
+      where: {
+        paymentProvider: 'ALATPAY',
+        status: { in: [OrderStatus.AWAITING_PAYMENT, OrderStatus.CANCELLED] },
+        createdAt: { gte: since },
+        amount: { gt: 0 },
+        providerTransactionRef: { not: null },
+      },
+      select: { reference: true, providerTransactionRef: true },
+      orderBy: { createdAt: 'desc' },
+      take: ID_BATCH,
+    });
+
+    let confirmed = 0;
+    for (const order of orders) {
+      try {
+        const result = await this.confirmation.confirm({
+          provider: 'ALATPAY',
+          transactionRef: order.providerTransactionRef!,
+          source: 'SWEEPER',
+          expectedReference: order.reference,
+        });
+        if (result.outcome === 'PROCESSED') confirmed++;
+      } catch (err) {
+        this.logger.warn(
+          `Requery of ${order.reference} by transaction id failed: ${(err as Error).message}`,
+        );
+      }
+    }
+    if (confirmed > 0) {
+      this.logger.log(
+        `Confirmed ${confirmed} ALATPay payment(s) by recorded transaction id`,
+      );
+    }
+    return confirmed;
   }
 }

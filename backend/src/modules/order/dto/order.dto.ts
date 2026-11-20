@@ -334,6 +334,27 @@ export class OrderListItemDto {
   @ApiProperty()
   id: string;
 
+  @ApiProperty({
+    description: 'Full order reference (the payment reference on the gateway)',
+    example: 'DevFestIbadan2026-CA4TME',
+  })
+  reference: string;
+
+  @ApiProperty({
+    enum: ['ALATPAY', 'MONNIFY'],
+    description: 'Gateway the order was created on',
+  })
+  paymentProvider: string;
+
+  @ApiProperty({
+    type: String,
+    nullable: true,
+    description:
+      "Gateway transaction id. Set when paid; for unpaid ALATPay bank transfers it is the id the checkout reported (not yet verified). FREE-… for free orders. Null when the gateway hasn't reported one.",
+    example: '75e69d88-9701-45a3-825d-e9f6749b624b',
+  })
+  transactionRef: string | null;
+
   @ApiProperty({ type: Date, format: 'date-time' })
   createdAt: Date;
 

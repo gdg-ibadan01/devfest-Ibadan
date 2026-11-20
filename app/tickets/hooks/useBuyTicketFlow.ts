@@ -168,9 +168,16 @@ export function useBuyTicketFlow({
             refreshOrder
           );
         },
-        onPending: () => {
+        onPending: (transactionRef) => {
           done();
           setView('success');
+          // Bank transfer in flight: hand the gateway's transaction id to the
+          // API so the order can be confirmed by id once the money lands.
+          if (transactionRef) {
+            void confirmPayment(order.reference, transactionRef).finally(
+              refreshOrder
+            );
+          }
         },
         onDismiss: () => {
           done();
