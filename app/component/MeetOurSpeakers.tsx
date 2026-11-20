@@ -1,31 +1,18 @@
 'use client';
 
-import { FC } from 'react';
-import Image from 'next/image';
-import Link from 'next/link';
 import { motion } from 'framer-motion';
+import Link from 'next/link';
+import { FC } from 'react';
 
 import {
   SpeakerItem,
-  defaultSpeakers,
+  speakersData,
 } from '@/app/_module/data/meet-our-speakers.data';
+import { SpeakerCard } from './SpeakerCard';
 
-export type { SpeakerItem };
-
-const colorStyles: Record<SpeakerItem['colorScheme'], string> = {
-  blue: 'bg-[#C3ECF6]',
-  yellow: 'bg-[#FFE7A5]',
-  green: 'bg-[#CCF6C5]',
-  pink: 'bg-[#F8D8D8]',
-};
-
-interface MeetOurSpeakersProps {
+export const MeetOurSpeakers: FC<{
   speakers?: SpeakerItem[];
-}
-
-export const MeetOurSpeakers: FC<MeetOurSpeakersProps> = ({
-  speakers = defaultSpeakers,
-}) => {
+}> = ({ speakers = speakersData }) => {
   return (
     <section
       id="speakers"
@@ -71,38 +58,8 @@ export const MeetOurSpeakers: FC<MeetOurSpeakersProps> = ({
 
         {/* Speakers Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch">
-          {speakers.map((speaker, index) => (
-            <motion.div
-              key={speaker.id}
-              initial={{ opacity: 0, y: 22 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.45, delay: index * 0.08 }}
-              className="group border border-black rounded-[22px] overflow-hidden bg-white flex flex-col shadow-xs hover:shadow-md transition-all duration-300 hover:-translate-y-1"
-            >
-              {/* Speaker Photo */}
-              <div className="relative w-full aspect-[4/3] bg-[#222224] border-b border-black overflow-hidden">
-                <Image
-                  src={speaker.image}
-                  alt={speaker.name}
-                  fill
-                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                  className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
-                />
-              </div>
-
-              {/* Speaker Details */}
-              <div
-                className={`${colorStyles[speaker.colorScheme]} p-5 sm:p-6 flex flex-col justify-center flex-1`}
-              >
-                <h3 className="font-semibold text-lg sm:text-xl text-[#060606] font-grotesk tracking-tight leading-snug">
-                  {speaker.name}
-                </h3>
-                <p className="text-xs sm:text-sm text-[#4A4A4A] mt-1.5 font-sans leading-[150%] font-normal">
-                  {speaker.role}
-                </p>
-              </div>
-            </motion.div>
+          {speakers.slice(0, 4).map((speaker, index) => (
+            <SpeakerCard key={speaker.id} speaker={speaker} index={index} />
           ))}
         </div>
       </div>

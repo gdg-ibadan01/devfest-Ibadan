@@ -1,11 +1,11 @@
 import React from 'react';
-import { AgendaItem } from './AgendaData';
+import { AgendaItemLegacy } from './AgendaData';
 
 type Props = {
-  data: AgendaItem[];
+  data: AgendaItemLegacy[];
 };
 
-export default function AgendaTable({ data }: Props) {
+export default function AgendaTable({ data }: Readonly<Props>) {
   if (!data || data.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-10 text-center text-gray-500">
@@ -24,13 +24,19 @@ export default function AgendaTable({ data }: Props) {
               Time
             </th>
             <th className="p-3 text-left border-[2px] border-[#1E1E1E] font-normal text-lg md:text-xl">
-              Felicia<br />Gbàjúmò
+              Felicia
+              <br />
+              Gbàjúmò
             </th>
             <th className="p-3 text-left border-[2px] border-[#1E1E1E] font-normal text-lg md:text-xl">
-              Banquet<br />Àgọ́
+              Banquet
+              <br />
+              Àgọ́
             </th>
             <th className="p-3 text-left border-[2px] border-[#1E1E1E] font-normal text-lg md:text-xl">
-              Functions<br />Ètò
+              Functions
+              <br />
+              Ètò
             </th>
             <th className="p-3 text-left border-[2px] border-[#1E1E1E] font-normal text-lg md:text-xl">
               Duration
@@ -40,7 +46,8 @@ export default function AgendaTable({ data }: Props) {
         <tbody>
           {data.map((item, idx) => {
             const isBanquetEmpty = !item.banquet || item.banquet.trim() === '';
-            const isFunctionsEmpty = !item.functions || item.functions.trim() === '';
+            const isFunctionsEmpty =
+              !item.functions || item.functions.trim() === '';
             const shouldSpan = isBanquetEmpty && isFunctionsEmpty;
 
             return (
@@ -55,7 +62,7 @@ export default function AgendaTable({ data }: Props) {
                   className="p-3 border-[2px] border-[#1E1E1E] font-normal text-sm md:text-base align-top"
                   colSpan={shouldSpan ? 3 : 1}
                   dangerouslySetInnerHTML={{
-                    __html: item.felicia || ''
+                    __html: item.felicia || '',
                   }}
                 />
                 {!shouldSpan && (
@@ -63,16 +70,15 @@ export default function AgendaTable({ data }: Props) {
                     <td
                       className="p-3 border-[2px] border-[#1E1E1E] font-normal text-sm md:text-base align-top"
                       dangerouslySetInnerHTML={{
-                        __html: item.banquet || ''
+                        __html: item.banquet || '',
                       }}
                     />
                     <td
                       className="p-3 border-[2px] border-[#1E1E1E] font-normal text-sm md:text-base align-top"
                       dangerouslySetInnerHTML={{
-                        __html: item.functions || ''
+                        __html: item.functions || '',
                       }}
                     />
-
                   </>
                 )}
                 <td className="p-3 border-[2px] border-[#1E1E1E] whitespace-nowrap font-normal text-sm md:text-base align-top">

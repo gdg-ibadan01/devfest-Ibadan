@@ -12,12 +12,16 @@ const RAW_BASE = (
 const API_BASE = RAW_BASE.endsWith('/api/v1') ? RAW_BASE : `${RAW_BASE}/api/v1`;
 
 /** Build auth headers using the current access token from httpOnly cookie */
-async function buildHeaders(token?: string): Promise<Record<string, string>> {
+async function buildHeaders(
+  token?: string,
+  isFormData = false
+): Promise<Record<string, string>> {
   const cookieStore = await cookies();
   const accessToken = token ?? cookieStore.get('admin_access_token')?.value;
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-  };
+  // For FormData the runtime sets the multipart boundary itself.
+  const headers: Record<string, string> = isFormData
+    ? {}
+    : { 'Content-Type': 'application/json' };
   if (accessToken) headers['Authorization'] = `Bearer ${accessToken}`;
   return headers;
 }
@@ -80,11 +84,17 @@ export async function serverFetch<T = unknown>(
   }
 
   const doRequest = async (tokenOverride?: string) => {
-    const headers = await buildHeaders(tokenOverride);
+    const isFormData = options.body instanceof FormData;
+    const headers = await buildHeaders(tokenOverride, isFormData);
     return fetch(url.toString(), {
       method: options.method ?? 'GET',
       headers,
-      body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
+      body:
+        options.body === undefined
+          ? undefined
+          : isFormData
+            ? (options.body as FormData)
+            : JSON.stringify(options.body),
       cache: 'no-store',
     });
   };

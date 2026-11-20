@@ -2,7 +2,14 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Loader2, Send, Save, Trash2, FlaskConical } from 'lucide-react';
+import {
+  Loader2,
+  Send,
+  Save,
+  Trash2,
+  FlaskConical,
+  ImagePlus,
+} from 'lucide-react';
 import { useDebounce } from '@/hooks/useDebounce';
 import {
   useMe,
@@ -17,8 +24,12 @@ import {
 import { showToast } from '@/app/_module/lib/notify';
 import type {
   CampaignAudience,
+  EmailAssetDto,
   EmailCampaignDto,
 } from '@/app/_module/api/types';
+import CampaignAssets, { ImageStrip } from './CampaignAssets';
+import { useCampaignAssets } from './useCampaignAssets';
+import { IMAGE_ACCEPT, MAX_INLINE_IMAGES } from './assetLimits';
 
 const TOKENS = [
   { token: '{{first_name}}', hint: 'First name' },
@@ -60,6 +71,7 @@ export default function CampaignEditor({
 }) {
   const router = useRouter();
   const bodyRef = useRef<HTMLTextAreaElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
   const [subject, setSubject] = useState(campaign?.subject ?? '');
   const [preheader, setPreheader] = useState(campaign?.preheader ?? '');
@@ -118,6 +130,33 @@ export default function CampaignEditor({
     if (!campaign) router.replace(`/core/emails/${id}`);
   };
 
+  const files = useCampaignAssets(campaign?.assets, saveDraft);
+
+  const imageMarkdown = (asset: EmailAssetDto) =>
+    `![${asset.filename.replace(/\.[^.]+$/, '').replace(/[\[\]()]/g, '')}](${asset.url})`;
+
+  const onPickImages = async (picked: File[]) => {
+    const added = await files.add(picked, 'INLINE_IMAGE');
+    if (added.length) {
+      insertToken(`\n\n${added.map(imageMarkdown).join('\n\n')}\n\n`);
+    }
+  };
+
+  const onRemoveAsset = async (asset: EmailAssetDto) => {
+    try {
+      await files.removeAsset(asset, savedId);
+    } catch {
+      return; // the error toast was already shown
+    }
+    if (asset.kind === 'INLINE_IMAGE') {
+      // Drop the picture from the message too. Save the draft to keep it that way.
+      const escaped = asset.url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      setBody((b) =>
+        b.replace(new RegExp(`!\\[[^\\]]*\\]\\(${escaped}\\)\\n*`, 'g'), '')
+      );
+    }
+  };
+
   // Remember who you tested with; default to your own address the first time.
   useEffect(() => {
     let saved = '';
@@ -156,7 +195,11 @@ export default function CampaignEditor({
     }
     if (
       !window.confirm(
-        `Send "${subject.trim()}" to ${count.toLocaleString()} ticket holder${count === 1 ? '' : 's'}?\n\nThis cannot be undone. Tip: send yourself a test first.`
+        `Send "${subject.trim()}" to ${count.toLocaleString()} ticket holder${count === 1 ? '' : 's'}?${
+          files.attachments.length
+            ? `\n\nAttached: ${files.attachments.map((a) => a.filename).join(', ')}`
+            : ''
+        }\n\nThis cannot be undone. Tip: send yourself a test first.`
       )
     ) {
       return;
@@ -237,6 +280,33 @@ export default function CampaignEditor({
                 {token}
               </button>
             ))}
+            <button
+              type="button"
+              title="Add a picture to the message"
+              disabled={
+                busy || files.uploading || files.images.length >= MAX_INLINE_IMAGES
+              }
+              onClick={() => imageInputRef.current?.click()}
+              className="inline-flex items-center gap-[6px] rounded-md border border-gray-300 px-[8px] py-[4px] text-[12px] hover:bg-gray-50 disabled:opacity-50"
+            >
+              {files.uploading ? (
+                <Loader2 size={12} className="animate-spin" />
+              ) : (
+                <ImagePlus size={12} />
+              )}
+              Insert image
+            </button>
+            <input
+              ref={imageInputRef}
+              type="file"
+              hidden
+              multiple
+              accept={IMAGE_ACCEPT}
+              onChange={(e) => {
+                void onPickImages(Array.from(e.target.files ?? []));
+                e.target.value = '';
+              }}
+            />
           </div>
           <textarea
             id="email-body"
@@ -251,9 +321,25 @@ export default function CampaignEditor({
             <code>*italic*</code>, <code>- bullet</code>,{' '}
             <code>[link text](https://…)</code>. Use{' '}
             <code>[Download your ticket]({'{{ticket_link}}'})</code> for the
-            person&apos;s own ticket link.
+            person&apos;s own ticket link. Use <code>Insert image</code> for
+            pictures (PNG, JPG, GIF, WebP; 4 MB each).
           </p>
+          <ImageStrip
+            images={files.images}
+            removing={files.removing}
+            onInsert={(img) => insertToken(`\n\n${imageMarkdown(img)}\n\n`)}
+            onRemove={onRemoveAsset}
+          />
         </div>
+
+        <CampaignAssets
+          attachments={files.attachments}
+          uploading={files.uploading}
+          removing={files.removing}
+          disabled={busy}
+          onAdd={(picked) => void files.add(picked, 'ATTACHMENT')}
+          onRemove={onRemoveAsset}
+        />
 
         <fieldset className="rounded-xl border border-gray-200 p-[16px]">
           <legend className="px-[6px] text-[13px] font-medium">

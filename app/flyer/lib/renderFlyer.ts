@@ -417,6 +417,16 @@ function roundedRect(
   ctx.closePath();
 }
 
+/** Flyer-only order: ALATPay sits right next to Google; everyone else keeps the site order. */
+function orderForFlyer<T extends { name: string }>(list: T[]): T[] {
+  const rest = list.filter((sp) => sp.name !== 'Alatpay');
+  const alat = list.find((sp) => sp.name === 'Alatpay');
+  if (!alat) return list;
+  const g = rest.findIndex((sp) => sp.name === 'Google');
+  rest.splice(g < 0 ? 0 : g + 1, 0, alat);
+  return rest;
+}
+
 async function drawSponsors(ctx: Ctx) {
   const boxX = 110;
   const boxW = FLYER_WIDTH - boxX * 2;
@@ -448,21 +458,31 @@ async function drawSponsors(ctx: Ctx) {
 
   const logos = (
     await Promise.all(
-      SPONSORS_2026.map((sp) => loadTrimmedLogo(`/sponsors/${sp.logo}`))
+      orderForFlyer(SPONSORS_2026).map((sp) =>
+        loadTrimmedLogo(`/sponsors/${sp.logo}`)
+      )
     )
   ).filter((c): c is HTMLCanvasElement => c !== null);
   if (!logos.length) return;
 
-  // Every logo gets the same height; one shared scale keeps them equal if the row is too wide.
-  const targetH = 38;
-  const gap = 44;
-  const widths = logos.map((c) => (c.width / c.height) * targetH);
-  const total = widths.reduce((a, b) => a + b, 0) + gap * (logos.length - 1);
+  // Size logos by visual weight, not equal height: wide wordmarks stay slim while tall or
+  // square marks (e.g. ALATPay, Kakanfo) get more height so they read as clearly as the rest.
+  const area = 3800;
+  const minH = 26;
+  const maxH = 58;
+  const gap = 30;
+  const sizes = logos.map((c) => {
+    const ratio = c.width / c.height;
+    const h = Math.min(maxH, Math.max(minH, Math.sqrt(area / ratio)));
+    return { w: ratio * h, h };
+  });
+  const total = sizes.reduce((a, s) => a + s.w, 0) + gap * (logos.length - 1);
+  // One shared scale keeps the proportions if the row is too wide for the pill.
   const scale = Math.min(1, (boxW - 60) / total);
-  const h = targetH * scale;
   let cursor = FLYER_WIDTH / 2 - (total * scale) / 2;
   logos.forEach((c, i) => {
-    const w = widths[i] * scale;
+    const w = sizes[i].w * scale;
+    const h = sizes[i].h * scale;
     ctx.drawImage(c, cursor, boxY + boxH / 2 - h / 2, w, h);
     cursor += w + gap * scale;
   });
