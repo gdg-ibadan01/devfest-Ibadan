@@ -20,6 +20,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/attendees/check-in/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Check-in statistics for an event day
+         * @description Expected vs checked-in counts for one day (default: today in the venue timezone), broken down by ticket and by hour. Requires any of: attendees.check_in, attendees.list, dashboard.view.
+         */
+        get: operations["AttendeeController_checkInStats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/attendees/checked-in": {
         parameters: {
             query?: never;
@@ -29,7 +49,7 @@ export interface paths {
         };
         /**
          * List checked-in attendees
-         * @description Cursor-paginated list of checked-in attendees. By default returns earlier-created attendees first.
+         * @description Cursor-paginated list of attendees checked in on any of `eventDates` (venue timezone). By default returns earlier-created attendees first. Requires any of: attendees.list, attendees.check_in.
          */
         get: operations["AttendeeController_checkedIn"];
         put?: never;
@@ -53,8 +73,51 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /** Check in an attendee */
+        /**
+         * Check in an attendee
+         * @description Idempotent per day: checking in an attendee who already checked in today returns 200 with `alreadyCheckedIn: true` and does not add another entry. "Today" is the calendar day in the venue timezone (EVENT_TIMEZONE, default Africa/Lagos).
+         */
         patch: operations["AttendeeController_checkIn"];
+        trace?: never;
+    };
+    "/api/v1/attendees/check-in/scan": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Check in from a scanned ticket QR or typed ticket code
+         * @description Accepts the content of the QR printed on every ticket (the signed ticket download URL, or just its token) and verifies the signature, so tickets emailed before this endpoint existed work. Also accepts the 6-character ticket code or full reference. Same response and per-day idempotency as PATCH /attendees/check-in.
+         */
+        post: operations["AttendeeController_scan"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/attendees/check-in/undo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Undo today's check-in
+         * @description Removes the check-in(s) recorded today (venue timezone) for the order and writes an UNDO_CHECK_IN audit log entry. Check-ins on other days are kept.
+         */
+        post: operations["AttendeeController_undo"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/admin/login": {
@@ -132,7 +195,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get the authenticated admin profile */
+        /**
+         * Get the authenticated admin profile
+         * @description Available to every signed-in admin regardless of role. Returns the role with its permission IDs so the dashboard can decide which modules to show.
+         */
         get: operations["AdminController_getProfile"];
         put?: never;
         post?: never;
@@ -185,7 +251,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Invite another admin (Super Admin only) */
+        /** Invite another admin (requires admins.invite) */
         post: operations["AdminController_inviteAdmin"];
         delete?: never;
         options?: never;
@@ -206,7 +272,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /** Activate an admin account (Super Admin only) */
+        /** Activate an admin account (requires admins.activate) */
         patch: operations["AdminController_activateAdmin"];
         trace?: never;
     };
@@ -223,7 +289,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /** Deactivate an admin account (Super Admin only) */
+        /** Deactivate an admin account (requires admins.deactivate) */
         patch: operations["AdminController_deactivateAdmin"];
         trace?: never;
     };
@@ -541,7 +607,7 @@ export interface paths {
         };
         /**
          * List orders
-         * @description Cursor-paginated list of orders. By default returns earlier-dated orders first. Optionally filter by creation date with dateFrom and dateTo.
+         * @description Cursor-paginated list of orders. By default returns earlier-dated orders first. Optionally filter by creation date with dateFrom and dateTo. Requires any of: orders.list, attendees.list, attendees.check_in (the Attendees screen, used for check-in, is backed by this endpoint).
          */
         get: operations["OrdersController_findAll"];
         put?: never;
@@ -749,7 +815,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List tickets */
+        /**
+         * List tickets
+         * @description Requires any of: tickets.list, attendees.list, attendees.check_in (check-in staff need the ticket list to filter check-ins).
+         */
         get: operations["TicketsController_findAll"];
         put?: never;
         /** Create a ticket */
@@ -859,10 +928,70 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Admin: re-check a payment by gateway transaction id
-         * @description Use when a customer has paid but the order is still awaiting payment.
+         * Admin: re-check a payment by order reference
+         * @description Use when a customer has paid but the order is still awaiting payment. `transactionRef` is optional for ALATPay (the completed transaction is looked up by order). Requires orders.list or attendees.create (door staff confirming a walk-in payment).
          */
         post: operations["CheckoutController_requery"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/checkout/admin/alatpay-transactions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Admin: recent ALATPay transactions as the gateway reports them
+         * @description Support/diagnostics for "paid but not confirmed": lists transactions since `hours` ago (default 3, max 48) with the order they belong to.
+         */
+        get: operations["CheckoutController_alatpayTransactions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/checkout/admin/reconciliation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Admin: payments completed on ALATPay but not PAID here
+         * @description Lists completed ALATPay transactions in the window whose order is not PAID (any status) or cannot be matched. Confirm each with POST /checkout/admin/reconciliation/confirm.
+         */
+        get: operations["CheckoutController_listReconciliation"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/checkout/admin/reconciliation/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Admin: confirm one ALATPay transaction from the reconciliation list
+         * @description Re-verifies the transaction with ALATPay (amount, order token, currency) and runs the normal payment-success path, which issues the ticket. Audit-logged as RECONCILE_PAYMENT.
+         */
+        post: operations["CheckoutController_confirmReconciliation"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1089,6 +1218,88 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        CheckInStatsTicketDto: {
+            ticketId: string;
+            /** @example Regular */
+            ticketName: string;
+            /**
+             * @description Paid orders for this ticket valid on the day
+             * @example 850
+             */
+            expected: number;
+            /** @example 312 */
+            checkedIn: number;
+            /** @example 538 */
+            remaining: number;
+            /**
+             * @description Percentage, 1 decimal place
+             * @example 36.7
+             */
+            checkInRate: number;
+        };
+        CheckInStatsHourDto: {
+            /**
+             * @description Hour of day (0–23), venue time
+             * @example 9
+             */
+            hour: number;
+            /** @example 140 */
+            count: number;
+        };
+        CheckInStatsStaffDto: {
+            adminId: string;
+            /** @example Ada Lovelace */
+            fullName: string;
+            /**
+             * @description Successful check-ins on the day
+             * @example 120
+             */
+            checkIns: number;
+            /**
+             * @description Scans of tickets that were already checked in
+             * @example 3
+             */
+            duplicateScans: number;
+            /** @example 1 */
+            undos: number;
+            /** Format: date-time */
+            lastActivityAt: string | null;
+        };
+        CheckInStatsResponseDto: {
+            /** @example 2026-11-21 */
+            date: string;
+            /** @example Africa/Lagos */
+            timezone: string;
+            /**
+             * @description Paid orders whose ticket is valid on `date`
+             * @example 1200
+             */
+            expected: number;
+            /**
+             * @description Of those, checked in on `date`
+             * @example 430
+             */
+            checkedIn: number;
+            /** @example 770 */
+            remaining: number;
+            /**
+             * @description Percentage, 1 decimal place
+             * @example 35.8
+             */
+            checkInRate: number;
+            /**
+             * @description Paid orders with at least one check-in on any day
+             * @example 430
+             */
+            totalCheckedInAllDays: number;
+            /** Format: date-time */
+            lastCheckInAt: string | null;
+            byTicket: components["schemas"]["CheckInStatsTicketDto"][];
+            /** @description Check-ins per hour on `date` (only hours with activity) */
+            byHour: components["schemas"]["CheckInStatsHourDto"][];
+            /** @description Check-in activity per staff member on `date`, from the audit log (only check-ins made after audit logging was added are attributed) */
+            byStaff: components["schemas"]["CheckInStatsStaffDto"][];
+        };
         CheckedInListItemDto: {
             id: string;
             /** Format: date-time */
@@ -1136,8 +1347,34 @@ export interface components {
         };
         CheckInResponseDto: {
             orderId: string;
+            /** @description Ticket code (last 6 characters of the reference) */
+            code: string;
+            attendeeFullName: string;
+            attendeeEmail: string;
+            /** @example Regular */
+            ticketName: string;
+            /** @description True when this attendee had already checked in today — the request is a no-op. Show a warning so a shared ticket is caught at the door. */
+            alreadyCheckedIn: boolean;
+            /**
+             * Format: date-time
+             * @description Time of today's check-in (the earlier one if alreadyCheckedIn)
+             */
+            checkedInAt: string;
+            checkIns: string[];
+        };
+        ScanCheckInDto: {
+            /**
+             * @description What the scanner read from the ticket QR (the signed download URL or its token), or a typed ticket code / reference
+             * @example https://api.devfestibadan.com/api/v1/tickets/download?token=…
+             */
+            code: string;
+        };
+        UndoCheckInResponseDto: {
+            orderId: string;
             /** @description Ticket code */
             code: string;
+            attendeeFullName: string;
+            /** @description Check-ins remaining after the undo (other days) */
             checkIns: string[];
         };
         LoginAdminDto: {
@@ -1170,6 +1407,10 @@ export interface components {
              */
             refreshToken: string;
         };
+        RefreshTokenResponseDto: {
+            readonly accessToken: string;
+            readonly refreshToken: string;
+        };
         ForgotPasswordDto: {
             /**
              * @description Registered email address of the admin
@@ -1190,6 +1431,8 @@ export interface components {
             newPassword: string;
         };
         AdminRoleDto: {
+            /** @description Role ID */
+            id?: string;
             /**
              * @description Human-readable role name
              * @example VOLUNTEER
@@ -1204,6 +1447,10 @@ export interface components {
              */
             permissions: ("tickets.create" | "tickets.list" | "tickets.edit" | "tickets.disable" | "attendees.create" | "attendees.check_in" | "attendees.list" | "admins.create" | "admins.list" | "admins.invite" | "admins.update" | "admins.profile" | "admins.deactivate" | "admins.activate" | "roles.create" | "roles.edit" | "roles.assign" | "roles.list" | "roles.deactivate" | "permissions.assign" | "payment_reports.export" | "discounts.create" | "discounts.list" | "discounts.update" | "orders.list" | "audit-logs.view-list" | "audit-logs.view" | "dashboard.view" | "emails.send" | "emails.manage" | "payment_gateway.view" | "payment_gateway.manage")[];
         };
+        AdminInvitedByDto: {
+            id: string;
+            name: string;
+        };
         FindOneAdminResponseDto: {
             id: string;
             fullName: string;
@@ -1211,6 +1458,8 @@ export interface components {
             /** @description Role assigned to this admin, including its permission set. */
             role: components["schemas"]["AdminRoleDto"];
             isActive: boolean;
+            /** @description Admin who sent the invite, if any */
+            invitedBy: components["schemas"]["AdminInvitedByDto"] | null;
             /** Format: date-time */
             createdAt: string;
             /** Format: date-time */
@@ -2246,14 +2495,67 @@ export interface components {
              * @example DevFest-AB12CD
              */
             reference: string;
-            /** @description Gateway transaction id from the popup (ALATPay transactionId / Monnify transactionReference) */
-            transactionRef: string;
+            /** @description Gateway transaction id from the popup (ALATPay transactionId / Monnify transactionReference). Omit when the popup didn't return one (ALATPay card payments): the order's completed transaction is then looked up on the gateway. */
+            transactionRef?: string;
         };
         VerifyCheckoutResponseDto: {
             /** @enum {string} */
             status: "AWAITING_PAYMENT" | "PAID" | "CANCELLED" | "AWAITING_REFUND" | "REFUNDED";
             /** @enum {string} */
             outcome: "PROCESSED" | "DUPLICATE" | "NOT_COMPLETED" | "REJECTED" | "IGNORED" | "ALREADY_FINAL";
+        };
+        ReconciliationOrderDto: {
+            id: string;
+            reference: string;
+            /** @enum {string} */
+            status: "AWAITING_PAYMENT" | "PAID" | "CANCELLED" | "AWAITING_REFUND" | "REFUNDED";
+            attendeeFullName: string;
+            attendeeEmail: string;
+            ticketName: string;
+            /** @example 9500.00 */
+            amount: string;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        ReconciliationItemDto: {
+            /** @description ALATPay transaction id */
+            transactionRef: string;
+            /** @description Amount paid on the gateway, in Naira */
+            amount: number;
+            /** @example NGN */
+            currency: string;
+            paidAt: string | null;
+            /**
+             * @description ORDER_NOT_PAID: gateway says paid, our order is not PAID. ORDER_NOT_FOUND: the transaction carries no order we know.
+             * @enum {string}
+             */
+            issue: "ORDER_NOT_PAID" | "ORDER_NOT_FOUND";
+            order: components["schemas"]["ReconciliationOrderDto"] | null;
+        };
+        ReconciliationResponseDto: {
+            /** Format: date-time */
+            since: string;
+            /** Format: date-time */
+            until: string;
+            /** @enum {string} */
+            gateway: "ALATPAY";
+            /** @description False when ALATPay credentials are missing */
+            configured: boolean;
+            /** @description Completed gateway transactions examined */
+            scanned: number;
+            items: components["schemas"]["ReconciliationItemDto"][];
+        };
+        ReconcileConfirmDto: {
+            /** @description ALATPay transaction id from the list */
+            transactionRef: string;
+        };
+        ReconcileConfirmResponseDto: {
+            /** @enum {string} */
+            outcome: "PROCESSED" | "DUPLICATE" | "NOT_COMPLETED" | "REJECTED" | "IGNORED";
+            reason: string | null;
+            /** @enum {string|null} */
+            orderStatus: "AWAITING_PAYMENT" | "PAID" | "CANCELLED" | "AWAITING_REFUND" | "REFUNDED" | null;
+            reference: string | null;
         };
         CheckoutSessionResponseDto: {
             reference: string;
@@ -2331,6 +2633,38 @@ export interface operations {
             };
         };
     };
+    AttendeeController_checkInStats: {
+        parameters: {
+            query?: {
+                /** @description Event day to report on (YYYY-MM-DD). Defaults to today in the venue timezone. */
+                date?: string;
+                /** @description Limit the stats to one ticket */
+                ticketId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Check-in stats retrieved successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CheckInStatsResponseDto"];
+                };
+            };
+            /** @description Missing permission */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     AttendeeController_checkedIn: {
         parameters: {
             query: {
@@ -2358,7 +2692,7 @@ export interface operations {
                     "application/json": components["schemas"]["CheckedInListResponseDto"];
                 };
             };
-            /** @description Missing attendees.list permission */
+            /** @description Missing attendees.list / attendees.check_in permission */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -2380,7 +2714,7 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Attendee checked in successfully */
+            /** @description Attendee checked in (or was already checked in today) */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -2389,7 +2723,7 @@ export interface operations {
                     "application/json": components["schemas"]["CheckInResponseDto"];
                 };
             };
-            /** @description Ticket not valid for today */
+            /** @description Ticket not valid for today, or order is not paid */
             400: {
                 headers: {
                     [name: string]: unknown;
@@ -2411,6 +2745,89 @@ export interface operations {
                 content?: never;
             };
             /** @description Ticket not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AttendeeController_scan: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ScanCheckInDto"];
+            };
+        };
+        responses: {
+            /** @description Attendee checked in (or was already checked in today) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CheckInResponseDto"];
+                };
+            };
+            /** @description QR signature invalid, ticket not valid today, or order not paid */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description No such ticket */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Typed code matches more than one ticket */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AttendeeController_undo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CheckInOrderDto"];
+            };
+        };
+        responses: {
+            /** @description Check-in removed */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UndoCheckInResponseDto"];
+                };
+            };
+            /** @description Attendee is not checked in today */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description No such ticket */
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -2468,7 +2885,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["RefreshTokenResponseDto"];
+                };
             };
             /** @description Invalid or expired refresh token. */
             401: {
@@ -2659,7 +3078,7 @@ export interface operations {
                     "application/json": components["schemas"]["InviteAdminDto"];
                 };
             };
-            /** @description Only SUPER_ADMIN can invite other admins. */
+            /** @description Missing admins.invite permission. */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -2702,7 +3121,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Only SUPER_ADMIN can activate other admins. */
+            /** @description Missing admins.activate permission. */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -2738,7 +3157,7 @@ export interface operations {
                     "application/json": components["schemas"]["AdminActionResponseDto"];
                 };
             };
-            /** @description Only SUPER_ADMIN can deactivate other admins. */
+            /** @description Missing admins.deactivate permission. */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -2794,7 +3213,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            default: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -3988,6 +4407,71 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["VerifyCheckoutResponseDto"];
+                };
+            };
+        };
+    };
+    CheckoutController_alatpayTransactions: {
+        parameters: {
+            query?: {
+                /** @description Look-back window in hours (1–48, default 3), or `all` for no date filter */
+                hours?: number | "all";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    CheckoutController_listReconciliation: {
+        parameters: {
+            query?: {
+                /** @description Look-back window in hours (1–48) */
+                hours?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReconciliationResponseDto"];
+                };
+            };
+        };
+    };
+    CheckoutController_confirmReconciliation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReconcileConfirmDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReconcileConfirmResponseDto"];
                 };
             };
         };

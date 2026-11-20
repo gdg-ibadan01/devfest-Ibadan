@@ -228,11 +228,14 @@ async function exportPDF(rows: OrderListItemDto[]) {
 
 interface OrdersTableProps {
   onCreateNew: () => void;
+  /** Opens the payment-reconciliation view. */
+  onPaymentIssues?: () => void;
   onViewDetails: (order: OrderListItemDto) => void;
 }
 
 export default function OrdersTable({
   onCreateNew,
+  onPaymentIssues,
   onViewDetails,
 }: OrdersTableProps) {
   const [searchInput, setSearchInput] = useState('');
@@ -435,6 +438,15 @@ export default function OrdersTable({
               className="text-[12px] text-gray-400 hover:text-red-500 transition-colors flex items-center gap-1 whitespace-nowrap"
             >
               <X size={12} /> Clear filters
+            </button>
+          )}
+
+          {onPaymentIssues && (
+            <button
+              onClick={onPaymentIssues}
+              className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-[11px] border border-gray-300 text-gray-800 text-[13px] font-medium rounded-lg hover:bg-gray-50 transition-colors whitespace-nowrap"
+            >
+              Payment issues
             </button>
           )}
 

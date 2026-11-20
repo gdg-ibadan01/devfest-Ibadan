@@ -10,6 +10,7 @@ import {
   RecentAttendeeDto,
 } from './dto/dashboard-response.dto';
 import { OrdersService } from 'src/modules/order/order.service';
+import { EVENT_TIMEZONE, eventToday } from 'src/common/utils/event-date';
 
 const MONTH_LABELS = [
   'Jan',
@@ -57,7 +58,7 @@ export class DashboardService {
    * Uses COALESCE(check_ins, ARRAY[]::timestamp(3)[]) for PostgreSQL null-safety,
    * aligning with the pattern in AttendeeService.checkedIn().
    * - totalCheckedIn: distinct paid attendees who have checked in at least once
-   * - checkedInToday: distinct paid attendees who checked in today
+   * - checkedInToday: distinct paid attendees who checked in today (venue timezone)
    */
   private async getCheckInStats(): Promise<{
     totalCheckedIn: number;
@@ -74,7 +75,7 @@ export class DashboardService {
           WHERE EXISTS (
             SELECT 1
             FROM unnest(COALESCE(o.check_ins, ARRAY[]::timestamp(3)[])) AS ci
-            WHERE ci::date = CURRENT_DATE
+            WHERE ((ci AT TIME ZONE 'UTC') AT TIME ZONE ${EVENT_TIMEZONE})::date = ${eventToday()}::date
           )
         )::bigint AS checked_in_today
       FROM orders o

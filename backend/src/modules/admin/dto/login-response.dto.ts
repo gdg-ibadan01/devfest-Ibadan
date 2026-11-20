@@ -19,3 +19,10 @@ export class LoginResponseDto {
   @ApiResponseProperty()
   refreshToken!: string;
 }
+
+export class RefreshTokenResponseDto {
+  @ApiResponseProperty()
+  accessToken!: string;
+  @ApiResponseProperty()
+  refreshToken!: string;
+}

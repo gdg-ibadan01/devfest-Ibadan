@@ -24,10 +24,12 @@ import { PaymentsService } from './payment.service';
 import * as crypto from 'crypto';
 import { InitiatePaymentDto } from './dto/initiate-payment.dto';
 import { VerifyPaymentDto } from './dto/verify-payment.dto';
-import { RolesGuard } from '../admin/guards/roles.guard';
+// RolesGuard compared `user.role.name`, but the JWT only carries `roleId`,
+// so these routes always returned 403. They now use permissions like the
+// rest of the API.
+import { PermissionsGuard } from '../admin/guards/permissions.guard';
 import { JwtAuthGuard } from '../admin/guards/jwt-auth.guard';
-import { Roles } from '../../common/decorators/roles.decorator';
-import { Role } from '../../common/enums/role.enum';
+import { RequirePermission } from 'src/common/decorators/permissions.decorator';
 
 @ApiTags('payments')
 @Controller('payments')
@@ -73,8 +75,8 @@ export class PaymentsController {
 
   @Get()
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @RequirePermission('orders.list')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
   @ApiOperation({ summary: 'Get all payments' })
   @ApiResponse({ status: 200, description: 'Payments retrieved successfully' })
   async findAll(
@@ -86,8 +88,8 @@ export class PaymentsController {
 
   @Get(':id')
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @RequirePermission('orders.list')
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
   @ApiOperation({ summary: 'Get payment by ID' })
   @ApiResponse({ status: 200, description: 'Payment retrieved successfully' })
   async findOne(@Param('id') id: string) {
