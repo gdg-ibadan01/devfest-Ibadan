@@ -116,12 +116,13 @@ export class OrdersController {
 
   @Get()
   @ApiBearerAuth()
-  @RequirePermission('orders.list')
+  @RequirePermission('orders.list', 'attendees.list', 'attendees.check_in')
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @ApiOperation({
     summary: 'List orders',
     description:
-      'Cursor-paginated list of orders. By default returns earlier-dated orders first. Optionally filter by creation date with dateFrom and dateTo.',
+      'Cursor-paginated list of orders. By default returns earlier-dated orders first. Optionally filter by creation date with dateFrom and dateTo. ' +
+      'Requires any of: orders.list, attendees.list, attendees.check_in (the Attendees screen, used for check-in, is backed by this endpoint).',
   })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -275,8 +276,13 @@ export class OrdersController {
 
       if (err instanceof ServiceError) {
         switch (err.name) {
+          // Discount problems are the admin's input, not a server fault
+          // (previously they fell through to a 500).
           case OrdersService.ERRORS.ValidationErr:
           case OrdersService.ERRORS.NotOnSaleErr:
+          case OrdersService.ERRORS.BulkDiscountRecipientMismatchErr:
+          case OrdersService.ERRORS.InvalidDiscountCodeErr:
+          case OrdersService.ERRORS.TicketDiscountCodeMismatchErr:
             throw new HttpException(err.message, HttpStatus.BAD_REQUEST);
 
           case OrdersService.ERRORS.TicketNotFoundErr:
@@ -287,6 +293,7 @@ export class OrdersController {
 
           case OrdersService.ERRORS.SoldOutErr:
           case OrdersService.ERRORS.RetryLaterErr:
+          case OrdersService.ERRORS.MaxedOutDiscountCodeErr:
             throw new HttpException(err.message, HttpStatus.CONFLICT);
 
           case OrdersService.ERRORS.PaymentErr:

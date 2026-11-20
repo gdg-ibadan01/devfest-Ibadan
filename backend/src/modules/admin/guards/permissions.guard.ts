@@ -18,24 +18,34 @@ export class PermissionsGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const permission = this.reflector.getAllAndOverride<PERMISSION_ID>(
-      PERMISSION_KEY,
-      [context.getHandler(), context.getClass()],
-    );
-    if (!permission) return true;
+    const metadata = this.reflector.getAllAndOverride<
+      PERMISSION_ID | PERMISSION_ID[] | undefined
+    >(PERMISSION_KEY, [context.getHandler(), context.getClass()]);
 
-    const { user } = context.switchToHttp().getRequest<{ user: IJwtPayload }>();
-    const role = await this.prisma.role.findFirstOrThrow({
+    const required = (
+      Array.isArray(metadata) ? metadata : metadata ? [metadata] : []
+    ).filter(Boolean);
+    if (required.length === 0) return true;
+
+    const { user } = context
+      .switchToHttp()
+      .getRequest<{ user?: IJwtPayload }>();
+    if (!user?.roleId) throw this.forbidden();
+
+    const role = await this.prisma.role.findUnique({
       where: { id: user.roleId },
+      select: { permissions: true },
     });
 
-    if (!user || !(role.permissions as PERMISSION_ID[]).includes(permission)) {
-      throw new ForbiddenException({
-        message: 'Forbidden',
-        success: false,
-      });
+    const granted = (role?.permissions ?? []) as PERMISSION_ID[];
+    if (!required.some((permission) => granted.includes(permission))) {
+      throw this.forbidden();
     }
 
     return true;
+  }
+
+  private forbidden() {
+    return new ForbiddenException({ message: 'Forbidden', success: false });
   }
 }

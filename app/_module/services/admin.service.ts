@@ -8,8 +8,10 @@ import type {
   InviteAdminDto,
   AdminActionResponseDto,
   AdminListParams,
+  PermissionId,
 } from '@/app/_module/api/types';
 import { notifyApiError } from '../lib/apiError';
+import { hasAnyPermission } from '../lib/permissions';
 
 //Get current admin (me) 
 
@@ -22,7 +24,23 @@ export function useMe() {
   return useQuery({
     queryKey: queryKeys.me(),
     queryFn: getMe,
+    staleTime: 1000 * 60 * 5,
   });
+}
+
+/**
+ * The signed-in admin's permission IDs (from /admin/me) plus a `can()` helper
+ * — true when the role has ANY of the given permissions.
+ */
+export function useMyPermissions() {
+  const { data: me, isLoading } = useMe();
+  const permissions = (me?.role?.permissions ?? []) as PermissionId[];
+  return {
+    permissions,
+    isLoading,
+    can: (...required: PermissionId[]) =>
+      hasAnyPermission(permissions, required),
+  };
 }
 
 //List all admins 

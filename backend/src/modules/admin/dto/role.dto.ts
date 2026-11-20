@@ -1,4 +1,8 @@
-import { ApiProperty, ApiResponseProperty } from '@nestjs/swagger';
+import {
+  ApiProperty,
+  ApiPropertyOptional,
+  ApiResponseProperty,
+} from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import {
   ArrayUnique,
@@ -134,6 +138,9 @@ export class ListPermissionsResponse {
 }
 
 export class AdminRoleDto {
+  @ApiPropertyOptional({ description: 'Role ID' })
+  id?: string;
+
   @ApiProperty({
     description: 'Human-readable role name',
     example: 'VOLUNTEER',
@@ -205,6 +212,14 @@ export class FindAllAdminsResponseDto {
   meta!: FindAllAdminsMetaDto;
 }
 
+export class AdminInvitedByDto {
+  @ApiProperty()
+  id!: string;
+
+  @ApiProperty()
+  name!: string;
+}
+
 export class FindOneAdminResponseDto {
   @ApiProperty()
   id!: string;
@@ -223,6 +238,13 @@ export class FindOneAdminResponseDto {
 
   @ApiProperty()
   isActive!: boolean;
+
+  @ApiProperty({
+    type: AdminInvitedByDto,
+    nullable: true,
+    description: 'Admin who sent the invite, if any',
+  })
+  invitedBy!: AdminInvitedByDto | null;
 
   @ApiProperty()
   createdAt!: Date;

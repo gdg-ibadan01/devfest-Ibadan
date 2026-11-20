@@ -10,7 +10,12 @@ import {
 import Ellipsis from '@/app/_module/components/icons/Ellipsis';
 
 interface AttendeeActionsMenuProps {
-  onCheckIn: () => void;
+  /** Hidden when omitted (role lacks attendees.check_in). */
+  onCheckIn?: () => void;
+  /** Order isn't PAID — check-in would be rejected by the API. */
+  notPaid?: boolean;
+  /** Shown when the attendee is checked in today. */
+  onUndoCheckIn?: () => void;
   /** Re-send this attendee their ticket email. Hidden when omitted. */
   onResendTicket?: () => void;
   resending?: boolean;
@@ -21,6 +26,8 @@ interface AttendeeActionsMenuProps {
 
 export default function AttendeeActionsMenu({
   onCheckIn,
+  notPaid,
+  onUndoCheckIn,
   onResendTicket,
   resending,
   disabled,
@@ -41,13 +48,34 @@ export default function AttendeeActionsMenu({
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-44">
-        <DropdownMenuItem
-          onClick={onCheckIn}
-          disabled={disabled || loading}
-          className="text-[13px] cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {loading ? 'Checking In…' : disabled ? 'Already Checked In' : 'Check In'}
-        </DropdownMenuItem>
+        {onCheckIn && (
+          <DropdownMenuItem
+            onClick={onCheckIn}
+            disabled={disabled || notPaid || loading}
+            className="text-[13px] cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {loading
+              ? 'Checking In…'
+              : notPaid
+                ? 'Not paid — can’t check in'
+                : disabled
+                  ? 'Already Checked In Today'
+                  : 'Check In'}
+          </DropdownMenuItem>
+        )}
+        {onUndoCheckIn && (
+          <DropdownMenuItem
+            onClick={onUndoCheckIn}
+            className="text-[13px] cursor-pointer text-[#C5221F]"
+          >
+            Undo today&apos;s check-in
+          </DropdownMenuItem>
+        )}
+        {!onCheckIn && !onResendTicket && !onUndoCheckIn && (
+          <DropdownMenuItem disabled className="text-[13px]">
+            No actions available
+          </DropdownMenuItem>
+        )}
         {onResendTicket && (
           <DropdownMenuItem
             onClick={onResendTicket}

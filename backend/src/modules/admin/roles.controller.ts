@@ -74,7 +74,7 @@ export class RolesController {
   @RequirePermission('roles.list')
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @ApiOperation({ summary: 'List roles' })
-  @ApiResponse({ type: ListRolesResponseDto })
+  @ApiOkResponse({ type: ListRolesResponseDto })
   async list() {
     return await this.roleService.list();
   }
