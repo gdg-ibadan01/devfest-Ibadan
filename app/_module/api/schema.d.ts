@@ -909,7 +909,7 @@ export interface paths {
         put?: never;
         /**
          * Confirm a payment the checkout popup reported as complete
-         * @description Re-queries the gateway the order was created on and, if the transaction is completed and belongs to this order, marks it PAID and issues tickets. Idempotent; the webhook does the same independently.
+         * @description Re-queries the gateway the order was created on and, if the transaction is completed and belongs to this order, marks it PAID and issues tickets. Idempotent; the webhook does the same independently. Call it for pending checkouts too (ALATPay bank transfers report a transaction id before the money lands): the id is recorded on the unpaid order (first one wins, never overwritten) and returned as `transactionRef` in GET /orders, so the order can later be confirmed by id. A recorded id is only a lookup hint — nothing is marked paid until the gateway confirms the transaction belongs to this order.
          */
         post: operations["CheckoutController_verify"];
         delete?: never;
@@ -929,7 +929,7 @@ export interface paths {
         put?: never;
         /**
          * Admin: re-check a payment by order reference
-         * @description Use when a customer has paid but the order is still awaiting payment. `transactionRef` is optional for ALATPay (the completed transaction is looked up by order). Requires orders.list or attendees.create (door staff confirming a walk-in payment).
+         * @description Use when a customer has paid but the order is still awaiting payment. Without `transactionRef`, the transaction id recorded on the order (see POST /checkout/verify) is tried first, then — for ALATPay — the completed transaction is looked up by order. With `transactionRef` (e.g. pasted from the ALATPay dashboard) only that id is checked, and it must belong to this order. Audit-logged as REQUERY_PAYMENT. Requires orders.list or attendees.create (door staff confirming a walk-in payment).
          */
         post: operations["CheckoutController_requery"];
         delete?: never;
@@ -989,7 +989,7 @@ export interface paths {
         put?: never;
         /**
          * Admin: confirm one ALATPay transaction from the reconciliation list
-         * @description Re-verifies the transaction with ALATPay (amount, order token, currency) and runs the normal payment-success path, which issues the ticket. Audit-logged as RECONCILE_PAYMENT.
+         * @description Re-verifies the transaction with ALATPay (amount, order token, currency) and runs the normal payment-success path, which issues the ticket. Works for orders in any status, including CANCELLED orders that expired while a bank transfer settled; the order is found from the transaction metadata. Audit-logged as RECONCILE_PAYMENT.
          */
         post: operations["CheckoutController_confirmReconciliation"];
         delete?: never;
@@ -2034,6 +2034,21 @@ export interface components {
         };
         OrderListItemDto: {
             id: string;
+            /**
+             * @description Full order reference (the payment reference on the gateway)
+             * @example DevFestIbadan2026-CA4TME
+             */
+            reference: string;
+            /**
+             * @description Gateway the order was created on
+             * @enum {string}
+             */
+            paymentProvider: "ALATPAY" | "MONNIFY";
+            /**
+             * @description Gateway transaction id. Set when paid; for unpaid ALATPay bank transfers it is the id the checkout reported (not yet verified). FREE-… for free orders. Null when the gateway hasn't reported one.
+             * @example 75e69d88-9701-45a3-825d-e9f6749b624b
+             */
+            transactionRef: string | null;
             /** Format: date-time */
             createdAt: string;
             /** Format: date-time */
@@ -2495,7 +2510,7 @@ export interface components {
              * @example DevFest-AB12CD
              */
             reference: string;
-            /** @description Gateway transaction id from the popup (ALATPay transactionId / Monnify transactionReference). Omit when the popup didn't return one (ALATPay card payments): the order's completed transaction is then looked up on the gateway. */
+            /** @description Gateway transaction id from the popup (ALATPay transactionId / Monnify transactionReference), or from the gateway dashboard. Omit when you don't have one (ALATPay card payments): the id recorded on the order is tried, then the order's completed transaction is looked up on the gateway. On POST /checkout/verify for an unpaid ALATPay order, the first id received is stored on the order. */
             transactionRef?: string;
         };
         VerifyCheckoutResponseDto: {

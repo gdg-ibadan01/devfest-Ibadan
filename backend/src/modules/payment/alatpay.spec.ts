@@ -1,9 +1,11 @@
+import axios from 'axios';
 import * as crypto from 'node:crypto';
 import { AlatpayService } from './alatpay.service';
 import {
   normalizeAlatpayTransaction,
   splitFullName,
   unwrapEnvelope,
+  unwrapList,
 } from './alatpay.mapper';
 
 const cfg = {
@@ -50,7 +52,7 @@ describe('AlatpayService webhook IP allowlist', () => {
     const s = new AlatpayService({
       ...cfg,
       webhookIpAllowlist: ['74.178.162.156'],
-    } as never);
+    });
     expect(s.isAllowedWebhookIp('74.178.162.156')).toBe(true);
     expect(s.isAllowedWebhookIp('::ffff:74.178.162.156')).toBe(true);
     expect(s.isAllowedWebhookIp('10.0.0.1')).toBe(false);
@@ -165,5 +167,65 @@ describe('ALATPay payload mapping', () => {
       firstName: 'Ada',
       lastName: 'Obi',
     });
+  });
+});
+
+describe('ALATPay transaction list (reconciliation)', () => {
+  const row = (id: string, status: string, orderId: string) => ({
+    id,
+    amount: 1000,
+    currency: 'NGN',
+    status,
+    channel: 'Bank Transfer',
+    customer: {
+      transactionId: id,
+      metadata: JSON.stringify({ orderId, reference: `REF-${orderId}` }),
+    },
+  });
+
+  it('finds rows in nested paginated envelopes', () => {
+    const rows = [row('a', 'Success', 'o1')];
+    expect(unwrapList({ data: { result: rows, totalCount: 1 } })).toBe(rows);
+    expect(
+      unwrapList({ status: true, value: { data: { records: rows } } }),
+    ).toBe(rows);
+    expect(unwrapList({ data: { total: 0 } })).toEqual([]);
+  });
+
+  it('treats "Success" (how ALATPay labels bank transfers) as completed', () => {
+    expect(normalizeAlatpayTransaction(row('a', 'Success', 'o1')).status).toBe(
+      'COMPLETED',
+    );
+  });
+
+  it('does not ask ALATPay to filter by status, and matches by reference too', async () => {
+    const svc = new AlatpayService({
+      publicKey: 'pk',
+      secretKey: 'sk',
+      businessId: 'biz',
+      webhookSecret: 'wh',
+      orderTokenSecret: 'wh',
+      transactionsBaseUrl: 'https://alatpay.test/transactions',
+    } as never);
+    const get = jest.spyOn(axios, 'get').mockResolvedValue({
+      status: 200,
+      data: {
+        data: {
+          result: [
+            row('pending', 'Pending', 'o1'),
+            row('paid', 'Success', 'o2'),
+          ],
+        },
+      },
+    });
+
+    const ref = await svc.findCompletedTransactionRef(
+      'unknown-id',
+      new Date(Date.now() - 3_600_000),
+      'REF-o2',
+    );
+    expect(ref).toBe('paid');
+    expect(String(get.mock.calls[0][0])).not.toContain('status=');
+    get.mockRestore();
   });
 });

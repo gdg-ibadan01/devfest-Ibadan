@@ -10,6 +10,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Loader2,
+  Copy,
+  Check,
 } from 'lucide-react';
 import { endOfDay, format, isValid, parseISO, startOfDay } from 'date-fns';
 import { cn } from '@/app/_module/lib/utils';
@@ -69,6 +71,7 @@ const COLUMNS = [
   'Email Address',
   'Ticket',
   'Code',
+  'Transaction ID',
   'Validity',
   'Order Date',
   'Amount',
@@ -179,6 +182,7 @@ function exportRows(rows: OrderListItemDto[]) {
     o.attendeeEmail,
     o.ticket?.name ?? '',
     o.ticket?.code ?? '',
+    o.transactionRef ?? '',
     o.ticket?.validity ?? '',
     formatDateSafe(o.createdAt),
     o.amount,
@@ -210,6 +214,7 @@ async function exportPDF(rows: OrderListItemDto[]) {
         'Email',
         'Ticket',
         'Code',
+        'Transaction ID',
         'Validity',
         'Order Date',
         'Amount',
@@ -224,6 +229,57 @@ async function exportPDF(rows: OrderListItemDto[]) {
   doc.save(`orders-${format(new Date(), 'yyyy-MM-dd')}.pdf`);
 }
 
+/**
+ * Gateway transaction id with one-click copy (for ALATPay/Monnify lookups and
+ * Resolve payment). Unpaid orders show the id the checkout reported, marked
+ * unverified until the gateway confirms it.
+ */
+function TransactionIdCell({
+  value,
+  unverified,
+}: {
+  value: string | null;
+  unverified: boolean;
+}) {
+  const [copied, setCopied] = useState(false);
+  if (!value || value.startsWith('FREE-')) {
+    return (
+      <span className="text-[13px] text-gray-400">{value ? 'Free' : '—'}</span>
+    );
+  }
+  const copy = () => {
+    navigator.clipboard
+      ?.writeText(value)
+      .then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1500);
+      })
+      .catch(() =>
+        showToast.error('Could not copy — select and copy it manually')
+      );
+  };
+  return (
+    <button
+      type="button"
+      onClick={copy}
+      title={`${value}${unverified ? ' (reported by checkout, not yet verified)' : ''} — click to copy`}
+      className="group inline-flex items-center gap-1.5 rounded-md px-1.5 py-0.5 font-mono text-[12px] text-gray-700 hover:bg-gray-100"
+    >
+      <span className="max-w-[120px] truncate">{value}</span>
+      {copied ? (
+        <Check size={13} className="text-[#1B873B]" />
+      ) : (
+        <Copy size={13} className="text-gray-400 group-hover:text-gray-700" />
+      )}
+      {unverified && (
+        <span className="rounded bg-[#FEF3C7] px-1 font-sans text-[10px] text-[#92400E]">
+          unverified
+        </span>
+      )}
+    </button>
+  );
+}
+
 // ── Main Table ────────────────────────────────────────────────────────────────
 
 interface OrdersTableProps {
@@ -231,12 +287,15 @@ interface OrdersTableProps {
   /** Opens the payment-reconciliation view. */
   onPaymentIssues?: () => void;
   onViewDetails: (order: OrderListItemDto) => void;
+  /** "I paid but have no ticket": confirm the payment with the gateway. */
+  onResolvePayment?: (order: OrderListItemDto) => void;
 }
 
 export default function OrdersTable({
   onCreateNew,
   onPaymentIssues,
   onViewDetails,
+  onResolvePayment,
 }: OrdersTableProps) {
   const [searchInput, setSearchInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
@@ -550,6 +609,15 @@ export default function OrdersTable({
                     <td className="px-5 py-4 text-[13px] font-mono text-gray-700 whitespace-nowrap">
                       {order.ticket?.code ?? '—'}
                     </td>
+                    <td
+                      className="px-5 py-4 whitespace-nowrap"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <TransactionIdCell
+                        value={order.transactionRef}
+                        unverified={order.status !== 'PAID'}
+                      />
+                    </td>
                     <td className="px-5 py-4 text-[13px] text-gray-600 whitespace-nowrap">
                       {order.ticket?.validity ?? '—'}
                     </td>
@@ -570,6 +638,13 @@ export default function OrdersTable({
                     >
                       <OrderActionsMenu
                         onViewDetails={() => onViewDetails(order)}
+                        onResolvePayment={
+                          onResolvePayment &&
+                          (order.status === 'AWAITING_PAYMENT' ||
+                            order.status === 'CANCELLED')
+                            ? () => onResolvePayment(order)
+                            : undefined
+                        }
                       />
                     </td>
                   </tr>
@@ -583,8 +658,7 @@ export default function OrdersTable({
         {!isLoading && (cursorStack.length > 0 || meta?.hasMore) && (
           <div className="flex items-center justify-between px-5 py-3 border-t border-gray-100 bg-white">
             <span className="text-[12px] text-gray-400">
-              {orders.length} order{orders.length === 1 ? '' : 's'} on this
-              page
+              {orders.length} order{orders.length === 1 ? '' : 's'} on this page
             </span>
             <div className="flex items-center gap-2">
               <button
