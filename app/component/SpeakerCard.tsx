@@ -2,7 +2,14 @@
 
 import { motion, useReducedMotion } from 'framer-motion';
 import Image from 'next/image';
-import { FC, useId, useState } from 'react';
+import { FC } from 'react';
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import { SpeakerItem } from '../_module/data';
 
 export interface SpeakerCardProps {
@@ -23,8 +30,6 @@ export const SpeakerCard: FC<SpeakerCardProps> = ({
   index = 0,
   className = '',
 }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const detailsId = useId();
   const reduceMotion = useReducedMotion();
   const socialProfiles = [
     { label: 'X', value: speaker.x },
@@ -44,43 +49,22 @@ export const SpeakerCard: FC<SpeakerCardProps> = ({
         duration: reduceMotion ? 0 : 0.45,
         delay: reduceMotion ? 0 : index * 0.08,
       }}
-      onHoverStart={() => setIsExpanded(true)}
-      onHoverEnd={(event) => {
-        if (
-          !(event.currentTarget instanceof HTMLElement) ||
-          !event.currentTarget.contains(document.activeElement)
-        ) {
-          setIsExpanded(false);
-        }
-      }}
-      onBlur={(event) => {
-        if (!event.currentTarget.contains(event.relatedTarget)) {
-          setIsExpanded(false);
-        }
-      }}
-      onKeyDown={(event) => {
-        if (event.key === 'Escape') {
-          // Return focus before hiding a focused social link.
-          event.currentTarget.querySelector('button')?.focus();
-          setIsExpanded(false);
-        }
-      }}
-      className={`group self-start w-full border border-black rounded-[22px] overflow-hidden bg-white flex flex-col shadow-xs hover:shadow-md transition-shadow duration-300 ${className}`.trim()}
+      className={`h-full w-full border border-black rounded-[22px] overflow-hidden bg-white flex flex-col shadow-xs hover:shadow-md transition-shadow duration-300 ${className}`.trim()}
     >
       {/* Speaker Photo */}
-      <div className="relative w-full aspect-[4/3] bg-[#222224] border-b border-black overflow-hidden">
+      <div className="relative w-full aspect-square bg-[#222224] border-b border-black overflow-hidden">
         <Image
           src={speaker.image}
           alt={speaker.name}
           fill
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-          className="object-cover object-center transition-transform duration-500 motion-safe:group-hover:scale-105 motion-reduce:transition-none"
+          className="object-contain"
         />
       </div>
 
       {/* Speaker Details */}
       <div
-        className={`${colorStyles[speaker.colorScheme]} p-5 sm:p-6 flex flex-col justify-center flex-1`}
+        className={`${colorStyles[speaker.colorScheme]} p-5 sm:p-6 flex flex-col flex-1`}
       >
         <h3 className="font-semibold text-lg sm:text-xl text-[#060606] font-grotesk tracking-tight leading-snug">
           {speaker.name}
@@ -89,38 +73,28 @@ export const SpeakerCard: FC<SpeakerCardProps> = ({
           {speaker.role}
         </p>
         {hasDetails && (
-          <>
-            <button
-              type="button"
-              aria-expanded={isExpanded}
-              aria-controls={detailsId}
-              aria-label={`${isExpanded ? 'Hide' : 'Show'} details for ${speaker.name}`}
-              onClick={() => setIsExpanded((expanded) => !expanded)}
-              className="mt-3 flex min-h-11 w-full items-center justify-between gap-3 rounded-md text-left text-sm font-semibold text-[#060606] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-black"
-            >
-              {isExpanded ? 'Hide details' : 'Show details'}
-              <motion.span
-                aria-hidden="true"
-                animate={{ rotate: isExpanded ? 180 : 0 }}
-                transition={{ duration: reduceMotion ? 0 : 0.25 }}
+          <Dialog>
+            <DialogTrigger asChild>
+              <button
+                type="button"
+                aria-label={`View details for ${speaker.name}`}
+                className="mt-auto pt-4 min-h-[44px] self-start rounded-sm text-sm font-semibold text-[#060606] underline underline-offset-4 hover:no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-black"
               >
-                ↓
-              </motion.span>
-            </button>
-            <motion.div
-              id={detailsId}
-              aria-hidden={!isExpanded}
-              initial={false}
-              animate={{
-                height: isExpanded ? 'auto' : 0,
-                opacity: isExpanded ? 1 : 0,
-              }}
-              transition={{
-                duration: reduceMotion ? 0 : 0.3,
-                ease: 'easeInOut',
-              }}
-              className="overflow-hidden"
+                View details
+              </button>
+            </DialogTrigger>
+            <DialogContent
+              data-lenis-prevent
+              className={`bg-white w-[calc(100%-2rem)] max-h-[85dvh] overflow-y-auto rounded-[22px] border-black p-6 motion-reduce:animate-none [&>button]:min-h-[44px] [&>button]:min-w-[44px] [&>button]:focus-visible:outline [&>button]:focus-visible:outline-2 [&>button]:focus-visible:outline-black`}
             >
+              <div className="pr-[44px]">
+                <DialogTitle className="font-grotesk text-2xl leading-snug text-[#060606]">
+                  {speaker.name}
+                </DialogTitle>
+                <DialogDescription className="mt-2 text-[#4A4A4A]">
+                  {speaker.role}
+                </DialogDescription>
+              </div>
               <div className="space-y-4 border-t border-black/15 pt-4 mt-2 text-sm text-[#060606]">
                 {speaker.sessionType && (
                   <div>
@@ -152,14 +126,10 @@ export const SpeakerCard: FC<SpeakerCardProps> = ({
                             href={value!.trim()}
                             target="_blank"
                             rel="noopener noreferrer"
-                            tabIndex={isExpanded ? 0 : -1}
                             aria-label={`${speaker.name} on ${label} (opens in a new tab)`}
                             className="inline-flex min-h-11 items-center rounded-sm font-semibold underline underline-offset-4 hover:no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
                           >
-                            {label}{' '}
-                            <span aria-hidden="true" className="ml-1">
-                              ↗
-                            </span>
+                            {label}
                           </a>
                         ) : (
                           <span className="inline-block py-3">
@@ -172,8 +142,8 @@ export const SpeakerCard: FC<SpeakerCardProps> = ({
                   </ul>
                 )}
               </div>
-            </motion.div>
-          </>
+            </DialogContent>
+          </Dialog>
         )}
       </div>
     </motion.div>

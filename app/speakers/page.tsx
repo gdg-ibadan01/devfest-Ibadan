@@ -25,7 +25,7 @@ export default function Speakers() {
             Ibadan. Explore their sessions and connect with them.
           </p>
         </header>
-        <div className="grid grid-cols-1 items-start gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 items-stretch gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {speakersData.map((speaker, index) => (
             <SpeakerCard key={speaker.id} speaker={speaker} index={index % 4} />
           ))}
