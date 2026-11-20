@@ -252,30 +252,58 @@ model EmailCampaign {
   updatedAt   DateTime            @updatedAt @map("updated_at")
 
   deliveries EmailDelivery[]
+  assets     EmailCampaignAsset[]
 
   @@index([status])
   @@map("email_campaigns")
 }
 
+enum EmailAssetKind {
+  /// Picture shown inside the email body (markdown image).
+  INLINE_IMAGE
+  /// File sent as a real email attachment.
+  ATTACHMENT
+}
+
+/// A file or image an admin added to a draft campaign (stored in Cloudinary).
+model EmailCampaignAsset {
+  id           String         @id @default(uuid(7))
+  campaignId   String         @map("campaign_id")
+  campaign     EmailCampaign  @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  kind         EmailAssetKind
+  filename     String
+  mimeType     String         @map("mime_type")
+  size         Int
+  url          String
+  publicId     String         @map("public_id")
+  /// Cloudinary resource type needed to delete it again ("image" or "raw").
+  resourceType String         @default("raw") @map("resource_type")
+  createdById  String         @map("created_by_id")
+  createdAt    DateTime       @default(now()) @map("created_at")
+
+  @@index([campaignId, kind])
+  @@map("email_campaign_assets")
+}
+
 /// One recipient of a campaign. Unique per campaign + email so a retry can never double-send.
 model EmailDelivery {
-  id         String          @id @default(uuid(7))
-  campaignId String          @map("campaign_id")
-  campaign   EmailCampaign   @relation(fields: [campaignId], references: [id], onDelete: Cascade)
-  orderId    String          @map("order_id")
-  order      Order           @relation(fields: [orderId], references: [id])
-  email      String
-  fullName   String          @map("full_name")
-  status     EmailSendStatus @default(PENDING)
-  error      String?
-  attempts   Int             @default(0)
-  messageId  String?         @map("message_id")
+  id          String           @id @default(uuid(7))
+  campaignId  String           @map("campaign_id")
+  campaign    EmailCampaign    @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  orderId     String           @map("order_id")
+  order       Order            @relation(fields: [orderId], references: [id])
+  email       String
+  fullName    String           @map("full_name")
+  status      EmailSendStatus  @default(PENDING)
+  error       String?
+  attempts    Int              @default(0)
+  messageId   String?          @map("message_id")
   event       EmailEventState? @map("event")
   eventAt     DateTime?        @map("event_at")
   eventDetail String?          @map("event_detail")
-  sentAt     DateTime?       @map("sent_at")
-  createdAt  DateTime        @default(now()) @map("created_at")
-  updatedAt  DateTime        @updatedAt @map("updated_at")
+  sentAt      DateTime?        @map("sent_at")
+  createdAt   DateTime         @default(now()) @map("created_at")
+  updatedAt   DateTime         @updatedAt @map("updated_at")
 
   @@unique([campaignId, email])
   @@index([campaignId, status])

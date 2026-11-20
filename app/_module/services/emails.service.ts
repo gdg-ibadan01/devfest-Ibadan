@@ -5,6 +5,8 @@ import { notifyApiError } from '@/app/_module/lib/apiError';
 import { showToast } from '@/app/_module/lib/notify';
 import type {
   CampaignAudience,
+  EmailAssetDto,
+  EmailAssetKind,
   EmailCampaignDto,
   EmailDeliveriesResponse,
   ResendBulkResult,
@@ -97,6 +99,40 @@ export function useDeleteEmailCampaign() {
       showToast.success('Draft deleted');
     },
     onError: (error: Error) => notifyApiError(error, 'Failed to delete draft'),
+  });
+}
+
+export function useUploadCampaignAsset() {
+  return useMutation({
+    mutationFn: async ({
+      id,
+      file,
+      kind,
+    }: {
+      id: string;
+      file: File;
+      kind: EmailAssetKind;
+    }) => {
+      const form = new FormData();
+      form.append('kind', kind);
+      form.append('file', file);
+      return (
+        await apiClient.post<EmailAssetDto>(
+          `/email-campaigns/${id}/assets`,
+          form,
+          { headers: { 'Content-Type': 'multipart/form-data' }, timeout: 120_000 }
+        )
+      ).data;
+    },
+    onError: (error: Error) => notifyApiError(error, 'Could not upload the file'),
+  });
+}
+
+export function useDeleteCampaignAsset() {
+  return useMutation({
+    mutationFn: async ({ id, assetId }: { id: string; assetId: string }) =>
+      (await apiClient.delete(`/email-campaigns/${id}/assets/${assetId}`)).data,
+    onError: (error: Error) => notifyApiError(error, 'Could not remove the file'),
   });
 }
 

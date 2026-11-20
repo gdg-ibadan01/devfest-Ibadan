@@ -105,6 +105,25 @@ export default function CampaignDetail({
         </p>
       )}
 
+      {campaign.assets?.some((a) => a.kind === 'ATTACHMENT') && (
+        <p className="text-[13px] text-gray-600">
+          <span className="font-medium">Attached to every email:</span>{' '}
+          {campaign.assets
+            .filter((a) => a.kind === 'ATTACHMENT')
+            .map((a) => (
+              <a
+                key={a.id}
+                href={a.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mr-[10px] text-core-blue underline"
+              >
+                {a.filename}
+              </a>
+            ))}
+        </p>
+      )}
+
       <div className="grid grid-cols-2 gap-[12px] md:grid-cols-4">
         <Stat label="Recipients" value={stats.total} />
         <Stat label="Sent" value={stats.sent} />

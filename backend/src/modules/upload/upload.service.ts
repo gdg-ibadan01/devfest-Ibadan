@@ -87,6 +87,56 @@ export class UploadService {
     }
   }
 
+  /**
+   * Stores an admin email asset exactly as uploaded (no resize or re-encode).
+   * Images go up as Cloudinary images, documents as raw files. The caller has
+   * already validated type and size.
+   */
+  async uploadEmailAsset(
+    buffer: Buffer,
+    options: { image: boolean; folder?: string; filename?: string },
+  ): Promise<{ url: string; publicId: string; resourceType: 'image' | 'raw' }> {
+    const resourceType = options.image ? 'image' : 'raw';
+    return new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        {
+          folder: options.folder ?? 'email-assets',
+          resource_type: resourceType,
+          // Keep the real name (and extension) in the URL so downloads open correctly.
+          use_filename: Boolean(options.filename),
+          ...(options.filename && { filename_override: options.filename }),
+          unique_filename: true,
+        },
+        (error: Error | undefined, result: UploadApiResponse | undefined) => {
+          if (error || !result)
+            return reject(error || new Error('Upload failed'));
+          resolve({
+            url: result.secure_url,
+            publicId: result.public_id,
+            resourceType,
+          });
+        },
+      );
+      this.bufferToStream(buffer).pipe(uploadStream);
+    });
+  }
+
+  /** Best-effort removal of an email asset; never throws (a leftover file is harmless). */
+  async deleteEmailAsset(
+    publicId: string,
+    resourceType: 'image' | 'raw',
+  ): Promise<void> {
+    try {
+      await cloudinary.uploader.destroy(publicId, {
+        resource_type: resourceType,
+      });
+    } catch (error) {
+      this.logger.warn(
+        `Could not delete ${resourceType} ${publicId}: ${(error as Error).message}`,
+      );
+    }
+  }
+
   async uploadFile(
     buffer: Buffer<ArrayBuffer>,
   ): Promise<UploadApiResponse | undefined> {
