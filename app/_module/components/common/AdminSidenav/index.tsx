@@ -16,92 +16,33 @@ import Attendees from '../../icons/Attendees';
 import AuditLog from '../../icons/AuditLog';
 import Logout from '../../icons/Logout';
 import { useSidenav } from '@/app/_module/context/SidenavContext';
-import {
-  useMe,
-  useAdminLogout,
-  useRole,
-  useRoles,
-  usePermissions,
-} from '@/app/_module/services';
+import { useMe, useAdminLogout } from '@/app/_module/services';
+import { ADMIN_NAV } from '@/app/_module/config/adminNav';
+import { hasAnyPermission } from '@/app/_module/lib/permissions';
+import type { PermissionId } from '@/app/_module/api/types';
 import AdminOrders from '../../icons/AdminOrders';
 import Checkins from '../../icons/Checkins';
 import Mail from '../../icons/Mail';
 import PaymentGateway from '../../icons/PaymentGateway';
 
-const navItems: {
-  label: string;
-  href: string;
-  icon: typeof Home;
-  /** Terms used to match the API's view permission labels for this module. */
-  moduleTerms?: string[];
-}[] = [
-    {
-      label: 'Home',
-      href: '/core/home',
-      icon: Home,
-      moduleTerms: ['dashboard'],
-    },
-    {
-      label: 'Admins',
-      href: '/core/admins',
-      icon: Admins,
-      moduleTerms: ['admin'],
-    },
-    {
-      label: 'Ticket',
-      href: '/core/ticket',
-      icon: Ticket,
-      moduleTerms: ['ticket'],
-    },
-    {
-      label: 'Orders',
-      href: '/core/orders',
-      icon: AdminOrders,
-      moduleTerms: ['order'],
-    },
-    {
-      label: 'Attendees',
-      href: '/core/attendees',
-      icon: Attendees,
-      moduleTerms: ['attendee'],
-    },
-    {
-      label: 'Checkins',
-      href: '/core/checkins',
-      icon: Checkins,
-      moduleTerms: ['attendee', 'check'],
-    },
-    {
-      label: 'Emails',
-      href: '/core/emails',
-      icon: Mail,
-      moduleTerms: ['email'],
-    },
-    {
-      label: 'Discount & Referral',
-      href: '/core/discount-referral',
-      icon: DiscountReferral,
-      moduleTerms: ['discount'],
-    },
-    {
-      label: 'Payment Gateway',
-      href: '/core/payment-gateway',
-      icon: PaymentGateway,
-      moduleTerms: ['payment gateway'],
-    },
-    {
-      label: 'Roles & Permission',
-      href: '/core/roles-permission',
-      icon: RolesAndPermissions,
-      moduleTerms: ['role', 'permission'],
-    },
-    {
-      label: 'Audit Log',
-      href: '/core/audit-log',
-      icon: AuditLog,
-      moduleTerms: ['audit log', 'audit'],
-    },
-  ];
+const NAV_ICONS: Record<string, typeof Home> = {
+  '/core/home': Home,
+  '/core/admins': Admins,
+  '/core/ticket': Ticket,
+  '/core/orders': AdminOrders,
+  '/core/attendees': Attendees,
+  '/core/checkins': Checkins,
+  '/core/emails': Mail,
+  '/core/discount-referral': DiscountReferral,
+  '/core/payment-gateway': PaymentGateway,
+  '/core/roles-permission': RolesAndPermissions,
+  '/core/audit-log': AuditLog,
+};
+
+const navItems = ADMIN_NAV.map((item) => ({
+  ...item,
+  icon: NAV_ICONS[item.href] ?? Home,
+}));
 
 const isActivePath = (pathname: string, href: string) => {
   if (href === '/core/home') return pathname === '/core' || pathname === href;
@@ -136,91 +77,25 @@ function NavLinksSkeleton() {
   );
 }
 
-function normalizePermissionId(permission: unknown): string | null {
-  if (typeof permission === 'string') return permission;
-  if (permission && typeof permission === 'object' && 'id' in permission) {
-    const id = (permission as { id?: unknown }).id;
-    return typeof id === 'string' ? id : null;
-  }
-  return null;
-}
-
-function isViewPermission(label: string): boolean {
-  return /\bview\b|\blist\b/i.test(label);
-}
-
-function canViewModule(
-  terms: string[] | undefined,
-  rolePermissionIds: Set<string>,
-  allPermissions: { id: string; label: string }[]
-): boolean {
-  if (!terms) return true;
-
-  return allPermissions.some((permission) => {
-    const label = permission.label.toLowerCase();
-    return (
-      rolePermissionIds.has(permission.id) &&
-      isViewPermission(permission.label) &&
-      terms.some((term) => label.includes(term))
-    );
-  });
-}
-
 /* ------------------------------------------------------------------ */
 /* Nav content — shared between desktop sidebar and mobile drawer       */
 /* ------------------------------------------------------------------ */
 function NavContent({ onLinkClick }: { onLinkClick?: () => void }) {
   const pathname = usePathname();
   const { data: me, isLoading: meLoading } = useMe();
-  const { data: rolesData, isLoading: rolesLoading } = useRoles();
-  const { data: allPermissionsData, isLoading: permissionsLoading } =
-    usePermissions();
   const { mutate: logout, isPending: loggingOut } = useAdminLogout();
-
-  const matchedRole = rolesData?.roles.find(
-    (role) => role.name.toLowerCase() === me?.role?.name?.toLowerCase()
-  );
-  const {
-    data: roleDetails,
-    isLoading: roleDetailsLoading,
-    isError: roleDetailsError,
-  } = useRole(matchedRole?.id ?? '');
 
   const fullName = me?.fullName ?? '';
   const roleName = me?.role?.name ?? '';
   const initials = fullName ? getInitials(fullName) : '--';
-  const assignedPermissions =
-    roleDetails?.permissions ??
-    matchedRole?.permissions ??
-    me?.role?.permissions ??
-    [];
-  const rolePermissionIds = new Set(
-    assignedPermissions
-      .map(normalizePermissionId)
-      .filter((id): id is string => Boolean(id))
+  // /admin/me returns the role's permission IDs directly, so the sidebar no
+  // longer needs roles.list (which check-in-only staff don't have).
+  const permissions = (me?.role?.permissions ?? []) as PermissionId[];
+
+  const permissionsLoadingState = meLoading;
+  const visibleItems = navItems.filter((item) =>
+    hasAnyPermission(permissions, item.permissions)
   );
-  const allPermissions = allPermissionsData?.permissions ?? [];
-
-  const meSettled = !meLoading;
-  const rolesSettled = !rolesLoading;
-  const permsListSettled = !permissionsLoading;
-
-  const roleDetailsSettled = matchedRole?.id
-    ? !!roleDetails || roleDetailsError
-    : rolesSettled;
-
-  const permissionsLoadingState = !(
-    meSettled &&
-    rolesSettled &&
-    permsListSettled &&
-    roleDetailsSettled
-  );
-
-  const visibleItems = permissionsLoadingState
-    ? navItems.filter((item) => !item.moduleTerms)
-    : navItems.filter((item) =>
-      canViewModule(item.moduleTerms, rolePermissionIds, allPermissions)
-    );
 
   const handleLogout = () => {
     logout();

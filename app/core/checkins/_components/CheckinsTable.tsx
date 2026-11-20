@@ -15,10 +15,21 @@ import { format, isValid, parseISO } from 'date-fns';
 import { cn } from '@/app/_module/lib/utils';
 import { downloadContactsCsv, zipNotice } from '@/utils/contacts-csv';
 import { showToast } from '@/app/_module/lib/notify';
-import type { CheckedInListItemDto, TicketListItemDto } from '@/app/_module/api/types';
+import type {
+  CheckedInListItemDto,
+  TicketListItemDto,
+} from '@/app/_module/api/types';
 import EmptyState from '@/app/_module/components/common/EmptyState';
 import { useTickets } from '@/app/_module/services/tickets.service';
-import { useCheckedInAttendees } from '@/app/_module/services/attendees.service';
+import {
+  fetchAllCheckedIn,
+  useCheckedInAttendees,
+  useUndoCheckIn,
+} from '@/app/_module/services/attendees.service';
+import { useMyPermissions } from '@/app/_module/services';
+import { isCheckedInToday } from '@/app/_module/lib/eventDate';
+import { downloadNameTags } from '@/utils/name-tags';
+import { notifyApiError } from '@/app/_module/lib/apiError';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -43,13 +54,30 @@ const STATUS_LABELS: Record<string, string> = {
   REFUNDED: 'Refunded',
 };
 
-const STATUS_CONFIG: Record<string, { dot: string; text: string; bg: string }> = {
-  PAID: { dot: 'bg-[#34A853]', text: 'text-[#1B873B]', bg: 'bg-[#E8F5E9]' },
-  AWAITING_PAYMENT: { dot: 'bg-[#F59E0B]', text: 'text-[#92400E]', bg: 'bg-[#FEF3C7]' },
-  CANCELLED: { dot: 'bg-[#EA4335]', text: 'text-[#C5221F]', bg: 'bg-[#FDECEA]' },
-  AWAITING_REFUND: { dot: 'bg-[#F59E0B]', text: 'text-[#92400E]', bg: 'bg-[#FEF3C7]' },
-  REFUNDED: { dot: 'bg-[#9AA0A6]', text: 'text-[#5F6368]', bg: 'bg-[#F1F3F4]' },
-};
+const STATUS_CONFIG: Record<string, { dot: string; text: string; bg: string }> =
+  {
+    PAID: { dot: 'bg-[#34A853]', text: 'text-[#1B873B]', bg: 'bg-[#E8F5E9]' },
+    AWAITING_PAYMENT: {
+      dot: 'bg-[#F59E0B]',
+      text: 'text-[#92400E]',
+      bg: 'bg-[#FEF3C7]',
+    },
+    CANCELLED: {
+      dot: 'bg-[#EA4335]',
+      text: 'text-[#C5221F]',
+      bg: 'bg-[#FDECEA]',
+    },
+    AWAITING_REFUND: {
+      dot: 'bg-[#F59E0B]',
+      text: 'text-[#92400E]',
+      bg: 'bg-[#FEF3C7]',
+    },
+    REFUNDED: {
+      dot: 'bg-[#9AA0A6]',
+      text: 'text-[#5F6368]',
+      bg: 'bg-[#F1F3F4]',
+    },
+  };
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
@@ -63,7 +91,9 @@ function StatusBadge({ status }: { status: string }) {
         cfg.text
       )}
     >
-      <span className={cn('w-[7px] h-[7px] rounded-full flex-shrink-0', cfg.dot)} />
+      <span
+        className={cn('w-[7px] h-[7px] rounded-full flex-shrink-0', cfg.dot)}
+      />
       {STATUS_LABELS[status] ?? status}
     </span>
   );
@@ -109,9 +139,13 @@ function TicketFilterDropdown({
           <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
           <div className="absolute top-full mt-1 left-0 z-20 bg-white border border-gray-200 rounded-xl shadow-lg py-1 min-w-[220px] max-h-[280px] overflow-y-auto">
             {loading ? (
-              <div className="px-4 py-3 text-[13px] text-gray-400">Loading tickets…</div>
+              <div className="px-4 py-3 text-[13px] text-gray-400">
+                Loading tickets…
+              </div>
             ) : tickets.length === 0 ? (
-              <div className="px-4 py-3 text-[13px] text-gray-400">No tickets found</div>
+              <div className="px-4 py-3 text-[13px] text-gray-400">
+                No tickets found
+              </div>
             ) : (
               tickets.map((t) => (
                 <button
@@ -153,7 +187,9 @@ function exportRows(rows: CheckedInListItemDto[]) {
     a.ticket?.validity ?? '',
     a.amount,
     STATUS_LABELS[a.status] ?? a.status,
-    a.checkIns.length > 0 ? formatDateSafe(a.checkIns[a.checkIns.length - 1]) : '—',
+    a.checkIns.length > 0
+      ? formatDateSafe(a.checkIns[a.checkIns.length - 1])
+      : '—',
   ]);
 }
 
@@ -171,12 +207,25 @@ async function exportPDF(rows: CheckedInListItemDto[], ticketName?: string) {
   const { default: autoTable } = await import('jspdf-autotable');
 
   const doc = new jsPDF({ orientation: 'landscape' });
-  doc.text(`Checked-In Attendees${ticketName ? ` — ${ticketName}` : ''}`, 14, 14);
+  doc.text(
+    `Checked-In Attendees${ticketName ? ` — ${ticketName}` : ''}`,
+    14,
+    14
+  );
 
   autoTable(doc, {
     startY: 22,
     head: [
-      ['Full Name', 'Email', 'Ticket', 'Code', 'Validity', 'Amount', 'Status', 'Checked In At'],
+      [
+        'Full Name',
+        'Email',
+        'Ticket',
+        'Code',
+        'Validity',
+        'Amount',
+        'Status',
+        'Checked In At',
+      ],
     ],
     body: exportRows(rows),
     styles: { fontSize: 9 },
@@ -199,11 +248,18 @@ export default function CheckinsTable() {
   );
   const [cursorStack, setCursorStack] = useState<string[]>([]);
   const [exportOpen, setExportOpen] = useState(false);
+  const [printingTags, setPrintingTags] = useState(false);
+  const { can } = useMyPermissions();
+  const canUndo = can('attendees.check_in');
+  const undo = useUndoCheckIn();
+  const columns = canUndo ? [...COLUMNS, 'Action'] : COLUMNS;
 
   // All tickets that have been created — used to populate the ticket-select
   // dropdown, whose chosen ticket's `eventDates` are sent to the checked-in
   // attendees API (per-ticket check-ins are scoped by event date).
-  const { data: ticketsData, isLoading: ticketsLoading } = useTickets({ limit: 50 });
+  const { data: ticketsData, isLoading: ticketsLoading } = useTickets({
+    limit: 50,
+  });
   const tickets = useMemo(() => ticketsData?.data ?? [], [ticketsData]);
 
   // Default the dropdown to the first ticket in the list once tickets load,
@@ -292,6 +348,31 @@ export default function CheckinsTable() {
     exportPDF(visibleAttendees, selectedTicket?.name);
     setExportOpen(false);
   };
+  // Name tags cover every checked-in attendee for the ticket, not just this page.
+  const handleNameTags = async () => {
+    setExportOpen(false);
+    if (eventDates.length === 0) return;
+    setPrintingTags(true);
+    try {
+      const all = await fetchAllCheckedIn(eventDates);
+      await downloadNameTags(
+        all.map((a) => ({
+          fullName: a.attendeeFullName,
+          subtitle: a.ticket?.name,
+        })),
+        {
+          fileName: `name-tags-${(selectedTicket?.name ?? 'checkins').replace(/\s+/g, '-').toLowerCase()}.pdf`,
+        }
+      );
+      showToast.success(
+        `Name tags ready for ${all.length} attendee${all.length === 1 ? '' : 's'}`
+      );
+    } catch (err) {
+      notifyApiError(err, 'Could not build name tags');
+    } finally {
+      setPrintingTags(false);
+    }
+  };
 
   const noTicketSelected = !selectedTicketId;
 
@@ -328,7 +409,8 @@ export default function CheckinsTable() {
             onChange={handleTicketChange}
           />
 
-          {(searchInput || (selectedTicketId && selectedTicketId !== firstTicketId)) && (
+          {(searchInput ||
+            (selectedTicketId && selectedTicketId !== firstTicketId)) && (
             <button
               onClick={clearFilters}
               className="text-[12px] text-gray-400 hover:text-red-500 transition-colors flex items-center gap-1 whitespace-nowrap"
@@ -341,11 +423,19 @@ export default function CheckinsTable() {
           <div className="relative flex-shrink-0">
             <button
               onClick={() => setExportOpen((p) => !p)}
-              disabled={noTicketSelected || visibleAttendees.length === 0}
+              disabled={
+                noTicketSelected ||
+                visibleAttendees.length === 0 ||
+                printingTags
+              }
               className="w-[42px] h-[42px] flex-shrink-0 flex items-center justify-center rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
               title="Export"
             >
-              <Download size={15} />
+              {printingTags ? (
+                <Loader2 size={15} className="animate-spin" />
+              ) : (
+                <Download size={15} />
+              )}
             </button>
             {exportOpen && (
               <>
@@ -366,6 +456,12 @@ export default function CheckinsTable() {
                   >
                     Export as PDF
                   </button>
+                  <button
+                    onClick={handleNameTags}
+                    className="w-full text-left px-4 py-2.5 text-[13px] hover:bg-gray-50 font-medium whitespace-nowrap"
+                  >
+                    Name tags (PDF)
+                  </button>
                 </div>
               </>
             )}
@@ -384,7 +480,7 @@ export default function CheckinsTable() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-200 bg-gray-50">
-                {COLUMNS.map((col) => (
+                {columns.map((col) => (
                   <th
                     key={col}
                     className="px-5 py-4 text-left text-[12px] font-semibold text-gray-700 whitespace-nowrap"
@@ -397,7 +493,10 @@ export default function CheckinsTable() {
             <tbody>
               {noTicketSelected ? (
                 <tr>
-                  <td colSpan={COLUMNS.length} className="text-center py-16 text-[13px] text-gray-400">
+                  <td
+                    colSpan={columns.length}
+                    className="text-center py-16 text-[13px] text-gray-400"
+                  >
                     Select a ticket above to view its checked-in attendees.
                   </td>
                 </tr>
@@ -405,7 +504,10 @@ export default function CheckinsTable() {
                 Array.from({ length: 8 }).map((_, i) => <SkeletonRow key={i} />)
               ) : isError ? (
                 <tr>
-                  <td colSpan={COLUMNS.length} className="text-center py-12 text-[13px] text-red-400">
+                  <td
+                    colSpan={columns.length}
+                    className="text-center py-12 text-[13px] text-red-400"
+                  >
                     Failed to load checked-in attendees. Please refresh.
                   </td>
                 </tr>
@@ -433,7 +535,9 @@ export default function CheckinsTable() {
                       {a.ticket?.validity ?? '—'}
                     </td>
                     <td className="px-5 py-4 text-[13px] font-semibold text-gray-800 whitespace-nowrap">
-                      {a.amount ? `₦${parseFloat(a.amount).toLocaleString('en-NG')}` : '—'}
+                      {a.amount
+                        ? `₦${parseFloat(a.amount).toLocaleString('en-NG')}`
+                        : '—'}
                     </td>
                     <td className="px-5 py-4 whitespace-nowrap">
                       <StatusBadge status={a.status} />
@@ -443,6 +547,33 @@ export default function CheckinsTable() {
                         ? formatDateSafe(a.checkIns[a.checkIns.length - 1])
                         : '—'}
                     </td>
+                    {canUndo && (
+                      <td className="px-5 py-4 whitespace-nowrap">
+                        {isCheckedInToday(a.checkIns) ? (
+                          <button
+                            onClick={() => {
+                              if (
+                                window.confirm(
+                                  `Undo today's check-in for ${a.attendeeFullName}?`
+                                )
+                              ) {
+                                undo.mutate({ orderId: a.id });
+                              }
+                            }}
+                            disabled={
+                              undo.isPending && undo.variables?.orderId === a.id
+                            }
+                            className="text-[12px] font-medium text-[#C5221F] hover:underline disabled:opacity-50"
+                          >
+                            {undo.isPending && undo.variables?.orderId === a.id
+                              ? 'Undoing…'
+                              : 'Undo'}
+                          </button>
+                        ) : (
+                          <span className="text-[12px] text-gray-300">—</span>
+                        )}
+                      </td>
+                    )}
                   </tr>
                 ))
               )}
@@ -451,39 +582,42 @@ export default function CheckinsTable() {
         </div>
 
         {/* Pagination — cursor based */}
-        {!noTicketSelected && !isLoading && (cursorStack.length > 0 || meta?.hasMore) && (
-          <div className="flex items-center justify-between px-5 py-3 border-t border-gray-100 bg-white">
-            <span className="text-[12px] text-gray-400">
-              {visibleAttendees.length} attendee{visibleAttendees.length === 1 ? '' : 's'} on this page
-            </span>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={goPrev}
-                disabled={cursorStack.length === 0}
-                className={cn(
-                  'flex items-center gap-1 px-3 py-1.5 rounded-md border text-[12px] transition-colors',
-                  cursorStack.length === 0
-                    ? 'border-gray-100 text-gray-300 cursor-not-allowed'
-                    : 'border-gray-200 text-gray-600 hover:bg-gray-50'
-                )}
-              >
-                <ChevronLeft size={14} /> Prev
-              </button>
-              <button
-                onClick={goNext}
-                disabled={!meta?.hasMore}
-                className={cn(
-                  'flex items-center gap-1 px-3 py-1.5 rounded-md border text-[12px] transition-colors',
-                  !meta?.hasMore
-                    ? 'border-gray-100 text-gray-300 cursor-not-allowed'
-                    : 'border-gray-200 text-gray-600 hover:bg-gray-50'
-                )}
-              >
-                Next <ChevronRight size={14} />
-              </button>
+        {!noTicketSelected &&
+          !isLoading &&
+          (cursorStack.length > 0 || meta?.hasMore) && (
+            <div className="flex items-center justify-between px-5 py-3 border-t border-gray-100 bg-white">
+              <span className="text-[12px] text-gray-400">
+                {visibleAttendees.length} attendee
+                {visibleAttendees.length === 1 ? '' : 's'} on this page
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={goPrev}
+                  disabled={cursorStack.length === 0}
+                  className={cn(
+                    'flex items-center gap-1 px-3 py-1.5 rounded-md border text-[12px] transition-colors',
+                    cursorStack.length === 0
+                      ? 'border-gray-100 text-gray-300 cursor-not-allowed'
+                      : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                  )}
+                >
+                  <ChevronLeft size={14} /> Prev
+                </button>
+                <button
+                  onClick={goNext}
+                  disabled={!meta?.hasMore}
+                  className={cn(
+                    'flex items-center gap-1 px-3 py-1.5 rounded-md border text-[12px] transition-colors',
+                    !meta?.hasMore
+                      ? 'border-gray-100 text-gray-300 cursor-not-allowed'
+                      : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                  )}
+                >
+                  Next <ChevronRight size={14} />
+                </button>
+              </div>
             </div>
-          </div>
-        )}
+          )}
       </div>
     </>
   );

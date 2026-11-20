@@ -5,6 +5,7 @@ import AdminWrapper from '@/app/_module/components/common/AdminWrapper';
 import TicketBreakdown from '@/app/_module/components/charts/TicketBreakdown';
 import RegistrationTrendChart from '@/app/_module/components/charts/RegistrationTrendChart';
 import RecentAttendeesTable from '@/app/_module/components/tables/RecentAttendeesTable';
+import CheckInStatsPanel from '@/app/_module/components/cards/CheckInStatsPanel';
 import { useDashboardOverview } from '@/app/_module/services';
 import type { DashboardStatsDto } from '@/app/_module/api/types';
 
@@ -114,6 +115,8 @@ export default function HomePageClient() {
               ))
             )}
           </section>
+
+          <CheckInStatsPanel compact className="mt-2" />
 
           {isError ? (
             <p className="text-center text-[13px] text-red-400 py-8">

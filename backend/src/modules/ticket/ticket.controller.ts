@@ -96,9 +96,13 @@ export class TicketsController {
 
   @Get()
   @ApiBearerAuth()
-  @RequirePermission('tickets.list')
+  @RequirePermission('tickets.list', 'attendees.list', 'attendees.check_in')
   @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @ApiOperation({ summary: 'List tickets' })
+  @ApiOperation({
+    summary: 'List tickets',
+    description:
+      'Requires any of: tickets.list, attendees.list, attendees.check_in (check-in staff need the ticket list to filter check-ins).',
+  })
   @ApiResponse({
     status: 200,
     description: 'Tickets retrieved successfully',
