@@ -21,7 +21,7 @@ export default function VibeLoungeSection({ data }: Readonly<Props>) {
             &amp; collaboration.
           </p>
         </div>
-        <div className="text-xs font-semibold text-[#1E1Ea1E] bg-white border border-[#1E1E1E] px-3 py-1.5 rounded-2xl self-start md:self-auto">
+        <div className="text-xs font-semibold text-[#1E1E1E] bg-white border border-[#1E1E1E] px-3 py-1.5 rounded-2xl self-start md:self-auto">
           1:30 PM - 4:55 PM
         </div>
       </div>

@@ -52,9 +52,15 @@ export default function PayOrderPage() {
           setIsOpening(false);
           void confirmPayment(reference, transactionRef).finally(goToStatus);
         },
-        onPending: () => {
+        onPending: (transactionRef) => {
           setIsOpening(false);
-          goToStatus();
+          // Bank transfer in flight: record the gateway's transaction id so
+          // the order can be confirmed by id once the money lands.
+          if (transactionRef) {
+            void confirmPayment(reference, transactionRef).finally(goToStatus);
+          } else {
+            goToStatus();
+          }
         },
         onDismiss: () => setIsOpening(false),
         onFailed: (message) => {

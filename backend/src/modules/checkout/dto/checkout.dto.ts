@@ -28,7 +28,7 @@ export class VerifyCheckoutDto {
 
   @ApiPropertyOptional({
     description:
-      "Gateway transaction id from the popup (ALATPay transactionId / Monnify transactionReference). Omit when the popup didn't return one (ALATPay card payments): the order's completed transaction is then looked up on the gateway.",
+      "Gateway transaction id from the popup (ALATPay transactionId / Monnify transactionReference), or from the gateway dashboard. Omit when you don't have one (ALATPay card payments): the id recorded on the order is tried, then the order's completed transaction is looked up on the gateway. On POST /checkout/verify for an unpaid ALATPay order, the first id received is stored on the order.",
   })
   @Transform(trim)
   @IsOptional()

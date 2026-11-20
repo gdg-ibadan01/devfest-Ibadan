@@ -3,13 +3,15 @@
 import React, { useState } from 'react';
 import {
   day1PlenaryData,
-  day1SpeakerHallsData,
-  day1WorkshopsData,
-  day1VibeData,
+  day1HallOneData,
+  day1HallTwoData,
+  day1HallThreeData,
+  day1HallFourData,
   day1ClosingData,
 } from './AgendaData';
 import PlenaryTable from './components/PlenaryTable';
-import SpeakerHallsTable from './components/SpeakerHallsTable';
+import HallOneSection from './components/HallOneSection';
+import HallTwoSection from './components/HallTwoSection';
 import WorkshopsSection from './components/WorkshopsSection';
 import VibeLoungeSection from './components/VibeLoungeSection';
 import BreakoutFilterTabs from './components/BreakoutFilterTabs';
@@ -48,9 +50,7 @@ export default function Day1AgendaView() {
               Breakout Sessions
             </h3>
             <p className="text-xs md:text-sm text-gray-300 mt-1 max-w-2xl">
-              Choose your track across 4 active halls: Speaker sessions in Halls
-              1 &amp; 2, deep-dive workshops in Hall 3, or build and connect at
-              the Vibe Lounge in Hall 4.
+              Choose your track across 4 active halls: Speaker sessions in Hall 1 &amp; Hall 2, deep-dive workshops in Hall 3, or build and connect at the Vibe Lounge in Hall 4.
             </p>
           </div>
 
@@ -61,18 +61,22 @@ export default function Day1AgendaView() {
           />
         </div>
 
-        {/* Content according to filter */}
+        {/* Content according to filter: Each hall has its own dedicated card section */}
         <div className="space-y-8">
-          {(breakoutFilter === 'all' || breakoutFilter === 'speakers') && (
-            <SpeakerHallsTable data={day1SpeakerHallsData} />
+          {(breakoutFilter === 'all' || breakoutFilter === 'hall-1') && (
+            <HallOneSection data={day1HallOneData} />
           )}
 
-          {(breakoutFilter === 'all' || breakoutFilter === 'workshops') && (
-            <WorkshopsSection data={day1WorkshopsData} />
+          {(breakoutFilter === 'all' || breakoutFilter === 'hall-2') && (
+            <HallTwoSection data={day1HallTwoData} />
           )}
 
-          {(breakoutFilter === 'all' || breakoutFilter === 'vibe') && (
-            <VibeLoungeSection data={day1VibeData} />
+          {(breakoutFilter === 'all' || breakoutFilter === 'hall-3') && (
+            <WorkshopsSection data={day1HallThreeData} />
+          )}
+
+          {(breakoutFilter === 'all' || breakoutFilter === 'hall-4') && (
+            <VibeLoungeSection data={day1HallFourData} />
           )}
         </div>
       </section>

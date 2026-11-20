@@ -16,7 +16,7 @@ export const speakersData: SpeakerItem[] = [
     id: 14,
     name: 'Oladayo Ogunbowale',
     role: 'S.A. Communications to Oyo State Governor',
-    image: '/speakers/oladayo_ogunbowale.png',
+    image: '/speakers/oladayo_ogunbowale.jpeg',
     colorScheme: 'green',
     sessionType: 'Keynote',
     topic:
@@ -45,15 +45,12 @@ export const speakersData: SpeakerItem[] = [
   },
   {
     id: 20,
-    name: 'Shadrack Inusah',
-    role: 'GDE Cloud AI & Software Engineer',
-    image: '/speakers/Shadrack Inusah.png',
+    name: 'Michael Toyinbo',
+    role: 'Director of Expansion, Strategy & Operations at Chowdeck',
+    image: '/speakers/michael_toyinbo.png',
     colorScheme: 'pink',
-    sessionType: 'Workshop',
-    topic:
-      'Build and Deploy a RAG AI Agent in Streamlit using Google ADK and Cloud Run',
-    x: 'https://x.com/kojo_shaddy',
-    linkedin: 'https://www.linkedin.com/in/shadrack-inusah/',
+    sessionType: 'Panel',
+    topic: 'Scaling in the AI Era: Ideas, Infrastructure, Expansion',
   },
   {
     id: 20,
@@ -84,12 +81,15 @@ export const speakersData: SpeakerItem[] = [
   },
   {
     id: 20,
-    name: 'Michael Toyinbo',
-    role: 'Director of Expansion, Strategy & Operations at Chowdeck',
-    image: '/speakers/michael_toyinbo.png',
+    name: 'Shadrack Inusah',
+    role: 'GDE Cloud AI & Software Engineer',
+    image: '/speakers/Shadrack Inusah.png',
     colorScheme: 'pink',
-    sessionType: 'Panel',
-    topic: 'Scaling in the AI Era: Ideas, Infrastructure, Expansion',
+    sessionType: 'Workshop',
+    topic:
+      'Build and Deploy a RAG AI Agent in Streamlit using Google ADK and Cloud Run',
+    x: 'https://x.com/kojo_shaddy',
+    linkedin: 'https://www.linkedin.com/in/shadrack-inusah/',
   },
   {
     id: 5,

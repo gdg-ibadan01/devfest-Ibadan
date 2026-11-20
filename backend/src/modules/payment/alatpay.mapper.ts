@@ -42,7 +42,12 @@ export function unwrapEnvelope(body: unknown): Dict {
   return isDict(body) ? body : {};
 }
 
-/** Returns the first array found in a list response. */
+/**
+ * Returns the transaction rows from a list response. Checks the known
+ * envelopes first, then searches nested objects (ALATPay has returned
+ * paginated shapes such as `data.result` / `value.data.records`), so an
+ * unexpected envelope can't silently yield "0 transactions".
+ */
 export function unwrapList(body: unknown): unknown[] {
   const paths = [
     ['data', 'data'],
@@ -56,7 +61,25 @@ export function unwrapList(body: unknown): unknown[] {
     const candidate = getCI(body, path);
     if (Array.isArray(candidate)) return candidate;
   }
-  return Array.isArray(body) ? body : [];
+  if (Array.isArray(body)) return body;
+  return findObjectArray(body, 4) ?? [];
+}
+
+/** First array of objects within `depth` levels (breadth-first). */
+function findObjectArray(root: unknown, depth: number): unknown[] | null {
+  let level: unknown[] = [root];
+  for (let d = 0; d <= depth && level.length > 0; d++) {
+    const next: unknown[] = [];
+    for (const node of level) {
+      if (Array.isArray(node)) {
+        if (node.length > 0 && node.every(isDict)) return node;
+        continue;
+      }
+      if (isDict(node)) next.push(...Object.values(node));
+    }
+    level = next;
+  }
+  return null;
 }
 
 export function parseMetadata(raw: unknown): Dict {
@@ -72,10 +95,14 @@ export function parseMetadata(raw: unknown): Dict {
   return {};
 }
 
-const str = (value: unknown): string | null =>
-  value === undefined || value === null || value === ''
-    ? null
-    : String(value as string);
+const str = (value: unknown): string | null => {
+  if (value === undefined || value === null || value === '') return null;
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number' || typeof value === 'boolean') {
+    return String(value);
+  }
+  return JSON.stringify(value);
+};
 
 export function extractTransactionId(tx: Dict): string | null {
   return (

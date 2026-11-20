@@ -571,6 +571,9 @@ export class OrdersService {
   ) {
     return {
       id: o.id,
+      reference: o.reference,
+      paymentProvider: o.paymentProvider,
+      transactionRef: o.providerTransactionRef,
       createdAt: o.createdAt,
       paidAt: o.paidAt,
       amount: o.amount.toFixed(2),
