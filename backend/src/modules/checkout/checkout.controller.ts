@@ -14,15 +14,21 @@ import {
 import {
   ApiBearerAuth,
   ApiOperation,
+  ApiQuery,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
 import { OrdersService } from '../order/order.service';
 import { PaymentConfirmationService } from './payment-confirmation.service';
+import { PaymentReconciliationService } from './payment-reconciliation.service';
 import { AlatpayService } from '../payment/alatpay.service';
 import { IpRateLimitGuard } from './ip-rate-limit.guard';
 import {
   CheckoutSessionResponseDto,
+  ReconcileConfirmDto,
+  ReconcileConfirmResponseDto,
+  ReconciliationQueryDto,
+  ReconciliationResponseDto,
   VerifyCheckoutDto,
   VerifyCheckoutResponseDto,
 } from './dto/checkout.dto';
@@ -44,6 +50,7 @@ export class CheckoutController {
     private readonly confirmation: PaymentConfirmationService,
     private readonly prisma: PrismaService,
     private readonly alatpay: AlatpayService,
+    private readonly reconciliation: PaymentReconciliationService,
   ) {}
 
   @Post('verify')
@@ -70,11 +77,12 @@ export class CheckoutController {
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @RequirePermission('orders.list')
+  @RequirePermission('orders.list', 'attendees.create')
   @ApiOperation({
-    summary: 'Admin: re-check a payment by gateway transaction id',
+    summary: 'Admin: re-check a payment by order reference',
     description:
-      'Use when a customer has paid but the order is still awaiting payment.',
+      'Use when a customer has paid but the order is still awaiting payment. `transactionRef` is optional for ALATPay (the completed transaction is looked up by order). ' +
+      'Requires orders.list or attendees.create (door staff confirming a walk-in payment).',
   })
   @ApiResponse({ status: HttpStatus.OK, type: VerifyCheckoutResponseDto })
   async requery(
@@ -118,6 +126,18 @@ export class CheckoutController {
     description:
       'Support/diagnostics for "paid but not confirmed": lists transactions since `hours` ago (default 3, max 48) with the order they belong to.',
   })
+  @ApiQuery({
+    name: 'hours',
+    required: false,
+    description:
+      'Look-back window in hours (1–48, default 3), or `all` for no date filter',
+    schema: {
+      oneOf: [
+        { type: 'integer', minimum: 1, maximum: 48 },
+        { type: 'string', enum: ['all'] },
+      ],
+    },
+  })
   async alatpayTransactions(@Query('hours') hours?: string) {
     // hours=all → no date filter (latest transactions, newest first)
     const h = Math.min(Math.max(Number(hours) || 3, 1), 48);
@@ -125,6 +145,53 @@ export class CheckoutController {
       return await this.alatpay.inspectTransactions(
         hours === 'all' ? null : new Date(Date.now() - h * 3_600_000),
       );
+    } catch (err) {
+      if (err instanceof GatewayRequestError) {
+        throw new HttpException(err.message, HttpStatus.BAD_GATEWAY);
+      }
+      throw this.toHttp(err);
+    }
+  }
+
+  @Get('admin/reconciliation')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermission('orders.list')
+  @ApiOperation({
+    summary: 'Admin: payments completed on ALATPay but not PAID here',
+    description:
+      'Lists completed ALATPay transactions in the window whose order is not PAID (any status) or cannot be matched. Confirm each with POST /checkout/admin/reconciliation/confirm.',
+  })
+  @ApiResponse({ status: HttpStatus.OK, type: ReconciliationResponseDto })
+  async listReconciliation(@Query() query: ReconciliationQueryDto) {
+    try {
+      return await this.reconciliation.list(query.hours ?? 6);
+    } catch (err) {
+      if (err instanceof GatewayRequestError) {
+        throw new HttpException(err.message, HttpStatus.BAD_GATEWAY);
+      }
+      throw this.toHttp(err);
+    }
+  }
+
+  @Post('admin/reconciliation/confirm')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermission('orders.list')
+  @ApiOperation({
+    summary:
+      'Admin: confirm one ALATPay transaction from the reconciliation list',
+    description:
+      'Re-verifies the transaction with ALATPay (amount, order token, currency) and runs the normal payment-success path, which issues the ticket. Audit-logged as RECONCILE_PAYMENT.',
+  })
+  @ApiResponse({ status: HttpStatus.OK, type: ReconcileConfirmResponseDto })
+  async confirmReconciliation(
+    @Body() dto: ReconcileConfirmDto,
+    @CurrentUser() user: IJwtPayload,
+  ) {
+    try {
+      return await this.reconciliation.confirm(dto.transactionRef, user.sub);
     } catch (err) {
       if (err instanceof GatewayRequestError) {
         throw new HttpException(err.message, HttpStatus.BAD_GATEWAY);

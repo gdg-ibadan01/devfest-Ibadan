@@ -586,7 +586,12 @@ export class OrdersService {
         name: o.ticket.name,
         code: o.reference.slice(-6),
         validity: o.ticket.validityDates
-          .map((d) => d.toLocaleDateString('en-US', { weekday: 'short' }))
+          .map((d) =>
+            d.toLocaleDateString('en-US', {
+              weekday: 'short',
+              timeZone: 'UTC',
+            }),
+          )
           .join(' + '),
       },
     };

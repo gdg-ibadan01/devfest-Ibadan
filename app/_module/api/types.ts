@@ -57,6 +57,23 @@ export type CheckInResponseDto = Schemas['CheckInResponseDto'];
 export type CheckedInListItemDto = Schemas['CheckedInListItemDto'];
 export type CheckedInPaginationMetaDto = Schemas['CheckedInPaginationMetaDto'];
 export type CheckedInListResponseDto = Schemas['CheckedInListResponseDto'];
+export type CheckInStatsResponseDto = Schemas['CheckInStatsResponseDto'];
+export type CheckInStatsTicketDto = Schemas['CheckInStatsTicketDto'];
+export type CheckInStatsHourDto = Schemas['CheckInStatsHourDto'];
+export type CheckInStatsStaffDto = Schemas['CheckInStatsStaffDto'];
+export type ScanCheckInDto = Schemas['ScanCheckInDto'];
+export type UndoCheckInResponseDto = Schemas['UndoCheckInResponseDto'];
+
+// ---- Payment reconciliation (admin) -------------------------
+export type ReconciliationResponseDto = Schemas['ReconciliationResponseDto'];
+export type ReconciliationItemDto = Schemas['ReconciliationItemDto'];
+export type ReconcileConfirmResponseDto = Schemas['ReconcileConfirmResponseDto'];
+
+export interface CheckInStatsParams {
+  /** YYYY-MM-DD; defaults to today at the venue */
+  date?: string;
+  ticketId?: string;
+}
 
 // ---- Payments ----------------------------------------------
 export type InitiatePaymentDto = Schemas['InitiatePaymentDto'];
