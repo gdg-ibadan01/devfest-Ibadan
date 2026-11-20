@@ -12,6 +12,8 @@ import HowItGoesDown from './component/HowItGoesDown';
 import OurSponsors from './component/OurSponsors';
 import SecureYourTickets from './component/SecureYourTickets';
 import SwagsAndTickets from './component/SwagsAndTickets';
+import MeetOurSpeakers from './component/MeetOurSpeakers';
+import ExploreAgenda from './component/ExploreAgenda';
 
 export const metadata: Metadata = {
   title: { absolute: DEFAULT_TITLE },
@@ -52,7 +54,8 @@ export default function Home() {
       <HowItGoesDown />
       <OurSponsors />
       <CallForPartnership />
-      {/* <MeetOurSpeakers /> */}
+      <MeetOurSpeakers />
+      <ExploreAgenda />
       <SecureYourTickets />
     </main>
   );

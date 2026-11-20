@@ -11,12 +11,12 @@ export default function AgendaTabs({ activeDay, setActiveDay }: Props) {
     {
       id: 'day1',
       mobileLabel: 'Friday (Day 1)',
-      desktopLabel: 'Friday, 28th Nov 2025',
+      desktopLabel: 'Friday, 28th Nov 2026',
     },
     {
       id: 'day2',
       mobileLabel: 'Saturday (Day 2)',
-      desktopLabel: 'Saturday, 29th Nov 2025',
+      desktopLabel: 'Saturday, 29th Nov 2026',
     },
   ];
 
