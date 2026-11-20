@@ -58,6 +58,15 @@ export const SPONSORS_2026: Sponsor[] = [
     description:
       'Premier hospitality and conference centre in Ibadan, providing world-class event spaces, accommodations, and dining experiences.',
   },
+  {
+    name: 'Stecs',
+    website: 'stecs.ng',
+    logo: 'stecs.png',
+    width: 151,
+    height: 36,
+    description:
+      'Ethical fintech platform providing smart digital banking, interest-free savings, and financial management solutions for modern professionals and businesses.',
+  },
 ];
 
 export const sponsors = SPONSORS_2026;

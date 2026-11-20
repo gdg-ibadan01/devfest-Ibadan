@@ -49,12 +49,11 @@ export default function Home() {
       <EventJsonLd />
       <DevfestHero />
       {/* <SponsorsMarquee /> */}
-      {/* <CallForSpeakers /> */}
       <SwagsAndTickets />
       <HowItGoesDown />
+      <MeetOurSpeakers />
       <OurSponsors />
       <CallForPartnership />
-      <MeetOurSpeakers />
       <ExploreAgenda />
       <SecureYourTickets />
     </main>

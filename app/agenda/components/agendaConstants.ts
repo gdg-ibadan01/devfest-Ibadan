@@ -14,7 +14,7 @@ export const SESSION_TYPE_LABEL: Record<HallSession['type'], string> = {
   vibe: 'Vibe Lounge',
 };
 
-export type BreakoutFilter = 'all' | 'speakers' | 'workshops' | 'vibe';
+export type BreakoutFilter = 'all' | 'hall-1' | 'hall-2' | 'hall-3' | 'hall-4';
 
 export type BreakoutFilterOption = {
   id: BreakoutFilter;
@@ -29,18 +29,23 @@ export const BREAKOUT_FILTER_OPTIONS: readonly BreakoutFilterOption[] = [
     activeColor: 'bg-white text-[#1E1E1E] border-white',
   },
   {
-    id: 'speakers',
-    label: '🎙️ Halls 1 & 2 (Speakers)',
+    id: 'hall-1',
+    label: '🎙️ Hall 1: Speakers Sessions & Lightning Talks',
     activeColor: 'bg-[#C3ECF6] text-[#1E1E1E] border-[#C3ECF6]',
   },
   {
-    id: 'workshops',
-    label: '🛠️ Hall 3 (Workshops)',
+    id: 'hall-2',
+    label: '🏛️ Hall 2: Speakers Sessions & Lightning Talks',
+    activeColor: 'bg-[#FFE7A5] text-[#1E1E1E] border-[#FFE7A5]',
+  },
+  {
+    id: 'hall-3',
+    label: '🛠️ Hall 3: Workshops',
     activeColor: 'bg-[#CCF6C5] text-[#1E1E1E] border-[#CCF6C5]',
   },
   {
-    id: 'vibe',
-    label: '🎧 Hall 4 (Vibe Lounge)',
+    id: 'hall-4',
+    label: '🎧 Hall 4: Vibe Lounge',
     activeColor: 'bg-[#F8D8D8] text-[#583C3C] border-[#F8D8D8]',
   },
 ] as const;

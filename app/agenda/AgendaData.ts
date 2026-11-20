@@ -10,27 +10,28 @@ export type AgendaItem = {
   notes?: string;
 };
 
-// ─── Hall session unit (shared by all breakout types) ────────────────────────
+// ─── Hall session unit ───────────────────────────────────────────────────────
 export type HallSession = {
   schedule: string;
   speaker?: string;
   track?: string;
   type: 'session' | 'workshop' | 'lightning' | 'vibe';
+  notes?: string;
 };
 
-// ─── Hall 1 & 2 — same 25m/10m rhythm ────────────────────────────────────────
+// ─── Single Hall Row (used by all halls) ─────────────────────────────────────
+export type SingleHallRow = {
+  time: string;
+  duration: string;
+  session: HallSession;
+};
+
+// Kept for backward compatibility with existing imports
 export type SpeakerHallRow = {
   time: string;
   duration: string;
   hallOne?: HallSession;
   hallTwo?: HallSession;
-};
-
-// ─── Hall 3 & 4 — independent rhythm, one event per row ─────────────────────
-export type SingleHallRow = {
-  time: string;
-  duration: string;
-  session: HallSession;
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -153,36 +154,123 @@ export const day1PlenaryData: AgendaItem[] = [
   },
 ];
 
-// ─── Hall 1 & 2 — Speaker Sessions + Lightning Talks ─────────────────────────
-export const day1SpeakerHallsData: SpeakerHallRow[] = [
+// ─── Hall One — Speakers Sessions & Lightning Talks ──────────────────────────────────────────────
+export const day1HallOneData: SingleHallRow[] = [
   {
     time: '1:30 PM - 1:55 PM',
     duration: '25m',
-    hallOne: {
+    session: {
       schedule:
         'Building the Next Generation of Web3 Applications with AI Agents',
       speaker: 'Abdulmujeeb Sulayman',
       track: 'Web Development · Blockchain',
       type: 'session',
     },
-    hallTwo: {
-      schedule: 'Building Distributed Systems with gRPC',
-      speaker: 'Adeshina Lasisi',
-      track: 'Mobile · Web · Cloud Engineering',
-      type: 'session',
-    },
   },
   {
     time: '2:00 PM - 2:10 PM',
     duration: '10m',
-    hallOne: {
+    session: {
       schedule:
         'Data Has Consequences: Engineering for Privacy, Ethics, and Trust',
       speaker: 'Chelsea Adetan',
       track: 'Data',
       type: 'lightning',
     },
-    hallTwo: {
+  },
+  {
+    time: '2:15 PM - 2:40 PM',
+    duration: '25m',
+    session: {
+      schedule:
+        'Multimodal Flutter: Apps That See, Hear, and Reason Across Platforms',
+      speaker: 'David Oluwabusayo',
+      track: 'Mobile Development · Web Development · Desktop',
+      type: 'session',
+    },
+  },
+  {
+    time: '2:45 PM - 2:55 PM',
+    duration: '10m',
+    session: {
+      schedule:
+        'How Developers Can Thrive in the Agentic AI Era: Skills, Workflows & Mindset',
+      speaker: 'Ifeoluwa Obayemi',
+      track: 'Artificial Intelligence / AI',
+      type: 'lightning',
+    },
+  },
+  {
+    time: '3:00 PM - 3:25 PM',
+    duration: '25m',
+    session: {
+      schedule:
+        "Beyond the Form: Why Data Privacy is the Missing Layer in Nigeria's Tech Stack",
+      speaker: 'Ireoluwatomiwa Omotayo',
+      track: 'Cybersecurity',
+      type: 'session',
+    },
+  },
+  {
+    time: '3:30 PM - 3:40 PM',
+    duration: '10m',
+    session: {
+      schedule:
+        'From Wireframes to Scaffolding: What Design Becomes When AI Builds',
+      speaker: 'Mary Esivue',
+      track: 'Product',
+      type: 'lightning',
+    },
+  },
+  {
+    time: '3:45 PM - 4:10 PM',
+    duration: '25m',
+    session: {
+      schedule:
+        'Your Gemini Key Is in the APK: Securing AI Features in Flutter',
+      speaker: 'Idris Idris',
+      track: 'Mobile Development · Cybersecurity',
+      type: 'session',
+    },
+  },
+  {
+    time: '4:15 PM - 4:25 PM',
+    duration: '10m',
+    session: {
+      schedule: 'Beyond the Code: Branding – The Invisible Resume',
+      speaker: 'Oreoluwa Osadugba',
+      track: 'Branding',
+      type: 'lightning',
+    },
+  },
+  {
+    time: '4:30 PM - 4:55 PM',
+    duration: '25m',
+    session: {
+      schedule: "AI as a Product Designer's Superpower",
+      speaker: 'Temiloluwa Kayode',
+      track: 'Product',
+      type: 'session',
+    },
+  },
+];
+
+// ─── Hall Two — Speakers Sessions & Lightning Talks ──────────────────────────────────────────────────
+export const day1HallTwoData: SingleHallRow[] = [
+  {
+    time: '1:30 PM - 1:55 PM',
+    duration: '25m',
+    session: {
+      schedule: 'Building Distributed Systems with gRPC',
+      speaker: 'Adeshina Lasisi',
+      track: 'Mobile Development · Web Development · Cloud Engineering',
+      type: 'session',
+    },
+  },
+  {
+    time: '2:00 PM - 2:10 PM',
+    duration: '10m',
+    session: {
       schedule: 'Quantum Technology: Hype or Real?',
       speaker: 'Ahmad Abdulmajeed',
       type: 'lightning',
@@ -191,67 +279,40 @@ export const day1SpeakerHallsData: SpeakerHallRow[] = [
   {
     time: '2:15 PM - 2:40 PM',
     duration: '25m',
-    hallOne: {
-      schedule:
-        'Multimodal Flutter: Apps That See, Hear, and Reason Across Platforms',
-      speaker: 'David Oluwabusayo',
-      track: 'Mobile · Web · Desktop',
-      type: 'session',
-    },
-    hallTwo: {
+    session: {
       schedule:
         'Architecting the Future: Building Highly Scalable Digital Platforms for Africa',
       speaker: 'Opeyemi Ojeyinka',
-      track: 'Mobile · Web · Cloud · Cybersecurity · Product · QA',
+      track:
+        'Mobile Development · Web Development · Cloud Engineering · Cybersecurity · Product · Quality Assurance',
       type: 'session',
     },
   },
   {
     time: '2:45 PM - 2:55 PM',
     duration: '10m',
-    hallOne: {
+    session: {
       schedule:
-        'How Developers Can Thrive in the Agentic AI Era: Skills, Workflows & Mindset',
-      speaker: 'Ifeoluwa Obayemi',
-      track: 'Artificial Intelligence / AI',
-      type: 'lightning',
-    },
-    hallTwo: {
-      schedule:
-        'AI Didn\u2019t Take My Job \u2014 It Changed It: A Frontend Engineer\u2019s Evolution',
+        'AI Didn\u2019t Take My Job — It Changed It: A Frontend Engineer\u2019s Evolution',
       speaker: 'James Uyi',
-      track: 'Mobile · Web · Product',
+      track: 'Mobile Development · Web Development · Product',
       type: 'lightning',
     },
   },
   {
     time: '3:00 PM - 3:25 PM',
     duration: '25m',
-    hallOne: {
-      schedule:
-        "Beyond the Form: Why Data Privacy is the Missing Layer in Nigeria's Tech Stack",
-      speaker: 'Ireoluwatomiwa Omotayo',
-      track: 'Cybersecurity',
-      type: 'session',
-    },
-    hallTwo: {
+    session: {
       schedule: 'Building Customer-Centric Products: The Engineering Mindset',
       speaker: 'Muritadoh Sodeeq',
-      track: 'Mobile · Web · Product',
+      track: 'Mobile Development · Web Development · Product',
       type: 'session',
     },
   },
   {
     time: '3:30 PM - 3:40 PM',
     duration: '10m',
-    hallOne: {
-      schedule:
-        'From Wireframes to Scaffolding: What Design Becomes When AI Builds',
-      speaker: 'Mary Esivue',
-      track: 'Product',
-      type: 'lightning',
-    },
-    hallTwo: {
+    session: {
       schedule:
         'Debugging Burnout: Mental Wellness as a Developer\u2019s Core Stack',
       speaker: 'Oluwatobi Oyesola',
@@ -262,14 +323,7 @@ export const day1SpeakerHallsData: SpeakerHallRow[] = [
   {
     time: '3:45 PM - 4:10 PM',
     duration: '25m',
-    hallOne: {
-      schedule:
-        'Your Gemini Key Is in the APK: Securing AI Features in Flutter',
-      speaker: 'Idris Idris',
-      track: 'Mobile · Cybersecurity',
-      type: 'session',
-    },
-    hallTwo: {
+    session: {
       schedule:
         'The Hidden Engineering of LLM Inference: A Deep Dive into Nano-vLLM',
       speaker: 'Praise Adegoju',
@@ -278,35 +332,19 @@ export const day1SpeakerHallsData: SpeakerHallRow[] = [
     },
   },
   {
-    time: '4:15 PM - 4:25 PM',
-    duration: '10m',
-    hallOne: {
-      schedule: 'Beyond the Code: Branding \u2013 The Invisible Resume',
-      speaker: 'Oreoluwa Osadugba',
-      track: 'Branding',
-      type: 'lightning',
-    },
-    hallTwo: {
+    time: '4:15 PM - 4:40 PM',
+    duration: '25m',
+    session: {
       schedule: 'Animating with Intent: Motion Design for Developers',
       speaker: 'Victor Williams',
       track: 'Web Development',
       type: 'session',
     },
   },
-  {
-    time: '4:30 PM - 4:55 PM',
-    duration: '25m',
-    hallOne: {
-      schedule: 'AI as a Product Designer\u2019s Superpower',
-      speaker: 'Temiloluwa Kayode',
-      track: 'Product',
-      type: 'session',
-    },
-  },
 ];
 
-// ─── Hall 3 — Workshops (45m each) ───────────────────────────────────────────
-export const day1WorkshopsData: SingleHallRow[] = [
+// ─── Hall Three — Hands-On Workshops ─────────────────────────────────────────
+export const day1HallThreeData: SingleHallRow[] = [
   {
     time: '1:30 PM - 1:55 PM',
     duration: '25m',
@@ -351,8 +389,8 @@ export const day1WorkshopsData: SingleHallRow[] = [
   },
 ];
 
-// ─── Hall 4 — Vibe Lounge (60m each) ─────────────────────────────────────────
-export const day1VibeData: SingleHallRow[] = [
+// ─── Hall Four — The Vibe Lounge ─────────────────────────────────────────────
+export const day1HallFourData: SingleHallRow[] = [
   {
     time: '1:30 PM - 2:30 PM',
     duration: '60m',
@@ -390,6 +428,21 @@ export const day1VibeData: SingleHallRow[] = [
   },
 ];
 
+// Aliases for convenience & backward compatibility
+export const day1WorkshopsData = day1HallThreeData;
+export const day1VibeData = day1HallFourData;
+
+// Hall 1 & 2 combined format kept as legacy alias
+export const day1SpeakerHallsData: SpeakerHallRow[] = day1HallOneData.map(
+  (item, idx) => ({
+    time: item.time,
+    duration: item.duration,
+    hallOne: item.session,
+    hallTwo: day1HallTwoData[idx]?.session,
+  })
+);
+
+// ─── Closing Programme (Main Hall) ───────────────────────────────────────────
 export const day1ClosingData: AgendaItem[] = [
   {
     time: '5:00 PM - 5:15 PM',

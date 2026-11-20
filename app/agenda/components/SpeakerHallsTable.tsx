@@ -71,13 +71,13 @@ export default function SpeakerHallsTable({ data }: Readonly<Props>) {
               <th className="p-3 text-left border-[2px] border-[#1E1E1E] font-bold text-sm md:text-base">
                 Hall One
                 <span className="block text-xs font-normal text-gray-600">
-                  Felicia Gbàjúmò
+                  Speakers Sessions & Lightning Talks
                 </span>
               </th>
               <th className="p-3 text-left border-[2px] border-[#1E1E1E] font-bold text-sm md:text-base">
                 Hall Two
                 <span className="block text-xs font-normal text-gray-600">
-                  Banquet Àgọ́
+                  Speakers Sessions & Lightning Talks
                 </span>
               </th>
               <th className="p-3 text-left border-[2px] border-[#1E1E1E] font-bold text-sm md:text-base w-[90px] md:w-[110px]">
