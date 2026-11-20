@@ -1,6 +1,6 @@
 export const menuItems = [
-  // { label: 'Agenda', slur: 'agenda' },
-  // { label: 'Speakers', slur: 'speakers' },
+  { label: 'Agenda', slur: 'agenda' },
+  { label: 'Speakers', slur: 'speakers' },
   // { label: 'Organizers', slur: 'organizers' },
   // { label: 'Merch', slur: 'https://eventpulse.ng/shop/devfest-ibadan-2026' },
   // { label: 'Team', slur: 'team' },
@@ -10,9 +10,9 @@ export const menuItems = [
 
 export const footerItems = {
   frameOne: [
-    // { label: 'Agenda', slur: 'agenda' },
+    { label: 'Agenda', slur: 'agenda' },
     // { label: 'Organizers', slur: 'organizers' },
-    // { label: 'Speakers', slur: 'speakers' },
+    { label: 'Speakers', slur: 'speakers' },
     { label: 'Merch', slur: 'https://eventpulse.ng/shop/devfest-ibadan-2026' },
     // { label: 'Ticket', slur: 'https://gdg.community.dev/e/mrbzpf/' },
     { label: 'Ticket', slur: 'tickets' },

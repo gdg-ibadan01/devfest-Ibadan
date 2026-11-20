@@ -60,13 +60,13 @@ export default function PlenaryTable({ data, title }: Readonly<Props>) {
 
                     {item.speaker && (
                       <p className="text-xs md:text-sm text-[#444] font-normal">
-                        🎤 {item.speaker}
+                        {item.speaker}
                       </p>
                     )}
 
                     {item.notes && (
                       <p className="text-xs text-[#777] italic font-normal">
-                        💡 {item.notes}
+                        {item.notes}
                       </p>
                     )}
                   </div>

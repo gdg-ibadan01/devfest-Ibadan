@@ -58,7 +58,7 @@ export const day1PlenaryData: AgendaItem[] = [
     time: '9:45 AM - 10:05 AM',
     schedule:
       'Keynote — Building the Future: How AI and Digital Innovation Can Transform Governance and Society',
-    speaker: 'S.A. Communications to the Oyo State Governor',
+    speaker: 'Speaker: S.A. Communications to the Oyo State Governor',
     room: 'MAIN HALL',
     duration: '20m',
     type: 'plenary',
@@ -94,7 +94,7 @@ export const day1PlenaryData: AgendaItem[] = [
     time: '11:15 AM - 11:35 AM',
     schedule:
       'Keynote II — Built to Last: A Future Proof Tech Career in the Age of AI',
-    speaker: 'Co-Founder & CEO of Bral AI, Menaget, STECS and AITI',
+    speaker: 'Speaker: Co-Founder & CEO of Bral AI, Menaget, STECS and AITI',
     room: 'MAIN HALL',
     duration: '20m',
     type: 'plenary',
@@ -111,7 +111,7 @@ export const day1PlenaryData: AgendaItem[] = [
   {
     time: '11:55 AM - 12:20 PM',
     schedule: 'Session',
-    speaker: 'Geek Tutor',
+    speaker: 'Speaker: Geek Tutor',
     room: 'MAIN HALL',
     duration: '25m',
     type: 'session',
@@ -308,7 +308,16 @@ export const day1SpeakerHallsData: SpeakerHallRow[] = [
 // ─── Hall 3 — Workshops (45m each) ───────────────────────────────────────────
 export const day1WorkshopsData: SingleHallRow[] = [
   {
-    time: '1:30 PM - 2:15 PM',
+    time: '1:30 PM - 1:55 PM',
+    duration: '25m',
+    session: {
+      schedule: 'Inside ALATPay: Exploring Our Payment Ecosystem',
+      speaker: 'Joy Offiong',
+      type: 'workshop',
+    },
+  },
+  {
+    time: '2:00 PM - 2:45 PM',
     duration: '45m',
     session: {
       schedule:
@@ -319,7 +328,7 @@ export const day1WorkshopsData: SingleHallRow[] = [
     },
   },
   {
-    time: '2:20 PM - 3:05 PM',
+    time: '2:50 PM - 3:35 PM',
     duration: '45m',
     session: {
       schedule:
@@ -330,21 +339,13 @@ export const day1WorkshopsData: SingleHallRow[] = [
     },
   },
   {
-    time: '3:10 PM - 3:55 PM',
+    time: '3:40 PM - 4:25 PM',
     duration: '45m',
     session: {
       schedule:
         'Build and Deploy a RAG AI Agent in Streamlit using Google ADK and Cloud Run',
       speaker: 'Shadrack Inusah',
       track: 'Cloud Engineering · Product',
-      type: 'workshop',
-    },
-  },
-  {
-    time: '4:00 PM - 4:25 PM',
-    duration: '25m',
-    session: {
-      schedule: 'Wema Workshop Session (TBC)',
       type: 'workshop',
     },
   },
