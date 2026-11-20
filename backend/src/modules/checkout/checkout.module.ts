@@ -4,6 +4,7 @@ import { PaymentsModule } from '../payment/payment.module';
 import { OrdersModule } from '../order/order.module';
 import { CheckoutController } from './checkout.controller';
 import { PaymentConfirmationService } from './payment-confirmation.service';
+import { PaymentReconciliationService } from './payment-reconciliation.service';
 import { AlatpayReconciliationSweeper } from './alatpay-reconciliation.sweeper';
 import { IpRateLimitGuard } from './ip-rate-limit.guard';
 
@@ -14,6 +15,7 @@ import { IpRateLimitGuard } from './ip-rate-limit.guard';
     PrismaService,
     PaymentConfirmationService,
     AlatpayReconciliationSweeper,
+    PaymentReconciliationService,
     IpRateLimitGuard,
   ],
   exports: [PaymentConfirmationService],

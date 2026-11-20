@@ -42,7 +42,12 @@ export const queryKeys = {
   attendees: {
     checkedIn: (params: Record<string, unknown>) =>
       ['attendees', 'checked-in', params] as const,
+    checkInStats: (params: Record<string, unknown>) =>
+      ['attendees', 'check-in-stats', params] as const,
   },
+
+  // Payment reconciliation (ALATPay paid, not PAID here)
+  reconciliation: (hours: number) => ['reconciliation', hours] as const,
 
   // Dashboard
   dashboard: {

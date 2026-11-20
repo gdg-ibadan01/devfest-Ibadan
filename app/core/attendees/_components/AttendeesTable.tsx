@@ -23,7 +23,12 @@ import {
   useCheckInFilteredOrders,
 } from '@/app/_module/services/order.service';
 import { notifyApiError } from '@/app/_module/lib/apiError';
-import { useResendTicketEmail } from '@/app/_module/services';
+import {
+  useMyPermissions,
+  useResendTicketEmail,
+  useUndoCheckIn,
+} from '@/app/_module/services';
+import { isCheckedInToday } from '@/app/_module/lib/eventDate';
 import { showToast } from '@/app/_module/lib/notify';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -118,7 +123,7 @@ function CheckInBadge({ checkedIn }: { checkedIn: boolean }) {
       <span
         className={cn('w-[7px] h-[7px] rounded-full flex-shrink-0', cfg.dot)}
       />
-      {checkedIn ? 'Checked In' : 'Not Checked In'}
+      {checkedIn ? 'Checked In Today' : 'Not Checked In'}
     </span>
   );
 }
@@ -349,6 +354,11 @@ export default function AttendeesTable({
 
   const [exportOpen, setExportOpen] = useState(false);
   const resendTicket = useResendTicketEmail();
+  const { can } = useMyPermissions();
+  const canExport = can('payment_reports.export');
+  const canResend = can('emails.send');
+  const canCheckIn = can('attendees.check_in');
+  const undoCheckIn = useUndoCheckIn();
   const [isExporting, setIsExporting] = useState(false);
 
   const unfilteredResult = useOrders(
@@ -545,6 +555,7 @@ export default function AttendeesTable({
           )}
 
           {/* Export dropdown */}
+          {canExport && (
           <div className="relative flex-shrink-0">
             <button
               onClick={() => setExportOpen((p) => !p)}
@@ -581,6 +592,7 @@ export default function AttendeesTable({
               </>
             )}
           </div>
+          )}
         </div>
       </div>
 
@@ -621,7 +633,9 @@ export default function AttendeesTable({
                 <EmptyState />
               ) : (
                 visibleOrders.map((order) => {
-                  const checkedIn = order.checkIns.length > 0;
+                  // Per-day check-in: a 2-day ticket used yesterday must
+                  // still be checkable today.
+                  const checkedIn = isCheckedInToday(order.checkIns);
                   return (
                     <tr
                       key={order.id}
@@ -673,7 +687,7 @@ export default function AttendeesTable({
                       >
                         <AttendeeActionsMenu
                           onResendTicket={
-                            order.status === 'PAID'
+                            canResend && order.status === 'PAID'
                               ? () => resendTicket.mutate(order.id)
                               : undefined
                           }
@@ -681,8 +695,24 @@ export default function AttendeesTable({
                             resendTicket.isPending &&
                             resendTicket.variables === order.id
                           }
-                          onCheckIn={() => onCheckIn(order)}
+                          onCheckIn={
+                            canCheckIn ? () => onCheckIn(order) : undefined
+                          }
                           disabled={checkedIn}
+                          notPaid={order.status !== 'PAID'}
+                          onUndoCheckIn={
+                            canCheckIn && checkedIn
+                              ? () => {
+                                  if (
+                                    window.confirm(
+                                      `Undo today's check-in for ${order.attendeeFullName}?`
+                                    )
+                                  ) {
+                                    undoCheckIn.mutate({ orderId: order.id });
+                                  }
+                                }
+                              : undefined
+                          }
                           loading={checkingInOrderId === order.id}
                         />
                       </td>

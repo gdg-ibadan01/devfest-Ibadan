@@ -514,6 +514,7 @@ export class AdminService {
           select: {
             id: true,
             name: true,
+            permissions: true,
           },
         },
         isActive: true,
@@ -534,6 +535,10 @@ export class AdminService {
 
     return {
       ...admin,
+      role: {
+        ...admin.role,
+        permissions: admin.role.permissions as PERMISSION_ID[],
+      },
       invitedBy: admin.invitedBy
         ? { id: admin.invitedBy.id, name: admin.invitedBy.fullName }
         : null,

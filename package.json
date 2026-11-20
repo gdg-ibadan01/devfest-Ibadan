@@ -42,6 +42,7 @@
     "gsap": "^3.12.5",
     "helmet": "^8.1.0",
     "jspdf-autotable": "^5.0.2",
+    "jsqr": "^1.4.0",
     "lenis": "^1.1.14",
     "lucide-react": "^0.427.0",
     "moment": "^2.30.1",

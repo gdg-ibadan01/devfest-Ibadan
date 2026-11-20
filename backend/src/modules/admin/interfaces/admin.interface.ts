@@ -13,6 +13,7 @@ export interface IAdmin {
 export interface IAdminRole {
   id: string;
   name: string;
+  permissions: PERMISSION_ID[];
 }
 
 export interface IAdminInvitedBy {

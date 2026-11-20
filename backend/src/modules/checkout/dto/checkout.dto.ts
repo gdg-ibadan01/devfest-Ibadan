@@ -1,6 +1,14 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
-import { Transform } from 'class-transformer';
+import {
+  IsInt,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  Max,
+  MaxLength,
+  Min,
+} from 'class-validator';
+import { Transform, Type } from 'class-transformer';
 import { OrderStatus } from '@prisma/client';
 import { CheckoutSessionDto } from 'src/modules/order/dto/order.dto';
 
@@ -74,4 +82,114 @@ export class CheckoutSessionResponseDto {
 
   @ApiPropertyOptional({ type: CheckoutSessionDto, nullable: true })
   payment: CheckoutSessionDto | null;
+}
+
+export class ReconciliationOrderDto {
+  @ApiProperty()
+  id: string;
+
+  @ApiProperty()
+  reference: string;
+
+  @ApiProperty({ enum: OrderStatus })
+  status: OrderStatus;
+
+  @ApiProperty()
+  attendeeFullName: string;
+
+  @ApiProperty()
+  attendeeEmail: string;
+
+  @ApiProperty()
+  ticketName: string;
+
+  @ApiProperty({ example: '9500.00' })
+  amount: string;
+
+  @ApiProperty({ type: String, format: 'date-time' })
+  createdAt: Date;
+}
+
+export class ReconciliationItemDto {
+  @ApiProperty({ description: 'ALATPay transaction id' })
+  transactionRef: string;
+
+  @ApiProperty({ description: 'Amount paid on the gateway, in Naira' })
+  amount: number;
+
+  @ApiProperty({ example: 'NGN' })
+  currency: string;
+
+  @ApiProperty({ type: String, nullable: true })
+  paidAt: string | null;
+
+  @ApiProperty({
+    enum: ['ORDER_NOT_PAID', 'ORDER_NOT_FOUND'],
+    description:
+      'ORDER_NOT_PAID: gateway says paid, our order is not PAID. ORDER_NOT_FOUND: the transaction carries no order we know.',
+  })
+  issue: 'ORDER_NOT_PAID' | 'ORDER_NOT_FOUND';
+
+  @ApiProperty({ type: ReconciliationOrderDto, nullable: true })
+  order: ReconciliationOrderDto | null;
+}
+
+export class ReconciliationResponseDto {
+  @ApiProperty({ type: String, format: 'date-time' })
+  since: Date;
+
+  @ApiProperty({ type: String, format: 'date-time' })
+  until: Date;
+
+  @ApiProperty({ enum: ['ALATPAY'] })
+  gateway: 'ALATPAY';
+
+  @ApiProperty({ description: 'False when ALATPay credentials are missing' })
+  configured: boolean;
+
+  @ApiProperty({ description: 'Completed gateway transactions examined' })
+  scanned: number;
+
+  @ApiProperty({ type: [ReconciliationItemDto] })
+  items: ReconciliationItemDto[];
+}
+
+export class ReconciliationQueryDto {
+  @ApiPropertyOptional({
+    description: 'Look-back window in hours (1–48)',
+    default: 6,
+    minimum: 1,
+    maximum: 48,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(48)
+  hours?: number = 6;
+}
+
+export class ReconcileConfirmDto {
+  @ApiProperty({ description: 'ALATPay transaction id from the list' })
+  @Transform(trim)
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(200)
+  transactionRef!: string;
+}
+
+export class ReconcileConfirmResponseDto {
+  @ApiProperty({
+    enum: ['PROCESSED', 'DUPLICATE', 'NOT_COMPLETED', 'REJECTED', 'IGNORED'],
+  })
+  outcome: string;
+
+  @ApiProperty({ type: String, nullable: true })
+  reason: string | null;
+
+  @ApiProperty({ enum: OrderStatus, nullable: true })
+  orderStatus: OrderStatus | null;
+
+  @ApiProperty({ type: String, nullable: true })
+  reference: string | null;
 }

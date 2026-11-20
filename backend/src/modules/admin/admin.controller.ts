@@ -45,7 +45,10 @@ import {
   IAdminResponse,
   IUpdateProfileResponse,
 } from './interfaces/admin.interface';
-import { LoginResponseDto } from './dto/login-response.dto';
+import {
+  LoginResponseDto,
+  RefreshTokenResponseDto,
+} from './dto/login-response.dto';
 import {
   FindAllAdminsResponseDto,
   FindOneAdminResponseDto,
@@ -74,7 +77,10 @@ export class AdminController {
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Refresh JWT tokens using a valid refresh token' })
-  @ApiResponse({ status: 200, description: 'Tokens refreshed successfully.' })
+  @ApiOkResponse({
+    description: 'Tokens refreshed successfully.',
+    type: RefreshTokenResponseDto,
+  })
   @ApiResponse({
     status: 401,
     description: 'Invalid or expired refresh token.',
@@ -126,9 +132,12 @@ export class AdminController {
 
   @Get('me')
   @ApiBearerAuth()
-  @RequirePermission('admins.profile')
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @ApiOperation({ summary: 'Get the authenticated admin profile' })
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({
+    summary: 'Get the authenticated admin profile',
+    description:
+      'Available to every signed-in admin regardless of role. Returns the role with its permission IDs so the dashboard can decide which modules to show.',
+  })
   @ApiOkResponse({
     description: 'Profile retrieved successfully.',
     type: FindOneAdminResponseDto,
@@ -186,14 +195,14 @@ export class AdminController {
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @RequirePermission('admins.invite')
-  @ApiOperation({ summary: 'Invite another admin (Super Admin only)' })
+  @ApiOperation({ summary: 'Invite another admin (requires admins.invite)' })
   @ApiOkResponse({
     description: 'Admin invited successfully',
     type: InviteAdminDto,
   })
   @ApiResponse({
     status: 403,
-    description: 'Only SUPER_ADMIN can invite other admins.',
+    description: 'Missing admins.invite permission.',
   })
   @HttpCode(HttpStatus.OK)
   async inviteAdmin(
@@ -207,7 +216,9 @@ export class AdminController {
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @RequirePermission('admins.activate')
-  @ApiOperation({ summary: 'Activate an admin account (Super Admin only)' })
+  @ApiOperation({
+    summary: 'Activate an admin account (requires admins.activate)',
+  })
   @ApiOkResponse({
     description: 'Admin activated successfully',
     type: AdminActionResponseDto,
@@ -218,7 +229,7 @@ export class AdminController {
   })
   @ApiResponse({
     status: 403,
-    description: 'Only SUPER_ADMIN can activate other admins.',
+    description: 'Missing admins.activate permission.',
   })
   @ApiResponse({
     status: 404,
@@ -240,14 +251,16 @@ export class AdminController {
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @RequirePermission('admins.deactivate')
-  @ApiOperation({ summary: 'Deactivate an admin account (Super Admin only)' })
+  @ApiOperation({
+    summary: 'Deactivate an admin account (requires admins.deactivate)',
+  })
   @ApiOkResponse({
     description: 'Admin deactivated successfully',
     type: AdminActionResponseDto,
   })
   @ApiResponse({
     status: 403,
-    description: 'Only SUPER_ADMIN can deactivate other admins.',
+    description: 'Missing admins.deactivate permission.',
   })
   @HttpCode(HttpStatus.OK)
   async deactivateAdmin(
