@@ -35,7 +35,7 @@ export type SpeakerHallRow = {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// DAY 1 — DEVFEST IBADAN 2026 (Saturday, 29 Nov 2026)
+// DAY 1 — DEVFEST IBADAN 2026 (Saturday, 21 Nov 2026)
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const day1PlenaryData: AgendaItem[] = [
