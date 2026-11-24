@@ -45,14 +45,27 @@ export default function Organizers() {
                   </span>
                 </div>
                 <div className="relative w-full md:-mt-[50px] lg:-mt-[100px] flex items-end">
-                  <Image
-                    src={org.image}
-                    alt={org.name}
-                    width={400}
-                    height={500}
-                    className="w-full h-full object-contain object-bottom select-none"
-                    priority={index < 5}
-                  />
+                  {org.image ? (
+                    <Image
+                      src={org.image}
+                      alt={org.name}
+                      width={400}
+                      height={500}
+                      className="w-full h-full object-contain object-bottom select-none"
+                      priority={index < 5}
+                    />
+                  ) : (
+                    <div
+                      aria-hidden="true"
+                      className="flex aspect-[4/5] w-full items-end justify-center pb-6 font-grotesk text-[72px] font-black text-black/30"
+                    >
+                      {org.name
+                        .split(' ')
+                        .slice(0, 2)
+                        .map((w) => w[0])
+                        .join('')}
+                    </div>
+                  )}
                 </div>
               </div>
             ))}

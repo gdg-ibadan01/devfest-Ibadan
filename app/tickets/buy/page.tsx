@@ -1,6 +1,8 @@
 'use client';
 
 import React, { Suspense } from 'react';
+import Link from 'next/link';
+import { EVENT_ENDED } from '@/app/_module/config/event-status';
 import Image from 'next/image';
 import { AnimatePresence } from 'framer-motion';
 import useMediaQueryWatcher from '@/app/_module/config/hooks/useMediaQueryWatcher';
@@ -177,9 +179,27 @@ export default function BuyTicket() {
         backgroundSize: 'cover',
       }}
     >
-      <Suspense fallback={<TicketFormSkeleton title="Buy Ticket" />}>
-        <BuyTicketContent />
-      </Suspense>
+      {EVENT_ENDED ? (
+        <div className="relative z-10 flex h-fit w-full max-w-[520px] flex-col items-center gap-4 rounded-[24px] border border-black bg-white p-8 text-center shadow-sm">
+          <h1 className="font-grotesk text-[28px] font-black text-black">
+            Ticket sales have closed
+          </h1>
+          <p className="text-[16px] leading-[1.6] text-[#4B5563]">
+            DevFest Ibadan 2026 was a success. Thank you, Ibadan! See you next
+            year.
+          </p>
+          <Link
+            href="/"
+            className="rounded-[100px] bg-[#18181b] px-8 py-3 text-[15px] font-semibold text-white hover:bg-[#232326]"
+          >
+            Back to home
+          </Link>
+        </div>
+      ) : (
+        <Suspense fallback={<TicketFormSkeleton title="Buy Ticket" />}>
+          <BuyTicketContent />
+        </Suspense>
+      )}
 
       {/* Decorative footer art */}
       <Image

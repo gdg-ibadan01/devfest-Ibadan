@@ -1,3 +1,4 @@
+import { EVENT_ENDED } from '@/app/_module/config/event-status';
 import { ticketTiers } from '@/app/_module/data/secure-your-tickets.data';
 import {
   DEFAULT_DESCRIPTION,
@@ -41,7 +42,7 @@ export default function EventJsonLd() {
       image: [OG_IMAGE.url],
       startDate: '2026-11-21',
       endDate: '2026-11-21',
-      eventStatus: 'https://schema.org/EventScheduled',
+      eventStatus: 'https://schema.org/EventScheduled', // the event happened as scheduled
       eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
       location: {
         '@type': 'Place',
@@ -55,7 +56,7 @@ export default function EventJsonLd() {
         },
       },
       organizer: { '@id': `${SITE_URL}/#organizer` },
-      ...(offers.length ? { offers } : {}),
+      ...(offers.length && !EVENT_ENDED ? { offers } : {}),
     },
     {
       '@type': 'Organization',
