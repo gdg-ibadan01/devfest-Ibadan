@@ -1,4 +1,10 @@
-export const ORGANIZERS_DATA = [
+export const ORGANIZERS_DATA: {
+  name: string;
+  role: string;
+  /** Cut-out photo in /public/organizers; a placeholder card is shown when missing. */
+  image?: string;
+  bgColor: string;
+}[] = [
   {
     name: 'Abidemi Tiamiyu',
     role: 'Lead',
@@ -58,5 +64,16 @@ export const ORGANIZERS_DATA = [
     role: 'Publicity lead',
     image: '/organizers/amatullah_mahmud.png',
     bgColor: 'bg-halftone-blue',
+  },
+  {
+    name: 'Haneefah Olamipeju',
+    role: 'Volunteers Team Lead',
+    bgColor: 'bg-halftone-green',
+  },
+  {
+    name: 'Favour Etunwoke',
+    role: 'Technical',
+    image: '/organizers/favour_etunwoke.jpg',
+    bgColor: 'bg-halftone-red',
   },
 ];

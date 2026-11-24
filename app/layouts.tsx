@@ -13,6 +13,8 @@ import ReactQueryProvider from '@/providers/react-query';
 import { ErrorBoundary } from '@/providers/error-boundary';
 import AuthGuard from './_module/components/common/AuthGuard';
 import NextTopLoader from 'nextjs-toploader';
+import ThankYouBar from './component/thank-you/ThankYouBar';
+import { EVENT_ENDED } from './_module/config/event-status';
 
 export const wrapperClass = {
   layout:
@@ -108,6 +110,7 @@ const HomeLayout = ({
                 {!shouldHideHeader && <DFIHeader />}
                 {children}
                 {!shouldHideHeader && !shouldHideFooter && <DFIFooterV2 />}
+                {EVENT_ENDED && <ThankYouBar />}
                 <Toaster position="top-center" duration={4000} />
               </Suspense>
             </ErrorBoundary>

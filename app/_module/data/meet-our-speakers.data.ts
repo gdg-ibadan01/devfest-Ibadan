@@ -49,7 +49,7 @@ export const speakersData: SpeakerItem[] = [
     role: 'Director of Expansion, Strategy & Operations at Chowdeck',
     image: '/speakers/michael_toyinbo.png',
     colorScheme: 'pink',
-    sessionType: 'Panel',
+    sessionType: 'Panelist',
     topic: 'Scaling in the AI Era: Ideas, Infrastructure, Expansion',
   },
   {
@@ -58,7 +58,7 @@ export const speakersData: SpeakerItem[] = [
     role: 'Developer Relations Lead, ALATPay',
     image: '/speakers/haastrup_adejoke.jpeg',
     colorScheme: 'blue',
-    sessionType: 'Panel',
+    sessionType: 'Panelist',
     topic: 'Scaling in the AI Era: Ideas, Infrastructure, Expansion',
   },
   {
@@ -67,7 +67,7 @@ export const speakersData: SpeakerItem[] = [
     role: 'Founder Pnine',
     image: '/speakers/gbolahan_alli.png',
     colorScheme: 'yellow',
-    sessionType: 'Panel',
+    sessionType: 'Panelist',
     topic: 'Scaling in the AI Era: Ideas, Infrastructure, Expansion',
   },
   {
@@ -76,7 +76,7 @@ export const speakersData: SpeakerItem[] = [
     role: 'Co-Founder & CEO, Zeeh Africa. Investor & Community Builder',
     image: '/speakers/david _adeleke.jpg',
     colorScheme: 'green',
-    sessionType: 'Panel',
+    sessionType: 'Panelist',
     topic: 'Scaling in the AI Era: Ideas, Infrastructure, Expansion',
   },
   {

@@ -230,3 +230,33 @@ html.lenis body {
     min-height: 85vh;
   }
 }
+
+/* Thank-you tapes: two ribbons scrolling in opposite directions. */
+@keyframes tape-left {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+@keyframes tape-right {
+  from {
+    transform: translateX(-50%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+.tape-track-left {
+  animation: tape-left 28s linear infinite;
+}
+.tape-track-right {
+  animation: tape-right 32s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .tape-track-left,
+  .tape-track-right {
+    animation: none;
+  }
+}
