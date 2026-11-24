@@ -18,12 +18,6 @@ export const ORGANIZERS_DATA: {
     bgColor: 'bg-halftone-blue',
   },
   {
-    name: 'Gift Adeleye',
-    role: 'Social Media Manager',
-    image: '/organizers/gift_adeleye.png',
-    bgColor: 'bg-halftone-green',
-  },
-  {
     name: 'John O. Ajeigbe',
     role: 'Software Engineer',
     image: '/organizers/john_o_ajeigbe.png',
@@ -68,6 +62,7 @@ export const ORGANIZERS_DATA: {
   {
     name: 'Haneefah Olamipeju',
     role: 'Volunteers Team Lead',
+    image: '/organizers/haneefah_olamipeju.jpg',
     bgColor: 'bg-halftone-green',
   },
   {
