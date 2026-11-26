@@ -26,7 +26,7 @@ export const ALATPAY_AD: AlatpayAd = {
   href: 'https://alatpay.ng',
   alt: 'ALATPay: Never miss a payment. Seamless integration, track transactions, instant payouts. Sign up on ALATPay.ng',
   desktopSrc: '/sponsors/ads/alatpay-desktop.jpeg',
-  mobileSrc: undefined,
+  mobileSrc: '/sponsors/ads/alatpay-mobile.jpeg',
   caption: undefined,
   ctaLabel: 'Sign up on ALATPay',
 };
