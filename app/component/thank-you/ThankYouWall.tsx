@@ -44,7 +44,7 @@ function Person({
   src?: string | StaticImageData;
 }) {
   return (
-    <li className="flex w-[110px] flex-col items-center gap-2 text-center sm:w-[130px]">
+    <li className="flex flex-col items-center gap-2 text-center">
       <span className="relative flex h-[84px] w-[84px] items-center justify-center overflow-hidden rounded-[50%] border-2 border-[#1a1a1a] bg-[#FBBC04] font-grotesk text-[24px] font-black sm:h-[100px] sm:w-[100px]">
         {src ? (
           <Image
@@ -81,7 +81,7 @@ export default function ThankYouWall() {
         </h2>
 
         <Group title={g.speakers.title} text={g.speakers.text}>
-          <ul className="flex flex-wrap gap-x-4 gap-y-6">
+          <ul className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-4 lg:grid-cols-6">
             {speakersData.map((s) => (
               <Person
                 key={s.name}
@@ -94,7 +94,7 @@ export default function ThankYouWall() {
         </Group>
 
         <Group title={g.organizers.title} text={g.organizers.text}>
-          <ul className="flex flex-wrap gap-x-4 gap-y-6">
+          <ul className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-4 lg:grid-cols-6">
             {ORGANIZERS_DATA.map((o) => (
               <Person key={o.name} name={o.name} note={o.role} src={o.image} />
             ))}
